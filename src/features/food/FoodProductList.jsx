@@ -97,7 +97,7 @@ export function FoodProductList() {
   const activeCategoryMeta = getCategoryById(selectedCategory) || FOOD_CATEGORIES[0];
 
   return (
-    <div className="bg-[#FDFBF7] text-[#172B1C] min-h-screen py-8 sm:py-12">
+    <div className="bg-[#F1EDE4] text-[#172B1C] min-h-screen py-8 sm:py-12">
       {/* Drawers */}
       <CartDrawer />
       <WishlistDrawer />
@@ -145,7 +145,7 @@ export function FoodProductList() {
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Search soups, millets, podis, spices..."
-                className="w-full pl-9 pr-9 py-2 rounded-xl text-xs bg-[#F5F1E8] border border-transparent focus:border-[#287A25] focus:bg-white focus:outline-none text-[#172B1C] transition-all"
+                className="w-full pl-9 pr-9 py-2 rounded-xl text-xs bg-[#F8F5EE] border border-[#172B1C]/15 focus:border-[#287A25] focus:bg-white focus:outline-none text-[#172B1C] transition-all shadow-inner"
                 aria-label="Filter products by search term"
               />
               <Search className="w-4 h-4 text-[#557C36] absolute left-3 top-2.5 pointer-events-none" />
@@ -170,7 +170,7 @@ export function FoodProductList() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="py-1.5 px-3 rounded-lg text-xs font-medium bg-[#F5F1E8] border border-transparent focus:border-[#287A25] text-[#172B1C] focus:outline-none"
+                className="py-1.5 px-3 rounded-lg text-xs font-medium bg-[#F8F5EE] border border-[#172B1C]/15 focus:border-[#287A25] text-[#172B1C] focus:outline-none shadow-sm"
                 aria-label="Sort product catalogue"
               >
                 <option value="featured">Featured Order</option>
@@ -194,7 +194,7 @@ export function FoodProductList() {
                   className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                     isSelected
                       ? 'bg-[#287A25] text-white shadow-sm font-semibold'
-                      : 'bg-[#F5F1E8] text-[#172B1C] hover:bg-[#EAE6D9]'
+                      : 'bg-[#E8E2D7] text-[#172B1C] hover:bg-[#DFD8CC]'
                   }`}
                 >
                   {cat.shortName || cat.name}
@@ -209,7 +209,7 @@ export function FoodProductList() {
 
         {/* Active Filters Summary Strip (if filtered) */}
         {(selectedCategory !== 'all' || searchQuery) && (
-          <div className="mb-6 flex items-center justify-between text-xs text-[#557C36] p-2.5 rounded-lg bg-[#EAE6D9]/40 border border-[#172B1C]/8">
+          <div className="mb-6 flex items-center justify-between text-xs text-[#557C36] p-2.5 rounded-lg bg-[#E5DFD3]/70 border border-[#172B1C]/10">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-[#172B1C]">Active Filter:</span>
               {selectedCategory !== 'all' && (
@@ -236,7 +236,7 @@ export function FoodProductList() {
         {/* Products Grid or Empty State */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-20 px-4 rounded-3xl bg-white border border-[#172B1C]/10 max-w-md mx-auto space-y-4 shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-[#EAE6D9] text-[#287A25] flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 rounded-full bg-[#E5DFD3] text-[#287A25] flex items-center justify-center mx-auto">
               <PackageSearch className="w-8 h-8 opacity-70" />
             </div>
             <div className="space-y-1">

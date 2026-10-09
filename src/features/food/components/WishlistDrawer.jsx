@@ -29,7 +29,7 @@ export function WishlistDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#FDFBF7] text-[#172B1C] shadow-2xl z-50 flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-50 flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
             role="dialog"
             aria-modal="true"
             aria-label="Wishlist Drawer"
@@ -56,7 +56,7 @@ export function WishlistDrawer() {
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {items.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center py-12 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-[#EAE6D9] flex items-center justify-center text-[#557C36]">
+                  <div className="w-16 h-16 rounded-full bg-[#E5DFD3] flex items-center justify-center text-[#557C36]">
                     <Heart className="w-8 h-8 opacity-60" />
                   </div>
                   <div className="space-y-1">

@@ -10,9 +10,9 @@ export function SoupCollectionSection() {
   const soupProducts = FOOD_PRODUCTS.filter((p) => p.category === 'soups');
 
   return (
-    <section className="py-16 sm:py-24 bg-[#172B1C] text-[#FDFBF7] relative overflow-hidden">
+    <section className="py-16 sm:py-24 bg-[#172B1C] text-[#F1EDE4] relative overflow-hidden">
       {/* Subtle organic background pattern */}
-      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#FDFBF7_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
+      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#F1EDE4_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
 
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
@@ -44,7 +44,7 @@ export function SoupCollectionSection() {
               <span>Authentic Recipe Formulations</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#FDFBF7] leading-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#F1EDE4] leading-tight">
               Soup Ready Mix <br />
               <span className="italic font-normal text-[#C5A46D]">
                 Twenty Distinctive Bowls
@@ -65,7 +65,7 @@ export function SoupCollectionSection() {
                   <Link
                     key={soup.id}
                     to={`/food/products/${soup.slug}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#C5A46D] hover:bg-white/10 text-xs text-[#FDFBF7] transition-all"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#C5A46D] hover:bg-white/10 text-xs text-[#F1EDE4] transition-all"
                   >
                     <span className="font-mono text-[10px] opacity-50">
                       {String(idx + 1).padStart(2, '0')}

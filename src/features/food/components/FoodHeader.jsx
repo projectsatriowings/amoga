@@ -38,7 +38,7 @@ export function FoodHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-[#FDFBF7]/95 backdrop-blur-md border-b border-[#172B1C]/10 transition-colors">
+      <header className="sticky top-0 z-40 bg-[#F1EDE4]/95 backdrop-blur-md border-b border-[#172B1C]/10 transition-colors">
         {/* Top Announcement Bar */}
         <div className="bg-[#287A25] text-white text-[11px] font-medium py-1.5 px-4 text-center tracking-wider">
           <span>Pure Food &bull; Farm-Fresh &bull; Single-Origin Teas & Traditional Soup Mixes</span>
@@ -104,13 +104,13 @@ export function FoodHeader() {
                 </button>
 
                 {categoriesDropdownOpen && (
-                  <div className="absolute top-full left-0 w-64 p-2 bg-[#FDFBF7] border border-[#172B1C]/10 rounded-xl shadow-xl z-50 text-left normal-case space-y-1">
+                  <div className="absolute top-full left-0 w-64 p-2 bg-[#F1EDE4] border border-[#172B1C]/10 rounded-xl shadow-xl z-50 text-left normal-case space-y-1">
                     {FOOD_CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
                       <Link
                         key={cat.id}
                         to={`/food/products?category=${cat.id}`}
                         onClick={() => setCategoriesDropdownOpen(false)}
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-[#EAE6D9]/50 transition-colors"
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-[#E5DFD3]/70 transition-colors"
                       >
                         <div>
                           <div className="text-xs font-semibold text-[#172B1C]">
@@ -227,7 +227,7 @@ export function FoodHeader() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-[#172B1C]/10 bg-[#FDFBF7] p-5 space-y-4">
+          <div className="lg:hidden border-t border-[#172B1C]/10 bg-[#F1EDE4] p-5 space-y-4">
             {/* Mobile Search Form */}
             <form onSubmit={handleSearchSubmit} className="relative">
               <input
@@ -285,7 +285,7 @@ export function FoodHeader() {
       {/* Account Info Modal */}
       {accountModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#FDFBF7] text-[#172B1C] max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-[#172B1C]/15 space-y-4">
+          <div className="bg-[#F1EDE4] text-[#172B1C] max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-[#172B1C]/15 space-y-4">
             <div className="flex items-center justify-between border-b pb-3 border-[#172B1C]/10">
               <div className="flex items-center gap-2">
                 <User className="w-5 h-5 text-[#287A25]" />
@@ -302,7 +302,7 @@ export function FoodHeader() {
             <p className="text-xs text-[#405244] leading-relaxed">
               Customer accounts and authentication are reserved for Phase 4. For direct assistance, phone orders, and enquiry tracking:
             </p>
-            <div className="p-3 rounded-lg bg-[#EAE6D9]/50 space-y-1 text-xs font-mono text-[#172B1C]">
+            <div className="p-3 rounded-lg bg-[#E5DFD3]/70 space-y-1 text-xs font-mono text-[#172B1C]">
               <div>Phone: +91 9940018593</div>
               <div>Direct: +91 8056700646</div>
               <div>Brand: Amoga Pure Gourmet</div>

@@ -30,9 +30,9 @@ export function FoodProductDetail() {
   // If unknown slug, display graceful not-found state
   if (!product) {
     return (
-      <div className="bg-[#FDFBF7] text-[#172B1C] min-h-[70vh] flex items-center justify-center py-16">
+      <div className="bg-[#F1EDE4] text-[#172B1C] min-h-[70vh] flex items-center justify-center py-16">
         <Container size="narrow" className="text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-[#EAE6D9] text-[#287A25] flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 rounded-full bg-[#E5DFD3] text-[#287A25] flex items-center justify-center mx-auto">
             <HelpCircle className="w-8 h-8 opacity-70" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif text-[#172B1C]">
@@ -68,7 +68,7 @@ export function FoodProductDetail() {
   };
 
   return (
-    <div className="bg-[#FDFBF7] text-[#172B1C] min-h-screen py-8 sm:py-12">
+    <div className="bg-[#F1EDE4] text-[#172B1C] min-h-screen py-8 sm:py-12">
       {/* Drawers */}
       <CartDrawer />
       <WishlistDrawer />
@@ -125,7 +125,7 @@ export function FoodProductDetail() {
             </div>
 
             {/* Source Reference Metadata Pill */}
-            <div className="p-3.5 rounded-xl bg-[#EAE6D9]/50 border border-[#172B1C]/10 flex items-center justify-between text-xs font-mono text-[#557C36]">
+            <div className="p-3.5 rounded-xl bg-[#E5DFD3]/70 border border-[#172B1C]/10 flex items-center justify-between text-xs font-mono text-[#557C36]">
               <span>Verified Source:</span>
               <span className="font-semibold text-[#172B1C]">
                 {product.sourceCatalogue || 'Amoga Organic Food Specification'}

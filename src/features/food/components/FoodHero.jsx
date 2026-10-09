@@ -8,7 +8,7 @@ import { Button } from '../../../components/ui/Button';
 
 export function FoodHero() {
   return (
-    <section className="relative overflow-hidden bg-[#FDFBF7] py-10 sm:py-14 lg:py-20 border-b border-[#172B1C]/8">
+    <section className="relative overflow-hidden bg-[#F1EDE4] py-10 sm:py-14 lg:py-20 border-b border-[#172B1C]/8">
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           {/* Left Column: Editorial Headline & Messaging */}
@@ -44,7 +44,7 @@ export function FoodHero() {
               ].map((pill) => (
                 <div
                   key={pill}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EAE6D9]/60 border border-[#172B1C]/10 text-xs font-medium text-[#172B1C]"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#E5DFD3]/70 border border-[#172B1C]/10 text-xs font-medium text-[#172B1C]"
                 >
                   <Check className="w-3.5 h-3.5 text-[#287A25]" />
                   <span>{pill}</span>
@@ -85,7 +85,7 @@ export function FoodHero() {
             transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5 relative"
           >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#172B1C]/10 bg-[#EAE6D9]/50 aspect-[4/3] sm:aspect-square">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#172B1C]/10 bg-[#E5DFD3]/60 aspect-[4/3] sm:aspect-square">
               <img
                 src={foodHeroImg}
                 alt="Amoga Gourmet Food Collection"

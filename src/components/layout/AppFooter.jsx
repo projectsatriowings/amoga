@@ -14,7 +14,7 @@ export function AppFooter({ activeCollection }) {
   const isJewellery = activeCollection?.id === 'jewellery';
 
   const footerBg = isFood
-    ? 'bg-[#EAE6D9]/60 text-[#172B1C] border-[#172B1C]/10'
+    ? 'bg-[#F1EDE4] text-[#172B1C] border-[#172B1C]/10'
     : isTea
     ? 'bg-[#FAF1BB] text-[#2C1E11] border-[#B88E38]/25'
     : isSarees

@@ -16,11 +16,12 @@ export default {
           light: '#FDFBF7',
         },
         food: {
-          bg: '#FDFBF7',
+          bg: '#F1EDE4',
+          surface: '#F8F5EE',
           accent: '#287A25',
           botanical: '#557C36',
           text: '#172B1C',
-          neutral: '#EAE6D9',
+          neutral: '#E5DFD3',
         },
         sarees: {
           bg: '#2C0E1A',

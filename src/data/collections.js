@@ -23,7 +23,7 @@ export const COLLECTIONS = [
     theme: 'food',
     accentColor: '#287A25',
     supportingColor: '#557C36',
-    bgColor: '#FDFBF7',
+    bgColor: '#F1EDE4',
     textColor: '#172B1C',
     fontHeading: 'font-sans',
     fontBody: 'font-sans',

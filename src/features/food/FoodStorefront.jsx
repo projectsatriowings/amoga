@@ -23,7 +23,7 @@ export function FoodStorefront() {
       : featuredProducts.filter((p) => p.category === activeTab);
 
   return (
-    <div className="bg-[#FDFBF7] text-[#172B1C] min-h-screen">
+    <div className="bg-[#F1EDE4] text-[#172B1C] min-h-screen">
       {/* Drawers */}
       <CartDrawer />
       <WishlistDrawer />
@@ -38,7 +38,7 @@ export function FoodStorefront() {
       <FoodCategoryGrid />
 
       {/* 4. Featured Products Showcase */}
-      <section className="py-16 sm:py-20 bg-[#FDFBF7] border-b border-[#172B1C]/8">
+      <section className="py-16 sm:py-20 bg-[#F1EDE4] border-b border-[#172B1C]/8">
         <Container>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <SectionHeading
@@ -49,7 +49,7 @@ export function FoodStorefront() {
             />
 
             {/* Filter Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-full bg-[#EAE6D9]/50 border border-[#172B1C]/10">
+            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-full bg-[#E5DFD3]/70 border border-[#172B1C]/10">
               {[
                 { id: 'all', label: 'All Featured' },
                 { id: 'spices', label: 'Pantry Staples' },

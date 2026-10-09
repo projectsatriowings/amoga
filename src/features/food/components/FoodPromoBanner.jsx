@@ -6,7 +6,7 @@ import { Button } from '../../../components/ui/Button';
 
 export function FoodPromoBanner() {
   return (
-    <section className="py-12 sm:py-16 bg-[#FDFBF7]">
+    <section className="py-12 sm:py-16 bg-[#F1EDE4]">
       <Container>
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#172B1C] via-[#213F27] to-[#172B1C] text-white p-8 sm:p-12 shadow-xl border border-[#287A25]/30">
           <div className="relative z-10 max-w-2xl space-y-4">

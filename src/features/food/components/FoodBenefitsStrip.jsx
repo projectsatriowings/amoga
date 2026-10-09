@@ -27,7 +27,7 @@ export function FoodBenefitsStrip() {
   ];
 
   return (
-    <section className="bg-[#EAE6D9]/40 border-b border-[#172B1C]/8 py-8 sm:py-10">
+    <section className="bg-[#E8E2D7]/50 border-b border-[#172B1C]/8 py-8 sm:py-10">
       <Container>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {benefits.map((b) => (

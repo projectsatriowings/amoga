@@ -40,7 +40,7 @@ export function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#FDFBF7] text-[#172B1C] shadow-2xl z-50 flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-50 flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
             role="dialog"
             aria-modal="true"
             aria-label="Shopping Cart Drawer"
@@ -158,7 +158,7 @@ export function CartDrawer() {
                             )}
 
                             {/* Quantity Controls */}
-                            <div className="flex items-center gap-1.5 bg-[#F5F1E8] rounded-md px-1.5 py-0.5">
+                            <div className="flex items-center gap-1.5 bg-[#E8E2D7] rounded-md px-1.5 py-0.5">
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(lineKey, quantity - 1)}

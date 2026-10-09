@@ -33,13 +33,13 @@ export function GatekeeperPanel({
   // Collection-specific palette & typography tokens
   const themeConfig = {
     food: {
-      bgColor: '#FDFBF7',
+      bgColor: '#F1EDE4',
       textColor: '#172B1C',
       accentColor: '#287A25',
       eyebrowColor: '#287A25',
       descriptionColor: '#405244',
       titleFont: 'font-sans font-bold tracking-tight',
-      gradientStop: 'from-[#FDFBF7] via-[#FDFBF7]/80 to-transparent',
+      gradientStop: 'from-[#F1EDE4] via-[#F1EDE4]/80 to-transparent',
       overlayDim: 'bg-[#172B1C]/25',
     },
     tea: {

@@ -14,7 +14,7 @@ export function FoodProductCard({ product }) {
       aria-label={product.name}
     >
       {/* Card Image Area */}
-      <div className="relative aspect-square w-full overflow-hidden bg-[#EAE6D9]/40">
+      <div className="relative aspect-square w-full overflow-hidden bg-[#E5DFD3]/50">
         <Link to={`/food/products/${product.slug}`} className="block w-full h-full">
           <img
             src={product.image}

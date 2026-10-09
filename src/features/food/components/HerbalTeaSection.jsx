@@ -10,7 +10,7 @@ export function HerbalTeaSection() {
   const teaProducts = FOOD_PRODUCTS.filter((p) => p.category === 'teas');
 
   return (
-    <section className="py-16 sm:py-24 bg-[#F5F1E8] border-b border-[#172B1C]/8">
+    <section className="py-16 sm:py-24 bg-[#F1EDE4] border-b border-[#172B1C]/8">
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* Left Column: Tea Standee Narrative & Varieties */}

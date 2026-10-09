@@ -9,7 +9,7 @@ export function FoodCategoryGrid() {
   const categories = FOOD_CATEGORIES.filter((c) => c.id !== 'all');
 
   return (
-    <section className="py-14 sm:py-20 bg-[#FDFBF7] border-b border-[#172B1C]/8">
+    <section className="py-14 sm:py-20 bg-[#F1EDE4] border-b border-[#172B1C]/8">
       <Container>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
           <SectionHeading

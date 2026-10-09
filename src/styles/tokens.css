@@ -15,6 +15,12 @@
   --amoga-dark: #0e0f12;
   --amoga-light: #FDFBF7;
 
+  /* Gourmet Food Centralized Tokens */
+  --gourmet-food-bg: #F1EDE4;
+  --gourmet-food-surface: #F8F5EE;
+  --gourmet-food-elevated: #ECE5D8;
+  --gourmet-food-neutral: #E5DFD3;
+
   /* Typography Scales */
   --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-playfair: 'Playfair Display', Georgia, Cambria, serif;
@@ -57,21 +63,21 @@
 
 /* =========================================================================
  * Collection A: Gourmet Food Theme
- * Fresh, organic, natural, bright, spacious and premium
+ * Warm, clean, premium, and natural with #F1EDE4 primary background
  * ========================================================================= */
 [data-collection="food"],
 .theme-food {
-  --bg-primary: #FDFBF7;
-  --bg-surface: #F5F1E8;
-  --bg-elevated: #ECE7DA;
+  --bg-primary: var(--gourmet-food-bg, #F1EDE4);
+  --bg-surface: var(--gourmet-food-surface, #F8F5EE);
+  --bg-elevated: var(--gourmet-food-elevated, #ECE5D8);
   --text-primary: #172B1C;
   --text-secondary: #405244;
   --text-muted: #728276;
   --accent-primary: #287A25;
   --accent-secondary: #557C36;
-  --supporting-neutral: #EAE6D9;
-  --border-subtle: rgba(23, 43, 28, 0.09);
-  --border-strong: rgba(23, 43, 28, 0.2);
+  --supporting-neutral: var(--gourmet-food-neutral, #E5DFD3);
+  --border-subtle: rgba(23, 43, 28, 0.1);
+  --border-strong: rgba(23, 43, 28, 0.22);
   --focus-ring: rgba(40, 122, 37, 0.45);
   --font-family-body: var(--font-inter);
   --font-family-heading: var(--font-cormorant);
