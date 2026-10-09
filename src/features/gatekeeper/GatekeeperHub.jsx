@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import amogaLogo from '../../assets/images/amoga-logo.png';
 import { COLLECTIONS } from '../../data/collections';
@@ -79,15 +79,19 @@ export function GatekeeperHub() {
     >
       {/* Floating Brand Header */}
       <header className="absolute top-0 left-0 right-0 z-40 px-6 sm:px-10 py-5 flex items-center justify-between pointer-events-none">
-        {/* Exact Amoga Brand Logo */}
+        {/* Exact Amoga Brand Logo (Transparent) */}
         <div className="pointer-events-auto flex items-center gap-3">
-          <div className="px-3.5 py-1.5 rounded-full bg-black/35 backdrop-blur-md border border-white/10 shadow-lg">
+          <Link
+            to="/"
+            className="flex items-center transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded"
+            title="Amoga Unified Home"
+          >
             <img
               src={amogaLogo}
               alt="Amoga"
-              className="h-8 sm:h-10 w-auto object-contain shrink-0"
+              className="h-8 sm:h-10 w-auto object-contain shrink-0 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
             />
-          </div>
+          </Link>
         </div>
 
         {/* Ambient Tagline / Visual Context */}
