@@ -1,0 +1,117 @@
+/**
+ * AMOGA GOURMET FOOD — APPROVED CATEGORIES
+ * Verified against Amoga Product Catalogues and Homepage Specifications
+ */
+
+import soupImg from '../../../assets/images/food-soups-hero.jpg';
+import delicacyImg from '../../../assets/images/gatekeeper-food.jpg';
+
+export const FOOD_CATEGORIES = [
+  {
+    id: 'all',
+    slug: 'all',
+    name: 'All Products',
+    shortName: 'All',
+    count: 61,
+    description: 'Browse the complete Amoga gourmet selection of traditional soups, millets, podis, and farm-fresh organic pantry essentials.',
+  },
+  {
+    id: 'soups',
+    slug: 'soup-ready-mix',
+    name: 'Soup Ready Mix',
+    shortName: 'Soups',
+    count: 20,
+    image: soupImg,
+    tagline: 'Twenty Distinctive Soups. One Memorable Collection.',
+    description: 'A thoughtfully crafted 20-recipe soup collection featuring regional botanical leaves, fresh garden herbs, and nourishing comforting broths.',
+    badge: '20 Recipes',
+    featured: true,
+  },
+  {
+    id: 'millets',
+    slug: 'millet-collection',
+    name: 'Millet Collection',
+    shortName: 'Millets',
+    count: 10,
+    image: delicacyImg,
+    tagline: 'The Everyday Table — Familiar Favourites, Fresh Possibilities.',
+    description: 'Ten versatile breakfast mixes, wholesome meal bases, and savoury treats reimagining heritage millets for everyday cooking.',
+    badge: '10 Items',
+    featured: true,
+  },
+  {
+    id: 'podis',
+    slug: 'rice-podi-collection',
+    name: 'Rice Podi Collection',
+    shortName: 'Rice Podis',
+    count: 25,
+    image: delicacyImg,
+    tagline: 'Tradition, With a Twist — 25 Podi Varieties for Rice.',
+    description: 'A varied selection of regional leaf blends, aromatic seeds, and savoury roasted accompaniments for warm rice.',
+    badge: '25 Varieties',
+    featured: true,
+  },
+  {
+    id: 'spices',
+    slug: 'spices-masalas',
+    name: 'Spices & Masalas',
+    shortName: 'Spices',
+    count: 2,
+    image: delicacyImg,
+    tagline: 'Single-Origin Sun-Dried Aromatics.',
+    description: 'Stone-ground whole spices with uncompromised natural aroma, essential oils, and rich pigmentation.',
+    badge: 'Single Origin',
+    featured: false,
+  },
+  {
+    id: 'honey',
+    slug: 'honey-sweeteners',
+    name: 'Honey & Natural Sweeteners',
+    shortName: 'Honey',
+    count: 1,
+    image: delicacyImg,
+    tagline: 'Wild Forest Raw Harvest.',
+    description: 'Raw, unheated single-origin forest honey sourced directly from tribal gatherers.',
+    badge: 'Raw & Pure',
+    featured: false,
+  },
+  {
+    id: 'oils',
+    slug: 'organic-oils',
+    name: 'Organic Oils',
+    shortName: 'Cold-Pressed Oils',
+    count: 1,
+    image: delicacyImg,
+    tagline: 'Traditional Wood-Pressed Purity.',
+    description: 'Extracted slowly using heritage wooden pestles to retain vital nutrition and natural aroma.',
+    badge: 'Wood Pressed',
+    featured: false,
+  },
+  {
+    id: 'snacks',
+    slug: 'healthy-snacks',
+    name: 'Healthy Snacks',
+    shortName: 'Snacks',
+    count: 1,
+    image: delicacyImg,
+    tagline: 'Slow-Roasted Crunchy Bites.',
+    description: 'Dry roasted whole nuts and seeds seasoned lightly with rock salt.',
+    badge: 'Dry Roasted',
+    featured: false,
+  },
+  {
+    id: 'superfoods',
+    slug: 'superfoods',
+    name: 'Superfoods',
+    shortName: 'Superfoods',
+    count: 1,
+    image: delicacyImg,
+    tagline: 'Nutrient-Dense Pantry Seeds.',
+    description: 'Cleaned, nutrient-dense whole seeds rich in plant-based omega and fiber.',
+    badge: 'Whole Seeds',
+    featured: false,
+  },
+];
+
+export const getCategoryById = (id) => FOOD_CATEGORIES.find((c) => c.id === id);
+export const getCategoryBySlug = (slug) => FOOD_CATEGORIES.find((c) => c.slug === slug);

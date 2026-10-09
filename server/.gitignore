@@ -1,0 +1,10 @@
+node_modules
+.env
+.env.*
+!.env.example
+backups/
+*.sql
+!prisma/migrations/**/*.sql
+generated/
+/generated/prisma
+*.log

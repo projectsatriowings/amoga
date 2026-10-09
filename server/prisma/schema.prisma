@@ -1,0 +1,221 @@
+// AMOGA E-COMMERCE — PRISMA SCHEMA
+// Supports Multi-Collection Storefronts (Food, Sarees, Jewellery) & Persistent Orders
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Collection {
+  id          String    @id // 'food' | 'sarees' | 'jewellery'
+  name        String
+  slug        String    @unique
+  tagline     String?
+  description String?
+  theme       String?
+  accentColor String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@map("collections")
+}
+
+model Product {
+  id               String           @id @default(uuid())
+  sourceId         String           @unique // e.g. 'f-turmeric-01', 's-kanchipuram-01', 'j-aurora-01'
+  collectionId     String
+  slug             String
+  name             String
+  tagline          String?
+  description      String           @db.Text
+  category         String
+  categoryName     String?
+  price            Decimal?         @db.Decimal(10, 2) // Nullable for unconfirmed bespoke items
+  originalPrice    Decimal?         @db.Decimal(10, 2)
+  discount         String?
+  currency         String           @default("INR")
+  image            String           @db.Text
+  gallery          Json?            // Array of image paths/URLs
+  packSize         String?
+  inStock          Boolean          @default(true)
+  isFeatured       Boolean          @default(false)
+  badge            String?
+  rating           Float?
+  reviewCount      Int?
+  specs            Json?            // Product attributes / technical specifications
+  sourceCatalogue  String?
+  verified         Boolean          @default(false)
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  collection       Collection       @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  variants         ProductVariant[]
+  orderItems       OrderItem[]
+
+  @@unique([collectionId, slug])
+  @@index([collectionId])
+  @@index([category])
+  @@index([inStock])
+  @@map("products")
+}
+
+model ProductVariant {
+  id          String      @id @default(uuid())
+  sourceId    String?     // e.g. 'v-wine', 'ring-16'
+  productId   String
+  name        String      // e.g. 'Royal Wine', 'US 7'
+  sku         String?
+  price       Decimal?    @db.Decimal(10, 2)
+  inStock     Boolean     @default(true)
+  attributes  Json?       // e.g. { hex: '#451523' } or { size: 'US 6' }
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PENDING_CONFIRMATION
+  CONFIRMED
+  PROCESSING
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  AUTHORIZED
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  EXPIRED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+model Order {
+  id                    String        @id @default(uuid())
+  orderReference        String        @unique // Public non-guessable reference: e.g. 'AMOGA-ORD-2026-XXXXX'
+  idempotencyKey        String?       @unique // Duplicate submission protection
+  guestAccessTokenHash  String?       // Secure hash for guest retrieval
+  status                OrderStatus   @default(PENDING_PAYMENT)
+  paymentStatus         PaymentStatus @default(PENDING)
+  currency              String        @default("INR")
+  
+  // Financial totals snapshot
+  subtotal              Decimal       @db.Decimal(10, 2)
+  shippingAmount        Decimal       @default(0.00) @db.Decimal(10, 2)
+  taxAmount             Decimal       @default(0.00) @db.Decimal(10, 2)
+  discountAmount        Decimal       @default(0.00) @db.Decimal(10, 2)
+  totalAmount           Decimal       @db.Decimal(10, 2)
+
+  // Customer Contact & Shipping Destination Snapshot
+  customerName          String
+  customerEmail         String
+  customerPhone         String
+  addressLine1          String
+  addressLine2          String?
+  city                  String
+  state                 String
+  pincode               String
+  deliveryInstructions  String?       @db.Text
+
+  // Mode and metadata
+  isDemo                Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  items                 OrderItem[]
+  payments              Payment[]
+
+  @@index([orderReference])
+  @@index([customerEmail])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model Payment {
+  id                    String        @id @default(uuid())
+  orderId               String
+  paymentReference      String        @unique // Public reference: e.g. 'AMOGA-PAY-2026-XXXX'
+  idempotencyKey        String?       @unique // Unique payment creation idempotency key
+  provider              String        // e.g. 'test', 'razorpay', 'cashfree', 'stripe'
+  providerOrderId       String?       // Provider's order identifier
+  providerPaymentId     String?       // Provider's payment / charge identifier
+  amountPaise           Int           // Exact integer paise (e.g. 250000 = Rs 2500.00)
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              String        @default("INR")
+  status                PaymentStatus @default(CREATED)
+  metadata              Json?         // Safe provider metadata
+  failureCode           String?
+  failureMessage        String?
+  verifiedAt            DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([providerOrderId])
+  @@index([providerPaymentId])
+  @@map("payments")
+}
+
+model PaymentEvent {
+  id                    String        @id @default(uuid())
+  provider              String        // e.g. 'test', 'razorpay', 'cashfree', 'stripe'
+  providerEventId       String        // Provider's unique event/webhook ID
+  orderId               String?
+  paymentId             String?
+  orderReference        String?
+  eventType             String        // e.g. 'payment.succeeded', 'payment.failed'
+  status                String        @default("PROCESSED") // 'PROCESSED', 'IGNORED', 'FAILED'
+  payload               Json?         // Sanitized event payload
+  error                 String?
+  receivedAt            DateTime      @default(now())
+  processedAt           DateTime?
+
+  @@unique([provider, providerEventId])
+  @@index([orderReference])
+  @@index([paymentId])
+  @@map("payment_events")
+}
+
+model OrderItem {
+  id            String          @id @default(uuid())
+  orderId       String
+  productId     String?
+  variantId     String?
+
+  // Frozen snapshots at time of order
+  collectionId  String
+  productName   String
+  variantName   String?
+  unitPrice     Decimal         @db.Decimal(10, 2)
+  quantity      Int
+  lineTotal     Decimal         @db.Decimal(10, 2)
+  image         String?         @db.Text
+
+  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
