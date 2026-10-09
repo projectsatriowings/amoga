@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm --prefix server install && npm --prefix server run prisma:generate && vite build",
+    "start": "node server/src/server.js",
+    "postinstall": "npm --prefix server install && npm --prefix server run prisma:generate",
     "lint": "oxlint",
     "preview": "vite preview",
     "server": "node server/src/server.js",
