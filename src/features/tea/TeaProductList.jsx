@@ -19,8 +19,14 @@ export function TeaProductList() {
   });
 
   const initialQuery = searchParams.get('q') || '';
+  const selectedCategory = searchParams.get('category') || 'all';
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState('featured');
+
+  // Sync searchQuery when searchParams query changes
+  React.useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+  }, [searchParams]);
 
   const handleSearchChange = (val) => {
     setSearchQuery(val);
@@ -44,6 +50,17 @@ export function TeaProductList() {
     const list = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
 
     let result = list.filter((p) => {
+      // Category Filter
+      if (selectedCategory && selectedCategory !== 'all') {
+        const cat = selectedCategory.toLowerCase();
+        const isCatMatch =
+          (cat === 'flower' && (p.slug.includes('pea') || p.slug.includes('hibiscus') || p.categoryName?.toLowerCase().includes('flower'))) ||
+          (cat === 'leaf' && (p.slug.includes('moringa') || p.categoryName?.toLowerCase().includes('leaf'))) ||
+          (cat === 'herbal' && (p.slug.includes('cinnamon') || p.slug.includes('sarsaparilla') || p.categoryName?.toLowerCase().includes('root') || p.categoryName?.toLowerCase().includes('spice')));
+        if (!isCatMatch) return false;
+      }
+
+      // Search Query Filter
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return (
@@ -64,7 +81,8 @@ export function TeaProductList() {
     }
 
     return result;
-  }, [apiProducts, searchQuery, sortBy]);
+  }, [apiProducts, selectedCategory, searchQuery, sortBy]);
+
 
   return (
     <div className="relative bg-[#F8F6F0] text-[#292820] min-h-screen py-8 sm:py-12 overflow-hidden">

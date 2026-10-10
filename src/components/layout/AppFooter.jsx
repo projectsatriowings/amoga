@@ -4,8 +4,10 @@ import { PhoneCall, Mail, MapPin } from 'lucide-react';
 import amogaLogo from '../../assets/images/amoga-logo.png';
 import { COLLECTIONS } from '../../data/collections';
 import { Container } from '../ui/Container';
+import { CollectionContactSection } from '../../features/collections/components/CollectionContactSection';
 
 const CURRENT_YEAR = 2026;
+
 
 export function AppFooter({ activeCollection }) {
   const location = useLocation();
@@ -33,133 +35,13 @@ export function AppFooter({ activeCollection }) {
   return (
     <footer className={`border-t py-12 sm:py-16 transition-colors duration-normal ease-smooth ${footerBg}`}>
       <Container>
-        {/* Wholesome Pantry Dedicated Contact Section */}
-        {isFood && (
-          <section
-            id="contact"
-            className="scroll-mt-28 mb-12 pb-12 border-b border-[#E5E0D5]"
-            aria-labelledby="wholesome-contact-heading"
-          >
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-              <div>
-                <span className="text-[11px] font-mono uppercase tracking-[0.22em] text-[#3F7B43] font-semibold">
-                  GET IN TOUCH
-                </span>
-                <h2
-                  id="wholesome-contact-heading"
-                  className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#173B2A] mt-2 font-normal"
-                >
-                  Wholesome Pantry Concierge & Orders Desk
-                </h2>
-                <p className="text-xs sm:text-sm text-[#292820]/80 mt-2 max-w-2xl leading-relaxed font-sans">
-                  Have a question about our traditional soup mixes, millet recipes, or rice podis? Connect with our team for telephone order assistance, bulk enquiries, and culinary recommendations.
-                </p>
-              </div>
-              <div className="shrink-0 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#3F7B43]/10 border border-[#3F7B43]/20 text-[#173B2A] text-xs font-mono font-medium">
-                  <span className="w-2 h-2 rounded-full bg-[#3F7B43] animate-pulse" />
-                  Support Desk Active
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* Card 1: Telephone Orders */}
-              <div className="p-6 rounded-2xl bg-white border border-[#E5E0D5] shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-[#3F7B43]/10 text-[#173B2A] flex items-center justify-center mb-4">
-                    <PhoneCall className="w-5 h-5 text-[#3F7B43]" />
-                  </div>
-                  <h3 className="font-serif text-base font-semibold text-[#173B2A]">
-                    Direct Phone & WhatsApp
-                  </h3>
-                  <p className="text-xs text-[#292820]/70 mt-1.5 leading-relaxed">
-                    Immediate order support, dispatch tracking, and product guidance.
-                  </p>
-                </div>
-                <div className="mt-5 pt-4 border-t border-[#E5E0D5]/70 space-y-1.5">
-                  <a
-                    href="tel:+919940018593"
-                    className="flex items-center justify-between text-xs font-mono font-semibold text-[#173B2A] hover:text-[#3F7B43] transition-colors"
-                  >
-                    <span>+91 9940018593</span>
-                    <span className="text-[10px] text-[#3F7B43] font-sans font-medium uppercase">Call Support</span>
-                  </a>
-                  <a
-                    href="tel:+918056700646"
-                    className="flex items-center justify-between text-xs font-mono font-semibold text-[#173B2A] hover:text-[#3F7B43] transition-colors"
-                  >
-                    <span>+91 8056700646</span>
-                    <span className="text-[10px] text-[#3F7B43] font-sans font-medium uppercase">Orders Desk</span>
-                  </a>
-                  <div className="text-[11px] text-[#292820]/60 pt-1">
-                    Mon – Sat &bull; 9:00 AM – 7:00 PM IST
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 2: Email Desk */}
-              <div className="p-6 rounded-2xl bg-white border border-[#E5E0D5] shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-[#3F7B43]/10 text-[#173B2A] flex items-center justify-center mb-4">
-                    <Mail className="w-5 h-5 text-[#3F7B43]" />
-                  </div>
-                  <h3 className="font-serif text-base font-semibold text-[#173B2A]">
-                    Email Inquiries
-                  </h3>
-                  <p className="text-xs text-[#292820]/70 mt-1.5 leading-relaxed">
-                    Culinary feedback, recipe questions, and corporate communications.
-                  </p>
-                </div>
-                <div className="mt-5 pt-4 border-t border-[#E5E0D5]/70 space-y-1.5">
-                  <a
-                    href="mailto:orders@amoga.com"
-                    className="flex items-center justify-between text-xs font-mono font-semibold text-[#173B2A] hover:text-[#3F7B43] transition-colors"
-                  >
-                    <span>orders@amoga.com</span>
-                    <span className="text-[10px] text-[#3F7B43] font-sans font-medium uppercase">Orders</span>
-                  </a>
-                  <a
-                    href="mailto:support@amoga.com"
-                    className="flex items-center justify-between text-xs font-mono font-semibold text-[#173B2A] hover:text-[#3F7B43] transition-colors"
-                  >
-                    <span>support@amoga.com</span>
-                    <span className="text-[10px] text-[#3F7B43] font-sans font-medium uppercase">Concierge</span>
-                  </a>
-                  <div className="text-[11px] text-[#292820]/60 pt-1">
-                    Replies guaranteed within 24 business hours
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 3: Institutional & Bulk Blends */}
-              <div className="p-6 rounded-2xl bg-white border border-[#E5E0D5] shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-[#3F7B43]/10 text-[#173B2A] flex items-center justify-center mb-4">
-                    <MapPin className="w-5 h-5 text-[#3F7B43]" />
-                  </div>
-                  <h3 className="font-serif text-base font-semibold text-[#173B2A]">
-                    Pantry Kitchen & Provenance
-                  </h3>
-                  <p className="text-xs text-[#292820]/70 mt-1.5 leading-relaxed">
-                    Traditional preparation hub sourcing indigenous South Indian grains & leaves.
-                  </p>
-                </div>
-                <div className="mt-5 pt-4 border-t border-[#E5E0D5]/70 space-y-1">
-                  <div className="text-xs font-medium text-[#173B2A]">
-                    Amoga Traditional Foods & Blends
-                  </div>
-                  <div className="text-[11px] text-[#292820]/75">
-                    Tamil Nadu, India &bull; Serving Nationwide Pan-India
-                  </div>
-                  <div className="text-[11px] font-mono font-semibold text-[#3F7B43] pt-0.5">
-                    Authentic Stone-Ground Formulations
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+        {/* Reusable Themed Contact Section & Interactive Form for Collections */}
+        {activeCollection && (
+          <div className="mb-12 pb-12 border-b border-current/15">
+            <CollectionContactSection collectionId={activeCollection.id} />
+          </div>
         )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-12 border-b border-current/10">
           {/* Brand Col */}
           <div className="lg:col-span-2 space-y-4">
