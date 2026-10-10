@@ -14,6 +14,10 @@ export async function getDashboardStats(req, res) {
       outOfStockProducts,
       recentOrders,
       orderItemsByCollection,
+      totalUnitsSoldAgg,
+      orderItemsByProduct,
+      allActiveProducts,
+      lowStockList,
     ] = await Promise.all([
       prisma.order.count(),
       prisma.order.groupBy({
@@ -51,7 +55,7 @@ export async function getDashboardStats(req, res) {
         },
       }),
       prisma.order.findMany({
-        take: 8,
+        take: 10,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
@@ -68,6 +72,47 @@ export async function getDashboardStats(req, res) {
         by: ['collectionId'],
         _sum: { quantity: true, lineTotal: true },
         _count: true,
+      }),
+      prisma.orderItem.aggregate({
+        _sum: { quantity: true },
+      }),
+      prisma.orderItem.groupBy({
+        by: ['productId', 'productName', 'collectionId'],
+        _sum: { quantity: true, lineTotal: true },
+        orderBy: { _sum: { lineTotal: 'desc' } },
+        take: 15,
+      }),
+      prisma.product.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          image: true,
+          price: true,
+          collectionId: true,
+          stockQuantity: true,
+          inStock: true,
+        },
+        take: 30,
+      }),
+      prisma.product.findMany({
+        where: {
+          isActive: true,
+          stockQuantity: { lte: 10 },
+        },
+        orderBy: { stockQuantity: 'asc' },
+        take: 5,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          image: true,
+          price: true,
+          collectionId: true,
+          stockQuantity: true,
+          inStock: true,
+        },
       }),
     ]);
 
@@ -93,18 +138,26 @@ export async function getDashboardStats(req, res) {
         status: { in: ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED'] },
       },
       _sum: { totalAmount: true },
+      _count: true,
     });
 
     const paidRevenue = paidPaymentsAgg._sum.amount ? Number(paidPaymentsAgg._sum.amount) : 0;
     const grossSales = validOrdersAgg._sum.totalAmount ? Number(validOrdersAgg._sum.totalAmount) : 0;
+    const validOrdersCount = validOrdersAgg._count || 0;
+    const averageOrderValue = validOrdersCount > 0 ? Number((grossSales / validOrdersCount).toFixed(2)) : 0;
 
-    // Build last 14 days trend data
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const totalPaidAttempts = (paidPaymentsAgg._count || 0) + failedPaymentsCount;
+    const paymentSuccessRate = totalPaidAttempts > 0
+      ? Math.round(((paidPaymentsAgg._count || 0) / totalPaidAttempts) * 100)
+      : 100;
+
+    // Build last 30 days trend data
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const recentTrendOrders = await prisma.order.findMany({
       where: {
-        createdAt: { gte: fourteenDaysAgo },
+        createdAt: { gte: thirtyDaysAgo },
         status: { notIn: ['CANCELLED', 'PENDING_PAYMENT'] },
       },
       select: {
@@ -115,7 +168,7 @@ export async function getDashboardStats(req, res) {
 
     // Group by date YYYY-MM-DD
     const trendMap = {};
-    for (let i = 13; i >= 0; i--) {
+    for (let i = 29; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateKey = d.toISOString().split('T')[0];
@@ -132,6 +185,50 @@ export async function getDashboardStats(req, res) {
 
     const salesTrends = Object.values(trendMap);
 
+    // Build enriched top selling products list
+    const productLookup = new Map();
+    for (const p of allActiveProducts) {
+      productLookup.set(p.id, p);
+    }
+
+    const topSellingMap = new Map();
+    for (const item of orderItemsByProduct) {
+      const p = item.productId ? productLookup.get(item.productId) : null;
+      const key = item.productId || item.productName;
+      topSellingMap.set(key, {
+        id: item.productId || `order-item-${key}`,
+        name: p?.name || item.productName,
+        slug: p?.slug || '',
+        image: p?.image || '',
+        collectionId: p?.collectionId || item.collectionId,
+        price: p?.price !== null && p?.price !== undefined ? Number(p.price) : 0,
+        unitsSold: item._sum.quantity || 0,
+        revenue: Number(item._sum.lineTotal || 0),
+        stockQuantity: p?.stockQuantity ?? 50,
+        inStock: p?.inStock ?? true,
+      });
+    }
+
+    // Pad with active catalogue products if sales records are sparse
+    for (const p of allActiveProducts) {
+      if (!topSellingMap.has(p.id) && topSellingMap.size < 15) {
+        topSellingMap.set(p.id, {
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          image: p.image || '',
+          collectionId: p.collectionId,
+          price: p.price !== null ? Number(p.price) : 0,
+          unitsSold: 0,
+          revenue: 0,
+          stockQuantity: p.stockQuantity ?? 50,
+          inStock: p.inStock ?? true,
+        });
+      }
+    }
+
+    const topSellingProducts = Array.from(topSellingMap.values());
+
     return res.status(200).json({
       success: true,
       metrics: {
@@ -144,6 +241,9 @@ export async function getDashboardStats(req, res) {
         failedPayments: failedPaymentsCount,
         lowStockCount: lowStockProducts,
         outOfStockCount: outOfStockProducts,
+        totalUnitsSold: totalUnitsSoldAgg._sum.quantity || 0,
+        averageOrderValue,
+        paymentSuccessRate,
       },
       recentOrders: recentOrders.map((o) => ({
         id: o.id,
@@ -161,6 +261,17 @@ export async function getDashboardStats(req, res) {
         totalQuantitySold: c._sum.quantity || 0,
         totalRevenue: Number(c._sum.lineTotal || 0),
         itemsCount: c._count,
+      })),
+      topSellingProducts,
+      lowStockList: lowStockList.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        image: p.image,
+        price: p.price ? Number(p.price) : 0,
+        collectionId: p.collectionId,
+        stockQuantity: p.stockQuantity,
+        inStock: p.inStock,
       })),
     });
   } catch (err) {

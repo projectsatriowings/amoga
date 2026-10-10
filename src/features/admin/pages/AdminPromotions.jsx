@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Calculator } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { AdminPagination } from '../components/AdminPagination';
 
 export function AdminPromotions() {
   const { adminFetch } = useAdminStore();
   const [coupons, setCoupons] = useState([]);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -215,7 +217,7 @@ export function AdminPromotions() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE4D9]">
-                {coupons.map((c) => (
+                {coupons.slice((page - 1) * 10, page * 10).map((c) => (
                   <tr key={c.id} className="hover:bg-[#F5F2EB]/50 transition-colors">
                     <td className="px-5 py-3 font-mono font-bold text-[#1A1817]">
                       {c.code}
@@ -270,6 +272,16 @@ export function AdminPromotions() {
             </table>
           </div>
         )}
+
+        {/* Pagination */}
+        <AdminPagination
+          currentPage={page}
+          totalPages={Math.ceil(coupons.length / 10) || 1}
+          totalItems={coupons.length}
+          pageSize={10}
+          onPageChange={setPage}
+          itemName="coupons"
+        />
       </div>
 
       {/* Create Coupon Modal */}

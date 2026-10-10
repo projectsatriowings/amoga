@@ -3,12 +3,21 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, AlertCircle, CheckCircle2, ArrowRight, RefreshCw, Boxes } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 
-export function InventoryAlertsCard({ lowStockCount = 0, outOfStockCount = 0 }) {
+export function InventoryAlertsCard({
+  lowStockCount = 0,
+  outOfStockCount = 0,
+  lowStockList = null,
+}) {
   const { adminFetch } = useAdminStore();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (lowStockList && Array.isArray(lowStockList)) {
+      setItems(lowStockList.slice(0, 4));
+      return;
+    }
+
     let isMounted = true;
     async function loadAlertItems() {
       setLoading(true);
@@ -32,7 +41,7 @@ export function InventoryAlertsCard({ lowStockCount = 0, outOfStockCount = 0 }) 
     return () => {
       isMounted = false;
     };
-  }, [adminFetch]);
+  }, [adminFetch, lowStockList]);
 
   return (
     <div className="space-y-4">

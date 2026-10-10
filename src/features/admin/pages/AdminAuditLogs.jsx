@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { AdminPagination } from '../components/AdminPagination';
 
 export function AdminAuditLogs() {
   const { adminFetch } = useAdminStore();
@@ -19,7 +20,7 @@ export function AdminAuditLogs() {
     try {
       const params = new URLSearchParams({
         page: String(page),
-        limit: '25',
+        limit: '10',
         entityType,
       });
 
@@ -161,29 +162,14 @@ export function AdminAuditLogs() {
         )}
 
         {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="p-4 border-t border-[#E5E0D5] flex items-center justify-between text-xs text-[#7A7167]">
-            <span>
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                disabled={pagination.page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="p-1.5 border border-[#D5CEC2] rounded bg-white disabled:opacity-40"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                disabled={pagination.page >= pagination.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="p-1.5 border border-[#D5CEC2] rounded bg-white disabled:opacity-40"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <AdminPagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.total}
+          pageSize={10}
+          onPageChange={(p) => setPage(p)}
+          itemName="audit events"
+        />
       </div>
 
       {/* Payload Modal */}

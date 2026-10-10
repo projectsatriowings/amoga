@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { AdminPagination } from '../components/AdminPagination';
 
 export function AdminUsers() {
   const { adminFetch, admin } = useAdminStore();
   const [users, setUsers] = useState([]);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -125,7 +127,7 @@ export function AdminUsers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE4D9]">
-                {users.map((u) => (
+                {users.slice((page - 1) * 10, page * 10).map((u) => (
                   <tr key={u.id} className="hover:bg-[#F5F2EB]/50 transition-colors">
                     <td className="px-5 py-3 font-medium text-[#1A1817]">
                       {u.name}
@@ -173,6 +175,16 @@ export function AdminUsers() {
             </table>
           </div>
         )}
+
+        {/* Pagination */}
+        <AdminPagination
+          currentPage={page}
+          totalPages={Math.ceil(users.length / 10) || 1}
+          totalItems={users.length}
+          pageSize={10}
+          onPageChange={setPage}
+          itemName="staff members"
+        />
       </div>
 
       {/* Add Staff Member Modal */}

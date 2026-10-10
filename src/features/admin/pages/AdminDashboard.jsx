@@ -18,7 +18,11 @@ import {
 import { useAdminStore } from '../store/useAdminStore';
 import { BentoCard } from '../components/BentoCard';
 import { BentoKpiCard } from '../components/BentoKpiCard';
+import { SecondaryKpiRow } from '../components/SecondaryKpiRow';
 import { SalesAnalyticsChart } from '../components/SalesAnalyticsChart';
+import { CollectionDonutChart } from '../components/CollectionDonutChart';
+import { SupportingPerformanceCard } from '../components/SupportingPerformanceCard';
+import { TopSellingProductsTable } from '../components/TopSellingProductsTable';
 import { OrderLifecycleCard } from '../components/OrderLifecycleCard';
 import { CollectionContributionCard } from '../components/CollectionContributionCard';
 import { InventoryAlertsCard } from '../components/InventoryAlertsCard';
@@ -29,8 +33,8 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.05,
+      staggerChildren: 0.04,
+      delayChildren: 0.03,
     },
   },
 };
@@ -105,7 +109,14 @@ export function AdminDashboard() {
     );
   }
 
-  const { metrics, recentOrders, salesTrends, collectionPerformance } = data;
+  const {
+    metrics,
+    recentOrders,
+    salesTrends,
+    collectionPerformance,
+    topSellingProducts = [],
+    lowStockList = [],
+  } = data;
 
   return (
     <motion.div
@@ -196,11 +207,14 @@ export function AdminDashboard() {
         />
       </div>
 
-      {/* Row 2: Bento Split — Sales Analytics Chart (8 Cols) & Order Lifecycle (4 Cols) */}
+      {/* Row 2: Secondary Compact KPI Operational Row */}
+      <SecondaryKpiRow metrics={metrics} />
+
+      {/* Row 3: Sales Analytics Chart (8 Cols) & Collection Donut Chart (4 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <BentoCard
           title="Sales Volume Trend"
-          subtitle="Daily sales velocity over the last 14 days"
+          subtitle="Daily sales velocity with interactive time-range selector"
           className="lg:col-span-8"
           badge={
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#762F39]/10 text-[#762F39] border border-[#762F39]/20 font-medium">
@@ -212,20 +226,66 @@ export function AdminDashboard() {
         </BentoCard>
 
         <BentoCard
-          title="Orders by Lifecycle State"
-          subtitle="Real-time pipeline distribution"
+          title="Collection Sales Donut"
+          subtitle="Revenue distribution by luxury category"
           className="lg:col-span-4"
           badge={
             <span className="text-[10px] font-mono text-[#746F63]">
-              {metrics.totalOrders} total
+              4 Collections
             </span>
           }
         >
-          <OrderLifecycleCard ordersByStatus={metrics.ordersByStatus} />
+          <CollectionDonutChart collectionPerformance={collectionPerformance} />
         </BentoCard>
       </div>
 
-      {/* Row 3: Collection Sales Contribution (8 Cols) & Inventory Alerts (4 Cols) */}
+      {/* Row 4: Top-Selling Products Performance Table (8 Cols) & Supporting Performance / Stock Attention (4 Cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <BentoCard
+          title="Top-Selling Products Performance"
+          subtitle="Catalogue sales volume, revenue contribution, and SKU inventory status"
+          className="lg:col-span-8"
+          action={
+            <Link
+              to="/admin/products"
+              className="text-xs text-[#762F39] hover:underline font-medium inline-flex items-center gap-1"
+            >
+              <span>Manage Catalogue</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          }
+        >
+          <TopSellingProductsTable products={topSellingProducts} />
+        </BentoCard>
+
+        <div className="lg:col-span-4 space-y-5 flex flex-col justify-between">
+          <BentoCard
+            title="Commercial Efficiency"
+            subtitle="Authoritative conversion & ticket size"
+            className="flex-1"
+          >
+            <SupportingPerformanceCard
+              averageOrderValue={metrics.averageOrderValue}
+              paymentSuccessRate={metrics.paymentSuccessRate}
+              grossSales={metrics.grossSales}
+            />
+          </BentoCard>
+
+          <BentoCard
+            title="Stock & Operational Health"
+            subtitle="Active SKU threshold monitoring"
+            className="flex-1"
+          >
+            <InventoryAlertsCard
+              lowStockCount={metrics.lowStockCount}
+              outOfStockCount={metrics.outOfStockCount}
+              lowStockList={lowStockList}
+            />
+          </BentoCard>
+        </div>
+      </div>
+
+      {/* Row 5: Collection Sales Contribution (8 Cols) & Orders by Lifecycle State (4 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <BentoCard
           title="Collection Sales Contribution"
@@ -245,18 +305,20 @@ export function AdminDashboard() {
         </BentoCard>
 
         <BentoCard
-          title="Stock & Operational Health"
-          subtitle="Active SKU threshold monitoring"
+          title="Orders by Lifecycle State"
+          subtitle="Real-time pipeline distribution"
           className="lg:col-span-4"
+          badge={
+            <span className="text-[10px] font-mono text-[#746F63]">
+              {metrics.totalOrders} total
+            </span>
+          }
         >
-          <InventoryAlertsCard
-            lowStockCount={metrics.lowStockCount}
-            outOfStockCount={metrics.outOfStockCount}
-          />
+          <OrderLifecycleCard ordersByStatus={metrics.ordersByStatus} />
         </BentoCard>
       </div>
 
-      {/* Row 4: Recent Orders Stream (Full Width 12-Columns) */}
+      {/* Row 6: Recent Orders Stream (Full Width 12-Columns with 10-Item Pagination) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <BentoCard
           title="Recent Order Stream"

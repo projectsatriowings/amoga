@@ -12,7 +12,10 @@ export function SalesAnalyticsChart({ salesTrends = [] }) {
     if (timeRange === '7d') {
       return salesTrends.slice(-7);
     }
-    return salesTrends.slice(-14);
+    if (timeRange === '14d') {
+      return salesTrends.slice(-14);
+    }
+    return salesTrends.slice(-30);
   }, [salesTrends, timeRange]);
 
   const maxRevenue = useMemo(() => {
@@ -73,6 +76,16 @@ export function SalesAnalyticsChart({ salesTrends = [] }) {
             }`}
           >
             Last 14D
+          </button>
+          <button
+            onClick={() => setTimeRange('30d')}
+            className={`px-2.5 py-1 text-xs font-mono font-medium rounded-md transition-all ${
+              timeRange === '30d'
+                ? 'bg-[#762F39] text-white shadow-xs'
+                : 'text-[#746F63] hover:text-[#292820] hover:bg-[#FFFFFF]'
+            }`}
+          >
+            Last 30D
           </button>
         </div>
       </div>

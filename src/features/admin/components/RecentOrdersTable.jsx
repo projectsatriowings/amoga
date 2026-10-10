@@ -2,12 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowUpDown, ExternalLink, ArrowRight, Filter, ChevronRight } from 'lucide-react';
+import { AdminPagination } from './AdminPagination';
 
 export function RecentOrdersTable({ orders = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [sortField, setSortField] = useState('createdAt');
   const [sortAsc, setSortAsc] = useState(false);
+  const [page, setPage] = useState(1);
 
   const filteredOrders = useMemo(() => {
     return orders
@@ -32,6 +34,10 @@ export function RecentOrdersTable({ orders = [] }) {
         return sortAsc ? diff : -diff;
       });
   }, [orders, searchTerm, statusFilter, sortField, sortAsc]);
+
+  const paginatedOrders = useMemo(() => {
+    return filteredOrders.slice((page - 1) * 10, page * 10);
+  }, [filteredOrders, page]);
 
   const toggleSort = (field) => {
     if (sortField === field) {
@@ -142,7 +148,7 @@ export function RecentOrdersTable({ orders = [] }) {
                 </td>
               </tr>
             ) : (
-              filteredOrders.map((ord) => (
+              paginatedOrders.map((ord) => (
                 <tr
                   key={ord.id}
                   className="hover:bg-[#FAF8F5] transition-colors duration-150 group"
@@ -211,7 +217,7 @@ export function RecentOrdersTable({ orders = [] }) {
             No orders match the current filter.
           </div>
         ) : (
-          filteredOrders.map((ord) => (
+          paginatedOrders.map((ord) => (
             <Link
               key={ord.id}
               to={`/admin/orders/${ord.id}`}
@@ -245,6 +251,16 @@ export function RecentOrdersTable({ orders = [] }) {
           ))
         )}
       </div>
+
+      {/* Pagination */}
+      <AdminPagination
+        currentPage={page}
+        totalPages={Math.ceil(filteredOrders.length / 10) || 1}
+        totalItems={filteredOrders.length}
+        pageSize={10}
+        onPageChange={setPage}
+        itemName="orders"
+      />
     </div>
   );
 }
