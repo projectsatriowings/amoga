@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import amogaLogo from '../../../assets/images/amoga-logo.png';
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -52,21 +53,23 @@ export function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F4EE] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8F6F0] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded bg-[#722F37] text-white font-serif font-bold text-2xl shadow-lg border border-[#C5A46D]/50 mb-4">
-          A
-        </div>
-        <h2 className="font-serif text-3xl font-bold tracking-tight text-[#1A1817]">
+        <img
+          src={amogaLogo}
+          alt="Amoga Luxury Atelier"
+          className="h-12 w-auto mx-auto object-contain mb-4 shrink-0"
+        />
+        <h2 className="font-serif text-3xl font-bold tracking-tight text-[#292820]">
           AMOGA ATELIER
         </h2>
-        <p className="mt-1 text-xs tracking-widest uppercase font-mono text-[#8C6320]">
+        <p className="mt-1 text-xs tracking-widest uppercase font-mono text-[#B08A4D]">
           Staff Administration Portal
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-        <div className="bg-[#FBF9F5] py-8 px-6 shadow-sm border border-[#E5E0D5] rounded-lg sm:px-10">
+        <div className="bg-[#FFFFFF] py-8 px-6 shadow-sm border border-[#E5E0D5] rounded-xl sm:px-10">
           {error && (
             <div className="mb-6 p-3 rounded bg-red-50 border border-red-200 flex items-center gap-3 text-red-800 text-xs">
               <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-600" />

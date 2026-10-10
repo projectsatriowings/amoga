@@ -34,7 +34,7 @@ export function AppShell({ children }) {
   return (
     <div
       data-collection={collectionTheme}
-      className={`min-h-screen flex flex-col transition-colors duration-normal ease-smooth ${
+      className={`min-h-screen flex flex-col w-full overflow-x-hidden transition-colors duration-normal ease-smooth ${
         activeCollection
           ? `theme-${activeCollection.theme}`
           : isCheckoutRoute

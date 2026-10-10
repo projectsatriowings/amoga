@@ -158,7 +158,7 @@ export function AdminOrders() {
         ) : orders.length === 0 ? (
           <div className="p-12 text-center text-xs text-[#7A7167]">No orders matched the filter criteria.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="w-full overflow-hidden">
             <table className="w-full text-left text-xs text-[#332D28]">
               <thead className="bg-[#F5F2EB] text-[10px] font-mono uppercase tracking-wider text-[#7A7167] border-b border-[#E5E0D5]">
                 <tr>
@@ -181,7 +181,7 @@ export function AdminOrders() {
                       <p className="font-medium text-[#1A1817]">{ord.customerName}</p>
                       <p className="text-[11px] text-[#7A7167] font-mono">{ord.customerEmail}</p>
                     </td>
-                    <td className="px-5 py-3 font-serif font-bold text-[#1A1817]">
+                    <td className="px-5 py-3 font-sans font-semibold text-[#1A1817] tabular-nums whitespace-nowrap">
                       ₹{ord.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-5 py-3">
