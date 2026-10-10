@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, ShieldCheck, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { SystemHealthCard } from '../components/SystemHealthCard';
 
 export function AdminSettings() {
   const { adminFetch, admin } = useAdminStore();
@@ -86,40 +87,24 @@ export function AdminSettings() {
         </div>
       )}
 
-      {/* Infrastructure Card */}
-      {environment && (
-        <div className="bg-[#1E1916] text-[#E8E2D8] p-5 rounded-lg border border-[#38312B] space-y-3">
-          <div className="flex items-center justify-between border-b border-[#38312B] pb-2">
-            <span className="font-serif text-sm font-bold text-[#F5F2EB] flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#C5A46D]" />
-              <span>Production Security & Provider Status</span>
-            </span>
-            <span className="text-[10px] font-mono text-[#C5A46D] uppercase">Encrypted Server Runtime</span>
+      {/* Infrastructure & Security Health */}
+      <div className="bg-[#FFFFFF] p-5 rounded-xl border border-[#E5E0D5] space-y-4 shadow-2xs">
+        <div className="flex items-center justify-between border-b border-[#F0EBE1] pb-3">
+          <div>
+            <h2 className="font-serif text-sm font-bold text-[#292820] flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#762F39]" />
+              <span>Infrastructure & Security Health</span>
+            </h2>
+            <p className="text-[11px] text-[#746F63] mt-0.5 font-sans">
+              Live operational verification across Neon PostgreSQL and Razorpay Sandbox
+            </p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div className="p-3 bg-[#28211C] rounded border border-[#3D332C]">
-              <span className="text-[10px] text-[#A89F93] uppercase font-mono block">Database Storage</span>
-              <span className="font-semibold text-emerald-400 mt-1 block">PostgreSQL (Neon Cloud)</span>
-              <span className="text-[10px] text-[#A89F93]">SSL / TLS Connected</span>
-            </div>
-
-            <div className="p-3 bg-[#28211C] rounded border border-[#3D332C]">
-              <span className="text-[10px] text-[#A89F93] uppercase font-mono block">Payment Gateway</span>
-              <span className="font-semibold text-[#C5A46D] mt-1 block">
-                Razorpay ({environment.paymentMode})
-              </span>
-              <span className="text-[10px] text-[#A89F93]">Live Credentials Protected</span>
-            </div>
-
-            <div className="p-3 bg-[#28211C] rounded border border-[#3D332C]">
-              <span className="text-[10px] text-[#A89F93] uppercase font-mono block">Audit Integrity</span>
-              <span className="font-semibold text-[#F5F2EB] mt-1 block">Append-Only Logs</span>
-              <span className="text-[10px] text-[#A89F93]">Immutable Forensic History</span>
-            </div>
-          </div>
+          <span className="text-[10px] font-mono font-medium text-[#3F5A35] bg-[#3F5A35]/10 px-2 py-0.5 rounded border border-[#3F5A35]/20">
+            All Systems Healthy
+          </span>
         </div>
-      )}
+        <SystemHealthCard />
+      </div>
 
       {/* Editable Business Settings Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

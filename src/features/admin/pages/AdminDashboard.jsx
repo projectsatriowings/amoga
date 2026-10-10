@@ -23,7 +23,6 @@ import { OrderLifecycleCard } from '../components/OrderLifecycleCard';
 import { CollectionContributionCard } from '../components/CollectionContributionCard';
 import { InventoryAlertsCard } from '../components/InventoryAlertsCard';
 import { RecentOrdersTable } from '../components/RecentOrdersTable';
-import { SystemHealthCard } from '../components/SystemHealthCard';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -274,17 +273,6 @@ export function AdminDashboard() {
           }
         >
           <RecentOrdersTable orders={recentOrders} />
-        </BentoCard>
-      </div>
-
-      {/* Row 5: Infrastructure & System Telemetry (Full Width 12-Columns) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <BentoCard
-          title="Infrastructure & Security Health"
-          subtitle="Enterprise operational verification across Neon PostgreSQL and Razorpay Sandbox"
-          className="lg:col-span-12"
-        >
-          <SystemHealthCard />
         </BentoCard>
       </div>
     </motion.div>

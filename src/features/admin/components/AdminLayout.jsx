@@ -173,16 +173,24 @@ export function AdminLayout() {
         onClose={() => setCommandPaletteOpen(false)}
       />
 
-      {/* Sidebar Desktop */}
+      {/* Sidebar Desktop Spacer (preserves document flow while aside is fixed) */}
+      <motion.div
+        animate={{ width: isCollapsed ? 80 : 256 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="hidden lg:block shrink-0 pointer-events-none"
+        aria-hidden="true"
+      />
+
+      {/* Sidebar Desktop - Fixed & Sticky */}
       <motion.aside
         animate={{ width: isCollapsed ? 80 : 256 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="hidden lg:flex flex-col bg-[#201916] text-[#E8E2D8] border-r border-[#38312B] flex-shrink-0 select-none z-30 sticky top-0 h-screen"
+        className="hidden lg:flex flex-col bg-[#201916] text-[#E8E2D8] border-r border-[#38312B] flex-shrink-0 select-none z-30 fixed top-0 bottom-0 left-0 h-screen"
       >
         {/* Brand Header */}
         <div
-          className={`border-b border-[#38312B]/70 flex items-center transition-all ${
-            isCollapsed ? 'p-3 flex-col gap-2.5 justify-center' : 'p-4 justify-between'
+          className={`border-b border-[#38312B]/70 flex items-center shrink-0 transition-all ${
+            isCollapsed ? 'p-3 flex-col gap-2.5 items-center justify-center' : 'p-4 justify-between'
           }`}
         >
           <Link
@@ -264,7 +272,7 @@ export function AdminLayout() {
         </nav>
 
         {/* User Footer */}
-        <div className="p-3 border-t border-[#38312B] bg-[#161210]">
+        <div className="p-3 border-t border-[#38312B] bg-[#161210] shrink-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 overflow-hidden">
               <div className="w-8 h-8 rounded-full bg-[#3D332C] text-[#B08A4D] font-mono text-xs flex items-center justify-center font-bold flex-shrink-0 border border-[#B08A4D]/30">
