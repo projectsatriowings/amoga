@@ -89,7 +89,7 @@ export function TeaProductList() {
 
 
   return (
-    <div className="relative bg-[#F8F6F0] text-[#292820] min-h-screen py-8 sm:py-12 overflow-hidden">
+    <div className="relative bg-[#FAF1BB] text-[#2C1E11] min-h-screen py-8 sm:py-12 overflow-hidden">
       {/* Drawers */}
       <CartDrawer />
       <WishlistDrawer />
@@ -102,33 +102,33 @@ export function TeaProductList() {
         <div className="mb-6 flex items-center justify-between">
           <Link
             to="/tea"
-            className="inline-flex items-center gap-1.5 text-xs text-[#65815A] hover:text-[#173B2A] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-[#8C6320] hover:text-[#2C1E11] font-medium transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Wellness Tea Overview</span>
           </Link>
 
-          <span className="text-xs font-mono text-[#173B2A] bg-white px-3.5 py-1 rounded-full border border-[#E5E0D5] shadow-2xs">
+          <span className="text-xs font-mono text-[#2C1E11] bg-[#FFFDF5] px-3.5 py-1 rounded-full border border-[#B88E38]/30 shadow-sm">
             {filteredProducts.length} Botanical {filteredProducts.length === 1 ? 'Variety' : 'Varieties'} Available
           </span>
         </div>
 
         {/* Page Header */}
         <div className="mb-8 space-y-2 max-w-3xl">
-          <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#65815A]">
-            <Sparkles className="w-3.5 h-3.5 text-[#65815A]" />
+          <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#8C6320]">
+            <Sparkles className="w-3.5 h-3.5 text-[#8C6320]" />
             <span>BOTANICAL WELLNESS</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#173B2A]">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#2C1E11]">
             Botanical Teas & Herbal Infusions
           </h1>
-          <p className="text-xs sm:text-sm text-[#292820]/80 leading-relaxed font-sans">
+          <p className="text-xs sm:text-sm text-[#543B25] leading-relaxed font-sans">
             Explore our selection of botanical teas and herbal infusions, bringing distinctive ingredients and comforting tea rituals to your everyday routine.
           </p>
         </div>
 
         {/* Search & Sort Controls */}
-        <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#E5E0D5] shadow-2xs mb-8">
+        <div className="p-4 rounded-2xl bg-[#FFFDF5] border border-[#B88E38]/30 shadow-sm mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
@@ -137,9 +137,9 @@ export function TeaProductList() {
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Search botanical teas, petals, or herbal infusions..."
-                className="w-full pl-9 pr-9 py-2 rounded-xl text-xs bg-[#F8F6F0] border border-[#E5E0D5] focus:border-[#173B2A] focus:bg-white focus:outline-none text-[#292820] transition-all shadow-inner"
+                className="w-full pl-9 pr-9 py-2 rounded-xl text-xs bg-[#FFFDF5] border border-[#B88E38]/30 focus:border-[#8C6320] focus:bg-white focus:outline-none text-[#2C1E11] transition-all shadow-inner"
               />
-              <Search className="w-4 h-4 text-[#746F63] absolute left-3 top-2.5 pointer-events-none" />
+              <Search className="w-4 h-4 text-[#8C6320] absolute left-3 top-2.5 pointer-events-none" />
               {searchQuery && (
                 <button
                   type="button"
@@ -153,14 +153,14 @@ export function TeaProductList() {
 
             {/* Sorting */}
             <div className="flex items-center gap-3 shrink-0">
-              <div className="flex items-center gap-1.5 text-xs text-[#746F63] font-mono">
+              <div className="flex items-center gap-1.5 text-xs text-[#543B25] font-mono">
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Sort by:</span>
               </div>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="py-1.5 px-3 rounded-lg text-xs font-mono font-medium bg-[#F8F6F0] border border-[#E5E0D5] focus:border-[#173B2A] text-[#292820] focus:outline-none shadow-2xs cursor-pointer"
+                className="py-1.5 px-3 rounded-lg text-xs font-mono font-medium bg-[#FFFDF5] border border-[#B88E38]/30 focus:border-[#8C6320] text-[#2C1E11] focus:outline-none shadow-sm cursor-pointer"
               >
                 <option value="featured">Featured Rituals</option>
                 <option value="name_asc">Name: A to Z</option>
@@ -174,18 +174,18 @@ export function TeaProductList() {
 
         {/* Product Grid or Empty State */}
         {filteredProducts.length === 0 ? (
-          <div className="py-20 text-center bg-[#FFFFFF] border border-[#E5E0D5] rounded-3xl p-8 max-w-xl mx-auto shadow-2xs space-y-4">
-            <PackageSearch className="w-12 h-12 text-[#746F63] mx-auto opacity-60" />
-            <h2 className="text-xl font-serif text-[#173B2A]">
+          <div className="py-20 text-center bg-[#FFFDF5] border border-[#B88E38]/30 rounded-3xl p-8 max-w-xl mx-auto shadow-sm space-y-4">
+            <PackageSearch className="w-12 h-12 text-[#8C6320] mx-auto opacity-60" />
+            <h2 className="text-xl font-serif text-[#2C1E11]">
               No Botanical Varieties Found
             </h2>
-            <p className="text-xs text-[#746F63] leading-relaxed max-w-sm mx-auto">
+            <p className="text-xs text-[#543B25] leading-relaxed max-w-sm mx-auto">
               We couldn't find any teas matching "{searchQuery}". Try searching for hibiscus, blue pea, or cinnamon.
             </p>
             <button
               type="button"
               onClick={clearAllFilters}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#173B2A] text-white text-xs font-mono uppercase tracking-wider hover:bg-[#65815A] transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-mono uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-sm"
             >
               Clear Search Filter
             </button>

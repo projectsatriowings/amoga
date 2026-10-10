@@ -59,7 +59,7 @@ export function TeaProductDetail() {
     return (
       <div className="bg-[#FAF1BB] text-[#2C1E11] min-h-[70vh] flex items-center justify-center py-16">
         <Container size="narrow" className="text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-[#FDF9E7] text-[#8C6320] flex items-center justify-center mx-auto border border-[#B88E38]/30">
+          <div className="w-16 h-16 rounded-full bg-[#FAF1BB] text-[#8C6320] flex items-center justify-center mx-auto border border-[#B88E38]/30">
             <HelpCircle className="w-8 h-8 opacity-70" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif text-[#2C1E11]">
@@ -124,7 +124,7 @@ export function TeaProductDetail() {
         </nav>
 
         {/* Main Product Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 bg-[#FDF9E7] p-6 sm:p-10 rounded-3xl border border-[#B88E38]/25 shadow-lg mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 bg-[#FFFDF5] p-6 sm:p-10 rounded-3xl border border-[#B88E38]/30 shadow-lg mb-16">
           {/* Left Column: Product Photography */}
           <div className="lg:col-span-6 space-y-4">
             <div className="relative rounded-2xl overflow-hidden aspect-square bg-[#FAF1BB]/60 border border-[#B88E38]/20 shadow-md">

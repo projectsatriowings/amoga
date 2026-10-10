@@ -24,7 +24,7 @@ export function AppHeader({ activeCollection }) {
   // Dynamic header styles based on active collection
   const headerThemeStyles = {
     food: 'bg-[#F3F0E7]/95 text-[#173B2A] border-[#D9DCCD]',
-    tea: 'bg-[#F0F1E8]/95 text-[#263A2D] border-[#D5DDCE]',
+    tea: 'bg-[#FAF1BB]/95 text-[#2C1E11] border-[#B88E38]/20',
     sarees: 'bg-[#F3EAE1]/95 text-[#3B111E] border-[#E0CFC0]',
     jewellery: 'bg-[#F0F1F1]/95 text-[#25272A] border-[#D6D9DC]',
     neutral: 'bg-[#F4F2EC]/95 text-[#292820] border-[#DCD6C7]',
