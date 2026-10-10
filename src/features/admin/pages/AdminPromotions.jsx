@@ -221,16 +221,16 @@ export function AdminPromotions() {
                       {c.code}
                     </td>
                     <td className="px-5 py-3">
-                      <span className="font-semibold text-[#722F37]">
+                      <span className="font-sans font-semibold tabular-nums text-[#722F37]">
                         {c.discountType === 'PERCENTAGE' ? `${c.discountValue}% OFF` : `₹${c.discountValue} FLAT OFF`}
                       </span>
                       {c.maxDiscountAmount && (
-                        <span className="text-[10px] font-mono text-[#8C8377] block">
+                        <span className="text-[10px] font-sans tabular-nums text-[#8C8377] block">
                           Cap: ₹{c.maxDiscountAmount}
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-3 text-[#5C544C]">
+                    <td className="px-5 py-3 text-[#5C544C] font-sans tabular-nums">
                       {c.minOrderAmount ? `Min Order ₹${c.minOrderAmount}` : 'No minimum'}
                       {c.expiresAt && (
                         <span className="text-[10px] text-[#8C8377] block font-mono">
@@ -238,7 +238,7 @@ export function AdminPromotions() {
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-3 font-mono">
+                    <td className="px-5 py-3 font-sans tabular-nums">
                       {c.usedCount} {c.usageLimit ? `/ ${c.usageLimit} max` : 'used'}
                     </td>
                     <td className="px-5 py-3">

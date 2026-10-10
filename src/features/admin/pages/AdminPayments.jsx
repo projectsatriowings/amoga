@@ -178,7 +178,7 @@ export function AdminPayments() {
                     <td className="px-5 py-3 font-mono text-[#5C544C]">
                       {p.order?.orderReference || p.orderId}
                     </td>
-                    <td className="px-5 py-3 font-serif font-bold text-[#1A1817]">
+                    <td className="px-5 py-3 font-sans font-semibold text-[#1A1817] tabular-nums whitespace-nowrap">
                       ₹{p.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-5 py-3 font-mono text-[11px] uppercase text-[#7A7167]">

@@ -141,25 +141,25 @@ export function AdminReports() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-[#FBF9F5] p-5 rounded-lg border border-[#E5E0D5]">
               <span className="text-xs font-mono uppercase text-[#7A7167]">Net Captured Payments</span>
-              <p className="text-2xl font-serif font-bold text-[#1A1817] mt-2">
+              <p className="text-2xl font-sans font-semibold text-[#1A1817] tabular-nums mt-2">
                 ₹{report.netCapturedRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-[11px] text-[#287A25] font-medium mt-1">
+              <p className="text-[11px] text-[#287A25] font-medium mt-1 font-sans tabular-nums">
                 {report.paymentsCapturedCount} captured transactions
               </p>
             </div>
 
             <div className="bg-[#FBF9F5] p-5 rounded-lg border border-[#E5E0D5]">
               <span className="text-xs font-mono uppercase text-[#7A7167]">Gross Sales</span>
-              <p className="text-2xl font-serif font-bold text-[#1A1817] mt-2">
+              <p className="text-2xl font-sans font-semibold text-[#1A1817] tabular-nums mt-2">
                 ₹{report.grossRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-[11px] text-[#7A7167] mt-1">{report.paidOrdersCount} fulfilled orders</p>
+              <p className="text-[11px] text-[#7A7167] mt-1 font-sans tabular-nums">{report.paidOrdersCount} fulfilled orders</p>
             </div>
 
             <div className="bg-[#FBF9F5] p-5 rounded-lg border border-[#E5E0D5]">
               <span className="text-xs font-mono uppercase text-[#7A7167]">Average Order Value (AOV)</span>
-              <p className="text-2xl font-serif font-bold text-[#8C6320] mt-2">
+              <p className="text-2xl font-sans font-semibold text-[#8C6320] tabular-nums mt-2">
                 ₹{report.averageOrderValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </p>
               <p className="text-[11px] text-[#7A7167] mt-1">Per paid checkout</p>
@@ -167,7 +167,7 @@ export function AdminReports() {
 
             <div className="bg-[#FBF9F5] p-5 rounded-lg border border-[#E5E0D5]">
               <span className="text-xs font-mono uppercase text-[#7A7167]">Total Orders Registered</span>
-              <p className="text-2xl font-serif font-bold text-[#1A1817] mt-2">
+              <p className="text-2xl font-sans font-semibold text-[#1A1817] tabular-nums mt-2">
                 {report.totalOrdersPlaced}
               </p>
               <p className="text-[11px] text-rose-700 mt-1">{report.failedPaymentsCount} payment drops</p>

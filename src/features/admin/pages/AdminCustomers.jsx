@@ -137,10 +137,10 @@ export function AdminCustomers() {
                     <td className="px-5 py-3 text-[#5C544C]">
                       {c.city}, {c.state} ({c.pincode})
                     </td>
-                    <td className="px-5 py-3 font-mono font-bold text-[#1A1817]">
+                    <td className="px-5 py-3 font-sans font-semibold tabular-nums text-[#1A1817]">
                       {c.totalOrders}
                     </td>
-                    <td className="px-5 py-3 font-serif font-bold text-[#722F37]">
+                    <td className="px-5 py-3 font-sans font-semibold tabular-nums text-[#722F37]">
                       ₹{c.totalSpent.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-5 py-3 font-mono text-[#7A7167]">
@@ -212,7 +212,7 @@ export function AdminCustomers() {
               </div>
               <div>
                 <span className="text-[#7A7167] block">Lifetime Value:</span>
-                <span className="font-serif font-bold text-[#722F37]">
+                <span className="font-sans font-bold tabular-nums text-[#722F37]">
                   ₹{selectedCustomer.totalSpent.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </span>
               </div>
@@ -234,7 +234,7 @@ export function AdminCustomers() {
                       <span className="text-[10px] text-[#7A7167] block">{new Date(ord.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-serif font-bold text-[#1A1817] block">
+                      <span className="font-sans font-semibold tabular-nums text-[#1A1817] block">
                         ₹{ord.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
                       <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-stone-100 text-[#4A423B]">

@@ -233,10 +233,10 @@ export function AdminProducts() {
                         {p.collection?.name || p.collectionId}
                       </span>
                     </td>
-                    <td className="px-5 py-3 font-serif font-bold text-[#1A1817]">
+                    <td className="px-5 py-3 font-sans font-semibold text-[#1A1817] tabular-nums whitespace-nowrap">
                       {p.price !== null ? `₹${p.price.toLocaleString('en-IN')}` : 'Bespoke / Unpriced'}
                     </td>
-                    <td className="px-5 py-3 font-mono">
+                    <td className="px-5 py-3 font-sans tabular-nums">
                       <span
                         className={`font-semibold ${
                           p.stockQuantity <= 0
@@ -249,7 +249,7 @@ export function AdminProducts() {
                         {p.stockQuantity} units
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-[#7A7167] font-mono">
+                    <td className="px-5 py-3 text-[#7A7167] font-sans tabular-nums">
                       {p.variants?.length ? `${p.variants.length} options` : 'Standard'}
                     </td>
                     <td className="px-5 py-3">

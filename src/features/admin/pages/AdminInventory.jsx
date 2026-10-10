@@ -236,7 +236,7 @@ export function AdminInventory() {
                     <td className="px-5 py-3 font-mono text-[11px] text-[#5C544C]">
                       {item.collectionName}
                     </td>
-                    <td className="px-5 py-3 font-mono font-bold">
+                    <td className="px-5 py-3 font-sans font-semibold tabular-nums">
                       <span
                         className={
                           item.stockQuantity <= 0
@@ -268,9 +268,9 @@ export function AdminInventory() {
                       {item.variants && item.variants.length > 0 ? (
                         <div className="space-y-1">
                           {item.variants.map((v) => (
-                            <div key={v.id} className="flex items-center justify-between text-[11px] font-mono bg-white px-2 py-0.5 rounded border border-[#E5E0D5]">
+                            <div key={v.id} className="flex items-center justify-between text-[11px] bg-white px-2 py-0.5 rounded border border-[#E5E0D5]">
                               <span className="text-[#4A423B]">{v.name}:</span>
-                              <span className="font-semibold text-[#1A1817]">{v.stockQuantity} u</span>
+                              <span className="font-sans font-semibold tabular-nums text-[#1A1817]">{v.stockQuantity} u</span>
                               <button
                                 onClick={() => handleOpenAdjust(item, v)}
                                 className="text-[10px] text-[#722F37] hover:underline ml-2"

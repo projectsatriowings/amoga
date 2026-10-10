@@ -128,9 +128,9 @@ export function AdminCollections() {
                   {col.description || 'Curated luxury collection crafted for discernment.'}
                 </p>
 
-                <div className="mt-4 pt-3 border-t border-[#EAE4D9] flex items-center justify-between text-xs text-[#7A7167] font-mono">
-                  <span>Slug: /{col.slug}</span>
-                  <span className="font-semibold text-[#1A1817]">
+                <div className="mt-4 pt-3 border-t border-[#EAE4D9] flex items-center justify-between text-xs text-[#7A7167]">
+                  <span className="font-mono">Slug: /{col.slug}</span>
+                  <span className="font-sans font-semibold tabular-nums text-[#1A1817]">
                     {col.productCount} Registered Products
                   </span>
                 </div>

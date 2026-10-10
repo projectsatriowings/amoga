@@ -340,25 +340,25 @@ export function AdminOrderDetail() {
           <div className="space-y-2 text-xs text-[#5C544C]">
             <div className="flex justify-between">
               <span>Items Subtotal:</span>
-              <span className="font-mono text-[#1A1817]">₹{order.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{order.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping Charge:</span>
-              <span className="font-mono text-[#1A1817]">₹{order.shippingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{order.shippingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span>Taxes (GST Included):</span>
-              <span className="font-mono text-[#1A1817]">₹{order.taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{order.taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             {order.discountAmount > 0 && (
               <div className="flex justify-between text-emerald-800">
                 <span>Promotional Discount:</span>
-                <span className="font-mono">-₹{order.discountAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span className="font-sans font-medium tabular-nums">-₹{order.discountAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
             <div className="pt-2 border-t border-[#EAE4D9] flex justify-between text-sm font-bold text-[#1A1817]">
               <span>Authoritative Total:</span>
-              <span className="font-serif text-lg text-[#722F37]">
+              <span className="font-sans font-bold text-lg text-[#722F37] tabular-nums">
                 ₹{order.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -395,16 +395,16 @@ export function AdminOrderDetail() {
                   <td className="px-5 py-3 font-mono uppercase text-[10px] text-[#7A7167]">
                     {item.collectionId}
                   </td>
-                  <td className="px-5 py-3 font-mono text-[#5C544C]">
+                  <td className="px-5 py-3 font-sans text-[#5C544C]">
                     {item.variantName || 'Standard'}
                   </td>
-                  <td className="px-5 py-3 font-mono">
+                  <td className="px-5 py-3 font-sans tabular-nums">
                     ₹{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="px-5 py-3 font-mono font-semibold">
+                  <td className="px-5 py-3 font-sans font-semibold tabular-nums">
                     {item.quantity}
                   </td>
-                  <td className="px-5 py-3 font-serif font-bold text-right text-[#1A1817]">
+                  <td className="px-5 py-3 font-sans font-semibold tabular-nums text-right text-[#1A1817]">
                     ₹{item.lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
@@ -437,7 +437,7 @@ export function AdminOrderDetail() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-serif font-bold text-[#1A1817]">
+                  <span className="font-sans font-semibold tabular-nums text-[#1A1817]">
                     ₹{pay.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                   <span
