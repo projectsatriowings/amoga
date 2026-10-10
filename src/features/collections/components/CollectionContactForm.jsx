@@ -145,13 +145,21 @@ export function CollectionContactForm({ theme, collectionId }) {
 
   return (
     <div
-      className="p-6 sm:p-8 rounded-2xl border shadow-sm transition-colors"
+      className="p-6 sm:p-8 rounded-2xl border shadow-sm transition-colors relative"
       style={{
         backgroundColor: palette.cardBg || '#FFFFFF',
         borderColor: palette.border || '#E5E0D5',
         color: palette.text || '#292820',
       }}
     >
+      {/* Decorative Collection Accent Bar (Antique gold for Sarees, forest/botanical green for pantry/tea) */}
+      <div
+        className="w-10 h-1 rounded-full mb-4"
+        style={{
+          backgroundColor: palette.accentGold || palette.accent || '#3F7B43',
+        }}
+      />
+
       <div className="mb-6">
         <h3
           className="font-serif text-lg sm:text-xl font-semibold tracking-tight"
@@ -224,12 +232,19 @@ export function CollectionContactForm({ theme, collectionId }) {
             required
             value={formData.fullName}
             onChange={handleChange}
+            onFocus={(e) => {
+              if (!errors.fullName) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+            }}
+            onBlur={(e) => {
+              if (!errors.fullName) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+            }}
             placeholder="e.g. Radhika Menon"
             className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2"
             style={{
               backgroundColor: palette.inputBg || '#FFFFFF',
               borderColor: errors.fullName ? '#EF4444' : palette.inputBorder || '#E5E0D5',
               color: palette.text || '#292820',
+              '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
             }}
             aria-invalid={!!errors.fullName}
             aria-describedby={errors.fullName ? 'contact-fullName-error' : undefined}
@@ -259,12 +274,19 @@ export function CollectionContactForm({ theme, collectionId }) {
               required
               value={formData.email}
               onChange={handleChange}
+              onFocus={(e) => {
+                if (!errors.email) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+              }}
+              onBlur={(e) => {
+                if (!errors.email) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+              }}
               placeholder="e.g. radhika@example.com"
               className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2"
               style={{
                 backgroundColor: palette.inputBg || '#FFFFFF',
                 borderColor: errors.email ? '#EF4444' : palette.inputBorder || '#E5E0D5',
                 color: palette.text || '#292820',
+                '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
               }}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'contact-email-error' : undefined}
@@ -291,12 +313,19 @@ export function CollectionContactForm({ theme, collectionId }) {
               type="tel"
               value={formData.phone}
               onChange={handleChange}
+              onFocus={(e) => {
+                if (!errors.phone) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+              }}
+              onBlur={(e) => {
+                if (!errors.phone) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+              }}
               placeholder="e.g. +91 9940018593"
               className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2"
               style={{
                 backgroundColor: palette.inputBg || '#FFFFFF',
                 borderColor: errors.phone ? '#EF4444' : palette.inputBorder || '#E5E0D5',
                 color: palette.text || '#292820',
+                '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
               }}
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? 'contact-phone-error' : undefined}
@@ -325,12 +354,19 @@ export function CollectionContactForm({ theme, collectionId }) {
             required
             value={formData.subject}
             onChange={handleChange}
+            onFocus={(e) => {
+              if (!errors.subject) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+            }}
+            onBlur={(e) => {
+              if (!errors.subject) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+            }}
             placeholder="e.g. Order Inquiry / Private Appointment"
             className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2"
             style={{
               backgroundColor: palette.inputBg || '#FFFFFF',
               borderColor: errors.subject ? '#EF4444' : palette.inputBorder || '#E5E0D5',
               color: palette.text || '#292820',
+              '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
             }}
             aria-invalid={!!errors.subject}
             aria-describedby={errors.subject ? 'contact-subject-error' : undefined}
@@ -358,12 +394,19 @@ export function CollectionContactForm({ theme, collectionId }) {
             required
             value={formData.message}
             onChange={handleChange}
+            onFocus={(e) => {
+              if (!errors.message) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+            }}
+            onBlur={(e) => {
+              if (!errors.message) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+            }}
             placeholder="Please detail your request or question..."
             className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 resize-none"
             style={{
               backgroundColor: palette.inputBg || '#FFFFFF',
               borderColor: errors.message ? '#EF4444' : palette.inputBorder || '#E5E0D5',
               color: palette.text || '#292820',
+              '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
             }}
             aria-invalid={!!errors.message}
             aria-describedby={errors.message ? 'contact-message-error' : undefined}

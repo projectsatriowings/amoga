@@ -16,7 +16,13 @@ export function TeaStorefront() {
     fallbackData: TEA_PRODUCTS,
   });
 
-  const displayProducts = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
+  const displayProducts = React.useMemo(() => {
+    const raw = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
+    return raw.map((p) => {
+      const fallback = TEA_PRODUCTS.find((f) => f.slug === p.slug || f.id === p.id);
+      return fallback ? { ...fallback, ...p } : p;
+    });
+  }, [apiProducts]);
 
   return (
     <div className="relative bg-[#F8F6F0] text-[#292820] min-h-screen overflow-hidden">

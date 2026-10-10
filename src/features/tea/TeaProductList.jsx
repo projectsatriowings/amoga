@@ -47,7 +47,11 @@ export function TeaProductList() {
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
-    const list = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
+    const rawList = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
+    const list = rawList.map((p) => {
+      const fallback = TEA_PRODUCTS.find((f) => f.slug === p.slug || f.id === p.id);
+      return fallback ? { ...fallback, ...p } : p;
+    });
 
     let result = list.filter((p) => {
       // Category Filter

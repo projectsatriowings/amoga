@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -25,7 +25,30 @@ export function TeaProductDetail() {
   const { slug } = useParams();
   const staticProduct = getTeaProductBySlug(slug);
   const { product: apiProduct } = useProductDetail('tea', slug, staticProduct);
-  const product = apiProduct || staticProduct;
+
+  // Safely combine API updates with rich static botanical catalogue metadata
+  const product = useMemo(() => {
+    if (!staticProduct && !apiProduct) return null;
+    if (!apiProduct) return staticProduct;
+    if (!staticProduct) return apiProduct;
+
+    return {
+      ...staticProduct,
+      ...apiProduct,
+      botanicalName: apiProduct.botanicalName || staticProduct.botanicalName,
+      standeeNotes: apiProduct.standeeNotes || staticProduct.standeeNotes,
+      categoryName: staticProduct.categoryName || apiProduct.categoryName,
+      origin: apiProduct.origin || staticProduct.origin,
+      brewingTime: apiProduct.brewingTime || staticProduct.brewingTime,
+      details: (Array.isArray(apiProduct.details) && apiProduct.details.length > 0)
+        ? apiProduct.details
+        : staticProduct.details,
+      originalPrice: apiProduct.originalPrice || staticProduct.originalPrice,
+      packSize: apiProduct.packSize || staticProduct.packSize,
+      badge: apiProduct.badge || staticProduct.badge,
+      image: staticProduct.image || apiProduct.image,
+    };
+  }, [staticProduct, apiProduct]);
 
   const { addToCart, toggleWishlistItem, isInWishlist } = useStore();
   const [quantity, setQuantity] = useState(1);

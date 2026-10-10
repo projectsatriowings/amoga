@@ -2,8 +2,37 @@ import { useState, useEffect } from 'react';
 import { fetchProducts, fetchProductBySlug } from '../services/productsApi';
 
 /**
+ * Merge an API product with a local static/fallback item so rich catalogue metadata
+ * (e.g. botanical species, standee wellness notes, harvest highlights, origin, brewing time)
+ * is never discarded by minimal database payloads.
+ */
+function mergeProductWithFallback(apiItem, fallbackItem) {
+  if (!apiItem && !fallbackItem) return null;
+  if (!apiItem) return fallbackItem;
+  if (!fallbackItem) return apiItem;
+
+  return {
+    ...fallbackItem,
+    ...apiItem,
+    // Preserve rich artisanal, botanical & standee highlights
+    botanicalName: apiItem.botanicalName || fallbackItem.botanicalName,
+    standeeNotes: apiItem.standeeNotes || fallbackItem.standeeNotes,
+    categoryName: fallbackItem.categoryName || apiItem.categoryName,
+    origin: apiItem.origin || fallbackItem.origin,
+    brewingTime: apiItem.brewingTime || fallbackItem.brewingTime,
+    details: (Array.isArray(apiItem.details) && apiItem.details.length > 0)
+      ? apiItem.details
+      : fallbackItem.details,
+    badge: apiItem.badge || fallbackItem.badge,
+    packSize: apiItem.packSize || fallbackItem.packSize,
+    originalPrice: apiItem.originalPrice || fallbackItem.originalPrice,
+    image: fallbackItem.image || apiItem.image,
+  };
+}
+
+/**
  * Hook to retrieve products for a specific collection from the API
- * with explicit loading and error handling.
+ * with explicit loading, error handling, and robust metadata preservation.
  */
 export function useProducts({ collection, category, q, sort, fallbackData = [] } = {}) {
   const [products, setProducts] = useState(fallbackData);
@@ -18,7 +47,13 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
       .then((res) => {
         if (isMounted) {
           if (res && Array.isArray(res.data)) {
-            setProducts(res.data);
+            const mergedList = res.data.map((apiItem) => {
+              const fallback = Array.isArray(fallbackData)
+                ? fallbackData.find((f) => f.slug === apiItem.slug || f.id === apiItem.id)
+                : null;
+              return mergeProductWithFallback(apiItem, fallback);
+            });
+            setProducts(mergedList);
             setIsUsingFallback(false);
           } else {
             setProducts(fallbackData);
@@ -48,6 +83,7 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
 
 /**
  * Hook to retrieve single product detail by collection and slug
+ * with rich catalogue metadata retention.
  */
 export function useProductDetail(collection, slug, fallbackItem = null) {
   const [product, setProduct] = useState(fallbackItem);
@@ -64,7 +100,8 @@ export function useProductDetail(collection, slug, fallbackItem = null) {
       .then((data) => {
         if (isMounted) {
           if (data) {
-            setProduct(data);
+            const merged = mergeProductWithFallback(data, fallbackItem);
+            setProduct(merged);
             setIsUsingFallback(false);
           } else {
             setProduct(fallbackItem);

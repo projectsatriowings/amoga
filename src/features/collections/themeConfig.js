@@ -30,7 +30,7 @@ export const COLLECTION_THEMES = {
     palette: {
       bg: '#F3F0E7',
       sectionBg: '#EAE8DC',
-      headerBg: '#F3F0E7',
+      headerBg: '#F8F6F0',
       headerText: '#173B2A',
       heading: '#173B2A',
       text: '#292820',
@@ -203,8 +203,8 @@ export const COLLECTION_THEMES = {
     palette: {
       bg: '#F0F1E8',
       sectionBg: '#E5E9DC',
-      headerBg: '#F0F1E8',
-      headerText: '#263A2D',
+      headerBg: '#F8F6F0',
+      headerText: '#173B2A',
       heading: '#1E3124',
       text: '#263A2D',
       mutedText: '#657164',

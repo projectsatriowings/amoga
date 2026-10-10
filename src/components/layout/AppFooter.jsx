@@ -22,23 +22,30 @@ export function AppFooter({ activeCollection }) {
 
   const isGatekeeper = location.pathname === '/';
 
-  return (
-    <footer
-      className={`border-t py-12 sm:py-16 transition-colors duration-normal ease-smooth ${
-        isGatekeeper
-          ? 'bg-[#0B0C0E] text-[#F4F4F2] border-white/10'
-          : 'bg-[var(--collection-section-bg,#EAE8DC)] text-[var(--collection-text,#292820)] border-[var(--collection-border,#D9DCCD)]'
-      }`}
-    >
-      <Container>
-        {/* Reusable Themed Contact Section & Interactive Form for Collections */}
-        {activeCollection && (
-          <div className="mb-12 pb-12 border-b border-current/15">
-            <CollectionContactSection collectionId={activeCollection.id} />
-          </div>
-        )}
+  const footerBg = isFood
+    ? 'bg-[#F1EDE4] text-[#172B1C] border-[#172B1C]/10'
+    : isTea
+    ? 'bg-[#FAF1BB] text-[#2C1E11] border-[#B88E38]/25'
+    : isSarees
+    ? 'bg-[#1D0911] text-[#F6EBD8] border-[#C5A46D]/15'
+    : isJewellery
+    ? 'bg-[#1C1B1E] text-[#F7F3EB] border-[#B9B8B5]/15'
+    : isCheckout
+    ? 'bg-[#F8F6F0] text-[#292820] border-[#E5E0D5]'
+    : 'bg-[#0B0C0E] text-[#F4F4F2] border-white/10';
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-12 border-b border-current/10">
+  return (
+    <>
+      {/* Reusable Themed Contact Section & Interactive Form for Collections */}
+      {activeCollection && (
+        <CollectionContactSection collectionId={activeCollection.id} />
+      )}
+
+      <footer
+        className={`border-t py-12 sm:py-16 transition-colors duration-normal ease-smooth ${footerBg}`}
+      >
+        <Container>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-12 border-b border-current/10">
           {/* Brand Col */}
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="inline-block">
@@ -328,5 +335,6 @@ export function AppFooter({ activeCollection }) {
         </div>
       </Container>
     </footer>
+    </>
   );
 }
