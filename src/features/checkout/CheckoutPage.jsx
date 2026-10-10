@@ -7,11 +7,12 @@ import { ShoppingBag, ShieldAlert } from 'lucide-react';
 
 export const CheckoutPage = () => {
   const cart = useStore((state) => state.cart);
+  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
   const getCartTotals = useStore((state) => state.getCartTotals);
   const { hasUnpricedItems } = getCartTotals();
 
   // If cart is empty, redirect or prompt customer
-  if (cart.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-amoga-paper pt-28 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl mx-auto text-center py-16 bg-white rounded-2xl p-8 border border-amoga-brass/20 shadow-sm">

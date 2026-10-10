@@ -39,12 +39,12 @@ function getNowIso() {
 }
 
 // Frozen order snapshot constructor
-function buildSimulatedOrder(demoOrderId, customerDetails, cart, totals) {
+function buildSimulatedOrder(demoOrderId, customerDetails, items, totals) {
   return {
     orderId: demoOrderId,
     createdAt: new Date().toISOString(),
     customer: { ...customerDetails },
-    items: cart.map((item) => ({ ...item })),
+    items: (Array.isArray(items) ? items : []).map((item) => ({ ...item })),
     totals: { ...totals },
     isDemo: true,
     simulationNotice: 'Demonstration only — no real payment was processed or charged.',
@@ -53,8 +53,9 @@ function buildSimulatedOrder(demoOrderId, customerDetails, cart, totals) {
 
 export const OrderReviewPage = () => {
   const navigate = useNavigate();
-  const cart = useStore((state) => state.cart);
-  const customerDetails = useStore((state) => state.customerDetails);
+  const cartState = useStore((state) => state.cart);
+  const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
+  const customerDetails = useStore((state) => state.customerDetails || state.checkout?.customerDetails) || {};
   const getCartTotals = useStore((state) => state.getCartTotals);
   const setLastCompletedOrder = useStore((state) => state.setLastCompletedOrder);
   const clearCart = useStore((state) => state.clearCart);
@@ -71,22 +72,22 @@ export const OrderReviewPage = () => {
 
   const totals = getCartTotals();
 
-  // Validate customer details
+  // Validate customer details safely
   const isCustomerValid =
-    Boolean(customerDetails.fullName?.trim()) &&
-    Boolean(customerDetails.email?.trim()) &&
-    Boolean(customerDetails.phone?.trim()) &&
-    Boolean(customerDetails.addressLine1?.trim()) &&
-    Boolean(customerDetails.city?.trim()) &&
-    Boolean(customerDetails.state?.trim()) &&
-    Boolean(customerDetails.pincode?.trim());
+    Boolean(customerDetails?.fullName?.trim()) &&
+    Boolean(customerDetails?.email?.trim()) &&
+    Boolean(customerDetails?.phone?.trim()) &&
+    Boolean(customerDetails?.addressLine1?.trim()) &&
+    Boolean(customerDetails?.city?.trim()) &&
+    Boolean(customerDetails?.state?.trim()) &&
+    Boolean(customerDetails?.pincode?.trim());
 
   // Validate cart eligibility
-  const cartValidation = validateCartForCheckout(cart);
+  const cartValidation = validateCartForCheckout(cartItems);
 
   const handleInitiatePayment = async () => {
     // 1. Re-validate cart client-side
-    const recheckCart = validateCartForCheckout(cart);
+    const recheckCart = validateCartForCheckout(cartItems);
     if (!recheckCart.isValid) {
       setSimulationError(recheckCart.errors.join(' '));
       return;
@@ -107,7 +108,7 @@ export const OrderReviewPage = () => {
     try {
       // 3. Submit or resume order in PostgreSQL backend
       const orderResult = await createOrderApi({
-        items: cart,
+        items: cartItems,
         customer: customerDetails,
         idempotencyKey,
       });
@@ -188,7 +189,7 @@ export const OrderReviewPage = () => {
                     paymentReference: paymentResult.paymentReference,
                     createdAt: getNowIso(),
                     customer: orderResult.customer || { ...customerDetails },
-                    items: orderResult.items || cart.map((item) => ({ ...item })),
+                    items: orderResult.items || cartItems.map((item) => ({ ...item })),
                     totals: orderResult.totals || { ...totals },
                     isPersistent: true,
                     isDemo: false,
@@ -233,7 +234,7 @@ export const OrderReviewPage = () => {
 
       // If backend is offline, provide graceful development fallback
       const demoOrderId = generateDemoOrderId();
-      const simulatedOrder = buildSimulatedOrder(demoOrderId, customerDetails, cart, totals);
+      const simulatedOrder = buildSimulatedOrder(demoOrderId, customerDetails, cartItems, totals);
       setLastCompletedOrder(simulatedOrder);
       clearCart();
       navigate(`/order-confirmation/${demoOrderId}`);
@@ -283,7 +284,7 @@ export const OrderReviewPage = () => {
           paymentReference: paymentAttempt.paymentReference,
           createdAt: getNowIso(),
           customer: createdOrderData.customer || { ...customerDetails },
-          items: createdOrderData.items || cart.map((item) => ({ ...item })),
+          items: createdOrderData.items || cartItems.map((item) => ({ ...item })),
           totals: createdOrderData.totals || { ...totals },
           isPersistent: true,
           isDemo: false,
@@ -307,7 +308,7 @@ export const OrderReviewPage = () => {
   };
 
   // If cart is empty and no active order
-  if (cart.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-amoga-paper pt-28 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl mx-auto text-center py-16 bg-white rounded-2xl p-8 border border-amoga-brass/20 shadow-sm">
@@ -498,47 +499,54 @@ export const OrderReviewPage = () => {
                 </Link>
               </div>
 
-              <div className="divide-y divide-amoga-brass/15">
-                {cart.map((item) => (
-                  <div key={item.lineId} className="py-4 first:pt-0 last:pb-0 flex items-center gap-4 text-xs">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-xl border border-amoga-brass/20 shrink-0"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23eee"/><text x="32" y="32" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="10">Amoga</text></svg>';
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-amoga-ivory text-amoga-burgundy border border-amoga-brass/20">
-                          {item.collectionId}
-                        </span>
-                        {item.selectedVariant?.name && (
-                          <span className="text-[11px] text-amoga-charcoal/60">
-                            • {item.selectedVariant.name}
+                {cartItems.map((item) => {
+                  const lineId = item.id || item.lineId;
+                  const name = item.name || item.product?.name;
+                  const image = item.image || item.product?.image;
+                  const price = item.price !== undefined ? item.price : item.product?.price;
+                  const collectionId = item.collectionId || item.product?.collection;
+                  const variantName = item.selectedVariant?.name || item.variantName;
+
+                  return (
+                    <div key={lineId} className="py-4 first:pt-0 last:pb-0 flex items-center gap-4 text-xs">
+                      <img
+                        src={image}
+                        alt={name}
+                        className="w-16 h-16 object-cover rounded-xl border border-amoga-brass/20 shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23eee"/><text x="32" y="32" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="10">Amoga</text></svg>';
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-amoga-ivory text-amoga-burgundy border border-amoga-brass/20">
+                            {collectionId}
                           </span>
-                        )}
+                          {variantName && (
+                            <span className="text-[11px] text-amoga-charcoal/60">
+                              • {variantName}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-medium text-sm text-amoga-charcoal truncate">
+                          {name}
+                        </h3>
+                        <div className="text-amoga-charcoal/70 mt-1">
+                          Unit Price: <span className="font-medium">{formatINR(price)}</span>
+                        </div>
                       </div>
-                      <h3 className="font-medium text-sm text-amoga-charcoal truncate">
-                        {item.name}
-                      </h3>
-                      <div className="text-amoga-charcoal/70 mt-1">
-                        Unit Price: <span className="font-medium">{formatINR(item.price)}</span>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs text-amoga-charcoal/60 block">
+                          Qty: <strong>{item.quantity}</strong>
+                        </span>
+                        <span className="font-serif text-base font-semibold text-amoga-burgundy block mt-0.5">
+                          {formatINR((price || 0) * item.quantity)}
+                        </span>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-xs text-amoga-charcoal/60 block">
-                        Qty: <strong>{item.quantity}</strong>
-                      </span>
-                      <span className="font-serif text-base font-semibold text-amoga-burgundy block mt-0.5">
-                        {formatINR((item.price || 0) * item.quantity)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  );
+                })}
             </div>
           </div>
 

@@ -8,9 +8,10 @@ import { request } from './apiClient';
  * Validates the cart items authoritatively against the backend PostgreSQL database
  */
 export async function validateCartApi(cartItems) {
-  const formattedItems = cartItems.map((item) => ({
-    productId: item.productId || item.id,
-    variantId: item.selectedVariant?.id || item.variantId || null,
+  const items = Array.isArray(cartItems) ? cartItems : (cartItems?.items || []);
+  const formattedItems = items.map((item) => ({
+    productId: item.productId || item.product?.id || item.id,
+    variantId: item.selectedVariant?.id || item.selectedVariant?.sourceId || item.variantId || null,
     quantity: item.quantity,
   }));
 
@@ -25,18 +26,31 @@ export async function validateCartApi(cartItems) {
 /**
  * Creates a persistent database order
  */
-export async function createOrderApi({ items, customer, idempotencyKey = null, isDemo = false }) {
+export async function createOrderApi({ items: rawItems, customer, idempotencyKey = null, isDemo = false }) {
+  const items = Array.isArray(rawItems) ? rawItems : (rawItems?.items || []);
   const formattedItems = items.map((item) => ({
-    productId: item.productId || item.id,
-    variantId: item.selectedVariant?.id || item.variantId || null,
+    productId: item.productId || item.product?.id || item.id,
+    variantId: item.selectedVariant?.id || item.selectedVariant?.sourceId || item.variantId || null,
     quantity: item.quantity,
   }));
+
+  const sanitizedCustomer = {
+    fullName: customer?.fullName?.trim() || '',
+    email: customer?.email?.trim()?.toLowerCase() || '',
+    phone: customer?.phone?.trim() || '',
+    addressLine1: customer?.addressLine1?.trim() || '',
+    addressLine2: customer?.addressLine2?.trim() || null,
+    city: customer?.city?.trim() || '',
+    state: customer?.state?.trim() || '',
+    pincode: customer?.pincode?.trim() || '',
+    instructions: customer?.instructions?.trim() || customer?.deliveryInstructions?.trim() || null,
+  };
 
   const result = await request('/orders', {
     method: 'POST',
     body: JSON.stringify({
       items: formattedItems,
-      customer,
+      customer: sanitizedCustomer,
       idempotencyKey,
       isDemo,
     }),

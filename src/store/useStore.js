@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { isValidPrice, isValidQuantity, calculateCartTotals } from '../utils/pricing';
+import { isValidPrice, isValidQuantity, calculateCartTotals } from '../utils/pricing.js';
 
 /**
  * Global Store (Zustand)
@@ -42,6 +42,10 @@ export const useStore = create((set, get) => ({
       (product.id?.startsWith('f-') ? 'food' : product.id?.startsWith('tea-') ? 'tea' : product.id?.startsWith('s-') ? 'sarees' : 'jewellery');
     const normalizedProduct = { ...product, collection: collectionId };
 
+    const price = selectedVariant?.price != null && isValidPrice(selectedVariant.price)
+      ? selectedVariant.price
+      : product.price;
+
     set((state) => {
       const lineId = selectedVariant
         ? `${collectionId}-${product.id}-${selectedVariant.id}`
@@ -65,9 +69,15 @@ export const useStore = create((set, get) => ({
           ...state.cart.items,
           {
             id: lineId,
+            lineId,
+            productId: product.id,
             product: normalizedProduct,
             selectedVariant,
             quantity: sanitizedQty,
+            name: normalizedProduct.name,
+            price,
+            image: normalizedProduct.image,
+            collectionId,
           },
         ];
       }
@@ -94,7 +104,7 @@ export const useStore = create((set, get) => ({
       cart: {
         ...state.cart,
         items: state.cart.items.map((item) =>
-          (item.id === lineId || item.product.id === lineId)
+          (item.id === lineId || item.lineId === lineId || item.product?.id === lineId)
             ? { ...item, quantity: parsedQty }
             : item
         ),
@@ -107,7 +117,7 @@ export const useStore = create((set, get) => ({
       cart: {
         ...state.cart,
         items: state.cart.items.filter(
-          (item) => item.id !== lineId && item.product.id !== lineId
+          (item) => item.id !== lineId && item.lineId !== lineId && item.product?.id !== lineId
         ),
       },
     }));
@@ -129,6 +139,20 @@ export const useStore = create((set, get) => ({
   // =========================================================================
   // Checkout State Management (Delivery Details & Demo Order State)
   // =========================================================================
+  customerDetails: {
+    fullName: '',
+    email: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    pincode: '',
+    instructions: '',
+    deliveryInstructions: '',
+  },
+  lastCompletedOrder: null,
+
   checkout: {
     customerDetails: {
       fullName: '',
@@ -139,47 +163,77 @@ export const useStore = create((set, get) => ({
       city: '',
       state: '',
       pincode: '',
+      instructions: '',
       deliveryInstructions: '',
     },
     lastCompletedOrder: null,
   },
 
   setCustomerDetails: (details) =>
-    set((state) => ({
-      checkout: {
-        ...state.checkout,
-        customerDetails: {
-          ...state.checkout.customerDetails,
-          ...details,
+    set((state) => {
+      const currentDetails = state.customerDetails || state.checkout?.customerDetails || {};
+      const instructions = details.instructions !== undefined
+        ? details.instructions
+        : (details.deliveryInstructions !== undefined ? details.deliveryInstructions : currentDetails.instructions || '');
+      const deliveryInstructions = details.deliveryInstructions !== undefined
+        ? details.deliveryInstructions
+        : (details.instructions !== undefined ? details.instructions : currentDetails.deliveryInstructions || '');
+
+      const merged = {
+        ...currentDetails,
+        ...details,
+        instructions,
+        deliveryInstructions,
+      };
+
+      return {
+        customerDetails: merged,
+        checkout: {
+          ...state.checkout,
+          customerDetails: merged,
         },
-      },
-    })),
+      };
+    }),
 
   clearCustomerDetails: () =>
-    set((state) => ({
-      checkout: {
-        ...state.checkout,
-        customerDetails: {
-          fullName: '',
-          email: '',
-          phone: '',
-          addressLine1: '',
-          addressLine2: '',
-          city: '',
-          state: '',
-          pincode: '',
-          deliveryInstructions: '',
+    set((state) => {
+      const reset = {
+        fullName: '',
+        email: '',
+        phone: '',
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        state: '',
+        pincode: '',
+        instructions: '',
+        deliveryInstructions: '',
+      };
+      return {
+        customerDetails: reset,
+        checkout: {
+          ...state.checkout,
+          customerDetails: reset,
         },
-      },
-    })),
+      };
+    }),
 
-  setLastCompletedOrder: (order) =>
+  setLastCompletedOrder: (order) => {
+    if (typeof window !== 'undefined' && order?.orderId) {
+      try {
+        sessionStorage.setItem(`amoga_last_completed_order_${order.orderId}`, JSON.stringify(order));
+      } catch {
+        // Non-blocking
+      }
+    }
     set((state) => ({
+      lastCompletedOrder: order,
       checkout: {
         ...state.checkout,
         lastCompletedOrder: order,
       },
-    })),
+    }));
+  },
 
   // =========================================================================
   // Wishlist State Management

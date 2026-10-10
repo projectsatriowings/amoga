@@ -5,7 +5,8 @@ import { formatINR } from '../../../utils/pricing';
 import { AlertCircle, ShieldCheck } from 'lucide-react';
 
 export const CheckoutOrderSummary = ({ compact = false }) => {
-  const cart = useStore((state) => state.cart);
+  const cartState = useStore((state) => state.cart);
+  const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
   const getCartTotals = useStore((state) => state.getCartTotals);
   const { subtotal, payableItemsCount, hasUnpricedItems, unpricedCount } = getCartTotals();
 
@@ -33,16 +34,21 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
 
       {/* Cart item listing */}
       <div className={`space-y-3 overflow-y-auto pr-1 ${compact ? 'max-h-60' : 'max-h-80'}`}>
-        {cart.map((item) => {
-          const badge = getCollectionBadge(item.collectionId);
+        {cartItems.map((item) => {
+          const lineId = item.id || item.lineId;
+          const name = item.name || item.product?.name;
+          const image = item.image || item.product?.image;
+          const price = item.price !== undefined ? item.price : item.product?.price;
+          const collectionId = item.collectionId || item.product?.collection;
+          const badge = getCollectionBadge(collectionId);
           return (
             <div
-              key={item.lineId}
+              key={lineId}
               className="flex items-start gap-3 p-2.5 rounded-xl bg-white/60 border border-amoga-brass/10 hover:border-amoga-brass/25 transition-all text-xs"
             >
               <img
-                src={item.image}
-                alt={item.name}
+                src={image}
+                alt={name}
                 className="w-14 h-14 object-cover rounded-lg shrink-0 border border-amoga-brass/15"
                 onError={(e) => {
                   e.currentTarget.src =
@@ -61,14 +67,14 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
                   )}
                 </div>
                 <h3 className="font-medium text-amoga-charcoal truncate text-xs">
-                  {item.name}
+                  {name}
                 </h3>
                 <div className="flex items-center justify-between mt-1 text-amoga-charcoal/70">
                   <span>
-                    Qty: <strong className="font-semibold text-amoga-charcoal">{item.quantity}</strong> × {formatINR(item.price)}
+                    Qty: <strong className="font-semibold text-amoga-charcoal">{item.quantity}</strong> × {formatINR(price)}
                   </span>
                   <span className="font-semibold text-amoga-burgundy">
-                    {formatINR((item.price || 0) * item.quantity)}
+                    {formatINR((price || 0) * item.quantity)}
                   </span>
                 </div>
               </div>

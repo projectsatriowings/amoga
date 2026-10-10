@@ -6,8 +6,11 @@ import { CartItemRow } from './components/CartItemRow';
 import { CartSummary } from './components/CartSummary';
 
 export const CartPage = () => {
-  const cart = useStore((state) => state.cart);
+  const cartState = useStore((state) => state.cart);
+  const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
   const getCartTotals = useStore((state) => state.getCartTotals);
+  const updateQuantity = useStore((state) => state.updateQuantity);
+  const removeFromCart = useStore((state) => state.removeFromCart);
   const clearCart = useStore((state) => state.clearCart);
 
   const { totalItemsCount, hasUnpricedItems } = getCartTotals();
@@ -42,7 +45,7 @@ export const CartPage = () => {
               Unified selections across Amoga Gourmet Food, Heritage Handloom Sarees, and Artisan Silver Jewellery.
             </p>
           </div>
-          {cart.length > 0 && (
+          {cartItems.length > 0 && (
             <div className="flex items-center gap-4">
               <span className="text-xs uppercase tracking-widest text-amoga-charcoal/60 bg-amoga-ivory px-3 py-1.5 rounded-full border border-amoga-brass/20">
                 {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'} in bag
@@ -58,7 +61,7 @@ export const CartPage = () => {
         </div>
 
         {/* Content Body */}
-        {cart.length === 0 ? (
+        {cartItems.length === 0 ? (
           /* Empty Bag State */
           <div className="py-20 text-center max-w-2xl mx-auto">
             <div className="w-20 h-20 rounded-full bg-amoga-ivory border border-amoga-brass/30 flex items-center justify-center mx-auto mb-6 text-amoga-burgundy/60 shadow-sm">
@@ -155,8 +158,13 @@ export const CartPage = () => {
               )}
 
               <div className="space-y-3">
-                {cart.map((item) => (
-                  <CartItemRow key={item.lineId} item={item} />
+                {cartItems.map((item) => (
+                  <CartItemRow
+                    key={item.id || item.lineId}
+                    item={item}
+                    onUpdateQuantity={updateQuantity}
+                    onRemove={removeFromCart}
+                  />
                 ))}
               </div>
 

@@ -1,28 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, AlertCircle, Info } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 
 export const CheckoutForm = () => {
   const navigate = useNavigate();
-  const customerDetails = useStore((state) => state.customerDetails);
+  const customerDetails = useStore((state) => state.customerDetails || state.checkout?.customerDetails);
   const setCustomerDetails = useStore((state) => state.setCustomerDetails);
   const getCartTotals = useStore((state) => state.getCartTotals);
 
   const { payableItemsCount, hasUnpricedItems } = getCartTotals();
 
-  // Local form state initialized from store to preserve entered details
-  const [formData, setFormData] = useState({
-    fullName: customerDetails.fullName || '',
-    email: customerDetails.email || '',
-    phone: customerDetails.phone || '',
-    addressLine1: customerDetails.addressLine1 || '',
-    addressLine2: customerDetails.addressLine2 || '',
-    city: customerDetails.city || '',
-    state: customerDetails.state || '',
-    pincode: customerDetails.pincode || '',
-    instructions: customerDetails.instructions || '',
-  });
+  // Local form state safely initialized with empty fallbacks
+  const [formData, setFormData] = useState(() => ({
+    fullName: customerDetails?.fullName || '',
+    email: customerDetails?.email || '',
+    phone: customerDetails?.phone || '',
+    addressLine1: customerDetails?.addressLine1 || '',
+    addressLine2: customerDetails?.addressLine2 || '',
+    city: customerDetails?.city || '',
+    state: customerDetails?.state || '',
+    pincode: customerDetails?.pincode || '',
+    instructions: customerDetails?.instructions || customerDetails?.deliveryInstructions || '',
+  }));
+
+  // Track fields modified by user to prevent asynchronous profile updates from overwriting user changes
+  const dirtyFieldsRef = useRef(new Set());
+
+  // Handle asynchronous customer / profile data arrival safely
+  useEffect(() => {
+    if (!customerDetails) return;
+    setFormData((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      const fields = [
+        'fullName',
+        'email',
+        'phone',
+        'addressLine1',
+        'addressLine2',
+        'city',
+        'state',
+        'pincode',
+      ];
+      fields.forEach((field) => {
+        if (!dirtyFieldsRef.current.has(field) && customerDetails[field] && !prev[field]) {
+          next[field] = customerDetails[field];
+          changed = true;
+        }
+      });
+      const incomingInstructions = customerDetails.instructions || customerDetails.deliveryInstructions;
+      if (!dirtyFieldsRef.current.has('instructions') && incomingInstructions && !prev.instructions) {
+        next.instructions = incomingInstructions;
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [customerDetails]);
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -81,6 +115,7 @@ export const CheckoutForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    dirtyFieldsRef.current.add(name);
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     // Revalidate field if already touched

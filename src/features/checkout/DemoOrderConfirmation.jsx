@@ -19,7 +19,26 @@ import {
 
 export const DemoOrderConfirmation = () => {
   const { orderId } = useParams();
-  const lastCompletedOrder = useStore((state) => state.lastCompletedOrder);
+  const storeLastCompletedOrder = useStore(
+    (state) => state.lastCompletedOrder || state.checkout?.lastCompletedOrder
+  );
+
+  // Retrieve cached order from session storage if page was refreshed
+  let cachedSessionOrder = null;
+  if (typeof window !== 'undefined' && orderId) {
+    try {
+      const stored = sessionStorage.getItem(`amoga_last_completed_order_${orderId}`);
+      if (stored) {
+        cachedSessionOrder = JSON.parse(stored);
+      }
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  const lastCompletedOrder = (storeLastCompletedOrder?.orderId === orderId || storeLastCompletedOrder?.orderReference === orderId)
+    ? storeLastCompletedOrder
+    : cachedSessionOrder;
 
   const [dbOrder, setDbOrder] = useState(null);
 
@@ -30,7 +49,7 @@ export const DemoOrderConfirmation = () => {
   } catch {
     // Non-blocking
   }
-  if (!guestToken && lastCompletedOrder?.orderId === orderId) {
+  if (!guestToken && (lastCompletedOrder?.orderId === orderId || lastCompletedOrder?.orderReference === orderId)) {
     guestToken = lastCompletedOrder.guestAccessToken;
   }
 

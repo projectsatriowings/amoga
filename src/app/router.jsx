@@ -19,6 +19,7 @@ import { CheckoutPage } from '../features/checkout/CheckoutPage';
 import { OrderReviewPage } from '../features/checkout/OrderReviewPage';
 import { DemoOrderConfirmation } from '../features/checkout/DemoOrderConfirmation';
 import { NotFound } from '../components/feedback/NotFound';
+import { RouteErrorBoundary } from '../components/feedback/RouteErrorBoundary';
 
 /**
  * React Router Configuration for Amoga E-Commerce Phase 1-6
@@ -136,6 +137,7 @@ export const router = createBrowserRouter([
         <CartPage />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/checkout',
@@ -144,6 +146,7 @@ export const router = createBrowserRouter([
         <CheckoutPage />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/checkout/review',
@@ -152,6 +155,7 @@ export const router = createBrowserRouter([
         <OrderReviewPage />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/order-confirmation/:orderId',
@@ -160,6 +164,7 @@ export const router = createBrowserRouter([
         <DemoOrderConfirmation />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '*',
