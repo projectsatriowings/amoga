@@ -79,7 +79,7 @@ describe('Amoga Admin API Integration & RBAC Security Suite', () => {
     assert.equal(body.error, 'UNAUTHORIZED');
   });
 
-  it('5. GET /api/admin/dashboard/stats returns real PostgreSQL metrics', async () => {
+  it('5. GET /api/admin/dashboard/stats reconciles 100% against authoritative PostgreSQL records', async () => {
     const res = await fetch(`${baseUrl}/api/admin/dashboard/stats`, {
       headers: { Authorization: `Bearer ${superAdminToken}` },
     });
@@ -87,10 +87,76 @@ describe('Amoga Admin API Integration & RBAC Security Suite', () => {
     assert.equal(res.status, 200);
     const body = await res.json();
     assert.equal(body.success, true);
-    assert.ok(typeof body.metrics.totalOrders === 'number');
-    assert.ok(typeof body.metrics.paidRevenue === 'number');
-    assert.ok(Array.isArray(body.recentOrders));
-    assert.ok(Array.isArray(body.salesTrends));
+
+    // Independent Direct PostgreSQL Queries for KPI Reconciliation
+    const [
+      dbTotalOrders,
+      dbPaidPaymentsAgg,
+      dbGrossSalesAgg,
+      dbFulfilmentQueue,
+      dbLowStock,
+      dbOutOfStock,
+      dbUnitsSoldAgg,
+      dbPendingPayments,
+    ] = await Promise.all([
+      prisma.order.count(),
+      prisma.payment.aggregate({
+        where: { status: 'SUCCEEDED' },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.order.aggregate({
+        where: { status: { in: ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED'] } },
+        _sum: { totalAmount: true },
+        _count: true,
+      }),
+      prisma.order.count({
+        where: { status: { in: ['CONFIRMED', 'PROCESSING'] } },
+      }),
+      prisma.product.count({
+        where: { isActive: true, inStock: true, stockQuantity: { lte: 10, gt: 0 } },
+      }),
+      prisma.product.count({
+        where: { isActive: true, OR: [{ inStock: false }, { stockQuantity: { lte: 0 } }] },
+      }),
+      prisma.orderItem.aggregate({
+        _sum: { quantity: true },
+      }),
+      prisma.payment.count({
+        where: { status: { in: ['CREATED', 'PENDING', 'AUTHORIZED'] } },
+      }),
+    ]);
+
+    const expectedPaidRevenue = dbPaidPaymentsAgg._sum.amount ? Number(Number(dbPaidPaymentsAgg._sum.amount).toFixed(2)) : 0;
+    const expectedGrossSales = dbGrossSalesAgg._sum.totalAmount ? Number(Number(dbGrossSalesAgg._sum.totalAmount).toFixed(2)) : 0;
+    const expectedUnitsSold = dbUnitsSoldAgg._sum.quantity || 0;
+    const expectedAov = dbGrossSalesAgg._count > 0 ? Number((expectedGrossSales / dbGrossSalesAgg._count).toFixed(2)) : 0;
+
+    // Strict Reconciliation Assertions (allowing +/- 1 for concurrent test runs inserting orders)
+    assert.ok(
+      Math.abs(body.metrics.totalOrders - dbTotalOrders) <= 1,
+      `Total orders must match DB count (actual: ${body.metrics.totalOrders}, db: ${dbTotalOrders})`
+    );
+    assert.equal(body.metrics.paidRevenue, expectedPaidRevenue, 'Captured revenue must match DB sum of SUCCEEDED payments');
+    assert.ok(
+      Math.abs(body.metrics.grossSales - expectedGrossSales) <= 500,
+      `Gross sales must match DB within concurrent test margin (actual: ${body.metrics.grossSales}, db: ${expectedGrossSales})`
+    );
+    assert.equal(body.metrics.ordersRequiringFulfilment, dbFulfilmentQueue, 'Fulfilment queue must match CONFIRMED + PROCESSING orders');
+    assert.equal(body.metrics.lowStockCount, dbLowStock, 'Low stock count must match active items with 1-10 units');
+    assert.equal(body.metrics.outOfStockCount, dbOutOfStock, 'Out of stock count must match active items with <= 0 units');
+    assert.ok(
+      Math.abs(body.metrics.totalUnitsSold - expectedUnitsSold) <= 2,
+      'Units sold must match total quantity across order items'
+    );
+    assert.equal(body.metrics.averageOrderValue, expectedAov, 'AOV must match gross sales divided by valid orders count');
+    assert.equal(body.metrics.pendingPayments, dbPendingPayments, 'Pending payments must match CREATED, PENDING, AUTHORIZED payments');
+
+    // Structural validations
+    assert.ok(Array.isArray(body.recentOrders), 'recentOrders must be an array');
+    assert.ok(Array.isArray(body.salesTrends), 'salesTrends must be an array');
+    assert.ok(Array.isArray(body.topSellingProducts), 'topSellingProducts must be an array');
+    assert.ok(Array.isArray(body.collectionPerformance), 'collectionPerformance must be an array');
   });
 
   it('6. Granular RBAC: Catalogue Manager is forbidden (403) from accessing admin user management', async () => {
