@@ -33,24 +33,24 @@ export function GatekeeperPanel({
   // Collection-specific palette & typography tokens
   const themeConfig = {
     food: {
-      bgColor: '#F1EDE4',
-      textColor: '#172B1C',
-      accentColor: '#287A25',
-      eyebrowColor: '#287A25',
-      descriptionColor: '#405244',
-      titleFont: 'font-sans font-bold tracking-tight',
-      gradientStop: 'from-[#F1EDE4] via-[#F1EDE4]/80 to-transparent',
-      overlayDim: 'bg-[#172B1C]/25',
+      bgColor: '#F8F6F0',
+      textColor: '#173B2A',
+      accentColor: '#3F7B43',
+      eyebrowColor: '#3F7B43',
+      descriptionColor: '#292820',
+      titleFont: 'font-serif font-bold tracking-tight',
+      gradientStop: 'from-[#F8F6F0] via-[#F8F6F0]/80 to-transparent',
+      overlayDim: 'bg-[#173B2A]/25',
     },
     tea: {
       bgColor: '#FAF1BB',
-      textColor: '#2C1E11',
-      accentColor: '#B88E38',
-      eyebrowColor: '#8C6320',
-      descriptionColor: '#543B25',
+      textColor: '#173B2A',
+      accentColor: '#65815A',
+      eyebrowColor: '#65815A',
+      descriptionColor: '#292820',
       titleFont: 'font-serif font-normal tracking-wide',
       gradientStop: 'from-[#FAF1BB] via-[#FAF1BB]/85 to-transparent',
-      overlayDim: 'bg-[#2C1E11]/15',
+      overlayDim: 'bg-[#173B2A]/15',
     },
     sarees: {
       bgColor: '#2C0E1A',
@@ -125,7 +125,7 @@ export function GatekeeperPanel({
       />
 
       {/* Top Content Area */}
-      <div className="relative z-10 pt-16 sm:pt-20 md:pt-24 px-5 sm:px-8 md:px-10 lg:px-12 flex flex-col items-start w-full">
+      <div className="relative z-10 pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 md:px-7 lg:px-8 xl:px-10 flex flex-col items-start w-full">
         {/* Collection Number & Divider */}
         <div className="flex items-center gap-3 text-xs sm:text-sm font-mono tracking-widest opacity-80 mb-3 sm:mb-4">
           <span className="font-semibold">{collection.number}</span>
@@ -138,10 +138,14 @@ export function GatekeeperPanel({
         {/* Collection Title */}
         <motion.h2
           layout="position"
-          className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl uppercase leading-[1.05] whitespace-nowrap ${themeConfig.titleFont}`}
+          className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl uppercase leading-[1.1] w-full max-w-full ${themeConfig.titleFont}`}
           style={{ color: themeConfig.textColor }}
         >
-          {collection.title}
+          {collection.title.split(' ').map((word, wIdx) => (
+            <span key={wIdx} className="inline-block mr-2.5 last:mr-0">
+              {word}
+            </span>
+          ))}
         </motion.h2>
 
         {/* Eyebrow Subheading */}

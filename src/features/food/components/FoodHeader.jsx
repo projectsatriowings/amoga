@@ -38,10 +38,10 @@ export function FoodHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-[#F1EDE4]/95 backdrop-blur-md border-b border-[#172B1C]/10 transition-colors">
+      <header className="sticky top-0 z-40 bg-[#F8F6F0]/95 backdrop-blur-md border-b border-[#E5E0D5] transition-colors">
         {/* Top Announcement Bar */}
-        <div className="bg-[#287A25] text-white text-[11px] font-medium py-1.5 px-4 text-center tracking-wider">
-          <span>Pure Food &bull; Farm-Fresh &bull; Single-Origin Teas & Traditional Soup Mixes</span>
+        <div className="bg-[#173B2A] text-[#F8F6F0] text-[11px] font-medium py-1.5 px-4 text-center tracking-wider">
+          <span>Traditional Soup Mixes &bull; Nourishing Millet Blends &bull; Flavourful Rice Podis</span>
           <span className="hidden sm:inline ml-3 opacity-90">&bull; Orders Support: +91 9940018593</span>
         </div>
 
@@ -56,21 +56,21 @@ export function FoodHeader() {
                   className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
                 />
               </Link>
-              <span className="hidden xl:inline text-xs font-serif italic text-[#557C36] pl-3 border-l border-[#172B1C]/15">
-                Pure Food &bull; Better Life
+              <span className="hidden xl:inline text-xs font-serif italic text-[#3F7B43] pl-3 border-l border-[#173B2A]/15">
+                The Goodness of Tradition
               </span>
             </div>
 
             {/* Center: Primary Navigation */}
             <nav
               aria-label="Food Store Navigation"
-              className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs uppercase tracking-wider font-medium text-[#172B1C]"
+              className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs uppercase tracking-wider font-medium text-[#173B2A]"
             >
               <Link
                 to="/food"
-                className={`px-3 py-1.5 rounded transition-colors hover:text-[#287A25] ${
+                className={`px-3 py-1.5 rounded transition-colors hover:text-[#3F7B43] ${
                   location.pathname === '/food' && !location.search
-                    ? 'font-bold text-[#287A25]'
+                    ? 'font-bold text-[#3F7B43]'
                     : ''
                 }`}
               >
@@ -79,13 +79,13 @@ export function FoodHeader() {
 
               <Link
                 to="/food/products"
-                className={`px-3 py-1.5 rounded transition-colors hover:text-[#287A25] ${
+                className={`px-3 py-1.5 rounded transition-colors hover:text-[#3F7B43] ${
                   location.pathname.startsWith('/food/products') && !location.search
-                    ? 'font-bold text-[#287A25]'
+                    ? 'font-bold text-[#3F7B43]'
                     : ''
                 }`}
               >
-                Shop
+                All Mixes
               </Link>
 
               {/* Categories Dropdown */}
@@ -96,7 +96,7 @@ export function FoodHeader() {
               >
                 <button
                   type="button"
-                  className="px-3 py-1.5 rounded flex items-center gap-1 hover:text-[#287A25] transition-colors"
+                  className="px-3 py-1.5 rounded flex items-center gap-1 hover:text-[#3F7B43] transition-colors"
                   aria-expanded={categoriesDropdownOpen}
                 >
                   <span>Categories</span>
@@ -104,23 +104,23 @@ export function FoodHeader() {
                 </button>
 
                 {categoriesDropdownOpen && (
-                  <div className="absolute top-full left-0 w-64 p-2 bg-[#F1EDE4] border border-[#172B1C]/10 rounded-xl shadow-xl z-50 text-left normal-case space-y-1">
+                  <div className="absolute top-full left-0 w-64 p-2 bg-[#F8F6F0] border border-[#E5E0D5] rounded-xl shadow-xl z-50 text-left normal-case space-y-1">
                     {FOOD_CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
                       <Link
                         key={cat.id}
                         to={`/food/products?category=${cat.id}`}
                         onClick={() => setCategoriesDropdownOpen(false)}
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-[#E5DFD3]/70 transition-colors"
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-[#EAE4D9]/80 transition-colors"
                       >
                         <div>
-                          <div className="text-xs font-semibold text-[#172B1C]">
+                          <div className="text-xs font-semibold text-[#173B2A]">
                             {cat.name}
                           </div>
-                          <div className="text-[10px] text-[#557C36]">
+                          <div className="text-[10px] text-[#3F7B43]">
                             {cat.badge || `${cat.count} items`}
                           </div>
                         </div>
-                        <span className="text-[10px] font-mono text-black/40">
+                        <span className="text-[10px] font-mono text-[#292820]/60">
                           {cat.count}
                         </span>
                       </Link>
@@ -244,18 +244,18 @@ export function FoodHeader() {
               <Link
                 to="/food"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-2 text-[#287A25] font-bold border-b border-black/5"
+                className="block py-2 text-[#3F7B43] font-bold border-b border-black/5"
               >
-                Food Home
+                Pantry Home
               </Link>
               <Link
                 to="/food/products"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block py-2 border-b border-black/5"
               >
-                All Products (Catalog)
+                All Mixes
               </Link>
-              <div className="py-2 text-xs font-mono text-[#557C36] uppercase tracking-wider">
+              <div className="py-2 text-xs font-mono text-[#3F7B43] uppercase tracking-wider">
                 Categories
               </div>
               <div className="grid grid-cols-2 gap-2 pb-2">

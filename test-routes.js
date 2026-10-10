@@ -12,7 +12,6 @@ const routes = [
   '/food/products?category=soups',
   '/food/products?category=millets',
   '/food/products?category=podis',
-  '/food/products?category=spices',
   '/food/products?q=moringa',
   '/food/products/lemon-coriander-leaves-soup',
   '/food/products/creamy-garlic-mushroom-soup',
