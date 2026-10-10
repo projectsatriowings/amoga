@@ -62,7 +62,7 @@ export function JewelleryHero() {
             className="lg:col-span-7 space-y-6 lg:pl-6 order-1 lg:order-2"
           >
             {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#343238] border border-[#B9B8B5]/20 text-[#B9B8B5] text-xs font-mono uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#343238]/70 backdrop-blur-md border border-[#B9B8B5]/30 text-[#B9B8B5] text-xs font-mono uppercase tracking-widest shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-[#C6AD82]" />
               <span>Timeless Elegance &bull; Pure Silver</span>
             </div>

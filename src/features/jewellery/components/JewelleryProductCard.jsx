@@ -39,8 +39,8 @@ export function JewelleryProductCard({ product }) {
 
         {/* Floating Top Badge */}
         {product.badge && (
-          <div className="absolute top-3 left-3 z-10">
-            <span className="text-[10px] uppercase font-mono tracking-wider px-2 py-1 rounded bg-[#242326]/85 text-[#B9B8B5] border border-[#B9B8B5]/25 backdrop-blur-sm">
+          <div className="absolute top-3 left-3 z-10 pointer-events-none">
+            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#242326]/65 backdrop-blur-md text-[#F7F3EB] border border-white/25 shadow-xs">
               {product.badge}
             </span>
           </div>

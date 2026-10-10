@@ -73,7 +73,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
         <div className="space-y-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${collectionBadge.color}`}
+              className={`text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-2xs ${collectionBadge.color}`}
             >
               {collectionBadge.label}
             </span>

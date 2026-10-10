@@ -62,7 +62,7 @@ export function SareeHero() {
             className="lg:col-span-7 space-y-6 lg:pl-6"
           >
             {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#451523] border border-[#C5A46D]/30 text-[#C5A46D] text-xs font-mono uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#451523]/70 backdrop-blur-md border border-[#C5A46D]/30 text-[#C5A46D] text-xs font-mono uppercase tracking-widest shadow-2xs">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Heritage Collection &bull; Timeless Elegance</span>
             </div>

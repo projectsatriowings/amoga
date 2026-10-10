@@ -108,7 +108,7 @@ export function TeaProductList() {
             <span>Back to Wellness Tea Overview</span>
           </Link>
 
-          <span className="text-xs font-mono text-[#2C1E11] bg-[#FFFDF5] px-3.5 py-1 rounded-full border border-[#B88E38]/30 shadow-sm">
+          <span className="text-xs font-mono text-[#2C1E11] bg-[#FFFDF5]/75 backdrop-blur-md px-3.5 py-1 rounded-full border border-[#B88E38]/30 shadow-xs">
             {filteredProducts.length} Botanical {filteredProducts.length === 1 ? 'Variety' : 'Varieties'} Available
           </span>
         </div>

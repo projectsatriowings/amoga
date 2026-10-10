@@ -40,7 +40,7 @@ export function TeaStorefront() {
             {/* Left Narrative */}
             <div className="lg:col-span-7 space-y-6">
               {/* Eyebrow text */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#B88E38]/20 border border-[#B88E38]/40 text-[#8C6320] text-xs font-mono tracking-widest uppercase font-semibold">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#B88E38]/20 backdrop-blur-md border border-[#B88E38]/40 text-[#8C6320] text-xs font-mono tracking-widest uppercase font-semibold shadow-2xs">
                 <Leaf className="w-3.5 h-3.5 text-[#B88E38]" />
                 <span>BOTANICAL WELLNESS</span>
               </div>

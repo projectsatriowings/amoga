@@ -39,8 +39,8 @@ export function SareeProductCard({ product }) {
 
         {/* Floating Top Badge */}
         {product.badge && (
-          <div className="absolute top-3 left-3 z-10">
-            <span className="text-[10px] uppercase font-mono tracking-wider px-2 py-1 rounded bg-[#2C0E1A]/85 text-[#C5A46D] border border-[#C5A46D]/30 backdrop-blur-sm">
+          <div className="absolute top-3 left-3 z-10 pointer-events-none">
+            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#2C0E1A]/65 backdrop-blur-md text-[#F6EBD8] border border-[#C5A46D]/40 shadow-xs">
               {product.badge}
             </span>
           </div>

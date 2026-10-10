@@ -29,7 +29,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
     <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 border border-[var(--collection-border)] shadow-sm sticky top-28 transition-colors">
       <div className="flex items-center justify-between pb-4 border-b border-[var(--collection-border)] mb-4">
         <h2 className="font-serif text-xl text-[var(--collection-heading)]">Your Bag Items</h2>
-        <span className="text-xs uppercase tracking-wider text-[var(--collection-text-muted)] bg-[var(--collection-section-bg)] px-2.5 py-1 rounded-full border border-[var(--collection-border)]">
+        <span className="text-xs uppercase tracking-wider text-[var(--collection-text-muted)] bg-[var(--collection-section-bg)]/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-[var(--collection-border)] shadow-2xs">
           {payableItemsCount} {payableItemsCount === 1 ? 'item' : 'items'}
         </span>
       </div>
@@ -59,7 +59,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className={`px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded border ${badge.class}`}>
+                  <span className={`px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded-full border backdrop-blur-md shadow-2xs ${badge.class}`}>
                     {badge.label}
                   </span>
                   {item.selectedVariant?.name && (

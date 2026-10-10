@@ -124,8 +124,8 @@ export function SareesProductDetail() {
 
               {/* Floating Badge */}
               {product.badge && (
-                <div className="absolute top-4 left-4">
-                  <span className="text-[11px] font-mono uppercase tracking-wider px-3 py-1 rounded bg-[#2C0E1A]/90 text-[#C5A46D] border border-[#C5A46D]/40 backdrop-blur-sm">
+                <div className="absolute top-4 left-4 pointer-events-none">
+                  <span className="text-[11px] font-mono uppercase tracking-wider font-semibold px-3 py-1 rounded-full bg-[#2C0E1A]/65 backdrop-blur-md text-[#F6EBD8] border border-[#C5A46D]/40 shadow-sm">
                     {product.badge}
                   </span>
                 </div>

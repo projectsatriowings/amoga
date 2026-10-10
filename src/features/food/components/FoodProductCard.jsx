@@ -27,12 +27,12 @@ export function FoodProductCard({ product }) {
         {/* Top Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
           {product.badge && (
-            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#173B2A] text-white shadow-2xs">
+            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#173B2A]/65 backdrop-blur-md text-white border border-white/25 shadow-xs">
               {product.badge}
             </span>
           )}
           {product.discount && (
-            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#3F7B43] text-white shadow-2xs">
+            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#3F7B43]/70 backdrop-blur-md text-white border border-white/30 shadow-xs">
               {product.discount}
             </span>
           )}

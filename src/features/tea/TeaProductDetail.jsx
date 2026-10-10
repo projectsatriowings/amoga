@@ -136,7 +136,7 @@ export function TeaProductDetail() {
 
               {product.badge && (
                 <div className="absolute top-4 left-4">
-                  <span className="px-3 py-1 rounded-full bg-[#B88E38] text-[#2C1E11] text-xs font-mono font-bold uppercase tracking-wider shadow-sm border border-[#8C6320]/30">
+                  <span className="px-3.5 py-1 rounded-full bg-white/75 backdrop-blur-md text-[#2C1E11] text-xs font-mono font-bold uppercase tracking-wider shadow-sm border border-white/60">
                     {product.badge}
                   </span>
                 </div>

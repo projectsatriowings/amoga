@@ -27,12 +27,12 @@ export function TeaProductCard({ product }) {
         {/* Top Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
           {product.badge && (
-            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#B88E38] text-[#2C1E11] shadow-sm border border-[#8C6320]/30">
+            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-white/75 backdrop-blur-md text-[#2C1E11] shadow-xs border border-white/60">
               {product.badge}
             </span>
           )}
           {product.isFeatured && (
-            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] shadow-sm">
+            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-[#2C1E11]/60 backdrop-blur-md text-[#FAF1BB] shadow-xs border border-white/20">
               Standee Selection
             </span>
           )}

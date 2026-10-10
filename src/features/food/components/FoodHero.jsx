@@ -18,7 +18,7 @@ export function FoodHero() {
             className="lg:col-span-7 space-y-6"
           >
             {/* Eyebrow Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#3F7B43]/10 border border-[#3F7B43]/20 text-[#3F7B43] text-xs font-mono font-semibold tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#3F7B43]/10 backdrop-blur-md border border-[#3F7B43]/20 text-[#3F7B43] text-xs font-mono font-semibold tracking-widest uppercase shadow-2xs">
               <Sparkles className="w-3.5 h-3.5" />
               <span>THE GOODNESS OF TRADITION</span>
             </div>

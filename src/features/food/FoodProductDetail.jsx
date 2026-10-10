@@ -112,12 +112,12 @@ export function FoodProductDetail() {
               {/* Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {product.badge && (
-                  <span className="text-xs uppercase font-mono tracking-wider font-semibold px-3 py-1 rounded-full bg-[#287A25] text-white shadow-md">
+                  <span className="text-xs uppercase font-mono tracking-wider font-semibold px-3 py-1 rounded-full bg-[#173B2A]/70 backdrop-blur-md text-white border border-white/30 shadow-sm">
                     {product.badge}
                   </span>
                 )}
                 {product.discount && (
-                  <span className="text-xs uppercase font-mono tracking-wider font-semibold px-3 py-1 rounded-full bg-orange-600 text-white shadow-md">
+                  <span className="text-xs uppercase font-mono tracking-wider font-semibold px-3 py-1 rounded-full bg-[#3F7B43]/75 backdrop-blur-md text-white border border-white/30 shadow-sm">
                     {product.discount}
                   </span>
                 )}

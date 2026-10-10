@@ -641,7 +641,7 @@ export const OrderReviewPage = () => {
                     Amoga Secure Checkout
                   </h3>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                    <span className="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md text-amber-300 border border-amber-400/40 shadow-2xs">
                       Test Mode Simulation
                     </span>
                     <span className="text-xs text-white/70">• No Real Money Charged</span>

@@ -127,8 +127,8 @@ export function JewelleryProductDetail() {
 
               {/* Floating Badge */}
               {product.badge && (
-                <div className="absolute top-4 left-4">
-                  <span className="text-[11px] font-mono uppercase tracking-wider px-3 py-1 rounded bg-[#242326]/90 text-[#B9B8B5] border border-[#B9B8B5]/30 backdrop-blur-sm">
+                <div className="absolute top-4 left-4 pointer-events-none">
+                  <span className="text-[11px] font-mono uppercase tracking-wider font-semibold px-3 py-1 rounded-full bg-[#242326]/65 backdrop-blur-md text-[#F7F3EB] border border-white/25 shadow-sm">
                     {product.badge}
                   </span>
                 </div>

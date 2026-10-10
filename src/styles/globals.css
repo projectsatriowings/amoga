@@ -108,6 +108,11 @@
     border: 1px solid var(--border-subtle);
   }
 
+  .badge-glass {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
   /* Professional tabular sans numerals across all data tables and financial figures */
   .tabular-nums,
   .font-numeric {
