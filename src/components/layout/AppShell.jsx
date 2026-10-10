@@ -19,15 +19,27 @@ export function AppShell({ children }) {
   const isSareeRoute = location.pathname.startsWith('/sarees');
   const isJewelleryRoute = location.pathname.startsWith('/jewellery');
   const isCollectionRoute = isFoodRoute || isTeaRoute || isSareeRoute || isJewelleryRoute;
+  const isCheckoutRoute =
+    location.pathname.startsWith('/checkout') ||
+    location.pathname.startsWith('/order-confirmation') ||
+    location.pathname === '/cart';
 
   // Apply collection theme data-attribute for tokens.css
-  const collectionTheme = activeCollection ? activeCollection.theme : 'amoga';
+  const collectionTheme = activeCollection
+    ? activeCollection.theme
+    : isCheckoutRoute
+    ? 'checkout'
+    : 'amoga';
 
   return (
     <div
       data-collection={collectionTheme}
       className={`min-h-screen flex flex-col transition-colors duration-normal ease-smooth ${
-        activeCollection ? `theme-${activeCollection.theme}` : ''
+        activeCollection
+          ? `theme-${activeCollection.theme}`
+          : isCheckoutRoute
+          ? 'theme-checkout'
+          : ''
       }`}
       style={{
         backgroundColor: 'var(--bg-primary)',

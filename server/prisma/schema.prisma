@@ -1,5 +1,5 @@
 // AMOGA E-COMMERCE — PRISMA SCHEMA
-// Supports Multi-Collection Storefronts (Food, Sarees, Jewellery) & Persistent Orders
+// Supports Multi-Collection Storefronts (Food, Sarees, Jewellery, Tea), Persistent Orders & Admin Panel
 
 generator client {
   provider = "prisma-client-js"
@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Collection {
-  id          String    @id // 'food' | 'sarees' | 'jewellery'
+  id          String    @id // 'food' | 'sarees' | 'jewellery' | 'tea'
   name        String
   slug        String    @unique
   tagline     String?
@@ -45,6 +45,7 @@ model Product {
   gallery          Json?            // Array of image paths/URLs
   packSize         String?
   inStock          Boolean          @default(true)
+  stockQuantity    Int              @default(50)
   isFeatured       Boolean          @default(false)
   badge            String?
   rating           Float?
@@ -59,6 +60,7 @@ model Product {
   collection       Collection       @relation(fields: [collectionId], references: [id], onDelete: Restrict)
   variants         ProductVariant[]
   orderItems       OrderItem[]
+  inventoryLogs    InventoryLog[]
 
   @@unique([collectionId, slug])
   @@index([collectionId])
@@ -68,19 +70,21 @@ model Product {
 }
 
 model ProductVariant {
-  id          String      @id @default(uuid())
-  sourceId    String?     // e.g. 'v-wine', 'ring-16'
-  productId   String
-  name        String      // e.g. 'Royal Wine', 'US 7'
-  sku         String?
-  price       Decimal?    @db.Decimal(10, 2)
-  inStock     Boolean     @default(true)
-  attributes  Json?       // e.g. { hex: '#451523' } or { size: 'US 6' }
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id            String         @id @default(uuid())
+  sourceId      String?        // e.g. 'v-wine', 'ring-16'
+  productId     String
+  name          String         // e.g. 'Royal Wine', 'US 7'
+  sku           String?
+  price         Decimal?       @db.Decimal(10, 2)
+  inStock       Boolean        @default(true)
+  stockQuantity Int            @default(25)
+  attributes    Json?          // e.g. { hex: '#451523' } or { size: 'US 6' }
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  orderItems  OrderItem[]
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  inventoryLogs InventoryLog[]
 
   @@index([productId])
   @@map("product_variants")
@@ -106,6 +110,13 @@ enum PaymentStatus {
   EXPIRED
   REFUNDED
   PARTIALLY_REFUNDED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  CATALOGUE_MANAGER
+  ORDER_MANAGER
+  CONTENT_MANAGER
 }
 
 model Order {
@@ -134,6 +145,10 @@ model Order {
   state                 String
   pincode               String
   deliveryInstructions  String?       @db.Text
+
+  // Carrier & Fulfilment tracking
+  carrier               String?
+  trackingNumber        String?
 
   // Mode and metadata
   isDemo                Boolean       @default(false)
@@ -218,4 +233,125 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@map("order_items")
+}
+
+// ================= ADMIN SYSTEM MODELS =================
+
+model AdminUser {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  name          String
+  passwordHash  String
+  role          AdminRole       @default(CATALOGUE_MANAGER)
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  sessions      AdminSession[]
+  auditLogs     AuditLog[]
+  inventoryLogs InventoryLog[]
+
+  @@map("admin_users")
+}
+
+model AdminSession {
+  id          String        @id @default(uuid())
+  adminId     String
+  tokenHash   String        @unique
+  expiresAt   DateTime
+  createdAt   DateTime      @default(now())
+
+  admin       AdminUser     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([tokenHash])
+  @@map("admin_sessions")
+}
+
+model AuditLog {
+  id          String        @id @default(uuid())
+  adminId     String?
+  adminEmail  String
+  action      String        // e.g. 'PRODUCT_CREATE', 'STOCK_ADJUST', 'ORDER_STATUS_CHANGE'
+  entityType  String        // e.g. 'Product', 'Collection', 'Order', 'Banner', 'Coupon', 'Settings'
+  entityId    String?
+  details     Json?
+  createdAt   DateTime      @default(now())
+
+  admin       AdminUser?    @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model InventoryLog {
+  id            String          @id @default(uuid())
+  productId     String
+  variantId     String?
+  previousStock Int
+  adjustedStock Int
+  delta         Int
+  reason        String
+  adminEmail    String
+  adminId       String?
+  createdAt     DateTime        @default(now())
+
+  admin         AdminUser?      @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  product       Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([createdAt])
+  @@map("inventory_logs")
+}
+
+model Banner {
+  id             String         @id @default(uuid())
+  title          String
+  subtitle       String?
+  imageUrl       String         @db.Text
+  mobileImageUrl String?        @db.Text
+  ctaLabel       String?
+  ctaLink        String?
+  displayOrder   Int            @default(0)
+  isPublished    Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([isPublished, displayOrder])
+  @@map("banners")
+}
+
+model Coupon {
+  id                String        @id @default(uuid())
+  code              String        @unique
+  discountType      String        // 'PERCENTAGE' | 'FIXED'
+  discountValue     Decimal       @db.Decimal(10, 2)
+  minOrderAmount    Decimal?      @db.Decimal(10, 2)
+  maxDiscountAmount Decimal?      @db.Decimal(10, 2)
+  usageLimit        Int?
+  usedCount         Int           @default(0)
+  isActive          Boolean       @default(true)
+  expiresAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([code])
+  @@map("coupons")
+}
+
+model StoreSetting {
+  id                       String         @id @default("default")
+  storeName                String         @default("Amoga Luxury")
+  contactEmail             String         @default("support@amoga.com")
+  contactPhone             String         @default("+91 98765 43210")
+  shippingStandardRate     Decimal        @default(0.00) @db.Decimal(10, 2)
+  freeShippingThreshold    Decimal        @default(2000.00) @db.Decimal(10, 2)
+  taxPercentage            Decimal        @default(5.00) @db.Decimal(5, 2)
+  enableOrderNotifications Boolean        @default(true)
+  enableInventoryAlerts    Boolean        @default(true)
+  updatedAt                DateTime       @default(now()) @updatedAt
+
+  @@map("store_settings")
 }

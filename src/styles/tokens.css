@@ -62,6 +62,31 @@
 }
 
 /* =========================================================================
+ * Unified Luxury Checkout & Cart Light Theme
+ * Consistent tokens for /checkout, /checkout/review, /order-confirmation, /cart
+ * ========================================================================= */
+[data-collection="checkout"],
+.theme-checkout {
+  --bg-primary: #F8F6F0;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --text-primary: #292820;
+  --text-secondary: #746F63;
+  --text-muted: #898477;
+  --accent-primary: #3F5A35;
+  --accent-secondary: #2E4426;
+  --border-subtle: #E5E0D5;
+  --border-strong: #C8C2B5;
+  --focus-ring: rgba(63, 90, 53, 0.45);
+  --color-error: #991B1B;
+  --color-success: #166534;
+  --font-family-body: var(--font-inter);
+  --font-family-heading: var(--font-playfair);
+  --shadow-subtle: 0 2px 12px rgba(41, 40, 32, 0.05);
+  --shadow-glow: 0 0 25px rgba(63, 90, 53, 0.12);
+}
+
+/* =========================================================================
  * Collection A: Gourmet Food Theme
  * Warm, clean, premium, and natural with #F1EDE4 primary background
  * ========================================================================= */

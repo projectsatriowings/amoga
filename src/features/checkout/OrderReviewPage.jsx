@@ -310,20 +310,20 @@ export const OrderReviewPage = () => {
   // If cart is empty and no active order
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-amoga-paper pt-28 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-xl mx-auto text-center py-16 bg-white rounded-2xl p-8 border border-amoga-brass/20 shadow-sm">
-          <div className="w-16 h-16 rounded-full bg-amoga-ivory border border-amoga-brass/30 flex items-center justify-center mx-auto mb-4 text-amoga-burgundy">
+      <div className="min-h-screen bg-[#F8F6F0] text-[#292820] pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-xl mx-auto text-center py-16 bg-white rounded-2xl p-8 border border-[#E5E0D5] shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-[#F8F6F0] border border-[#E5E0D5] flex items-center justify-center mx-auto mb-4 text-[#3F5A35]">
             <ShoppingBag className="w-8 h-8" />
           </div>
-          <h1 className="font-serif text-2xl text-amoga-charcoal mb-2">
+          <h1 className="font-serif text-2xl text-[#292820] mb-2">
             No Active Bag for Review
           </h1>
-          <p className="text-sm text-amoga-charcoal/70 mb-6">
+          <p className="text-sm text-[#746F63] mb-6">
             There are no items in your shopping bag to review.
           </p>
           <Link
             to="/cart"
-            className="inline-flex items-center px-6 py-3 rounded-xl bg-amoga-burgundy text-amoga-ivory text-sm font-medium hover:bg-amoga-burgundy/90 transition-all shadow-md"
+            className="inline-flex items-center px-6 py-3 rounded-xl bg-[#3F5A35] text-white text-sm font-medium hover:bg-[#344B2C] transition-all shadow-md"
           >
             Return to Shopping Bag
           </Link>
@@ -333,53 +333,53 @@ export const OrderReviewPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-amoga-paper pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8F6F0] text-[#292820] pt-28 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-amoga-charcoal/60">
+          <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[#746F63]">
             <li>
-              <Link to="/" className="hover:text-amoga-burgundy transition-colors">
+              <Link to="/" className="hover:text-[#3F5A35] transition-colors">
                 Portal
               </Link>
             </li>
             <li>
-              <span className="text-amoga-charcoal/40">/</span>
+              <span className="text-[#898477]">/</span>
             </li>
             <li>
-              <Link to="/cart" className="hover:text-amoga-burgundy transition-colors">
+              <Link to="/cart" className="hover:text-[#3F5A35] transition-colors">
                 Bag
               </Link>
             </li>
             <li>
-              <span className="text-amoga-charcoal/40">/</span>
+              <span className="text-[#898477]">/</span>
             </li>
             <li>
-              <Link to="/checkout" className="hover:text-amoga-burgundy transition-colors">
+              <Link to="/checkout" className="hover:text-[#3F5A35] transition-colors">
                 Checkout
               </Link>
             </li>
             <li>
-              <span className="text-amoga-charcoal/40">/</span>
+              <span className="text-[#898477]">/</span>
             </li>
-            <li className="text-amoga-burgundy font-medium" aria-current="page">
+            <li className="text-[#3F5A35] font-semibold" aria-current="page">
               Order Review
             </li>
           </ol>
         </nav>
 
         {/* Page Title */}
-        <div className="pb-6 border-b border-amoga-brass/20 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="pb-6 border-b border-[#E5E0D5] mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl sm:text-4xl text-amoga-charcoal">
+            <h1 className="font-serif text-3xl sm:text-4xl text-[#292820]">
               Order Review & Demonstration
             </h1>
-            <p className="mt-1 text-sm text-amoga-charcoal/70">
+            <p className="mt-1 text-sm text-[#746F63]">
               Please inspect your selections and delivery destination before completing the simulation.
             </p>
           </div>
-          <span className="text-xs uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-300 font-semibold self-start sm:self-auto flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span className="text-xs uppercase tracking-widest text-[#166534] bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-300 font-semibold self-start sm:self-auto flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-[#166534]" />
             Frontend Demo Preview
           </span>
         </div>
@@ -399,8 +399,8 @@ export const OrderReviewPage = () => {
 
         {/* Errors / Warnings */}
         {simulationError && (
-          <div className="p-4 bg-rose-50 border border-rose-300 rounded-xl text-rose-900 text-xs sm:text-sm mb-8 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="p-4 bg-red-50 border border-red-300 rounded-xl text-[#991B1B] text-xs sm:text-sm mb-8 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-[#991B1B] shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold">Review Error</p>
               <p className="mt-0.5">{simulationError}</p>
@@ -433,72 +433,73 @@ export const OrderReviewPage = () => {
           {/* Left Column: Order Items & Customer Card (8 cols) */}
           <div className="lg:col-span-8 space-y-6">
             {/* Delivery Destination Card */}
-            <div className="bg-white rounded-2xl p-6 border border-amoga-brass/20 shadow-sm">
-              <div className="flex items-center justify-between pb-3 border-b border-amoga-brass/15 mb-4">
-                <div className="flex items-center gap-2 text-amoga-burgundy">
+            <div className="bg-white rounded-2xl p-6 border border-[#E5E0D5] shadow-sm">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D5] mb-4">
+                <div className="flex items-center gap-2 text-[#3F5A35]">
                   <Truck className="w-4 h-4" />
-                  <h2 className="font-serif text-lg font-semibold text-amoga-charcoal">
+                  <h2 className="font-serif text-lg font-semibold text-[#292820]">
                     Delivery Destination
                   </h2>
                 </div>
                 <Link
                   to="/checkout"
-                  className="text-xs uppercase tracking-wider text-amoga-burgundy hover:underline font-semibold"
+                  className="text-xs uppercase tracking-wider text-[#3F5A35] hover:underline font-semibold"
                 >
                   Edit Address
                 </Link>
               </div>
 
               {isCustomerValid ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-amoga-charcoal/80">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-[#746F63]">
                   <div>
-                    <span className="block text-[11px] uppercase tracking-wider text-amoga-charcoal/50 font-medium mb-1">
+                    <span className="block text-[11px] uppercase tracking-wider text-[#898477] font-medium mb-1">
                       Recipient
                     </span>
-                    <p className="font-semibold text-amoga-charcoal text-sm">
+                    <p className="font-semibold text-[#292820] text-sm break-words">
                       {customerDetails.fullName}
                     </p>
-                    <p className="mt-0.5">{customerDetails.email}</p>
+                    <p className="mt-0.5 break-words">{customerDetails.email}</p>
                     <p>{customerDetails.phone}</p>
                   </div>
                   <div>
-                    <span className="block text-[11px] uppercase tracking-wider text-amoga-charcoal/50 font-medium mb-1">
+                    <span className="block text-[11px] uppercase tracking-wider text-[#898477] font-medium mb-1">
                       Shipping Address
                     </span>
-                    <p>{customerDetails.addressLine1}</p>
-                    {customerDetails.addressLine2 && <p>{customerDetails.addressLine2}</p>}
+                    <p className="break-words">{customerDetails.addressLine1}</p>
+                    {customerDetails.addressLine2 && <p className="break-words">{customerDetails.addressLine2}</p>}
                     <p>
                       {customerDetails.city}, {customerDetails.state} -{' '}
-                      <strong>{customerDetails.pincode}</strong>
+                      <strong className="text-[#292820]">{customerDetails.pincode}</strong>
                     </p>
                     {customerDetails.instructions && (
-                      <p className="mt-2 text-[11px] italic text-amoga-charcoal/60 bg-amoga-ivory p-2 rounded-lg border border-amoga-brass/15">
+                      <p className="mt-2 text-[11px] italic text-[#746F63] bg-[#F8F6F0] p-2 rounded-lg border border-[#E5E0D5] break-words">
                         Instructions: &ldquo;{customerDetails.instructions}&rdquo;
                       </p>
                     )}
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-rose-700 italic">
+                <p className="text-xs text-[#991B1B] italic">
                   No delivery address entered yet. Please return to Checkout.
                 </p>
               )}
             </div>
 
             {/* Cart Items Detailed Review */}
-            <div className="bg-white rounded-2xl p-6 border border-amoga-brass/20 shadow-sm">
-              <div className="flex items-center justify-between pb-3 border-b border-amoga-brass/15 mb-4">
-                <h2 className="font-serif text-lg font-semibold text-amoga-charcoal">
+            <div className="bg-white rounded-2xl p-6 border border-[#E5E0D5] shadow-sm">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D5] mb-4">
+                <h2 className="font-serif text-lg font-semibold text-[#292820]">
                   Items Selected ({totals.payableItemsCount})
                 </h2>
                 <Link
                   to="/cart"
-                  className="text-xs uppercase tracking-wider text-amoga-burgundy hover:underline font-semibold"
+                  className="text-xs uppercase tracking-wider text-[#3F5A35] hover:underline font-semibold"
                 >
                   Edit Cart
                 </Link>
               </div>
 
+              <div className="divide-y divide-[#E5E0D5]">
                 {cartItems.map((item) => {
                   const lineId = item.id || item.lineId;
                   const name = item.name || item.product?.name;
@@ -512,7 +513,7 @@ export const OrderReviewPage = () => {
                       <img
                         src={image}
                         alt={name}
-                        className="w-16 h-16 object-cover rounded-xl border border-amoga-brass/20 shrink-0"
+                        className="w-16 h-16 object-cover rounded-xl border border-[#E5E0D5] shrink-0"
                         onError={(e) => {
                           e.currentTarget.src =
                             'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23eee"/><text x="32" y="32" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="10">Amoga</text></svg>';
@@ -520,61 +521,62 @@ export const OrderReviewPage = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-amoga-ivory text-amoga-burgundy border border-amoga-brass/20">
+                          <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-[#F8F6F0] text-[#3F5A35] border border-[#E5E0D5]">
                             {collectionId}
                           </span>
                           {variantName && (
-                            <span className="text-[11px] text-amoga-charcoal/60">
+                            <span className="text-[11px] text-[#746F63] truncate">
                               • {variantName}
                             </span>
                           )}
                         </div>
-                        <h3 className="font-medium text-sm text-amoga-charcoal truncate">
+                        <h3 className="font-medium text-sm text-[#292820] truncate">
                           {name}
                         </h3>
-                        <div className="text-amoga-charcoal/70 mt-1">
-                          Unit Price: <span className="font-medium">{formatINR(price)}</span>
+                        <div className="text-[#746F63] mt-1">
+                          Unit Price: <span className="font-medium text-[#292820]">{formatINR(price)}</span>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-xs text-amoga-charcoal/60 block">
-                          Qty: <strong>{item.quantity}</strong>
+                        <span className="text-xs text-[#746F63] block">
+                          Qty: <strong className="text-[#292820]">{item.quantity}</strong>
                         </span>
-                        <span className="font-serif text-base font-semibold text-amoga-burgundy block mt-0.5">
+                        <span className="font-serif text-base font-semibold text-[#3F5A35] block mt-0.5">
                           {formatINR((price || 0) * item.quantity)}
                         </span>
                       </div>
                     </div>
                   );
                 })}
+              </div>
             </div>
           </div>
 
           {/* Right Column: Financial Breakdown & Demo Simulation CTA (4 cols) */}
           <div className="lg:col-span-4">
-            <div className="bg-amoga-ivory rounded-2xl p-6 sm:p-7 border border-amoga-brass/25 shadow-sm sticky top-28 space-y-6">
-              <h2 className="font-serif text-xl text-amoga-burgundy border-b border-amoga-brass/15 pb-3">
+            <div className="bg-white rounded-2xl p-6 sm:p-7 border border-[#E5E0D5] shadow-sm sticky top-28 space-y-6">
+              <h2 className="font-serif text-xl text-[#292820] border-b border-[#E5E0D5] pb-3">
                 Final Payable Summary
               </h2>
 
-              <div className="space-y-3 text-xs text-amoga-charcoal">
+              <div className="space-y-3 text-xs text-[#292820]">
                 <div className="flex justify-between items-baseline">
-                  <span>Subtotal ({totals.payableItemsCount} items)</span>
-                  <span className="font-serif text-sm font-semibold">
+                  <span className="text-[#746F63]">Subtotal ({totals.payableItemsCount} items)</span>
+                  <span className="font-serif text-sm font-semibold text-[#292820]">
                     {formatINR(totals.subtotal)}
                   </span>
                 </div>
-                <div className="flex justify-between items-baseline text-amoga-charcoal/70">
+                <div className="flex justify-between items-baseline text-[#746F63]">
                   <span>Standard Shipping</span>
-                  <span className="italic">Complimentary (Demo)</span>
+                  <span className="italic text-[#3F5A35]">Complimentary (Demo)</span>
                 </div>
-                <div className="flex justify-between items-baseline text-amoga-charcoal/70">
+                <div className="flex justify-between items-baseline text-[#746F63]">
                   <span>Taxes & Duties</span>
                   <span className="italic">Included</span>
                 </div>
-                <div className="pt-4 border-t border-amoga-brass/15 flex justify-between items-baseline">
-                  <span className="text-sm font-semibold text-amoga-charcoal">Total Amount</span>
-                  <span className="font-serif text-2xl font-bold text-amoga-burgundy">
+                <div className="pt-4 border-t border-[#E5E0D5] flex justify-between items-baseline">
+                  <span className="text-sm font-semibold text-[#292820]">Total Amount</span>
+                  <span className="font-serif text-2xl font-bold text-[#3F5A35]">
                     {formatINR(totals.subtotal)}
                   </span>
                 </div>
@@ -588,8 +590,8 @@ export const OrderReviewPage = () => {
                   disabled={!cartValidation.isValid || !isCustomerValid || isSubmitting}
                   className={`w-full py-4 px-5 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2 text-center transition-all shadow-md ${
                     !cartValidation.isValid || !isCustomerValid || isSubmitting
-                      ? 'bg-amoga-charcoal/20 text-amoga-charcoal/40 cursor-not-allowed shadow-none'
-                      : 'bg-amoga-burgundy hover:bg-amoga-burgundy/90 text-amoga-ivory active:scale-[0.99] shadow-amoga-burgundy/20 hover:shadow-lg'
+                      ? 'bg-[#898477]/30 text-[#746F63] cursor-not-allowed shadow-none'
+                      : 'bg-[#3F5A35] hover:bg-[#344B2C] text-white active:scale-[0.99] shadow-[#3F5A35]/20 hover:shadow-lg'
                   }`}
                 >
                   <CreditCard className="w-4 h-4 shrink-0" />
@@ -598,23 +600,23 @@ export const OrderReviewPage = () => {
                   </span>
                 </button>
 
-                <p className="mt-2.5 text-[11px] text-center text-amoga-charcoal/60 leading-tight">
+                <p className="mt-2.5 text-[11px] text-center text-[#746F63] leading-tight">
                   Test Mode Payment Gateway • Authoritative Server Pricing in INR
                 </p>
               </div>
 
               {/* Navigation Links */}
-              <div className="pt-4 border-t border-amoga-brass/15 flex flex-col gap-2 text-center text-xs">
+              <div className="pt-4 border-t border-[#E5E0D5] flex flex-col gap-2 text-center text-xs">
                 <Link
                   to="/checkout"
-                  className="text-amoga-charcoal/70 hover:text-amoga-burgundy font-medium flex items-center justify-center gap-1"
+                  className="text-[#746F63] hover:text-[#3F5A35] font-medium flex items-center justify-center gap-1"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Return to Checkout Form</span>
                 </Link>
                 <Link
                   to="/cart"
-                  className="text-amoga-charcoal/50 hover:text-amoga-charcoal font-medium"
+                  className="text-[#898477] hover:text-[#292820] font-medium"
                 >
                   Return to Shopping Bag
                 </Link>
@@ -626,23 +628,23 @@ export const OrderReviewPage = () => {
 
       {/* Secure Test Payment Gateway Modal */}
       {paymentModalOpen && paymentAttempt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-amoga-charcoal/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full border border-amoga-brass/30 shadow-2xl overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#292820]/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full border border-[#E5E0D5] shadow-2xl overflow-hidden flex flex-col">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-amoga-charcoal via-amoga-charcoal/95 to-amoga-burgundy text-amoga-ivory px-6 py-5 flex items-center justify-between">
+            <div className="bg-[#292820] text-white px-6 py-5 flex items-center justify-between border-b border-[#E5E0D5]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-amoga-brass">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#FAF1BB]">
                   <Lock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-lg font-semibold tracking-wide">
+                  <h3 className="font-serif text-lg font-semibold tracking-wide text-white">
                     Amoga Secure Checkout
                   </h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
                       Test Mode Simulation
                     </span>
-                    <span className="text-xs text-white/60">• No Real Money Charged</span>
+                    <span className="text-xs text-white/70">• No Real Money Charged</span>
                   </div>
                 </div>
               </div>
@@ -659,30 +661,30 @@ export const OrderReviewPage = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-5 bg-white">
               {/* Order & Payment References */}
-              <div className="bg-amoga-ivory/80 rounded-2xl p-4 border border-amoga-brass/20 space-y-2 text-xs">
+              <div className="bg-[#F8F6F0] rounded-2xl p-4 border border-[#E5E0D5] space-y-2 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-amoga-charcoal/60">Order Reference:</span>
-                  <span className="font-mono font-bold text-amoga-burgundy">
+                  <span className="text-[#746F63]">Order Reference:</span>
+                  <span className="font-mono font-bold text-[#3F5A35]">
                     {paymentAttempt.orderReference}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-amoga-charcoal/60">Payment Attempt:</span>
-                  <span className="font-mono font-medium text-amoga-charcoal">
+                  <span className="text-[#746F63]">Payment Attempt:</span>
+                  <span className="font-mono font-medium text-[#292820]">
                     {paymentAttempt.paymentReference}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-amoga-charcoal/60">Provider Adapter:</span>
-                  <span className="font-semibold text-emerald-800 uppercase tracking-wider text-[11px]">
+                  <span className="text-[#746F63]">Provider Adapter:</span>
+                  <span className="font-semibold text-[#166534] uppercase tracking-wider text-[11px]">
                     {paymentAttempt.provider} (Isolated Test Adapter)
                   </span>
                 </div>
-                <div className="pt-2 border-t border-amoga-brass/20 flex justify-between items-baseline">
-                  <span className="font-semibold text-amoga-charcoal text-sm">Authoritative Total:</span>
-                  <span className="font-serif text-xl font-bold text-amoga-burgundy">
+                <div className="pt-2 border-t border-[#E5E0D5] flex justify-between items-baseline">
+                  <span className="font-semibold text-[#292820] text-sm">Authoritative Total:</span>
+                  <span className="font-serif text-xl font-bold text-[#3F5A35]">
                     {formatINR(paymentAttempt.amount || totals.subtotal)}
                   </span>
                 </div>
@@ -690,8 +692,8 @@ export const OrderReviewPage = () => {
 
               {/* Error message banner */}
               {paymentError && (
-                <div className="p-3.5 bg-red-50 rounded-xl border border-red-300 text-xs text-red-800 flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div className="p-3.5 bg-red-50 rounded-xl border border-red-300 text-xs text-[#991B1B] flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-[#991B1B] shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold">Payment Failed</p>
                     <p className="mt-0.5 text-red-700">{paymentError}</p>
@@ -717,7 +719,7 @@ export const OrderReviewPage = () => {
                   type="button"
                   onClick={() => handleExecutePaymentSimulation('success')}
                   disabled={isProcessingPayment}
-                  className="w-full py-3.5 px-4 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white shadow-md transition-all active:scale-[0.99] disabled:opacity-50"
+                  className="w-full py-3.5 px-4 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2 bg-[#166534] hover:bg-[#14532D] text-white shadow-md transition-all active:scale-[0.99] disabled:opacity-50"
                 >
                   {isProcessingPayment ? (
                     <>
@@ -736,9 +738,9 @@ export const OrderReviewPage = () => {
                   type="button"
                   onClick={() => handleExecutePaymentSimulation('failure')}
                   disabled={isProcessingPayment}
-                  className="w-full py-2.5 px-4 rounded-xl text-xs font-medium text-red-700 hover:bg-red-50 border border-red-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="w-full py-2.5 px-4 rounded-xl text-xs font-medium text-[#991B1B] hover:bg-red-50 border border-red-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
-                  <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+                  <ShieldAlert className="w-3.5 h-3.5 text-[#991B1B]" />
                   <span>Simulate Payment Failure (Declined / Invalid Signature)</span>
                 </button>
               </div>

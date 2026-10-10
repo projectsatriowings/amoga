@@ -14,20 +14,20 @@ export const CheckoutPage = () => {
   // If cart is empty, redirect or prompt customer
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-amoga-paper pt-28 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-xl mx-auto text-center py-16 bg-white rounded-2xl p-8 border border-amoga-brass/20 shadow-sm">
-          <div className="w-16 h-16 rounded-full bg-amoga-ivory border border-amoga-brass/30 flex items-center justify-center mx-auto mb-4 text-amoga-burgundy">
+      <div className="min-h-screen bg-[#F8F6F0] text-[#292820] pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-xl mx-auto text-center py-16 bg-white rounded-2xl p-8 border border-[#E5E0D5] shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-[#F8F6F0] border border-[#E5E0D5] flex items-center justify-center mx-auto mb-4 text-[#3F5A35]">
             <ShoppingBag className="w-8 h-8" />
           </div>
-          <h1 className="font-serif text-2xl text-amoga-charcoal mb-2">
+          <h1 className="font-serif text-2xl text-[#292820] mb-2">
             No Items in Checkout
           </h1>
-          <p className="text-sm text-amoga-charcoal/70 mb-6">
+          <p className="text-sm text-[#746F63] mb-6">
             Your shopping bag is currently empty. Please select products from our collections before proceeding with checkout.
           </p>
           <Link
             to="/cart"
-            className="inline-flex items-center px-6 py-3 rounded-xl bg-amoga-burgundy text-amoga-ivory text-sm font-medium hover:bg-amoga-burgundy/90 transition-all shadow-md"
+            className="inline-flex items-center px-6 py-3 rounded-xl bg-[#3F5A35] text-white text-sm font-medium hover:bg-[#344B2C] transition-all shadow-md"
           >
             Go to Shopping Bag
           </Link>
@@ -37,39 +37,39 @@ export const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-amoga-paper pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8F6F0] text-[#292820] pt-28 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-amoga-charcoal/60">
+          <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[#746F63]">
             <li>
-              <Link to="/" className="hover:text-amoga-burgundy transition-colors">
+              <Link to="/" className="hover:text-[#3F5A35] transition-colors">
                 Portal
               </Link>
             </li>
             <li>
-              <span className="text-amoga-charcoal/40">/</span>
+              <span className="text-[#898477]">/</span>
             </li>
             <li>
-              <Link to="/cart" className="hover:text-amoga-burgundy transition-colors">
+              <Link to="/cart" className="hover:text-[#3F5A35] transition-colors">
                 Bag
               </Link>
             </li>
             <li>
-              <span className="text-amoga-charcoal/40">/</span>
+              <span className="text-[#898477]">/</span>
             </li>
-            <li className="text-amoga-burgundy font-medium" aria-current="page">
+            <li className="text-[#3F5A35] font-semibold" aria-current="page">
               Checkout & Delivery
             </li>
           </ol>
         </nav>
 
         {/* Page Title */}
-        <div className="pb-6 border-b border-amoga-brass/20 mb-8">
-          <h1 className="font-serif text-3xl sm:text-4xl text-amoga-charcoal">
+        <div className="pb-6 border-b border-[#E5E0D5] mb-8">
+          <h1 className="font-serif text-3xl sm:text-4xl text-[#292820]">
             Delivery & Customer Details
           </h1>
-          <p className="mt-1 text-sm text-amoga-charcoal/70">
+          <p className="mt-1 text-sm text-[#746F63]">
             Please enter your contact and destination details for this simulated checkout preview.
           </p>
         </div>
@@ -93,15 +93,15 @@ export const CheckoutPage = () => {
           </div>
         )}
 
-        {/* Layout Grid */}
+        {/* Layout Grid: Responsive 2-column desktop layout that stacks on mobile/tablet */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Main Form Column (8 cols) */}
-          <div className="lg:col-span-8">
+          {/* Main Form Column (8 cols on desktop) */}
+          <div className="lg:col-span-8 w-full">
             <CheckoutForm />
           </div>
 
-          {/* Sticky Summary Column (4 cols) */}
-          <div className="lg:col-span-4">
+          {/* Sticky Summary Column (4 cols on desktop) */}
+          <div className="lg:col-span-4 w-full">
             <CheckoutOrderSummary />
           </div>
         </div>

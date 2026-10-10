@@ -42,15 +42,15 @@ app.use(
       return callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-guest-access-token', 'Idempotency-Key'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-guest-access-token', 'x-admin-token', 'Idempotency-Key'],
   })
 );
 
 // Body Parsers with size limits & rawBody preservation for webhooks
 app.use(
   express.json({
-    limit: '100kb',
+    limit: '1mb',
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },

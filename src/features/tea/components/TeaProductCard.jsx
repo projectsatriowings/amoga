@@ -87,10 +87,15 @@ export function TeaProductCard({ product }) {
         <div className="pt-2 border-t border-[#B88E38]/20 flex items-center justify-between gap-3">
           <div>
             {hasPrice ? (
-              <div className="flex items-baseline gap-1.5">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
                 <span className="text-base font-serif font-bold text-[#2C1E11]">
                   ₹{product.price}
                 </span>
+                {product.packSize && (
+                  <span className="text-[10px] font-mono text-[#8C6320] opacity-80">
+                    ({product.packSize})
+                  </span>
+                )}
                 {product.originalPrice && (
                   <span className="text-xs text-[#7D5C3F] line-through">
                     ₹{product.originalPrice}

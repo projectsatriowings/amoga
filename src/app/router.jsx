@@ -21,11 +21,31 @@ import { DemoOrderConfirmation } from '../features/checkout/DemoOrderConfirmatio
 import { NotFound } from '../components/feedback/NotFound';
 import { RouteErrorBoundary } from '../components/feedback/RouteErrorBoundary';
 
+// Admin Panel Screens
+import { AdminLayout } from '../features/admin/components/AdminLayout';
+import { AdminLogin } from '../features/admin/pages/AdminLogin';
+import { AdminDashboard } from '../features/admin/pages/AdminDashboard';
+import { AdminProducts } from '../features/admin/pages/AdminProducts';
+import { AdminProductForm } from '../features/admin/pages/AdminProductForm';
+import { AdminCollections } from '../features/admin/pages/AdminCollections';
+import { AdminInventory } from '../features/admin/pages/AdminInventory';
+import { AdminOrders } from '../features/admin/pages/AdminOrders';
+import { AdminOrderDetail } from '../features/admin/pages/AdminOrderDetail';
+import { AdminPayments } from '../features/admin/pages/AdminPayments';
+import { AdminCustomers } from '../features/admin/pages/AdminCustomers';
+import { AdminBanners } from '../features/admin/pages/AdminBanners';
+import { AdminHomepage } from '../features/admin/pages/AdminHomepage';
+import { AdminPromotions } from '../features/admin/pages/AdminPromotions';
+import { AdminReports } from '../features/admin/pages/AdminReports';
+import { AdminSettings } from '../features/admin/pages/AdminSettings';
+import { AdminUsers } from '../features/admin/pages/AdminUsers';
+import { AdminAuditLogs } from '../features/admin/pages/AdminAuditLogs';
+
 /**
- * React Router Configuration for Amoga E-Commerce Phase 1-6
- * Defines conventions for all collections, catalogue lists, detail routes, unified cart, checkout, and 404 handler.
+ * React Router Configuration for Amoga E-Commerce Storefront & Admin Atelier
  */
 export const router = createBrowserRouter([
+  // Customer Storefront Routes
   {
     path: '/',
     element: (
@@ -166,6 +186,39 @@ export const router = createBrowserRouter([
     ),
     errorElement: <RouteErrorBoundary />,
   },
+
+  // Dedicated Admin Atelier Routes
+  {
+    path: '/admin/login',
+    element: <AdminLogin />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/admin',
+    element: <AdminLayout />,
+    errorElement: <RouteErrorBoundary />,
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: 'products', element: <AdminProducts /> },
+      { path: 'products/new', element: <AdminProductForm /> },
+      { path: 'products/:id/edit', element: <AdminProductForm /> },
+      { path: 'collections', element: <AdminCollections /> },
+      { path: 'inventory', element: <AdminInventory /> },
+      { path: 'orders', element: <AdminOrders /> },
+      { path: 'orders/:id', element: <AdminOrderDetail /> },
+      { path: 'payments', element: <AdminPayments /> },
+      { path: 'customers', element: <AdminCustomers /> },
+      { path: 'banners', element: <AdminBanners /> },
+      { path: 'homepage', element: <AdminHomepage /> },
+      { path: 'promotions', element: <AdminPromotions /> },
+      { path: 'reports', element: <AdminReports /> },
+      { path: 'settings', element: <AdminSettings /> },
+      { path: 'users', element: <AdminUsers /> },
+      { path: 'audit-logs', element: <AdminAuditLogs /> },
+    ],
+  },
+
+  // 404 Fallback
   {
     path: '*',
     element: <NotFound />,

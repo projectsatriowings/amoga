@@ -16,16 +16,25 @@ export function AppHeader({ activeCollection }) {
   const cartCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   const wishlistCount = wishlist.items.length;
 
+  const isCheckoutRoute =
+    location.pathname.startsWith('/checkout') ||
+    location.pathname.startsWith('/order-confirmation') ||
+    location.pathname === '/cart';
+
   // Dynamic header styles based on active collection
   const headerThemeStyles = {
     food: 'bg-[#F1EDE4]/90 text-[#172B1C] border-[#172B1C]/10',
+    tea: 'bg-[#FAF1BB]/90 text-[#2C1E11] border-[#B88E38]/20',
     sarees: 'bg-[#2C0E1A]/90 text-[#F6EBD8] border-[#C5A46D]/20',
     jewellery: 'bg-[#111215]/90 text-[#F4F4F2] border-white/10',
+    checkout: 'bg-[#F8F6F0]/95 text-[#292820] border-[#E5E0D5]',
     default: 'bg-[#0e0f12]/90 text-[#F4F4F2] border-white/10',
   };
 
   const activeThemeClass = activeCollection
     ? headerThemeStyles[activeCollection.id] || headerThemeStyles.default
+    : isCheckoutRoute
+    ? headerThemeStyles.checkout
     : headerThemeStyles.default;
 
   return (

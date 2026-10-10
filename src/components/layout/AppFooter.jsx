@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PhoneCall } from 'lucide-react';
 import amogaLogo from '../../assets/images/amoga-logo.png';
 import { COLLECTIONS } from '../../data/collections';
@@ -8,10 +8,15 @@ import { Container } from '../ui/Container';
 const CURRENT_YEAR = 2026;
 
 export function AppFooter({ activeCollection }) {
+  const location = useLocation();
   const isFood = activeCollection?.id === 'food';
   const isTea = activeCollection?.id === 'tea';
   const isSarees = activeCollection?.id === 'sarees';
   const isJewellery = activeCollection?.id === 'jewellery';
+  const isCheckout =
+    location.pathname.startsWith('/checkout') ||
+    location.pathname.startsWith('/order-confirmation') ||
+    location.pathname === '/cart';
 
   const footerBg = isFood
     ? 'bg-[#F1EDE4] text-[#172B1C] border-[#172B1C]/10'
@@ -21,6 +26,8 @@ export function AppFooter({ activeCollection }) {
     ? 'bg-[#1D0911] text-[#F6EBD8] border-[#C5A46D]/15'
     : isJewellery
     ? 'bg-[#1C1B1E] text-[#F7F3EB] border-[#B9B8B5]/15'
+    : isCheckout
+    ? 'bg-[#F8F6F0] text-[#292820] border-[#E5E0D5]'
     : 'bg-[#0B0C0E] text-[#F4F4F2] border-white/10';
 
   return (
@@ -306,6 +313,8 @@ export function AppFooter({ activeCollection }) {
           <div>&copy; {CURRENT_YEAR} Amoga E-Commerce. All rights reserved.</div>
           <div className="flex items-center gap-4">
             <Link to="/food" className="hover:underline">Gourmet Food</Link>
+            <span>&bull;</span>
+            <Link to="/tea" className="hover:underline">Botanical Tea</Link>
             <span>&bull;</span>
             <Link to="/sarees" className="hover:underline">Heritage Sarees</Link>
             <span>&bull;</span>

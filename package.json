@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -n \"SERVER,CLIENT\" -c \"magenta,cyan\" \"npm run server\" \"vite\"",
+    "dev:client": "vite",
+    "dev:server": "npm run server:dev",
     "build": "npm --prefix server install && npm --prefix server run prisma:generate && vite build",
     "start": "node server/src/server.js",
     "postinstall": "npm --prefix server install && npm --prefix server run prisma:generate",
@@ -30,6 +32,7 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.6.1",
+    "concurrently": "^10.0.6",
     "oxlint": "^1.81.0",
     "postcss": "^8.5.29",
     "tailwindcss": "^3.4.19",

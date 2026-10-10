@@ -32,23 +32,27 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
   // Collection metadata label & styling
   const collectionBadge =
     product.collection === 'jewellery'
-      ? { label: 'Silver Jewellery', color: 'bg-[#B9B8B5]/15 text-[#B9B8B5] border-[#B9B8B5]/30' }
+      ? { label: 'Silver Jewellery', color: 'bg-[#3A4556]/10 text-[#3A4556] border-[#3A4556]/20' }
       : product.collection === 'sarees'
-      ? { label: 'Heritage Sarees', color: 'bg-[#C5A46D]/15 text-[#C5A46D] border-[#C5A46D]/30' }
+      ? { label: 'Heritage Sarees', color: 'bg-[#7A1C2E]/10 text-[#7A1C2E] border-[#7A1C2E]/20' }
       : product.collection === 'tea'
-      ? { label: 'Herbal Tea', color: 'bg-[#FAF1BB]/30 text-[#8C6320] border-[#B88E38]/40' }
-      : { label: 'Gourmet Food', color: 'bg-[#287A25]/15 text-[#557C36] border-[#287A25]/30' };
+      ? { label: 'Botanical Tea', color: 'bg-[#FAF1BB]/60 text-[#8C6320] border-[#B88E38]/30' }
+      : { label: 'Gourmet Food', color: 'bg-[#2D5A27]/10 text-[#2D5A27] border-[#2D5A27]/20' };
 
   return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E5E0D5] hover:border-[#C8C2B5] shadow-sm transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       {/* Product Image & Info */}
       <div className="flex items-start gap-4 flex-1 min-w-0">
         <Link to={productUrl} className="shrink-0 group">
-          <div className="w-20 h-20 rounded-xl overflow-hidden bg-black/20 border border-white/10">
+          <div className="w-20 h-20 rounded-xl overflow-hidden bg-[#F8F6F0] border border-[#E5E0D5]">
             <img
               src={product.image}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+              onError={(e) => {
+                e.currentTarget.src =
+                  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="%23f8f6f0"/><text x="40" y="40" dominant-baseline="middle" text-anchor="middle" fill="%23746f63" font-size="11">Amoga</text></svg>';
+              }}
             />
           </div>
         </Link>
@@ -61,36 +65,36 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
               {collectionBadge.label}
             </span>
             {product.categoryName && (
-              <span className="text-[11px] font-mono text-white/40">
+              <span className="text-[11px] font-mono text-[#746F63]">
                 &bull; {product.categoryName}
               </span>
             )}
           </div>
 
-          <h3 className="text-base font-serif font-medium text-white hover:text-white/80 transition-colors line-clamp-1">
+          <h3 className="text-base font-serif font-medium text-[#292820] hover:text-[#3F5A35] transition-colors line-clamp-1">
             <Link to={productUrl}>{product.name}</Link>
           </h3>
 
           {/* Selected Variant / Size display */}
           {selectedVariant && (
-            <div className="flex items-center gap-1.5 text-xs text-white/70">
-              <span className="text-white/40">Option:</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#746F63]">
+              <span className="text-[#898477]">Option:</span>
               {selectedVariant.hex && (
                 <span
-                  className="w-3 h-3 rounded-full border border-white/30 inline-block"
+                  className="w-3 h-3 rounded-full border border-[#E5E0D5] inline-block"
                   style={{ backgroundColor: selectedVariant.hex }}
                 />
               )}
-              <span className="font-medium text-white/90">{selectedVariant.name}</span>
+              <span className="font-medium text-[#292820]">{selectedVariant.name}</span>
             </div>
           )}
 
           {/* Unit Price */}
-          <div className="text-xs text-white/60 pt-0.5">
+          <div className="text-xs text-[#746F63] pt-0.5">
             {hasPrice ? (
-              <span>Unit Price: {formatINR(unitPrice)}</span>
+              <span>Unit Price: <strong className="text-[#292820]">{formatINR(unitPrice)}</strong></span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-amber-400 font-mono text-[11px]">
+              <span className="inline-flex items-center gap-1 text-amber-700 font-mono text-[11px]">
                 <AlertCircle className="w-3.5 h-3.5" />
                 Price pending confirmation
               </span>
@@ -100,20 +104,20 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
       </div>
 
       {/* Quantity & Line Total */}
-      <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+      <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E5E0D5]">
         {/* Quantity Controls */}
-        <div className="flex items-center gap-1.5 bg-white/5 border border-white/15 rounded-xl px-2 py-1">
+        <div className="flex items-center gap-1 bg-[#F8F6F0] border border-[#E5E0D5] rounded-xl px-2 py-1">
           <button
             type="button"
             onClick={() => handleUpdate(lineKey, quantity - 1)}
             disabled={quantity <= 1}
-            className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-1.5 rounded-lg text-[#746F63] hover:text-[#292820] hover:bg-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label={`Decrease quantity of ${product.name}`}
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
           <span
-            className="text-xs font-mono font-bold text-white px-2 min-w-[24px] text-center"
+            className="text-xs font-mono font-bold text-[#292820] px-2 min-w-[24px] text-center"
             aria-label={`Current quantity: ${quantity}`}
           >
             {quantity}
@@ -121,7 +125,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
           <button
             type="button"
             onClick={() => handleUpdate(lineKey, quantity + 1)}
-            className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-[#746F63] hover:text-[#292820] hover:bg-white transition-colors"
             aria-label={`Increase quantity of ${product.name}`}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -131,11 +135,11 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
         {/* Line Subtotal */}
         <div className="text-right min-w-[90px]">
           {hasPrice ? (
-            <div className="text-base font-serif font-bold text-white">
+            <div className="text-base font-serif font-bold text-[#3F5A35]">
               {formatINR(unitPrice * quantity)}
             </div>
           ) : (
-            <div className="text-[11px] font-mono text-amber-400">
+            <div className="text-[11px] font-mono text-amber-700">
               Unverified
             </div>
           )}
@@ -145,7 +149,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
         <button
           type="button"
           onClick={() => handleRemove(lineKey)}
-          className="p-2 rounded-xl text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="p-2 rounded-xl text-[#746F63] hover:text-[#991B1B] hover:bg-red-50 transition-colors"
           aria-label={`Remove ${product.name} from shopping bag`}
           title="Remove item"
         >

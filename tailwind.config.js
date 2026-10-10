@@ -14,6 +14,24 @@ export default {
           silver: '#C6C8CD',
           dark: '#0e0f12',
           light: '#FDFBF7',
+          // Unified Light Luxury Checkout Tokens
+          paper: '#F8F6F0',
+          ivory: '#F8F6F0',
+          charcoal: '#292820',
+          brass: '#E5E0D5',
+          burgundy: '#3F5A35', // Dark olive primary action
+        },
+        checkout: {
+          bg: '#F8F6F0',
+          surface: '#FFFFFF',
+          text: '#292820',
+          secondary: '#746F63',
+          muted: '#898477',
+          border: '#E5E0D5',
+          primary: '#3F5A35',
+          primaryHover: '#344B2C',
+          error: '#991B1B',
+          success: '#166534',
         },
         food: {
           bg: '#F1EDE4',

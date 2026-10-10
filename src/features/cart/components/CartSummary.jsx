@@ -12,29 +12,29 @@ export const CartSummary = () => {
   const isCheckoutDisabled = payableItemsCount === 0 || hasUnpricedItems;
 
   return (
-    <div className="bg-amoga-ivory rounded-2xl p-6 lg:p-8 border border-amoga-brass/20 shadow-sm sticky top-28">
-      <h2 className="font-serif text-2xl text-amoga-burgundy mb-6 flex items-center justify-between">
+    <div className="bg-white rounded-2xl p-6 lg:p-8 border border-[#E5E0D5] shadow-sm sticky top-28">
+      <h2 className="font-serif text-2xl text-[#292820] mb-6 flex items-center justify-between">
         <span>Order Summary</span>
-        <span className="text-xs font-sans uppercase tracking-widest text-amoga-charcoal/60 bg-white/80 px-2.5 py-1 rounded-full border border-amoga-brass/20">
+        <span className="text-xs font-sans uppercase tracking-wider text-[#746F63] bg-[#F8F6F0] px-2.5 py-1 rounded-full border border-[#E5E0D5]">
           {payableItemsCount} {payableItemsCount === 1 ? 'item' : 'items'}
         </span>
       </h2>
 
       {/* Pricing Breakdown */}
-      <div className="space-y-4 text-sm pb-6 border-b border-amoga-brass/15">
-        <div className="flex justify-between items-baseline text-amoga-charcoal">
-          <span className="font-sans">Subtotal (Payable items)</span>
-          <span className="font-serif text-lg font-semibold text-amoga-charcoal">
+      <div className="space-y-4 text-sm pb-6 border-b border-[#E5E0D5]">
+        <div className="flex justify-between items-baseline text-[#292820]">
+          <span className="font-sans text-[#746F63]">Subtotal (Payable items)</span>
+          <span className="font-serif text-lg font-semibold text-[#292820]">
             {formatINR(subtotal)}
           </span>
         </div>
 
-        <div className="flex justify-between items-start text-xs text-amoga-charcoal/70">
+        <div className="flex justify-between items-start text-xs text-[#746F63]">
           <span>Standard Delivery</span>
-          <span className="text-right italic">Complimentary during demo preview</span>
+          <span className="text-right italic text-[#3F5A35]">Complimentary during demo preview</span>
         </div>
 
-        <div className="flex justify-between items-start text-xs text-amoga-charcoal/70">
+        <div className="flex justify-between items-start text-xs text-[#746F63]">
           <span>Applicable Taxes & Duties</span>
           <span className="text-right italic">Included in displayed product pricing</span>
         </div>
@@ -56,10 +56,10 @@ export const CartSummary = () => {
       {/* Payable Total */}
       <div className="py-6 flex justify-between items-baseline">
         <div>
-          <span className="text-base font-medium text-amoga-charcoal block">Estimated Payable</span>
-          <span className="text-xs text-amoga-charcoal/60">Final review on next step</span>
+          <span className="text-base font-medium text-[#292820] block">Estimated Payable</span>
+          <span className="text-xs text-[#746F63]">Final review on next step</span>
         </div>
-        <span className="font-serif text-3xl font-bold text-amoga-burgundy">
+        <span className="font-serif text-3xl font-bold text-[#3F5A35]">
           {formatINR(subtotal)}
         </span>
       </div>
@@ -70,8 +70,8 @@ export const CartSummary = () => {
         disabled={isCheckoutDisabled}
         className={`w-full py-4 px-6 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md ${
           isCheckoutDisabled
-            ? 'bg-amoga-charcoal/20 text-amoga-charcoal/40 cursor-not-allowed shadow-none'
-            : 'bg-amoga-burgundy hover:bg-amoga-burgundy/90 text-amoga-ivory active:scale-[0.99] shadow-amoga-burgundy/15 hover:shadow-lg'
+            ? 'bg-[#898477]/30 text-[#746F63] cursor-not-allowed shadow-none'
+            : 'bg-[#3F5A35] hover:bg-[#344B2C] text-white active:scale-[0.99] shadow-[#3F5A35]/20 hover:shadow-lg'
         }`}
       >
         <span>Proceed to Checkout</span>
@@ -79,13 +79,13 @@ export const CartSummary = () => {
       </button>
 
       {/* Micro-assurance */}
-      <div className="mt-6 pt-5 border-t border-amoga-brass/10 space-y-2.5 text-xs text-amoga-charcoal/70">
+      <div className="mt-6 pt-5 border-t border-[#E5E0D5] space-y-2.5 text-xs text-[#746F63]">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>Authentic artisanal curation across Food, Sarees & Silver</span>
+          <ShieldCheck className="w-4 h-4 text-[#166534] shrink-0" />
+          <span>Authentic artisanal curation across Food, Tea, Sarees & Silver</span>
         </div>
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-amoga-gold shrink-0" />
+          <Sparkles className="w-4 h-4 text-[#C5A46D] shrink-0" />
           <span>Multi-collection unified shopping bag</span>
         </div>
       </div>
@@ -93,7 +93,7 @@ export const CartSummary = () => {
       <div className="mt-6 text-center">
         <Link
           to="/"
-          className="text-xs uppercase tracking-widest text-amoga-burgundy/80 hover:text-amoga-burgundy font-semibold underline underline-offset-4"
+          className="text-xs uppercase tracking-wider text-[#3F5A35] hover:underline font-semibold"
         >
           ← Continue Browsing Collections
         </Link>

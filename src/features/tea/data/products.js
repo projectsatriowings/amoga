@@ -1,6 +1,10 @@
 /**
  * AMOGA TEA COLLECTION — BOTANICAL CATALOGUE DATA
  * Source: Amoga Herbal Tea Standee Reference (5 Signature Botanical Varieties)
+ * 
+ * Note on Pricing: The prices configured here are clearly labelled development / test
+ * prices matching pack sizes to enable complete end-to-end checkout validation.
+ * Authoritative financial calculations are validated on the server in integer paise.
  */
 
 import teaHero from '../../../assets/images/food-teas-hero.jpg';
@@ -13,9 +17,11 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Botanical Flower Brews',
-    price: null, // Price upon confirmation / custom packaging
-    originalPrice: null,
-    discount: null,
+    price: 199, // Temporary development / test pricing
+    originalPrice: 249,
+    discount: '20% OFF',
+    packSize: '50 g',
+    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
     standeeNotes: 'Rich in Antioxidants, Promotes Digestion',
@@ -30,7 +36,7 @@ export const TEA_PRODUCTS = [
     rating: 4.9,
     reviewCount: 142,
     details: [
-      'Pure sun-dried whole blue pea blossoms',
+      'Pure sun-dried whole blue pea blossoms (50 g pouch)',
       'Naturally caffeine-free calming herbal tisane',
       'Transformative color changes to rich violet with a squeeze of fresh lemon',
       'Zero artificial colors, preservatives, or sweeteners',
@@ -43,9 +49,11 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Medicinal Leaf Brews',
-    price: null,
-    originalPrice: null,
-    discount: null,
+    price: 199, // Temporary development / test pricing
+    originalPrice: 249,
+    discount: '20% OFF',
+    packSize: '50 g',
+    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
     standeeNotes: 'Nutrient Superhouse, Controls Blood Sugar',
@@ -60,7 +68,7 @@ export const TEA_PRODUCTS = [
     rating: 4.8,
     reviewCount: 98,
     details: [
-      'Gently harvested tender moringa leaves and wild florets',
+      'Gently harvested tender moringa leaves and wild florets (50 g pouch)',
       'High natural chlorophyll and essential amino acids',
       'Earthy, grassy profile with a delicate mineral finish',
       'Traditional Ayurvedic vitality restorative',
@@ -73,9 +81,11 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Heritage Spice Infusions',
-    price: null,
-    originalPrice: null,
-    discount: null,
+    price: 219, // Temporary development / test pricing
+    originalPrice: 269,
+    discount: '18% OFF',
+    packSize: '100 g',
+    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
     standeeNotes: 'Fights Inflammation, Boosts Immunity',
@@ -90,7 +100,7 @@ export const TEA_PRODUCTS = [
     rating: 4.9,
     reviewCount: 175,
     details: [
-      'Hand-quilled true Ceylon cinnamon bark flakes',
+      'Hand-quilled true Ceylon cinnamon bark flakes (100 g pouch)',
       'Natural comforting warmth with gentle spicy-sweet aroma',
       'Supports circulation and balanced metabolism',
       'Unblended pure bark without cassia adulteration',
@@ -103,9 +113,11 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Herbal Root Infusions',
-    price: null,
-    originalPrice: null,
-    discount: null,
+    price: 229, // Temporary development / test pricing
+    originalPrice: 279,
+    discount: '18% OFF',
+    packSize: '100 g',
+    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
     standeeNotes: 'Regulates Blood Sugar, Natural Body Coolant',
@@ -120,7 +132,7 @@ export const TEA_PRODUCTS = [
     rating: 4.7,
     reviewCount: 84,
     details: [
-      'Crushed sun-cured Nannari root bark',
+      'Crushed sun-cured Nannari root bark (100 g pouch)',
       'Intensely aromatic vanilla-like botanical bouquet',
       'Renowned heritage Pitta-balancing cooling properties',
       'Ancient South Indian natural hydration staple',
@@ -133,9 +145,11 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Botanical Flower Brews',
-    price: null,
-    originalPrice: null,
-    discount: null,
+    price: 249, // Temporary development / test pricing
+    originalPrice: 299,
+    discount: '16% OFF',
+    packSize: '100 g',
+    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
     standeeNotes: 'Lowers Blood Pressure, Improves Cholesterol',
@@ -150,7 +164,7 @@ export const TEA_PRODUCTS = [
     rating: 5.0,
     reviewCount: 210,
     details: [
-      'Whole, hand-separated deep ruby calyx petals',
+      'Whole, hand-separated deep ruby calyx petals (100 g pouch)',
       'Bracing natural cranberry tartness with floral undertones',
       'Rich in bioactive polyphenols and Vitamin C',
       'Exquisite served piping hot or chilled over crystal ice',

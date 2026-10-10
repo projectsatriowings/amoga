@@ -19,10 +19,13 @@ import { CartDrawer } from '../food/components/CartDrawer';
 import { WishlistDrawer } from '../food/components/WishlistDrawer';
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
+import { useProductDetail } from '../../hooks/useProducts';
 
 export function TeaProductDetail() {
   const { slug } = useParams();
-  const product = getTeaProductBySlug(slug);
+  const staticProduct = getTeaProductBySlug(slug);
+  const { product: apiProduct } = useProductDetail('tea', slug, staticProduct);
+  const product = apiProduct || staticProduct;
 
   const { addToCart, toggleWishlistItem, isInWishlist } = useStore();
   const [quantity, setQuantity] = useState(1);
@@ -172,7 +175,7 @@ export function TeaProductDetail() {
               {/* Pricing Display */}
               <div className="pt-2 border-t border-[#B88E38]/20 flex items-baseline gap-3">
                 {hasPrice ? (
-                  <>
+                  <div className="flex flex-wrap items-baseline gap-3">
                     <span className="text-3xl font-serif font-bold text-[#2C1E11]">
                       ₹{product.price}
                     </span>
@@ -181,7 +184,15 @@ export function TeaProductDetail() {
                         ₹{product.originalPrice}
                       </span>
                     )}
-                  </>
+                    {product.packSize && (
+                      <span className="text-xs font-mono font-medium text-[#8C6320] bg-white/80 px-2.5 py-0.5 rounded-full border border-[#B88E38]/25">
+                        {product.packSize}
+                      </span>
+                    )}
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#8C6320] bg-[#FAF1BB] px-2 py-0.5 rounded border border-[#B88E38]/30">
+                      Development Test Price
+                    </span>
+                  </div>
                 ) : (
                   <div className="space-y-1">
                     <span className="text-lg font-serif italic text-[#8C6320]">

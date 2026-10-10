@@ -181,24 +181,24 @@ export const CheckoutForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
       {/* Notice Banner */}
-      <div className="p-4 bg-amoga-ivory rounded-xl border border-amoga-brass/30 text-xs text-amoga-charcoal/80 flex items-start gap-3">
-        <Info className="w-4 h-4 text-amoga-burgundy shrink-0 mt-0.5" />
+      <div className="p-4 bg-[#F8F6F0] rounded-xl border border-[#E5E0D5] text-xs text-[#746F63] flex items-start gap-3">
+        <Info className="w-4 h-4 text-[#3F5A35] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong>Frontend Demonstration:</strong> All delivery information entered here is stored in local memory only for this demo session. No personal data is sent to a remote fulfilment server or permanent database.
+          <strong className="text-[#292820]">Checkout Simulation Notice:</strong> All customer and delivery information entered below is securely kept for your checkout session. No permanent profile data is shared or stored without verified authorization.
         </p>
       </div>
 
-      {/* Customer Contact Information */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-amoga-brass/20 shadow-sm space-y-5">
-        <h2 className="font-serif text-xl sm:text-2xl text-amoga-charcoal border-b border-amoga-brass/15 pb-3">
+      {/* Customer Contact Information Card */}
+      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#E5E0D5] shadow-sm space-y-5">
+        <h2 className="font-serif text-xl sm:text-2xl text-[#292820] border-b border-[#E5E0D5] pb-3">
           1. Contact Information
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Full Name */}
           <div className="sm:col-span-2">
-            <label htmlFor="fullName" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              Full Name <span className="text-rose-600">*</span>
+            <label htmlFor="fullName" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              Full Name <span className="text-[#991B1B]">*</span>
             </label>
             <input
               id="fullName"
@@ -210,25 +210,25 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.fullName}
               aria-describedby={errors.fullName ? 'fullName-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-amoga-charcoal transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
                 errors.fullName
-                  ? 'border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-200'
-                  : 'border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10'
+                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
+                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
               }`}
               placeholder="e.g. Radhika Sharma"
             />
             {errors.fullName && (
-              <p id="fullName-error" className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p id="fullName-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                {errors.fullName}
+                <span>{errors.fullName}</span>
               </p>
             )}
           </div>
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              Email Address <span className="text-rose-600">*</span>
+            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              Email Address <span className="text-[#991B1B]">*</span>
             </label>
             <input
               id="email"
@@ -240,25 +240,25 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'email-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-amoga-charcoal transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
                 errors.email
-                  ? 'border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-200'
-                  : 'border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10'
+                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
+                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
               }`}
               placeholder="radhika@example.com"
             />
             {errors.email && (
-              <p id="email-error" className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p id="email-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                {errors.email}
+                <span>{errors.email}</span>
               </p>
             )}
           </div>
 
           {/* Phone */}
           <div>
-            <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              Phone Number <span className="text-rose-600">*</span>
+            <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              Phone Number <span className="text-[#991B1B]">*</span>
             </label>
             <input
               id="phone"
@@ -270,34 +270,34 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? 'phone-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-amoga-charcoal transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
                 errors.phone
-                  ? 'border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-200'
-                  : 'border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10'
+                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
+                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
               }`}
               placeholder="9876543210"
             />
             {errors.phone && (
-              <p id="phone-error" className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p id="phone-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                {errors.phone}
+                <span>{errors.phone}</span>
               </p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Delivery Address */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-amoga-brass/20 shadow-sm space-y-5">
-        <h2 className="font-serif text-xl sm:text-2xl text-amoga-charcoal border-b border-amoga-brass/15 pb-3">
+      {/* Delivery Address Card */}
+      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#E5E0D5] shadow-sm space-y-5">
+        <h2 className="font-serif text-xl sm:text-2xl text-[#292820] border-b border-[#E5E0D5] pb-3">
           2. Delivery Address
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Address Line 1 */}
           <div className="sm:col-span-2">
-            <label htmlFor="addressLine1" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              Address Line 1 <span className="text-rose-600">*</span>
+            <label htmlFor="addressLine1" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              Address Line 1 <span className="text-[#991B1B]">*</span>
             </label>
             <input
               id="addressLine1"
@@ -309,25 +309,25 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.addressLine1}
               aria-describedby={errors.addressLine1 ? 'addressLine1-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-amoga-charcoal transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
                 errors.addressLine1
-                  ? 'border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-200'
-                  : 'border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10'
+                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
+                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
               }`}
               placeholder="House / Flat No., Apartment Name, Street"
             />
             {errors.addressLine1 && (
-              <p id="addressLine1-error" className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p id="addressLine1-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                {errors.addressLine1}
+                <span>{errors.addressLine1}</span>
               </p>
             )}
           </div>
 
           {/* Address Line 2 */}
           <div className="sm:col-span-2">
-            <label htmlFor="addressLine2" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              Address Line 2 <span className="text-amoga-charcoal/50 lowercase font-normal">(optional)</span>
+            <label htmlFor="addressLine2" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              Address Line 2 <span className="text-[#746F63] lowercase font-normal">(optional)</span>
             </label>
             <input
               id="addressLine2"
@@ -336,15 +336,15 @@ export const CheckoutForm = () => {
               autoComplete="address-line2"
               value={formData.addressLine2}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10 text-sm text-amoga-charcoal transition-all outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15 text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none"
               placeholder="Landmark, Area or Colony"
             />
           </div>
 
           {/* City */}
           <div>
-            <label htmlFor="city" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              City <span className="text-rose-600">*</span>
+            <label htmlFor="city" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              City <span className="text-[#991B1B]">*</span>
             </label>
             <input
               id="city"
@@ -356,25 +356,25 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.city}
               aria-describedby={errors.city ? 'city-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-amoga-charcoal transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
                 errors.city
-                  ? 'border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-200'
-                  : 'border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10'
+                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
+                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
               }`}
               placeholder="e.g. Bangalore, Chennai, Mumbai"
             />
             {errors.city && (
-              <p id="city-error" className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p id="city-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                {errors.city}
+                <span>{errors.city}</span>
               </p>
             )}
           </div>
 
           {/* State */}
           <div>
-            <label htmlFor="state" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              State / Province <span className="text-rose-600">*</span>
+            <label htmlFor="state" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              State / Province <span className="text-[#991B1B]">*</span>
             </label>
             <input
               id="state"
@@ -386,25 +386,25 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.state}
               aria-describedby={errors.state ? 'state-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-amoga-charcoal transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
                 errors.state
-                  ? 'border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-200'
-                  : 'border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10'
+                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
+                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
               }`}
               placeholder="e.g. Karnataka, Tamil Nadu"
             />
             {errors.state && (
-              <p id="state-error" className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p id="state-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                {errors.state}
+                <span>{errors.state}</span>
               </p>
             )}
           </div>
 
           {/* PIN code */}
           <div>
-            <label htmlFor="pincode" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              PIN / Postal Code <span className="text-rose-600">*</span>
+            <label htmlFor="pincode" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              PIN / Postal Code <span className="text-[#991B1B]">*</span>
             </label>
             <input
               id="pincode"
@@ -418,25 +418,25 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.pincode}
               aria-describedby={errors.pincode ? 'pincode-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-amoga-charcoal transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
                 errors.pincode
-                  ? 'border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-200'
-                  : 'border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10'
+                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
+                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
               }`}
               placeholder="560001"
             />
             {errors.pincode && (
-              <p id="pincode-error" className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p id="pincode-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                {errors.pincode}
+                <span>{errors.pincode}</span>
               </p>
             )}
           </div>
 
           {/* Delivery Instructions */}
           <div className="sm:col-span-2">
-            <label htmlFor="instructions" className="block text-xs font-semibold uppercase tracking-wider text-amoga-charcoal mb-1.5">
-              Delivery Instructions <span className="text-amoga-charcoal/50 lowercase font-normal">(optional)</span>
+            <label htmlFor="instructions" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+              Delivery Instructions <span className="text-[#746F63] lowercase font-normal">(optional)</span>
             </label>
             <textarea
               id="instructions"
@@ -444,7 +444,7 @@ export const CheckoutForm = () => {
               rows={2}
               value={formData.instructions}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-amoga-brass/30 focus:border-amoga-burgundy focus:ring-2 focus:ring-amoga-burgundy/10 text-sm text-amoga-charcoal transition-all outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15 text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none resize-none"
               placeholder="Gate code, landmark, or delivery time preferences..."
             />
           </div>
@@ -456,7 +456,7 @@ export const CheckoutForm = () => {
         <button
           type="button"
           onClick={() => navigate('/cart')}
-          className="text-xs uppercase tracking-widest font-semibold text-amoga-charcoal/70 hover:text-amoga-burgundy transition-colors py-3"
+          className="text-xs uppercase tracking-widest font-semibold text-[#746F63] hover:text-[#3F5A35] transition-colors py-3"
         >
           ← Return to Shopping Bag
         </button>
@@ -464,7 +464,7 @@ export const CheckoutForm = () => {
         <button
           type="submit"
           disabled={hasUnpricedItems || payableItemsCount === 0}
-          className="w-full sm:w-auto px-8 py-4 rounded-xl bg-amoga-burgundy hover:bg-amoga-burgundy/90 text-amoga-ivory font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md shadow-amoga-burgundy/15 disabled:bg-amoga-charcoal/20 disabled:cursor-not-allowed disabled:shadow-none"
+          className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#3F5A35] hover:bg-[#344B2C] text-white font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md shadow-[#3F5A35]/20 disabled:bg-[#898477]/30 disabled:text-[#746F63] disabled:cursor-not-allowed disabled:shadow-none"
         >
           <span>Continue to Order Review</span>
           <ArrowRight className="w-4 h-4" />
