@@ -1,16 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Sparkles, Compass } from 'lucide-react';
+import { ArrowRight, Compass, Sparkles, Check } from 'lucide-react';
 import foodHeroImg from '../../../assets/images/gatekeeper-food.jpg';
 import { Container } from '../../../components/ui/Container';
-import { Button } from '../../../components/ui/Button';
 
 export function FoodHero() {
   return (
-    <section className="relative overflow-hidden bg-[#F1EDE4] py-10 sm:py-14 lg:py-20 border-b border-[#172B1C]/8">
+    <section className="relative overflow-hidden bg-[#F8F6F0] py-12 sm:py-16 lg:py-24 border-b border-[#E5E0D5]">
       <Container>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Left Column: Editorial Headline & Messaging */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -19,99 +18,92 @@ export function FoodHero() {
             className="lg:col-span-7 space-y-6"
           >
             {/* Eyebrow Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#287A25]/10 border border-[#287A25]/20 text-[#287A25] text-xs font-semibold tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#3F7B43]/10 border border-[#3F7B43]/20 text-[#3F7B43] text-xs font-mono font-semibold tracking-widest uppercase">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>100% Organic & Natural</span>
+              <span>THE GOODNESS OF TRADITION</span>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-[#172B1C] leading-[1.08] tracking-tight">
-              Pure Goodness <br />
-              <span className="italic font-normal text-[#287A25]">from Nature</span>
+            {/* Large Uppercase Collection Heading */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-[#173B2A] leading-[1.08] tracking-tight uppercase">
+              WHOLESOME PANTRY
             </h1>
 
-            {/* Supporting Copy */}
-            <p className="text-base sm:text-lg text-[#405244] max-w-xl leading-relaxed">
-              Discover Amoga's selection of thoughtfully presented food products, herbal teas, and comforting soup mixes crafted for daily vitality and honest flavour.
+            {/* Approved Hero Description */}
+            <p className="text-base sm:text-lg text-[#292820]/80 max-w-xl leading-relaxed font-sans">
+              Discover traditional Indian blends made for everyday cooking, from comforting soup mixes to nourishing millet blends and flavourful rice podis.
             </p>
 
-            {/* Trust Pill Benefits */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* Category Highlights */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-2">
               {[
-                '100% Organic Ingredients',
-                'No Artificial Additives',
-                'Sustainably Sourced',
+                'Soup Mixes',
+                'Millet Mixes',
+                'Rice Podis',
               ].map((pill) => (
                 <div
                   key={pill}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#E5DFD3]/70 border border-[#172B1C]/10 text-xs font-medium text-[#172B1C]"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFFFF] border border-[#E5E0D5] text-xs font-medium text-[#173B2A] shadow-2xs"
                 >
-                  <Check className="w-3.5 h-3.5 text-[#287A25]" />
+                  <Check className="w-3.5 h-3.5 text-[#3F7B43]" />
                   <span>{pill}</span>
                 </div>
               ))}
             </div>
 
-            {/* Action Buttons */}
+            {/* Rounded Outlined CTA */}
             <div className="flex flex-wrap items-center gap-4 pt-4">
-              <Link to="/food/products">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  collection="food"
-                  rightIcon={<ArrowRight className="w-4 h-4" />}
-                >
-                  Shop Food
-                </Button>
+              <Link
+                to="/food/products"
+                className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full border-2 border-[#173B2A] text-[#173B2A] hover:bg-[#173B2A] hover:text-[#F8F6F0] text-xs font-mono font-semibold tracking-wider uppercase transition-all duration-200 active:scale-95 shadow-sm"
+              >
+                <span>EXPLORE COLLECTION</span>
+                <ArrowRight className="w-4 h-4" />
               </Link>
 
-              <Link to="/">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  collection="food"
-                  leftIcon={<Compass className="w-4 h-4" />}
-                >
-                  Explore Collections
-                </Button>
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FFFFFF] border border-[#E5E0D5] text-[#292820] hover:bg-[#F8F6F0] hover:border-[#173B2A]/30 text-xs font-mono font-medium tracking-wider uppercase transition-all"
+              >
+                <Compass className="w-3.5 h-3.5 text-[#3F7B43]" />
+                <span>All Collections</span>
               </Link>
             </div>
           </motion.div>
 
-          {/* Right Column: High-Quality Culinary Photography */}
+          {/* Right Column: Refined Food Photography */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5 relative"
           >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#172B1C]/10 bg-[#E5DFD3]/60 aspect-[4/3] sm:aspect-square">
+            <div className="relative rounded-3xl overflow-hidden shadow-xl border border-[#E5E0D5] bg-[#FFFFFF] aspect-[4/3] sm:aspect-square">
               <img
                 src={foodHeroImg}
-                alt="Amoga Gourmet Food Collection"
-                className="w-full h-full object-cover object-center filter saturate-[1.05]"
+                alt="Amoga Wholesome Pantry Collection"
+                className="w-full h-full object-cover object-center"
               />
 
               {/* Decorative Subtle Stamp */}
-              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-md border border-[#172B1C]/10 text-[11px] font-serif italic text-[#172B1C]">
-                Real Food &bull; Real Health
+              <div className="absolute top-4 right-4 bg-[#FFFFFF]/95 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-xs border border-[#E5E0D5] text-[11px] font-serif italic text-[#173B2A]">
+                Traditional Blends &bull; Everyday Cooking
               </div>
 
               {/* Bottom Feature Pill */}
-              <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 text-white flex items-center justify-between">
+              <div className="absolute bottom-4 left-4 right-4 bg-[#173B2A]/90 backdrop-blur-md p-3.5 rounded-2xl border border-white/15 text-white flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-[#C5A46D]">
-                    Featured Delicacy
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-[#E5E0D5]">
+                    Wholesome Pantry Blends
                   </div>
                   <div className="text-xs sm:text-sm font-medium">
-                    Farm-Fresh Organic Harvest & Soups
+                    Soup Mixes, Millets & Rice Podis
                   </div>
                 </div>
                 <Link
                   to="/food/products?category=soups"
-                  className="text-xs text-[#C5A46D] hover:underline flex items-center gap-1 font-mono"
+                  className="text-xs text-[#F8F6F0] hover:underline flex items-center gap-1 font-mono font-semibold"
                 >
-                  <span>20 Soups</span>
+                  <span>Explore</span>
                   <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>

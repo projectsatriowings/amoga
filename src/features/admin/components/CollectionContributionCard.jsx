@@ -6,7 +6,7 @@ import { Coffee, Sparkles, Gem, Utensils, ArrowRight } from 'lucide-react';
 export function CollectionContributionCard({ collectionPerformance = [] }) {
   const collectionMeta = {
     food: {
-      name: 'Gourmet Food',
+      name: 'Wholesome Pantry',
       icon: Utensils,
       color: '#3F5A35',
       bg: 'bg-[#3F5A35]/10',
@@ -14,7 +14,7 @@ export function CollectionContributionCard({ collectionPerformance = [] }) {
       text: 'text-[#3F5A35]',
     },
     tea: {
-      name: 'Botanical Teas',
+      name: 'Wellness Tea',
       icon: Coffee,
       color: '#8C6320',
       bg: 'bg-[#8C6320]/10',

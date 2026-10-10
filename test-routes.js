@@ -4,8 +4,10 @@ const routes = [
   // Core Gatekeeper
   '/',
 
-  // Phase 3 Food Storefront & Catalogue
+  // Phase 3 Wholesome Pantry Storefront & Catalogue
   '/food',
+  '/wholesome-pantry',
+  '/pantry',
   '/food/products',
   '/food/products?category=soups',
   '/food/products?category=millets',
@@ -16,8 +18,9 @@ const routes = [
   '/food/products/creamy-garlic-mushroom-soup',
   '/food/products/unknown-nonexistent-soup-recipe',
 
-  // Dedicated Tea Storefront & Catalogue
+  // Dedicated Wellness Tea Storefront & Catalogue
   '/tea',
+  '/wellness-tea',
   '/tea/products',
   '/tea/products?q=hibiscus',
   '/tea/products/hibiscus-tea',

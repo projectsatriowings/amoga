@@ -7,12 +7,21 @@ const prisma = new PrismaClient();
 const COLLECTIONS_DATA = [
   {
     id: 'food',
-    name: 'Gourmet Food',
+    name: 'Wholesome Pantry',
     slug: 'food',
-    tagline: 'The Art of Taste',
-    description: 'Discover thoughtfully selected gourmet foods, crafted for everyday enjoyment.',
+    tagline: 'Traditional Blends & Mixes',
+    description: 'Discover traditional Indian blends made for everyday cooking, from comforting soup mixes to nourishing millet blends and flavourful rice podis.',
     theme: 'food',
-    accentColor: '#287A25',
+    accentColor: '#3F7B43',
+  },
+  {
+    id: 'tea',
+    name: 'Wellness Tea',
+    slug: 'tea',
+    tagline: 'Botanical Teas & Herbal Infusions',
+    description: 'Discover thoughtfully selected botanical teas and herbal infusions for your everyday tea ritual.',
+    theme: 'tea',
+    accentColor: '#65815A',
   },
   {
     id: 'sarees',

@@ -52,7 +52,7 @@ export function FoodHeader() {
               <Link to="/food" className="flex items-center gap-3 group">
                 <img
                   src={amogaLogo}
-                  alt="Amoga Gourmet Food"
+                  alt="Amoga Wholesome Pantry"
                   className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
                 />
               </Link>

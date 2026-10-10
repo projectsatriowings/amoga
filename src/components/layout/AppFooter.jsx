@@ -45,14 +45,14 @@ export function AppFooter({ activeCollection }) {
             </Link>
             <p className="text-xs leading-relaxed max-w-sm opacity-80">
               {isFood
-                ? 'Amoga Gourmet Food brings traditional medicinal leaf soups, wholesome ancient breakfast millets, and pure pantry essentials straight to your home.'
+                ? 'Amoga Wholesome Pantry brings traditional soup mixes, nourishing millet mixes, and flavourful rice podis straight to everyday meals.'
                 : isTea
-                ? 'Amoga Tea curates single-origin floral blossoms, therapeutic herbal leaves, and heritage bark brews inspired by traditional wellness wisdom.'
+                ? 'Amoga Wellness Tea curates botanical teas and herbal infusions for your everyday tea ritual.'
                 : isSarees
                 ? 'Amoga Heritage Sarees celebrates master handloom weavers, authentic temple Kanchipuram silks, Banarasi brocades, and ceremonial textiles passed down through generations.'
                 : isJewellery
                 ? 'Amoga Silver Jewellery curates modern heirlooms, solid 925 sterling silver bands, fluid pendants, and architectural cuffs designed for quiet, lasting elegance.'
-                : 'One unified luxury identity across four distinctive artisanal universes: Gourmet Food, Herbal Tea, Heritage Sarees, and Silver Jewellery.'}
+                : 'One unified luxury identity across four distinctive artisanal universes: Wholesome Pantry, Wellness Tea, Heritage Sarees, and Silver Jewellery.'}
             </p>
 
             {isFood && (
@@ -312,9 +312,9 @@ export function AppFooter({ activeCollection }) {
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs opacity-60 gap-4">
           <div>&copy; {CURRENT_YEAR} Amoga E-Commerce. All rights reserved.</div>
           <div className="flex items-center gap-4">
-            <Link to="/food" className="hover:underline">Gourmet Food</Link>
+            <Link to="/food" className="hover:underline">Wholesome Pantry</Link>
             <span>&bull;</span>
-            <Link to="/tea" className="hover:underline">Botanical Tea</Link>
+            <Link to="/tea" className="hover:underline">Wellness Tea</Link>
             <span>&bull;</span>
             <Link to="/sarees" className="hover:underline">Heritage Sarees</Link>
             <span>&bull;</span>

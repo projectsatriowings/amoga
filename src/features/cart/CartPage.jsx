@@ -42,7 +42,7 @@ export const CartPage = () => {
               Your Shopping Bag
             </h1>
             <p className="mt-2 text-sm sm:text-base text-[#746F63] font-sans max-w-2xl">
-              Unified selections across Amoga Gourmet Food, Botanical Teas, Heritage Sarees, and Silver Jewellery.
+              Unified selections across Amoga Wholesome Pantry, Wellness Tea, Heritage Sarees, and Silver Jewellery.
             </p>
           </div>
           {cartItems.length > 0 && (
@@ -71,7 +71,7 @@ export const CartPage = () => {
               Your shopping bag is currently empty
             </h2>
             <p className="text-sm sm:text-base text-[#746F63] mb-10 leading-relaxed max-w-xl mx-auto">
-              Explore our artisanal collections to discover slow-crafted gourmet provisions, single-origin botanical teas, heritage handloom weaves, and hallmarked pure silver adornments.
+              Explore our artisanal collections to discover slow-crafted pantry provisions, thoughtfully selected wellness teas, heritage handloom weaves, and hallmarked pure silver adornments.
             </p>
 
             {/* Collection Discovery Hub: 4 houses */}
@@ -79,21 +79,21 @@ export const CartPage = () => {
               {/* 1. Food */}
               <Link
                 to="/food"
-                className="group p-5 rounded-2xl bg-white border border-[#2D5A27]/20 hover:border-[#2D5A27] hover:shadow-md transition-all flex flex-col justify-between"
+                className="group p-5 rounded-2xl bg-white border border-[#3F7B43]/20 hover:border-[#3F7B43] hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-[#2D5A27]/10 text-[#2D5A27] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-[#3F7B43]/10 text-[#173B2A] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                     <UtensilsCrossed className="w-5 h-5" />
                   </div>
-                  <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#2D5A27] transition-colors">
-                    Gourmet Food
+                  <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#173B2A] transition-colors">
+                    Wholesome Pantry
                   </h3>
                   <p className="text-xs text-[#746F63] mt-1">
-                    Traditional soups, ancient millets & pantry spices
+                    Comforting soup mixes, nourishing millet blends and flavourful rice podis
                   </p>
                 </div>
-                <div className="mt-4 flex items-center text-xs font-semibold text-[#2D5A27] uppercase tracking-wider gap-1">
-                  <span>Explore Food</span>
+                <div className="mt-4 flex items-center text-xs font-semibold text-[#3F7B43] uppercase tracking-wider gap-1">
+                  <span>Explore Pantry</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
@@ -101,20 +101,20 @@ export const CartPage = () => {
               {/* 2. Tea */}
               <Link
                 to="/tea"
-                className="group p-5 rounded-2xl bg-white border border-[#B88E38]/25 hover:border-[#B88E38] hover:shadow-md transition-all flex flex-col justify-between"
+                className="group p-5 rounded-2xl bg-white border border-[#65815A]/25 hover:border-[#65815A] hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-[#FAF1BB]/60 text-[#8C6320] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-[#65815A]/10 text-[#173B2A] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                     <Leaf className="w-5 h-5" />
                   </div>
-                  <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#8C6320] transition-colors">
-                    Botanical Tea
+                  <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#173B2A] transition-colors">
+                    Wellness Tea
                   </h3>
                   <p className="text-xs text-[#746F63] mt-1">
-                    Whole Hibiscus, Blue Pea & Ceylon Cinnamon
+                    Thoughtfully selected botanical teas and herbal infusions for your everyday ritual
                   </p>
                 </div>
-                <div className="mt-4 flex items-center text-xs font-semibold text-[#8C6320] uppercase tracking-wider gap-1">
+                <div className="mt-4 flex items-center text-xs font-semibold text-[#65815A] uppercase tracking-wider gap-1">
                   <span>Explore Tea</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>

@@ -47,21 +47,30 @@ export function NotFound() {
           </p>
 
           {/* Quick Collection Gateways */}
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto text-left">
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-2xl mx-auto text-left">
             <Link
               to="/food"
-              className="p-4 rounded-lg bg-[#172B1C]/40 border border-[#287A25]/30 hover:border-[#287A25] transition-all group"
+              className="p-4 rounded-lg bg-[#172B1C]/40 border border-[#3F7B43]/30 hover:border-[#3F7B43] transition-all group"
             >
-              <div className="text-xs uppercase tracking-wider text-[#287A25] font-semibold">01</div>
-              <div className="text-sm font-medium text-white group-hover:text-[#557C36]">Gourmet Food</div>
-              <div className="text-xs text-[#9FA1A8] mt-0.5">The Art of Taste</div>
+              <div className="text-xs uppercase tracking-wider text-[#3F7B43] font-semibold">01</div>
+              <div className="text-sm font-medium text-white group-hover:text-[#65815A]">Wholesome Pantry</div>
+              <div className="text-xs text-[#9FA1A8] mt-0.5">Traditional Blends</div>
+            </Link>
+
+            <Link
+              to="/tea"
+              className="p-4 rounded-lg bg-[#173B2A]/40 border border-[#65815A]/30 hover:border-[#65815A] transition-all group"
+            >
+              <div className="text-xs uppercase tracking-wider text-[#65815A] font-semibold">02</div>
+              <div className="text-sm font-medium text-white group-hover:text-[#8CA483]">Wellness Tea</div>
+              <div className="text-xs text-[#9FA1A8] mt-0.5">Botanical Rituals</div>
             </Link>
 
             <Link
               to="/sarees"
               className="p-4 rounded-lg bg-[#2C0E1A]/60 border border-[#C5A46D]/30 hover:border-[#C5A46D] transition-all group"
             >
-              <div className="text-xs uppercase tracking-wider text-[#C5A46D] font-semibold">02</div>
+              <div className="text-xs uppercase tracking-wider text-[#C5A46D] font-semibold">03</div>
               <div className="text-sm font-medium text-white group-hover:text-[#C5A46D]">Heritage Sarees</div>
               <div className="text-xs text-[#9FA1A8] mt-0.5">Timeless Weaves</div>
             </Link>
@@ -70,7 +79,7 @@ export function NotFound() {
               to="/jewellery"
               className="p-4 rounded-lg bg-[#18191D] border border-white/15 hover:border-white/40 transition-all group"
             >
-              <div className="text-xs uppercase tracking-wider text-[#C6C8CD] font-semibold">03</div>
+              <div className="text-xs uppercase tracking-wider text-[#C6C8CD] font-semibold">04</div>
               <div className="text-sm font-medium text-white group-hover:text-[#C6C8CD]">Silver Jewellery</div>
               <div className="text-xs text-[#9FA1A8] mt-0.5">Modern Heirlooms</div>
             </Link>

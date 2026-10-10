@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, X, ArrowLeft, Leaf, SlidersHorizontal, PackageSearch } from 'lucide-react';
+import { Search, X, ArrowLeft, Leaf, SlidersHorizontal, PackageSearch, Sparkles } from 'lucide-react';
 import { TEA_PRODUCTS } from './data/products';
 import { TeaProductCard } from './components/TeaProductCard';
 import { BotanicalSideAnimations } from './components/BotanicalAnimations';
@@ -49,7 +49,6 @@ export function TeaProductList() {
       return (
         p.name.toLowerCase().includes(q) ||
         p.description?.toLowerCase().includes(q) ||
-        p.standeeNotes?.toLowerCase().includes(q) ||
         p.botanicalName?.toLowerCase().includes(q)
       );
     });
@@ -58,13 +57,17 @@ export function TeaProductList() {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'name_desc') {
       result.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (sortBy === 'price_asc') {
+      result.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sortBy === 'price_desc') {
+      result.sort((a, b) => (b.price || 0) - (a.price || 0));
     }
 
     return result;
   }, [apiProducts, searchQuery, sortBy]);
 
   return (
-    <div className="relative bg-[#FAF1BB] text-[#2C1E11] min-h-screen py-8 sm:py-12 overflow-hidden">
+    <div className="relative bg-[#F8F6F0] text-[#292820] min-h-screen py-8 sm:py-12 overflow-hidden">
       {/* Drawers */}
       <CartDrawer />
       <WishlistDrawer />
@@ -77,98 +80,99 @@ export function TeaProductList() {
         <div className="mb-6 flex items-center justify-between">
           <Link
             to="/tea"
-            className="inline-flex items-center gap-1.5 text-xs text-[#8C6320] hover:text-[#2C1E11] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-[#65815A] hover:text-[#173B2A] font-medium transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Tea Collection Overview</span>
+            <span>Back to Wellness Tea Overview</span>
           </Link>
 
-          <span className="text-xs font-mono text-[#8C6320] bg-white/60 px-3 py-1 rounded-full border border-[#B88E38]/20">
-            {filteredProducts.length} Botanical {filteredProducts.length === 1 ? 'Brew' : 'Brews'} Available
+          <span className="text-xs font-mono text-[#173B2A] bg-white px-3.5 py-1 rounded-full border border-[#E5E0D5] shadow-2xs">
+            {filteredProducts.length} Botanical {filteredProducts.length === 1 ? 'Variety' : 'Varieties'} Available
           </span>
         </div>
 
         {/* Page Header */}
-        <div className="mb-8 space-y-2">
-          <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#8C6320]">
-            <Leaf className="w-3.5 h-3.5 text-[#B88E38]" />
-            <span>Dedicated Amoga Catalogue</span>
+        <div className="mb-8 space-y-2 max-w-3xl">
+          <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#65815A]">
+            <Sparkles className="w-3.5 h-3.5 text-[#65815A]" />
+            <span>BOTANICAL WELLNESS</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#2C1E11]">
-            Artisanal Botanical Teas
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#173B2A]">
+            Botanical Teas & Herbal Infusions
           </h1>
-          <p className="text-xs sm:text-sm text-[#543B25] max-w-2xl leading-relaxed">
-            The five authenticated herbal varieties from the Amoga Herbal Tea Standee Reference: whole Hibiscus flowers, Butterfly Blue Pea, Ceylon Cinnamon, wild Sarsaparilla, and Moringa blossoms.
+          <p className="text-xs sm:text-sm text-[#292820]/80 leading-relaxed font-sans">
+            Explore our selection of botanical teas and herbal infusions, bringing distinctive ingredients and comforting tea rituals to your everyday routine.
           </p>
         </div>
 
-        {/* Filter & Search Toolbar */}
-        <div className="p-4 rounded-2xl bg-[#FDF9E7] border border-[#B88E38]/25 shadow-sm mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Search Input */}
+        {/* Search & Sort Controls */}
+        <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#E5E0D5] shadow-2xs mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Search */}
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search hibiscus, blue pea, cinnamon, nannari..."
-                className="w-full pl-9 pr-9 py-2.5 rounded-xl text-xs bg-white border border-[#B88E38]/30 focus:border-[#B88E38] focus:outline-none text-[#2C1E11] placeholder:text-[#7D5C3F]/60 transition-all shadow-inner"
-                aria-label="Filter herbal teas by keyword"
+                placeholder="Search botanical teas, petals, or herbal infusions..."
+                className="w-full pl-9 pr-9 py-2 rounded-xl text-xs bg-[#F8F6F0] border border-[#E5E0D5] focus:border-[#173B2A] focus:bg-white focus:outline-none text-[#292820] transition-all shadow-inner"
               />
-              <Search className="w-4 h-4 text-[#8C6320] absolute left-3 top-3 pointer-events-none" />
+              <Search className="w-4 h-4 text-[#746F63] absolute left-3 top-2.5 pointer-events-none" />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => handleSearchChange('')}
-                  className="absolute right-3 top-3 text-[#7D5C3F] hover:text-[#2C1E11]"
-                  aria-label="Clear search"
+                  className="absolute right-3 top-2.5 text-black/40 hover:text-black"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* Sorting Dropdown */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-[#543B25]">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#8C6320]" />
-                <span className="hidden sm:inline">Sort:</span>
+            {/* Sorting */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-1.5 text-xs text-[#746F63] font-mono">
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Sort by:</span>
               </div>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 rounded-xl text-xs bg-white border border-[#B88E38]/30 text-[#2C1E11] focus:border-[#B88E38] focus:outline-none font-medium cursor-pointer"
-                aria-label="Sort teas"
+                className="py-1.5 px-3 rounded-lg text-xs font-mono font-medium bg-[#F8F6F0] border border-[#E5E0D5] focus:border-[#173B2A] text-[#292820] focus:outline-none shadow-2xs cursor-pointer"
               >
-                <option value="featured">Featured Standee Order</option>
-                <option value="name_asc">Alphabetical (A &rarr; Z)</option>
-                <option value="name_desc">Alphabetical (Z &rarr; A)</option>
+                <option value="featured">Featured Rituals</option>
+                <option value="name_asc">Name: A to Z</option>
+                <option value="name_desc">Name: Z to A</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* Product Cards Grid */}
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {filteredProducts.map((product) => (
-              <TeaProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="p-12 text-center bg-[#FDF9E7] rounded-3xl border border-[#B88E38]/25 space-y-4">
-            <PackageSearch className="w-12 h-12 text-[#8C6320] mx-auto opacity-70" />
-            <h3 className="text-xl font-serif text-[#2C1E11]">No Botanical Teas Match Your Search</h3>
-            <p className="text-xs text-[#543B25] max-w-md mx-auto">
-              We couldn't find any tea matching <code className="font-mono text-[#8C6320]">"{searchQuery}"</code>.
+        {/* Product Grid or Empty State */}
+        {filteredProducts.length === 0 ? (
+          <div className="py-20 text-center bg-[#FFFFFF] border border-[#E5E0D5] rounded-3xl p-8 max-w-xl mx-auto shadow-2xs space-y-4">
+            <PackageSearch className="w-12 h-12 text-[#746F63] mx-auto opacity-60" />
+            <h2 className="text-xl font-serif text-[#173B2A]">
+              No Botanical Varieties Found
+            </h2>
+            <p className="text-xs text-[#746F63] leading-relaxed max-w-sm mx-auto">
+              We couldn't find any teas matching "{searchQuery}". Try searching for hibiscus, blue pea, or cinnamon.
             </p>
             <button
               type="button"
               onClick={clearAllFilters}
-              className="px-5 py-2.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-medium uppercase tracking-wider hover:bg-[#8C6320] transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#173B2A] text-white text-xs font-mono uppercase tracking-wider hover:bg-[#65815A] transition-all"
             >
-              Reset Filters
+              Clear Search Filter
             </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {filteredProducts.map((product) => (
+              <TeaProductCard key={product.id} product={product} />
+            ))}
           </div>
         )}
       </Container>

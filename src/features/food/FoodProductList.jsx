@@ -1,13 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, X, ArrowLeft, SlidersHorizontal, PackageSearch } from 'lucide-react';
+import { Search, X, ArrowLeft, SlidersHorizontal, PackageSearch, Sparkles } from 'lucide-react';
 import { FOOD_PRODUCTS } from './data/products';
-import { FOOD_CATEGORIES, getCategoryById } from './data/categories';
 import { FoodProductCard } from './components/FoodProductCard';
 import { CartDrawer } from './components/CartDrawer';
 import { WishlistDrawer } from './components/WishlistDrawer';
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
+
+const APPROVED_PANTRY_CATEGORIES = [
+  { id: 'all', label: 'All Blends & Mixes' },
+  { id: 'soups', label: 'Soup Mixes' },
+  { id: 'millets', label: 'Millet Mixes' },
+  { id: 'podis', label: 'Rice Podis' },
+];
 
 export function FoodProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,46 +64,49 @@ export function FoodProductList() {
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
-    return apiProducts.filter((product) => {
-      // Category Match
-      const matchesCategory =
-        selectedCategory === 'all' || product.category === selectedCategory;
+    return apiProducts
+      .filter((product) => {
+        // Category Match
+        const matchesCategory =
+          selectedCategory === 'all' || product.category === selectedCategory;
 
-      // Search Query Match (case insensitive across name, description, tags)
-      const query = searchQuery.trim().toLowerCase();
-      const matchesQuery =
-        !query ||
-        product.name.toLowerCase().includes(query) ||
-        product.categoryName.toLowerCase().includes(query) ||
-        (product.description && product.description.toLowerCase().includes(query)) ||
-        (product.catalogueTheme && product.catalogueTheme.toLowerCase().includes(query));
+        // Search Query Match (case insensitive across name, description, tags)
+        const query = searchQuery.trim().toLowerCase();
+        const matchesQuery =
+          !query ||
+          product.name.toLowerCase().includes(query) ||
+          (product.categoryName && product.categoryName.toLowerCase().includes(query)) ||
+          (product.description && product.description.toLowerCase().includes(query));
 
-      return matchesCategory && matchesQuery;
-    }).sort((a, b) => {
-      if (sortBy === 'name-asc') {
-        return a.name.localeCompare(b.name);
-      }
-      if (sortBy === 'name-desc') {
-        return b.name.localeCompare(a.name);
-      }
-      if (sortBy === 'price-asc') {
-        if (a.price === null) return 1;
-        if (b.price === null) return -1;
-        return a.price - b.price;
-      }
-      if (sortBy === 'price-desc') {
-        if (a.price === null) return 1;
-        if (b.price === null) return -1;
-        return b.price - a.price;
-      }
-      return 0; // Default featured order
-    });
+        return matchesCategory && matchesQuery;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'name-asc') {
+          return a.name.localeCompare(b.name);
+        }
+        if (sortBy === 'name-desc') {
+          return b.name.localeCompare(a.name);
+        }
+        if (sortBy === 'price-asc') {
+          if (a.price === null) return 1;
+          if (b.price === null) return -1;
+          return a.price - b.price;
+        }
+        if (sortBy === 'price-desc') {
+          if (a.price === null) return 1;
+          if (b.price === null) return -1;
+          return b.price - a.price;
+        }
+        return 0; // Default featured order
+      });
   }, [apiProducts, selectedCategory, searchQuery, sortBy]);
 
-  const activeCategoryMeta = getCategoryById(selectedCategory) || FOOD_CATEGORIES[0];
+  const activeCategoryTitle =
+    APPROVED_PANTRY_CATEGORIES.find((c) => c.id === selectedCategory)?.label ||
+    'Traditional Blends & Mixes';
 
   return (
-    <div className="bg-[#F1EDE4] text-[#172B1C] min-h-screen py-8 sm:py-12">
+    <div className="bg-[#F8F6F0] text-[#292820] min-h-screen py-8 sm:py-12">
       {/* Drawers */}
       <CartDrawer />
       <WishlistDrawer />
@@ -106,37 +115,38 @@ export function FoodProductList() {
         {/* Breadcrumb Navigation */}
         <nav
           aria-label="Breadcrumbs"
-          className="flex items-center gap-2 text-xs font-mono text-[#557C36] mb-6"
+          className="flex items-center gap-2 text-xs font-mono text-[#746F63] mb-6"
         >
-          <Link to="/" className="hover:underline flex items-center gap-1">
+          <Link to="/" className="hover:text-[#173B2A] flex items-center gap-1">
             <ArrowLeft className="w-3.5 h-3.5" />
             Amoga Portal
           </Link>
           <span>/</span>
-          <Link to="/food" className="hover:underline">
-            Gourmet Food
+          <Link to="/food" className="hover:text-[#173B2A]">
+            Wholesome Pantry
           </Link>
           <span>/</span>
-          <span className="font-semibold text-[#172B1C]">
-            {activeCategoryMeta.name}
+          <span className="font-semibold text-[#173B2A]">
+            {activeCategoryTitle}
           </span>
         </nav>
 
-        {/* Page Header */}
+        {/* Inner-Page Header */}
         <div className="mb-8 sm:mb-12 max-w-3xl space-y-3">
-          <div className="text-xs uppercase font-mono tracking-widest text-[#287A25] font-semibold">
-            Product Catalogue &bull; {filteredProducts.length} Items
+          <div className="inline-flex items-center gap-2 text-xs uppercase font-mono tracking-widest text-[#3F7B43] font-semibold">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>WHOLESOME PANTRY &bull; {filteredProducts.length} ITEMS</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#172B1C]">
-            {activeCategoryMeta.name}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#173B2A]">
+            Traditional Blends & Mixes
           </h1>
-          <p className="text-xs sm:text-sm text-[#405244] leading-relaxed">
-            {activeCategoryMeta.description}
+          <p className="text-xs sm:text-sm text-[#292820]/80 leading-relaxed font-sans">
+            Explore a thoughtful selection of soup mixes, millet mixes and traditional rice podis, bringing convenience and familiar flavours to everyday meals.
           </p>
         </div>
 
         {/* Filter & Search Bar */}
-        <div className="p-4 rounded-2xl bg-white border border-[#172B1C]/10 shadow-sm mb-8 space-y-4">
+        <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#E5E0D5] shadow-2xs mb-8 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Search Input */}
             <div className="relative flex-1 max-w-md">
@@ -144,11 +154,11 @@ export function FoodProductList() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search soups, millets, podis, spices..."
-                className="w-full pl-9 pr-9 py-2 rounded-xl text-xs bg-[#F8F5EE] border border-[#172B1C]/15 focus:border-[#287A25] focus:bg-white focus:outline-none text-[#172B1C] transition-all shadow-inner"
+                placeholder="Search soup mixes, millets, or rice podis..."
+                className="w-full pl-9 pr-9 py-2 rounded-xl text-xs bg-[#F8F6F0] border border-[#E5E0D5] focus:border-[#173B2A] focus:bg-white focus:outline-none text-[#292820] transition-all shadow-inner"
                 aria-label="Filter products by search term"
               />
-              <Search className="w-4 h-4 text-[#557C36] absolute left-3 top-2.5 pointer-events-none" />
+              <Search className="w-4 h-4 text-[#746F63] absolute left-3 top-2.5 pointer-events-none" />
               {searchQuery && (
                 <button
                   type="button"
@@ -163,14 +173,14 @@ export function FoodProductList() {
 
             {/* Sorting Controls */}
             <div className="flex items-center gap-3 shrink-0">
-              <div className="flex items-center gap-1.5 text-xs text-[#557C36]">
+              <div className="flex items-center gap-1.5 text-xs text-[#746F63] font-mono">
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 <span>Sort by:</span>
               </div>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="py-1.5 px-3 rounded-lg text-xs font-medium bg-[#F8F5EE] border border-[#172B1C]/15 focus:border-[#287A25] text-[#172B1C] focus:outline-none shadow-sm"
+                className="py-1.5 px-3 rounded-lg text-xs font-mono font-medium bg-[#F8F6F0] border border-[#E5E0D5] focus:border-[#173B2A] text-[#292820] focus:outline-none shadow-2xs cursor-pointer"
                 aria-label="Sort product catalogue"
               >
                 <option value="featured">Featured Order</option>
@@ -182,77 +192,44 @@ export function FoodProductList() {
             </div>
           </div>
 
-          {/* Category Filter Pills Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar">
-            {FOOD_CATEGORIES.map((cat) => {
+          {/* 3 Categories Filter Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-none">
+            {APPROVED_PANTRY_CATEGORIES.map((cat) => {
               const isSelected = selectedCategory === cat.id;
               return (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => handleCategoryChange(cat.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-mono font-medium whitespace-nowrap transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#287A25] text-white shadow-sm font-semibold'
-                      : 'bg-[#E8E2D7] text-[#172B1C] hover:bg-[#DFD8CC]'
+                      ? 'bg-[#173B2A] text-white shadow-xs font-semibold'
+                      : 'bg-[#F8F6F0] border border-[#E5E0D5] text-[#292820] hover:bg-[#FFFFFF] hover:text-[#173B2A]'
                   }`}
                 >
-                  {cat.shortName || cat.name}
-                  <span className="ml-1.5 opacity-60 text-[10px] font-mono">
-                    {cat.count}
-                  </span>
+                  {cat.label}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Active Filters Summary Strip (if filtered) */}
-        {(selectedCategory !== 'all' || searchQuery) && (
-          <div className="mb-6 flex items-center justify-between text-xs text-[#557C36] p-2.5 rounded-lg bg-[#E5DFD3]/70 border border-[#172B1C]/10">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#172B1C]">Active Filter:</span>
-              {selectedCategory !== 'all' && (
-                <span className="bg-white px-2 py-0.5 rounded border border-black/10">
-                  Category: {activeCategoryMeta.name}
-                </span>
-              )}
-              {searchQuery && (
-                <span className="bg-white px-2 py-0.5 rounded border border-black/10">
-                  Query: "{searchQuery}"
-                </span>
-              )}
-            </div>
+        {/* Product Cards Grid or Empty State */}
+        {filteredProducts.length === 0 ? (
+          <div className="py-20 text-center bg-[#FFFFFF] border border-[#E5E0D5] rounded-3xl p-8 max-w-xl mx-auto shadow-2xs space-y-4">
+            <PackageSearch className="w-12 h-12 text-[#746F63] mx-auto opacity-60" />
+            <h2 className="text-xl font-serif text-[#173B2A]">
+              No Products Found
+            </h2>
+            <p className="text-xs text-[#746F63] leading-relaxed max-w-sm mx-auto">
+              We couldn't find any blends matching your search or selected category in the Wholesome Pantry collection.
+            </p>
             <button
               type="button"
               onClick={clearAllFilters}
-              className="text-[#287A25] font-semibold underline hover:text-[#1E5C1B]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#173B2A] text-white text-xs font-mono uppercase tracking-wider hover:bg-[#3F7B43] transition-all"
             >
               Clear All Filters
-            </button>
-          </div>
-        )}
-
-        {/* Products Grid or Empty State */}
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-20 px-4 rounded-3xl bg-white border border-[#172B1C]/10 max-w-md mx-auto space-y-4 shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-[#E5DFD3] text-[#287A25] flex items-center justify-center mx-auto">
-              <PackageSearch className="w-8 h-8 opacity-70" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-serif font-medium text-[#172B1C]">
-                No matching gourmet products
-              </h3>
-              <p className="text-xs text-[#405244]">
-                We couldn't find any items matching your selected criteria. Try adjusting your search query or view all products.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className="px-4 py-2 rounded-lg bg-[#287A25] text-white text-xs font-medium uppercase tracking-wider hover:bg-[#1E5C1B]"
-            >
-              Reset Filters
             </button>
           </div>
         ) : (

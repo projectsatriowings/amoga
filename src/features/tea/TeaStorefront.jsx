@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Leaf, PhoneCall } from 'lucide-react';
+import { ArrowRight, Leaf, Sparkles, Compass } from 'lucide-react';
 import teaHero from '../../assets/images/food-teas-hero.jpg';
 import { Container } from '../../components/ui/Container';
 import { BotanicalSideAnimations } from './components/BotanicalAnimations';
@@ -8,10 +8,18 @@ import { TeaProductCard } from './components/TeaProductCard';
 import { TEA_PRODUCTS } from './data/products';
 import { CartDrawer } from '../food/components/CartDrawer';
 import { WishlistDrawer } from '../food/components/WishlistDrawer';
+import { useProducts } from '../../hooks/useProducts';
 
 export function TeaStorefront() {
+  const { products: apiProducts } = useProducts({
+    collection: 'tea',
+    fallbackData: TEA_PRODUCTS,
+  });
+
+  const displayProducts = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
+
   return (
-    <div className="relative bg-[#FAF1BB] text-[#2C1E11] min-h-screen overflow-hidden">
+    <div className="relative bg-[#F8F6F0] text-[#292820] min-h-screen overflow-hidden">
       {/* Drawers */}
       <CartDrawer />
       <WishlistDrawer />
@@ -20,38 +28,40 @@ export function TeaStorefront() {
       <BotanicalSideAnimations />
 
       {/* 1. Hero Section */}
-      <section className="relative z-10 pt-10 sm:pt-16 pb-16 sm:pb-24 border-b border-[#B88E38]/25 bg-gradient-to-b from-[#FAF1BB] via-[#FDF9E7] to-[#FAF1BB]">
+      <section className="relative z-10 pt-12 sm:pt-16 pb-16 sm:pb-24 border-b border-[#E5E0D5] bg-gradient-to-b from-[#F8F6F0] via-[#FAF6EE] to-[#F8F6F0]">
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Narrative */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#B88E38]/20 border border-[#B88E38]/40 text-[#8C6320] text-xs font-mono tracking-widest uppercase font-semibold">
-                <Leaf className="w-3.5 h-3.5 text-[#B88E38]" />
-                <span>Let's Make Tea Healthy</span>
+              {/* Eyebrow text */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#65815A]/10 border border-[#65815A]/25 text-[#173B2A] text-xs font-mono tracking-widest uppercase font-semibold">
+                <Leaf className="w-3.5 h-3.5 text-[#65815A]" />
+                <span>BOTANICAL WELLNESS</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif text-[#2C1E11] leading-[1.08]">
-                Discover Nature in <br />
-                <span className="italic text-[#8C6320]">Every Steeping Cup</span>
+              {/* Hero Heading */}
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-[#173B2A] leading-[1.08] tracking-tight uppercase">
+                WELLNESS TEA
               </h1>
 
-              <p className="text-sm sm:text-base text-[#543B25] leading-relaxed max-w-xl">
-                Five signature botanical brews crafted from natural sun-dried blossoms, therapeutic roots, and Ceylon spice chips without added sugar, synthetic colors, or artificial flavorings.
+              {/* Hero Description */}
+              <p className="text-base sm:text-lg text-[#292820]/80 leading-relaxed max-w-xl font-sans">
+                Discover thoughtfully selected botanical teas and herbal infusions for your everyday tea ritual.
               </p>
 
-              {/* Botanical Pillars */}
+              {/* Botanical Ritual Pillars */}
               <div className="grid grid-cols-3 gap-3 pt-2 max-w-lg">
-                <div className="p-3 rounded-xl bg-[#FFFDF5] border border-[#B88E38]/25 shadow-sm text-center">
-                  <div className="text-xs font-serif font-bold text-[#2C1E11]">100% Whole</div>
-                  <div className="text-[10px] text-[#7D5C3F] mt-0.5">Sun-Dried Petals</div>
+                <div className="p-3.5 rounded-xl bg-[#FFFFFF] border border-[#E5E0D5] shadow-2xs text-center">
+                  <div className="text-xs font-serif font-bold text-[#173B2A]">Whole Leaf</div>
+                  <div className="text-[10px] text-[#746F63] font-mono mt-0.5">Sun-Dried Petals</div>
                 </div>
-                <div className="p-3 rounded-xl bg-[#FFFDF5] border border-[#B88E38]/25 shadow-sm text-center">
-                  <div className="text-xs font-serif font-bold text-[#2C1E11]">Zero Sugar</div>
-                  <div className="text-[10px] text-[#7D5C3F] mt-0.5">Pure Herbs Only</div>
+                <div className="p-3.5 rounded-xl bg-[#FFFFFF] border border-[#E5E0D5] shadow-2xs text-center">
+                  <div className="text-xs font-serif font-bold text-[#173B2A]">Pure Botanicals</div>
+                  <div className="text-[10px] text-[#746F63] font-mono mt-0.5">Honest Blends</div>
                 </div>
-                <div className="p-3 rounded-xl bg-[#FFFDF5] border border-[#B88E38]/25 shadow-sm text-center">
-                  <div className="text-xs font-serif font-bold text-[#2C1E11]">Caffeine-Free</div>
-                  <div className="text-[10px] text-[#7D5C3F] mt-0.5">Gentle Tisanes</div>
+                <div className="p-3.5 rounded-xl bg-[#FFFFFF] border border-[#E5E0D5] shadow-2xs text-center">
+                  <div className="text-xs font-serif font-bold text-[#173B2A]">Daily Ritual</div>
+                  <div className="text-[10px] text-[#746F63] font-mono mt-0.5">Gentle Infusions</div>
                 </div>
               </div>
 
@@ -59,36 +69,37 @@ export function TeaStorefront() {
               <div className="pt-4 flex flex-wrap items-center gap-4">
                 <Link
                   to="/tea/products"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95"
+                  className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full border-2 border-[#173B2A] text-[#173B2A] hover:bg-[#173B2A] hover:text-[#F8F6F0] text-xs font-mono font-semibold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm"
                 >
-                  <span>Explore All 5 Varieties</span>
+                  <span>EXPLORE COLLECTION</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 
-                <a
-                  href="#standee-selection"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white/70 text-[#2C1E11] text-xs font-semibold uppercase tracking-wider hover:bg-white transition-all border border-[#B88E38]/30 shadow-sm"
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FFFFFF] border border-[#E5E0D5] text-[#292820] hover:bg-[#F8F6F0] hover:border-[#173B2A]/30 text-xs font-mono font-medium tracking-wider uppercase transition-all"
                 >
-                  <span>Standee Reference</span>
-                </a>
+                  <Compass className="w-3.5 h-3.5 text-[#65815A]" />
+                  <span>All Collections</span>
+                </Link>
               </div>
             </div>
 
             {/* Right Hero Image */}
             <div className="lg:col-span-5 relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-[#B88E38]/30 aspect-square">
+              <div className="relative rounded-3xl overflow-hidden shadow-xl border border-[#E5E0D5] bg-[#FFFFFF] aspect-square">
                 <img
                   src={teaHero}
-                  alt="Amoga Herbal Teas Display"
+                  alt="Amoga Wellness Tea Collection"
                   className="w-full h-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-                <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-black/65 backdrop-blur-md border border-white/15 text-white text-xs space-y-1">
-                  <div className="font-serif font-semibold text-[#FAF1BB] text-sm">
-                    Amoga Herbal Tea Standee Reference
+                <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-[#173B2A]/90 backdrop-blur-md border border-white/15 text-white text-xs space-y-1">
+                  <div className="font-serif font-semibold text-[#EAE2D3] text-sm">
+                    Botanical Tea Rituals
                   </div>
-                  <p className="text-[11px] text-white/80">
+                  <p className="text-[11px] text-white/80 font-sans">
                     Butterfly Blue Pea &bull; Moringa Leaf &bull; Cinnamon &bull; Sarsaparilla &bull; Hibiscus
                   </p>
                 </div>
@@ -98,100 +109,36 @@ export function TeaStorefront() {
         </Container>
       </section>
 
-      {/* 2. Standee Varieties Showcase Grid */}
-      <section id="standee-selection" className="relative z-10 py-16 sm:py-24 bg-[#FDF9E7] border-b border-[#B88E38]/20">
+      {/* 2. Featured Varieties Grid */}
+      <section className="relative z-10 py-16 sm:py-20 bg-[#F8F6F0] border-b border-[#E5E0D5]">
         <Container>
-          <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
-            <span className="text-xs font-mono uppercase tracking-[0.25em] text-[#8C6320] font-semibold">
-              The Five Botanical Pillars
-            </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#2C1E11]">
-              Dedicated Herbal Tea Collection
-            </h2>
-            <p className="text-xs sm:text-sm text-[#543B25] leading-relaxed">
-              Every tea in this collection is formulated from documented traditional Indian remedies, combining single-estate harvest flowers, leaves, and barks.
-            </p>
-          </div>
-
-          {/* 5 Product Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {TEA_PRODUCTS.map((tea) => (
-              <TeaProductCard key={tea.id} product={tea} />
-            ))}
-          </div>
-
-          {/* Direct Wholesale / Order Contact Banner */}
-          <div className="mt-14 p-6 sm:p-8 rounded-2xl bg-[#FFFDF5] border border-[#B88E38]/30 shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#FAF1BB] border border-[#B88E38]/30 text-[#8C6320] flex items-center justify-center shrink-0">
-                <PhoneCall className="w-6 h-6" />
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-[#65815A] mb-1">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>BOTANICAL WELLNESS SELECTION</span>
               </div>
-              <div className="space-y-0.5">
-                <div className="text-sm font-semibold text-[#2C1E11]">
-                  Direct Tea Orders & Wholesale Enquiries
-                </div>
-                <div className="text-xs text-[#543B25]">
-                  Place direct orders for retail tins or bespoke bulk infusions:
-                  <span className="font-mono font-bold text-[#8C6320] ml-1.5">+91 9940018593 / +91 8056700646</span>
-                </div>
-              </div>
+              <h2 className="text-3xl sm:text-4xl font-serif text-[#173B2A]">
+                Botanical Teas & Herbal Infusions
+              </h2>
+              <p className="text-xs sm:text-sm text-[#746F63] mt-1 max-w-xl">
+                Explore our selection of botanical teas and herbal infusions, bringing distinctive ingredients and comforting tea rituals to your everyday routine.
+              </p>
             </div>
 
             <Link
               to="/tea/products"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#B88E38] text-[#2C1E11] text-xs font-bold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shrink-0 shadow-sm"
+              className="text-xs font-mono font-semibold uppercase tracking-wider text-[#173B2A] hover:text-[#65815A] flex items-center gap-1.5 hover:underline"
             >
-              <span>View Full Catalogue</span>
+              <span>View All Varieties</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-        </Container>
-      </section>
 
-      {/* 3. Brewing Rituals & Botanical Guidance */}
-      <section className="relative z-10 py-16 sm:py-20 bg-[#FAF1BB]/60">
-        <Container>
-          <div className="max-w-4xl mx-auto space-y-8">
-            <div className="text-center space-y-2">
-              <h3 className="text-2xl sm:text-3xl font-serif text-[#2C1E11]">
-                The Botanical Steeping Ritual
-              </h3>
-              <p className="text-xs sm:text-sm text-[#543B25]">
-                To extract full polyphenols and delicate aromas without scorching floral petals:
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-5 rounded-2xl bg-white/80 border border-[#B88E38]/20 space-y-2 text-center">
-                <div className="w-10 h-10 rounded-full bg-[#FAF1BB] text-[#8C6320] font-mono font-bold flex items-center justify-center mx-auto text-sm">
-                  01
-                </div>
-                <h4 className="font-serif font-semibold text-[#2C1E11] text-sm">Spring Water</h4>
-                <p className="text-xs text-[#543B25] leading-relaxed">
-                  Bring fresh filtered water to a gentle boil (85°C–95°C depending on delicate leaf vs woody bark).
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-white/80 border border-[#B88E38]/20 space-y-2 text-center">
-                <div className="w-10 h-10 rounded-full bg-[#FAF1BB] text-[#8C6320] font-mono font-bold flex items-center justify-center mx-auto text-sm">
-                  02
-                </div>
-                <h4 className="font-serif font-semibold text-[#2C1E11] text-sm">Whole Infusion</h4>
-                <p className="text-xs text-[#543B25] leading-relaxed">
-                  Steep 1–2 teaspoons of whole calyces or root chips in covered cup for 4 to 6 minutes.
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-white/80 border border-[#B88E38]/20 space-y-2 text-center">
-                <div className="w-10 h-10 rounded-full bg-[#FAF1BB] text-[#8C6320] font-mono font-bold flex items-center justify-center mx-auto text-sm">
-                  03
-                </div>
-                <h4 className="font-serif font-semibold text-[#2C1E11] text-sm">Savor Mindfully</h4>
-                <p className="text-xs text-[#543B25] leading-relaxed">
-                  Enjoy pure, or add a drop of wild forest honey or a squeeze of fresh lemon for the blue pea color shift.
-                </p>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {displayProducts.slice(0, 6).map((product) => (
+              <TeaProductCard key={product.id} product={product} />
+            ))}
           </div>
         </Container>
       </section>

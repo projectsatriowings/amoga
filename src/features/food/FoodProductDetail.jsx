@@ -85,7 +85,7 @@ export function FoodProductDetail() {
           </Link>
           <span>/</span>
           <Link to="/food" className="hover:underline">
-            Gourmet Food
+            Wholesome Pantry
           </Link>
           <span>/</span>
           <Link

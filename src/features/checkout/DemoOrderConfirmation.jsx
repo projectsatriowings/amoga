@@ -348,45 +348,45 @@ export const DemoOrderConfirmation = () => {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* 1. Gourmet Food */}
+            {/* 1. Wholesome Pantry */}
             <Link
               to="/food"
-              className="group p-5 rounded-2xl bg-white border border-[#2D5A27]/20 hover:border-[#2D5A27] hover:shadow-md transition-all flex flex-col justify-between"
+              className="group p-5 rounded-2xl bg-white border border-[#3F7B43]/20 hover:border-[#3F7B43] hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div>
-                <div className="w-10 h-10 rounded-xl bg-[#2D5A27]/10 text-[#2D5A27] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#3F7B43]/10 text-[#173B2A] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                   <UtensilsCrossed className="w-5 h-5" />
                 </div>
-                <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#2D5A27] transition-colors">
-                  Gourmet Food
+                <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#173B2A] transition-colors">
+                  Wholesome Pantry
                 </h3>
                 <p className="text-xs text-[#746F63] mt-1">
-                  Artisanal treats, pure filter coffee & breakfast millets
+                  Comforting soup mixes, nourishing millet blends and flavourful rice podis
                 </p>
               </div>
-              <div className="mt-4 flex items-center text-xs font-semibold text-[#2D5A27] uppercase tracking-wider gap-1">
-                <span>Explore Food</span>
+              <div className="mt-4 flex items-center text-xs font-semibold text-[#3F7B43] uppercase tracking-wider gap-1">
+                <span>Explore Pantry</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
 
-            {/* 2. Botanical Tea */}
+            {/* 2. Wellness Tea */}
             <Link
               to="/tea"
-              className="group p-5 rounded-2xl bg-white border border-[#B88E38]/25 hover:border-[#B88E38] hover:shadow-md transition-all flex flex-col justify-between"
+              className="group p-5 rounded-2xl bg-white border border-[#65815A]/25 hover:border-[#65815A] hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div>
-                <div className="w-10 h-10 rounded-xl bg-[#FAF1BB]/60 text-[#8C6320] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#65815A]/10 text-[#173B2A] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                   <Leaf className="w-5 h-5" />
                 </div>
-                <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#8C6320] transition-colors">
-                  Botanical Tea
+                <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#173B2A] transition-colors">
+                  Wellness Tea
                 </h3>
                 <p className="text-xs text-[#746F63] mt-1">
-                  Single-origin flower infusions, spices & therapeutic roots
+                  Thoughtfully selected botanical teas and herbal infusions for your everyday ritual
                 </p>
               </div>
-              <div className="mt-4 flex items-center text-xs font-semibold text-[#8C6320] uppercase tracking-wider gap-1">
+              <div className="mt-4 flex items-center text-xs font-semibold text-[#65815A] uppercase tracking-wider gap-1">
                 <span>Explore Tea</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>

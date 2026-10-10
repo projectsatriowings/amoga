@@ -14,8 +14,8 @@ import {
 import { AdminPagination } from './AdminPagination';
 
 const COLLECTION_LABELS = {
-  food: 'Gourmet Food',
-  tea: 'Botanical Teas',
+  food: 'Wholesome Pantry',
+  tea: 'Wellness Tea',
   sarees: 'Heritage Sarees',
   jewellery: 'Silver Jewellery',
 };

@@ -90,7 +90,7 @@ export function TeaProductDetail() {
           </Link>
           <span>/</span>
           <Link to="/tea" className="hover:text-[#2C1E11] transition-colors">
-            Tea
+            Wellness Tea
           </Link>
           <span>/</span>
           <Link to="/tea/products" className="hover:text-[#2C1E11] transition-colors">

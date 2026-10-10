@@ -182,8 +182,8 @@ export function AdminInventory() {
             className="px-3 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs text-[#4A423B]"
           >
             <option value="all">All Collections</option>
-            <option value="food">Gourmet Food</option>
-            <option value="tea">Artisanal Tea</option>
+            <option value="food">Wholesome Pantry</option>
+            <option value="tea">Wellness Tea</option>
             <option value="sarees">Heritage Sarees</option>
             <option value="jewellery">Silver Jewellery</option>
           </select>

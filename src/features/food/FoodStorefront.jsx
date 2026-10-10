@@ -23,7 +23,7 @@ export function FoodStorefront() {
       : featuredProducts.filter((p) => p.category === activeTab);
 
   return (
-    <div className="bg-[#F1EDE4] text-[#172B1C] min-h-screen">
+    <div className="bg-[#F8F6F0] text-[#292820] min-h-screen">
       {/* Drawers */}
       <CartDrawer />
       <WishlistDrawer />
@@ -34,36 +34,36 @@ export function FoodStorefront() {
       {/* 2. Trust and Benefits Strip */}
       <FoodBenefitsStrip />
 
-      {/* 3. Shop by Category */}
+      {/* 3. Shop by Category (Soup Mixes, Millet Mixes, Rice Podis) */}
       <FoodCategoryGrid />
 
       {/* 4. Featured Products Showcase */}
-      <section className="py-16 sm:py-20 bg-[#F1EDE4] border-b border-[#172B1C]/8">
+      <section className="py-16 sm:py-20 bg-[#F8F6F0] border-b border-[#E5E0D5]">
         <Container>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <SectionHeading
-              eyebrow="Crafted for Wholesome Living"
-              title="Featured Delicacies"
-              description="A curated selection of farm-fresh staples, wholesome ancient millets, and regional soup mixes."
+              eyebrow="THE GOODNESS OF TRADITION"
+              title="Traditional Blends & Mixes"
+              description="Explore a thoughtful selection of soup mixes, millet mixes and traditional rice podis, bringing convenience and familiar flavours to everyday meals."
               collection="food"
             />
 
-            {/* Filter Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-full bg-[#E5DFD3]/70 border border-[#172B1C]/10">
+            {/* Filter Tabs for the 3 Categories */}
+            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-full bg-[#FFFFFF] border border-[#E5E0D5] shadow-2xs">
               {[
-                { id: 'all', label: 'All Featured' },
-                { id: 'spices', label: 'Pantry Staples' },
-                { id: 'soups', label: 'Soups' },
-                { id: 'millets', label: 'Millets' },
+                { id: 'all', label: 'All Mixes' },
+                { id: 'soups', label: 'Soup Mixes' },
+                { id: 'millets', label: 'Millet Mixes' },
+                { id: 'podis', label: 'Rice Podis' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-mono font-medium transition-all cursor-pointer ${
                     activeTab === tab.id
-                      ? 'bg-[#287A25] text-white shadow-sm'
-                      : 'text-[#172B1C] hover:bg-black/5'
+                      ? 'bg-[#173B2A] text-white shadow-xs'
+                      : 'text-[#292820] hover:text-[#173B2A] hover:bg-[#F8F6F0]'
                   }`}
                 >
                   {tab.label}
@@ -82,16 +82,16 @@ export function FoodStorefront() {
           <div className="mt-12 text-center">
             <Link
               to="/food/products"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#287A25] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#1E5C1B] transition-all shadow-md active:scale-95"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border-2 border-[#173B2A] text-[#173B2A] hover:bg-[#173B2A] hover:text-white text-xs font-mono font-semibold uppercase tracking-wider transition-all shadow-sm active:scale-95"
             >
-              <span>Explore Complete Catalogue (61 Items)</span>
+              <span>Explore Complete Pantry Blends</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </Container>
       </section>
 
-      {/* 5. Dedicated Soup ReadyMix Section (20-Recipe Range) */}
+      {/* 5. Dedicated Soup ReadyMix Section */}
       <SoupCollectionSection />
 
       {/* 6. Promotional / Brand Heritage Banner */}

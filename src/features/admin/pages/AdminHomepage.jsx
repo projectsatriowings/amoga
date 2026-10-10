@@ -94,7 +94,7 @@ export function AdminHomepage() {
         <div className="bg-[#FBF9F5] p-5 rounded-lg border border-[#E5E0D5] space-y-2">
           <h3 className="font-serif text-sm font-bold text-[#1A1817]">1. Four Luxury Portals</h3>
           <p className="text-xs text-[#5C544C] leading-relaxed">
-            The Gatekeeper displays Gourmet Food, Botanical Tea, Heritage Sarees, and Silver Jewellery.
+            The Gatekeeper displays Wholesome Pantry, Wellness Tea, Heritage Sarees, and Silver Jewellery.
           </p>
           <Link to="/admin/collections" className="text-xs text-[#722F37] font-semibold hover:underline block pt-2">
             Configure Collections →

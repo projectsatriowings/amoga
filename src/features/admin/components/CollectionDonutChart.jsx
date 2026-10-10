@@ -4,12 +4,12 @@ import { Utensils, Coffee, Sparkles, Gem } from 'lucide-react';
 
 const COLLECTION_CONFIG = {
   food: {
-    label: 'Gourmet Food',
+    label: 'Wholesome Pantry',
     color: '#3F5A35',
     icon: Utensils,
   },
   tea: {
-    label: 'Botanical Teas',
+    label: 'Wellness Tea',
     color: '#B08A4D',
     icon: Coffee,
   },

@@ -36,8 +36,8 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
       : product.collection === 'sarees'
       ? { label: 'Heritage Sarees', color: 'bg-[#7A1C2E]/10 text-[#7A1C2E] border-[#7A1C2E]/20' }
       : product.collection === 'tea'
-      ? { label: 'Botanical Tea', color: 'bg-[#FAF1BB]/60 text-[#8C6320] border-[#B88E38]/30' }
-      : { label: 'Gourmet Food', color: 'bg-[#2D5A27]/10 text-[#2D5A27] border-[#2D5A27]/20' };
+      ? { label: 'Wellness Tea', color: 'bg-[#FAF1BB]/60 text-[#173B2A] border-[#65815A]/30' }
+      : { label: 'Wholesome Pantry', color: 'bg-[#3F7B43]/10 text-[#173B2A] border-[#3F7B43]/20' };
 
   return (
     <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E5E0D5] hover:border-[#C8C2B5] shadow-sm transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

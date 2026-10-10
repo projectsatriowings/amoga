@@ -73,13 +73,18 @@ export function CartDrawer() {
                   <div className="space-y-1">
                     <p className="text-base font-serif font-medium">Your basket is currently empty</p>
                     <p className="text-xs text-[#557C36] max-w-xs">
-                      Explore Amoga's authentic soups, herbal teas, and pantry organics.
+                      Explore Amoga's traditional soup mixes, millet mixes, and rice podis.
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 w-full max-w-xs pt-2">
                     <Link to="/food/products" onClick={closeCart}>
                       <Button variant="primary" size="sm" collection="food" className="w-full text-xs">
-                        Browse Gourmet Food
+                        Browse Wholesome Pantry
+                      </Button>
+                    </Link>
+                    <Link to="/tea/products" onClick={closeCart}>
+                      <Button variant="outline" size="sm" collection="tea" className="w-full text-xs">
+                        Browse Wellness Tea
                       </Button>
                     </Link>
                     <Link to="/sarees/products" onClick={closeCart}>

@@ -259,7 +259,7 @@ export function AdminProductForm() {
           {isEditing ? `Edit: ${formData.name || 'Product'}` : 'Create Unified Product'}
         </h1>
         <p className="text-xs text-[#7A7167]">
-          Manage pricing, collection attributes, variants, and stock across Gourmet Food, Tea, Sarees, or Jewellery.
+          Manage pricing, collection attributes, variants, and stock across Wholesome Pantry, Wellness Tea, Heritage Sarees, or Silver Jewellery.
         </p>
       </div>
 

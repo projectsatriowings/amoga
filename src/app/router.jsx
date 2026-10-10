@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { GatekeeperHub } from '../features/gatekeeper/GatekeeperHub';
 import { FoodStorefront } from '../features/food/FoodStorefront';
@@ -53,6 +53,18 @@ export const router = createBrowserRouter([
         <GatekeeperHub />
       </AppShell>
     ),
+  },
+  {
+    path: '/pantry',
+    element: <Navigate to="/food" replace />,
+  },
+  {
+    path: '/wholesome-pantry',
+    element: <Navigate to="/food" replace />,
+  },
+  {
+    path: '/wellness-tea',
+    element: <Navigate to="/tea" replace />,
   },
   {
     path: '/food',

@@ -90,8 +90,8 @@ export function AdminProducts() {
 
   const collections = [
     { id: 'all', name: 'All Collections' },
-    { id: 'food', name: 'Gourmet Food' },
-    { id: 'tea', name: 'Botanical Tea' },
+    { id: 'food', name: 'Wholesome Pantry' },
+    { id: 'tea', name: 'Wellness Tea' },
     { id: 'sarees', name: 'Heritage Sarees' },
     { id: 'jewellery', name: 'Silver Jewellery' },
   ];
@@ -103,7 +103,7 @@ export function AdminProducts() {
         <div>
           <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Product Catalogue</h1>
           <p className="text-xs text-[#7A7167]">
-            Unified inventory across all 4 Amoga collections: Gourmet Food, Tea, Heritage Sarees, Silver Jewellery
+            Unified inventory across all 4 Amoga collections: Wholesome Pantry, Wellness Tea, Heritage Sarees, Silver Jewellery
           </p>
         </div>
         <Link
