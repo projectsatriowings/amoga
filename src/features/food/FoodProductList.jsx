@@ -9,7 +9,7 @@ import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
 
 const APPROVED_PANTRY_CATEGORIES = [
-  { id: 'all', label: 'All Blends & Mixes' },
+  { id: 'all', label: 'All Mixes' },
   { id: 'soups', label: 'Soup Mixes' },
   { id: 'millets', label: 'Millet Mixes' },
   { id: 'podis', label: 'Rice Podis' },
@@ -31,6 +31,12 @@ export function FoodProductList() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState('featured');
+
+  // Synchronize internal state with URL search params (e.g. when navigated via header dropdown)
+  React.useEffect(() => {
+    setSelectedCategory(searchParams.get('category') || 'all');
+    setSearchQuery(searchParams.get('q') || '');
+  }, [searchParams]);
 
   // Update URL parameters when filters change
   const handleCategoryChange = (catId) => {
