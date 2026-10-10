@@ -23,18 +23,17 @@ export function AppHeader({ activeCollection }) {
 
   // Dynamic header styles based on active collection
   const headerThemeStyles = {
-    food: 'bg-[#F1EDE4]/90 text-[#172B1C] border-[#172B1C]/10',
-    tea: 'bg-[#FAF1BB]/90 text-[#2C1E11] border-[#B88E38]/20',
-    sarees: 'bg-[#2C0E1A]/90 text-[#F6EBD8] border-[#C5A46D]/20',
-    jewellery: 'bg-[#111215]/90 text-[#F4F4F2] border-white/10',
-    checkout: 'bg-[#F8F6F0]/95 text-[#292820] border-[#E5E0D5]',
+    food: 'bg-[#F3F0E7]/95 text-[#173B2A] border-[#D9DCCD]',
+    tea: 'bg-[#F0F1E8]/95 text-[#263A2D] border-[#D5DDCE]',
+    sarees: 'bg-[#F3EAE1]/95 text-[#3B111E] border-[#E0CFC0]',
+    jewellery: 'bg-[#F0F1F1]/95 text-[#25272A] border-[#D6D9DC]',
+    neutral: 'bg-[#F4F2EC]/95 text-[#292820] border-[#DCD6C7]',
+    checkout: 'bg-[#F4F2EC]/95 text-[#292820] border-[#DCD6C7]',
     default: 'bg-[#0e0f12]/90 text-[#F4F4F2] border-white/10',
   };
 
   const activeThemeClass = activeCollection
-    ? headerThemeStyles[activeCollection.id] || headerThemeStyles.default
-    : isCheckoutRoute
-    ? headerThemeStyles.checkout
+    ? (headerThemeStyles[activeCollection.id] || headerThemeStyles[activeCollection.theme] || headerThemeStyles.neutral)
     : headerThemeStyles.default;
 
   return (

@@ -4,6 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure Indian Rupee symbol U+20B9 always renders with a clean, crisp glyph even inside serif containers */
+@font-face {
+  font-family: 'Playfair Display';
+  src: local('Inter'), local('Segoe UI'), local('Roboto'), local('sans-serif');
+  unicode-range: U+20B9;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: local('Inter'), local('Segoe UI'), local('Roboto'), local('sans-serif');
+  unicode-range: U+20B9;
+}
+
+
 @layer base {
   *, ::before, ::after {
     border-color: var(--border-subtle);
@@ -95,9 +109,26 @@
   }
 
   /* Professional tabular sans numerals across all data tables and financial figures */
-  .tabular-nums {
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum" 1;
-    font-family: var(--font-inter);
+  .tabular-nums,
+  .font-numeric {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    letter-spacing: -0.01em;
   }
+
+  /* Collection Theme Semantic Utilities */
+  .bg-collection-page { background-color: var(--collection-page-bg); }
+  .bg-collection-section { background-color: var(--collection-section-bg); }
+  .bg-collection-card { background-color: var(--collection-card-bg); }
+  .bg-collection-input { background-color: var(--collection-input-bg); }
+  .bg-collection-accent { background-color: var(--collection-accent); }
+  .text-collection-primary { color: var(--collection-text); }
+  .text-collection-muted { color: var(--collection-text-muted); }
+  .text-collection-heading { color: var(--collection-heading); }
+  .text-collection-accent { color: var(--collection-accent); }
+  .text-collection-btn { color: var(--collection-button-text); }
+  .border-collection { border-color: var(--collection-border); }
+  .border-collection-input { border-color: var(--collection-input-border); }
 }
+

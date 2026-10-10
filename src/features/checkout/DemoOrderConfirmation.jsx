@@ -82,20 +82,20 @@ export const DemoOrderConfirmation = () => {
   const isDemoFormat = typeof orderId === 'string' && (orderId.startsWith('AMOGA-DEMO-') || orderId.startsWith('AMOGA-ORD-'));
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] text-[#292820] pt-28 pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[var(--collection-page-bg)] text-[var(--collection-text)] pt-28 pb-24 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-4xl mx-auto">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[#746F63]">
+          <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[var(--collection-text-muted)]">
             <li>
-              <Link to="/" className="hover:text-[#3F5A35] transition-colors">
+              <Link to="/" className="hover:text-[var(--collection-accent)] transition-colors">
                 Portal
               </Link>
             </li>
             <li>
-              <span className="text-[#898477]">/</span>
+              <span className="text-[var(--collection-border)]">/</span>
             </li>
-            <li className="text-[#3F5A35] font-semibold" aria-current="page">
+            <li className="text-[var(--collection-accent)] font-semibold" aria-current="page">
               Order Confirmation
             </li>
           </ol>
@@ -105,7 +105,7 @@ export const DemoOrderConfirmation = () => {
           /* Active Order Snapshot View */
           <div className="space-y-8">
             {/* Header Hero Card */}
-            <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#E5E0D5] shadow-sm text-center">
+            <div className="bg-[var(--collection-card-bg)] rounded-3xl p-6 sm:p-10 border border-[var(--collection-border)] shadow-sm text-center transition-colors">
               <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-300 text-[#166534] flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8" />
               </div>
@@ -133,7 +133,7 @@ export const DemoOrderConfirmation = () => {
                 </span>
               </div>
 
-              <h1 className="font-serif text-3xl sm:text-4xl text-[#292820] mt-1">
+              <h1 className="font-serif text-3xl sm:text-4xl text-[var(--collection-heading)] mt-1">
                 {isPaid
                   ? 'Order Confirmed & Payment Verified'
                   : isPersistent
@@ -141,11 +141,11 @@ export const DemoOrderConfirmation = () => {
                   : 'Order Confirmation'}
               </h1>
 
-              <div className="mt-4 p-3 bg-[#F8F6F0] inline-block rounded-xl border border-[#E5E0D5]">
-                <span className="text-xs text-[#746F63] uppercase tracking-widest block font-medium">
+              <div className="mt-4 p-3 bg-[var(--collection-section-bg)] inline-block rounded-xl border border-[var(--collection-border)]">
+                <span className="text-xs text-[var(--collection-text-muted)] uppercase tracking-widest block font-medium">
                   Authoritative Order Reference
                 </span>
-                <span className="font-mono text-base sm:text-lg font-bold text-[#3F5A35]">
+                <span className="font-mono text-base sm:text-lg font-bold text-[var(--collection-accent)]">
                   {orderId}
                 </span>
               </div>
@@ -169,32 +169,32 @@ export const DemoOrderConfirmation = () => {
             {/* Order Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Delivery Destination Snapshot */}
-              <div className="bg-white rounded-2xl p-6 border border-[#E5E0D5] shadow-sm text-xs">
-                <div className="flex items-center gap-2 text-[#3F5A35] pb-3 border-b border-[#E5E0D5] mb-4">
+              <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 border border-[var(--collection-border)] shadow-sm text-xs transition-colors">
+                <div className="flex items-center gap-2 text-[var(--collection-accent)] pb-3 border-b border-[var(--collection-border)] mb-4">
                   <Truck className="w-4 h-4" />
-                  <h2 className="font-serif text-base font-semibold text-[#292820]">
+                  <h2 className="font-serif text-base font-semibold text-[var(--collection-heading)]">
                     Delivery Recipient Details
                   </h2>
                 </div>
 
-                <div className="space-y-1 text-[#746F63]">
-                  <p className="font-bold text-sm text-[#292820] break-words">
+                <div className="space-y-1 text-[var(--collection-text-muted)]">
+                  <p className="font-bold text-sm text-[var(--collection-text)] break-words">
                     {activeOrder.customer?.fullName || 'Valued Customer'}
                   </p>
                   <p className="break-words">{activeOrder.customer?.email}</p>
                   <p>{activeOrder.customer?.phone}</p>
-                  <div className="pt-2 text-[#746F63]">
-                    <p className="break-words">{activeOrder.customer?.addressLine1}</p>
+                  <div className="pt-2 text-[var(--collection-text-muted)]">
+                    <p className="break-words text-[var(--collection-text)]">{activeOrder.customer?.addressLine1}</p>
                     {activeOrder.customer?.addressLine2 && (
-                      <p className="break-words">{activeOrder.customer?.addressLine2}</p>
+                      <p className="break-words text-[var(--collection-text)]">{activeOrder.customer?.addressLine2}</p>
                     )}
                     <p>
                       {activeOrder.customer?.city}, {activeOrder.customer?.state} -{' '}
-                      <strong className="text-[#292820]">{activeOrder.customer?.pincode}</strong>
+                      <strong className="text-[var(--collection-text)]">{activeOrder.customer?.pincode}</strong>
                     </p>
                   </div>
                   {activeOrder.customer?.instructions && (
-                    <p className="pt-2 italic text-[#746F63] bg-[#F8F6F0] p-2 rounded-lg border border-[#E5E0D5] break-words">
+                    <p className="pt-2 italic text-[var(--collection-text-muted)] bg-[var(--collection-section-bg)] p-2 rounded-lg border border-[var(--collection-border)] break-words">
                       Instructions: &ldquo;{activeOrder.customer.instructions}&rdquo;
                     </p>
                   )}
@@ -202,18 +202,18 @@ export const DemoOrderConfirmation = () => {
               </div>
 
               {/* Order Meta Snapshot */}
-              <div className="bg-white rounded-2xl p-6 border border-[#E5E0D5] shadow-sm text-xs">
-                <div className="flex items-center gap-2 text-[#3F5A35] pb-3 border-b border-[#E5E0D5] mb-4">
+              <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 border border-[var(--collection-border)] shadow-sm text-xs transition-colors">
+                <div className="flex items-center gap-2 text-[var(--collection-accent)] pb-3 border-b border-[var(--collection-border)] mb-4">
                   <Calendar className="w-4 h-4" />
-                  <h2 className="font-serif text-base font-semibold text-[#292820]">
+                  <h2 className="font-serif text-base font-semibold text-[var(--collection-heading)]">
                     Order & Payment Lifecycle
                   </h2>
                 </div>
 
-                <div className="space-y-2.5 text-[#746F63]">
+                <div className="space-y-2.5 text-[var(--collection-text-muted)]">
                   <div className="flex justify-between">
-                    <span className="text-[#898477]">Created At:</span>
-                    <span className="font-medium text-[#292820]">
+                    <span className="text-[var(--collection-text-muted)]">Created At:</span>
+                    <span className="font-medium text-[var(--collection-text)]">
                       {new Date(activeOrder.createdAt).toLocaleString('en-IN', {
                         dateStyle: 'medium',
                         timeStyle: 'short',
@@ -221,34 +221,34 @@ export const DemoOrderConfirmation = () => {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#898477]">Order Status:</span>
+                    <span className="text-[var(--collection-text-muted)]">Order Status:</span>
                     <span className="font-semibold text-[#166534]">
                       {activeOrder.status || 'CONFIRMED'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#898477]">Payment Status:</span>
+                    <span className="text-[var(--collection-text-muted)]">Payment Status:</span>
                     <span className={`font-semibold ${isPaid ? 'text-[#166534]' : 'text-amber-700'}`}>
                       {activeOrder.paymentStatus || (isPaid ? 'SUCCEEDED' : 'PENDING')}
                     </span>
                   </div>
                   {latestPaymentRef && (
                     <div className="flex justify-between">
-                      <span className="text-[#898477]">Payment Attempt:</span>
-                      <span className="font-mono text-[11px] text-[#292820]">
+                      <span className="text-[var(--collection-text-muted)]">Payment Attempt:</span>
+                      <span className="font-mono text-[11px] text-[var(--collection-text)]">
                         {latestPaymentRef}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-[#898477]">Provider Mode:</span>
-                    <span className="font-medium text-[#746F63]">
+                    <span className="text-[var(--collection-text-muted)]">Provider Mode:</span>
+                    <span className="font-medium text-[var(--collection-text-muted)]">
                       Test Adapter (Dev Mode)
                     </span>
                   </div>
-                  <div className="flex justify-between pt-2 border-t border-[#E5E0D5]">
-                    <span className="font-semibold text-[#292820]">Paid Total:</span>
-                    <span className="font-serif text-base font-bold text-[#3F5A35]">
+                  <div className="flex justify-between pt-2 border-t border-[var(--collection-border)]">
+                    <span className="font-semibold text-[var(--collection-heading)]">Paid Total:</span>
+                    <span className="font-sans text-base font-bold text-[var(--collection-accent)] tabular-nums">
                       {formatINR(activeOrder.totals?.totalAmount || activeOrder.totals?.subtotal)}
                     </span>
                   </div>
@@ -257,15 +257,15 @@ export const DemoOrderConfirmation = () => {
             </div>
 
             {/* Line Items Snapshot */}
-            <div className="bg-white rounded-2xl p-6 border border-[#E5E0D5] shadow-sm">
-              <div className="flex items-center gap-2 text-[#3F5A35] pb-3 border-b border-[#E5E0D5] mb-4">
+            <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 border border-[var(--collection-border)] shadow-sm transition-colors">
+              <div className="flex items-center gap-2 text-[var(--collection-accent)] pb-3 border-b border-[var(--collection-border)] mb-4">
                 <FileText className="w-4 h-4" />
-                <h2 className="font-serif text-base font-semibold text-[#292820]">
+                <h2 className="font-serif text-base font-semibold text-[var(--collection-heading)]">
                   Items in Order ({activeOrder.items?.length || 0})
                 </h2>
               </div>
 
-              <div className="divide-y divide-[#E5E0D5] text-xs">
+              <div className="divide-y divide-[var(--collection-border)] text-xs">
                 {(activeOrder.items || []).map((item, idx) => (
                   <div key={item.lineId || item.id || idx} className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
@@ -273,28 +273,28 @@ export const DemoOrderConfirmation = () => {
                         <img
                           src={item.image}
                           alt={item.name || item.productName}
-                          className="w-12 h-12 object-cover rounded-lg border border-[#E5E0D5] shrink-0"
+                          className="w-12 h-12 object-cover rounded-lg border border-[var(--collection-border)] shrink-0"
                         />
                       )}
                       <div className="min-w-0">
-                        <span className="text-[9px] uppercase tracking-wider font-semibold text-[#3F5A35]">
+                        <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--collection-accent)]">
                           {item.collectionId || item.collectionName || 'Collection'}
                         </span>
-                        <h3 className="font-medium text-[#292820] truncate">
+                        <h3 className="font-medium text-[var(--collection-text)] truncate">
                           {item.name || item.productName}
                         </h3>
                         {(item.selectedVariant?.name || item.variantName) && (
-                          <p className="text-[10px] text-[#746F63]">
+                          <p className="text-[10px] text-[var(--collection-text-muted)]">
                             {item.selectedVariant?.name || item.variantName}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <span className="text-[#746F63]">
+                      <span className="text-[var(--collection-text-muted)]">
                         Qty: {item.quantity} × {formatINR(item.price || item.unitPrice || 0)}
                       </span>
-                      <p className="font-semibold text-[#292820] font-serif">
+                      <p className="font-semibold text-[var(--collection-text)] font-sans tabular-nums">
                         {formatINR(item.lineTotal || (item.price || item.unitPrice || 0) * item.quantity)}
                       </p>
                     </div>
@@ -305,25 +305,25 @@ export const DemoOrderConfirmation = () => {
           </div>
         ) : (
           /* Graceful Unknown / Expired Reference View */
-          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-[#E5E0D5] shadow-sm text-center max-w-2xl mx-auto">
+          <div className="bg-[var(--collection-card-bg)] rounded-3xl p-8 sm:p-12 border border-[var(--collection-border)] shadow-sm text-center max-w-2xl mx-auto transition-colors">
             <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-300 text-amber-600 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8" />
             </div>
 
-            <h1 className="font-serif text-2xl sm:text-3xl text-[#292820] mb-2">
+            <h1 className="font-serif text-2xl sm:text-3xl text-[var(--collection-heading)] mb-2">
               {isDemoFormat ? 'Order Reference Notice' : 'Unknown Reference Identifier'}
             </h1>
 
-            <div className="my-4 p-3 bg-[#F8F6F0] inline-block rounded-xl border border-[#E5E0D5]">
-              <span className="text-xs text-[#746F63] uppercase tracking-widest block font-medium">
+            <div className="my-4 p-3 bg-[var(--collection-section-bg)] inline-block rounded-xl border border-[var(--collection-border)]">
+              <span className="text-xs text-[var(--collection-text-muted)] uppercase tracking-widest block font-medium">
                 Provided Identifier
               </span>
-              <span className="font-mono text-base font-bold text-[#292820]">
+              <span className="font-mono text-base font-bold text-[var(--collection-text)]">
                 {orderId || 'None'}
               </span>
             </div>
 
-            <p className="text-sm text-[#746F63] leading-relaxed mb-6">
+            <p className="text-sm text-[var(--collection-text-muted)] leading-relaxed mb-6">
               {isDemoFormat
                 ? 'This reference identifier was generated during a previous checkout session. Session details are cached in browser memory or retrieved via your guest access token.'
                 : 'No recorded order was found for this identifier in your current browser session.'}
@@ -331,7 +331,7 @@ export const DemoOrderConfirmation = () => {
 
             <Link
               to="/cart"
-              className="inline-flex items-center px-6 py-3 rounded-xl bg-[#3F5A35] text-white text-sm font-medium hover:bg-[#344B2C] transition-all shadow-md"
+              className="inline-flex items-center px-6 py-3 rounded-xl bg-[var(--collection-accent)] text-[var(--collection-btn-text,#FFFFFF)] text-sm font-medium hover:bg-[var(--collection-accent-hover)] transition-all shadow-md"
             >
               Go to Shopping Bag
             </Link>

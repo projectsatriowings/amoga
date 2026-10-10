@@ -101,8 +101,8 @@ export function JewelleryProductCard({ product }) {
         <div className="pt-2 border-t border-[#B9B8B5]/15 flex items-center justify-between gap-2">
           <div>
             {hasPrice ? (
-              <div className="text-base font-serif font-bold text-[#F7F3EB]">
-                ₹ {product.price.toLocaleString()}
+              <div className="text-base font-sans font-bold text-[#F7F3EB] tabular-nums">
+                ₹{product.price.toLocaleString('en-IN')}
               </div>
             ) : (
               <span className="text-[10px] font-mono text-[#B9B8B5] bg-[#242326] px-2 py-0.5 rounded border border-[#B9B8B5]/20">

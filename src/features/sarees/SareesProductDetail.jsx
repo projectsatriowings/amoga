@@ -196,8 +196,8 @@ export function SareesProductDetail() {
               <div className="pt-3">
                 {hasPrice ? (
                   <div className="flex items-baseline gap-3">
-                    <span className="font-serif text-3xl font-bold text-[#F6EBD8]">
-                      ₹ {product.price.toLocaleString()}
+                    <span className="font-sans text-3xl font-bold text-[#F6EBD8] tabular-nums">
+                      ₹{product.price.toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs font-mono text-[#C5A46D]">
                       Verified Catalogue Price (All Taxes Included)

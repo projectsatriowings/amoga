@@ -20,20 +20,16 @@ export function AppFooter({ activeCollection }) {
     location.pathname.startsWith('/order-confirmation') ||
     location.pathname === '/cart';
 
-  const footerBg = isFood
-    ? 'bg-[#F8F6F0] text-[#292820] border-[#E5E0D5]'
-    : isTea
-    ? 'bg-[#FAF1BB] text-[#2C1E11] border-[#B88E38]/25'
-    : isSarees
-    ? 'bg-[#1D0911] text-[#F6EBD8] border-[#C5A46D]/15'
-    : isJewellery
-    ? 'bg-[#1C1B1E] text-[#F7F3EB] border-[#B9B8B5]/15'
-    : isCheckout
-    ? 'bg-[#F8F6F0] text-[#292820] border-[#E5E0D5]'
-    : 'bg-[#0B0C0E] text-[#F4F4F2] border-white/10';
+  const isGatekeeper = location.pathname === '/';
 
   return (
-    <footer className={`border-t py-12 sm:py-16 transition-colors duration-normal ease-smooth ${footerBg}`}>
+    <footer
+      className={`border-t py-12 sm:py-16 transition-colors duration-normal ease-smooth ${
+        isGatekeeper
+          ? 'bg-[#0B0C0E] text-[#F4F4F2] border-white/10'
+          : 'bg-[var(--collection-section-bg,#EAE8DC)] text-[var(--collection-text,#292820)] border-[var(--collection-border,#D9DCCD)]'
+      }`}
+    >
       <Container>
         {/* Reusable Themed Contact Section & Interactive Form for Collections */}
         {activeCollection && (

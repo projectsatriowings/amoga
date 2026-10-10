@@ -111,8 +111,8 @@ export function SareeProductCard({ product }) {
         <div className="pt-2 border-t border-[#C5A46D]/15 flex items-center justify-between gap-2">
           <div>
             {hasPrice ? (
-              <div className="text-base font-serif font-bold text-[#F6EBD8]">
-                ₹ {product.price.toLocaleString()}
+              <div className="text-base font-sans font-bold text-[#F6EBD8] tabular-nums">
+                ₹{product.price.toLocaleString('en-IN')}
               </div>
             ) : (
               <span className="text-[10px] font-mono text-[#C5A46D] bg-[#451523] px-2 py-0.5 rounded border border-[#C5A46D]/20">

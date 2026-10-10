@@ -148,11 +148,11 @@ export function CartDrawer() {
 
                           <div className="flex items-center justify-between pt-1">
                             {hasPrice ? (
-                              <div className="text-sm font-semibold text-[#172B1C]">
-                                ₹{(product.price * quantity).toLocaleString()}
+                              <div className="text-sm font-sans font-semibold text-[#172B1C] tabular-nums">
+                                ₹{(product.price * quantity).toLocaleString('en-IN')}
                                 {quantity > 1 && (
-                                  <span className="text-[10px] font-normal text-black/50 ml-1">
-                                    (₹{product.price.toLocaleString()} each)
+                                  <span className="text-[10px] font-normal text-black/50 ml-1 tabular-nums">
+                                    (₹{product.price.toLocaleString('en-IN')} each)
                                   </span>
                                 )}
                               </div>
@@ -217,8 +217,8 @@ export function CartDrawer() {
               <div className="p-5 border-t border-[#172B1C]/10 bg-white/70 backdrop-blur-md space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-black/70">Verified Subtotal</span>
-                  <span className="font-semibold text-base text-[#172B1C]">
-                    ₹{verifiedSubtotal.toLocaleString()}
+                  <span className="font-sans font-semibold text-base text-[#172B1C] tabular-nums">
+                    ₹{verifiedSubtotal.toLocaleString('en-IN')}
                   </span>
                 </div>
 

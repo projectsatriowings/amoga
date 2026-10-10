@@ -104,8 +104,8 @@ export function WishlistDrawer() {
                           {prod.categoryName}
                         </div>
 
-                        <div className="text-xs font-semibold text-[#172B1C] mt-1">
-                          {prod.price !== null ? `₹${prod.price.toLocaleString()}` : 'Price to be confirmed'}
+                        <div className="text-xs font-sans font-semibold text-[#172B1C] mt-1 tabular-nums">
+                          {prod.price !== null ? `₹${prod.price.toLocaleString('en-IN')}` : 'Price to be confirmed'}
                         </div>
                       </div>
 

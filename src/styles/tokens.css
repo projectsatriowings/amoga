@@ -62,122 +62,214 @@
 }
 
 /* =========================================================================
- * Unified Luxury Checkout & Cart Light Theme
- * Consistent tokens for /checkout, /checkout/review, /order-confirmation, /cart
+ * Centralized Collection Theme System
+ * Semantic tokens for Storefront, Cart, Checkout, Order Review & Contact
  * ========================================================================= */
-[data-collection="checkout"],
-.theme-checkout {
-  --bg-primary: #F8F6F0;
-  --bg-surface: #FFFFFF;
-  --bg-elevated: #FFFFFF;
+
+/* Wholesome Pantry: Warm, natural, traditional food aesthetic */
+[data-collection="food"],
+[data-collection="pantry"],
+[data-collection="wholesome-pantry"],
+.theme-food {
+  --collection-page-bg: #F3F0E7;
+  --collection-section-bg: #EAE8DC;
+  --collection-card-bg: #FAF9F4;
+  --collection-text: #292820;
+  --collection-text-muted: #65675A;
+  --collection-heading: #173B2A;
+  --collection-accent: #3F7B43;
+  --collection-accent-hover: #2F6334;
+  --collection-accent-light: rgba(63, 123, 67, 0.12);
+  --collection-border: #D9DCCD;
+  --collection-input-bg: #F8F7F0;
+  --collection-input-border: #D9DCCD;
+  --collection-focus-ring: rgba(63, 123, 67, 0.45);
+  --collection-button-text: #FFFFFF;
+
+  --bg-primary: #F3F0E7;
+  --bg-surface: #FAF9F4;
+  --bg-elevated: #EAE8DC;
   --text-primary: #292820;
-  --text-secondary: #746F63;
-  --text-muted: #898477;
+  --text-secondary: #65675A;
+  --text-muted: #728276;
+  --accent-primary: #3F7B43;
+  --accent-secondary: #2F6334;
+  --border-subtle: #D9DCCD;
+  --border-strong: #BFC4B1;
+  --focus-ring: rgba(63, 123, 67, 0.45);
+  --font-family-body: var(--font-inter);
+  --font-family-heading: var(--font-cormorant);
+}
+
+/* Wellness Tea: Calming botanical aesthetic */
+[data-collection="tea"],
+[data-collection="wellness-tea"],
+.theme-tea {
+  --collection-page-bg: #F0F1E8;
+  --collection-section-bg: #E5E9DC;
+  --collection-card-bg: #F8F8F2;
+  --collection-text: #263A2D;
+  --collection-text-muted: #657164;
+  --collection-heading: #1E3124;
+  --collection-accent: #6C8461;
+  --collection-accent-hover: #506A49;
+  --collection-accent-light: rgba(108, 132, 97, 0.14);
+  --collection-border: #D5DDCE;
+  --collection-input-bg: #F5F6EF;
+  --collection-input-border: #D5DDCE;
+  --collection-focus-ring: rgba(108, 132, 97, 0.45);
+  --collection-button-text: #FFFFFF;
+
+  --bg-primary: #F0F1E8;
+  --bg-surface: #F8F8F2;
+  --bg-elevated: #E5E9DC;
+  --text-primary: #263A2D;
+  --text-secondary: #657164;
+  --text-muted: #7D8E7C;
+  --accent-primary: #6C8461;
+  --accent-secondary: #506A49;
+  --border-subtle: #D5DDCE;
+  --border-strong: #BCC5B4;
+  --focus-ring: rgba(108, 132, 97, 0.45);
+  --font-family-body: var(--font-inter);
+  --font-family-heading: var(--font-cormorant);
+}
+
+/* Heritage Sarees: Premium textile-inspired aesthetic */
+[data-collection="sarees"],
+[data-collection="heritage-sarees"],
+.theme-sarees {
+  --collection-page-bg: #F3EAE1;
+  --collection-section-bg: #E9DCD0;
+  --collection-card-bg: #FBF5ED;
+  --collection-text: #3B111E;
+  --collection-text-muted: #775B5C;
+  --collection-heading: #3B111E;
+  --collection-accent: #6E263A;
+  --collection-accent-hover: #501A2B;
+  --collection-accent-gold: #B18A50;
+  --collection-accent-light: rgba(110, 38, 58, 0.12);
+  --collection-border: #E0CFC0;
+  --collection-input-bg: #F8F0E7;
+  --collection-input-border: #E0CFC0;
+  --collection-focus-ring: rgba(110, 38, 58, 0.45);
+  --collection-button-text: #FFFFFF;
+
+  --bg-primary: #F3EAE1;
+  --bg-surface: #FBF5ED;
+  --bg-elevated: #E9DCD0;
+  --text-primary: #3B111E;
+  --text-secondary: #775B5C;
+  --text-muted: #957879;
+  --accent-primary: #6E263A;
+  --accent-secondary: #B18A50;
+  --border-subtle: #E0CFC0;
+  --border-strong: #CBB4A1;
+  --focus-ring: rgba(110, 38, 58, 0.45);
+  --font-family-body: var(--font-inter);
+  --font-family-heading: var(--font-playfair);
+}
+
+/* Silver Jewellery: Refined cool neutral aesthetic */
+[data-collection="jewellery"],
+[data-collection="silver-jewellery"],
+.theme-jewellery {
+  --collection-page-bg: #F0F1F1;
+  --collection-section-bg: #E5E7E8;
+  --collection-card-bg: #F8F9F9;
+  --collection-text: #25272A;
+  --collection-text-muted: #65696D;
+  --collection-heading: #25272A;
+  --collection-accent: #737C86;
+  --collection-accent-hover: #525B65;
+  --collection-accent-light: rgba(115, 124, 134, 0.14);
+  --collection-border: #D6D9DC;
+  --collection-input-bg: #F4F5F5;
+  --collection-input-border: #D6D9DC;
+  --collection-focus-ring: rgba(115, 124, 134, 0.45);
+  --collection-button-text: #FFFFFF;
+
+  --bg-primary: #F0F1F1;
+  --bg-surface: #F8F9F9;
+  --bg-elevated: #E5E7E8;
+  --text-primary: #25272A;
+  --text-secondary: #65696D;
+  --text-muted: #82878D;
+  --accent-primary: #737C86;
+  --accent-secondary: #525B65;
+  --border-subtle: #D6D9DC;
+  --border-strong: #B9BDC2;
+  --focus-ring: rgba(115, 124, 134, 0.45);
+  --font-family-body: var(--font-inter);
+  --font-family-heading: var(--font-playfair);
+}
+
+/* Gourmet Food: Warm neutrals and natural green accents */
+[data-collection="gourmet"],
+.theme-gourmet {
+  --collection-page-bg: #F3F0E7;
+  --collection-section-bg: #EAE6DB;
+  --collection-card-bg: #FAF8F2;
+  --collection-text: #292820;
+  --collection-text-muted: #65675A;
+  --collection-heading: #1B351E;
+  --collection-accent: #3F5A35;
+  --collection-accent-hover: #2F4528;
+  --collection-accent-light: rgba(63, 90, 53, 0.12);
+  --collection-border: #DDD7C9;
+  --collection-input-bg: #F7F5ED;
+  --collection-input-border: #DDD7C9;
+  --collection-focus-ring: rgba(63, 90, 53, 0.45);
+  --collection-button-text: #FFFFFF;
+
+  --bg-primary: #F3F0E7;
+  --bg-surface: #FAF8F2;
+  --bg-elevated: #EAE6DB;
+  --text-primary: #292820;
+  --text-secondary: #65675A;
+  --text-muted: #7E796D;
+  --accent-primary: #3F5A35;
+  --accent-secondary: #2F4528;
+  --border-subtle: #DDD7C9;
+  --border-strong: #C4BDAA;
+  --focus-ring: rgba(63, 90, 53, 0.45);
+  --font-family-body: var(--font-inter);
+  --font-family-heading: var(--font-cormorant);
+}
+
+/* Neutral Amoga Commerce (Mixed Collections / Default Storefront) */
+[data-collection="neutral"],
+[data-collection="mixed"],
+[data-collection="checkout"],
+.theme-neutral,
+.theme-mixed,
+.theme-checkout {
+  --collection-page-bg: #F4F2EC;
+  --collection-section-bg: #EAE6DB;
+  --collection-card-bg: #FAF9F4;
+  --collection-text: #292820;
+  --collection-text-muted: #65675A;
+  --collection-heading: #1C2D20;
+  --collection-accent: #3F5A35;
+  --collection-accent-hover: #2E4426;
+  --collection-accent-light: rgba(63, 90, 53, 0.12);
+  --collection-border: #DCD6C7;
+  --collection-input-bg: #F7F5ED;
+  --collection-input-border: #DCD6C7;
+  --collection-focus-ring: rgba(63, 90, 53, 0.45);
+  --collection-button-text: #FFFFFF;
+
+  --bg-primary: #F4F2EC;
+  --bg-surface: #FAF9F4;
+  --bg-elevated: #EAE6DB;
+  --text-primary: #292820;
+  --text-secondary: #65675A;
+  --text-muted: #7A766B;
   --accent-primary: #3F5A35;
   --accent-secondary: #2E4426;
-  --border-subtle: #E5E0D5;
-  --border-strong: #C8C2B5;
+  --border-subtle: #DCD6C7;
+  --border-strong: #C4BEB0;
   --focus-ring: rgba(63, 90, 53, 0.45);
-  --color-error: #991B1B;
-  --color-success: #166534;
   --font-family-body: var(--font-inter);
   --font-family-heading: var(--font-playfair);
-  --shadow-subtle: 0 2px 12px rgba(41, 40, 32, 0.05);
-  --shadow-glow: 0 0 25px rgba(63, 90, 53, 0.12);
-}
-
-/* =========================================================================
- * Collection A: Gourmet Food Theme
- * Warm, clean, premium, and natural with #F1EDE4 primary background
- * ========================================================================= */
-[data-collection="food"],
-.theme-food {
-  --bg-primary: var(--gourmet-food-bg, #F1EDE4);
-  --bg-surface: var(--gourmet-food-surface, #F8F5EE);
-  --bg-elevated: var(--gourmet-food-elevated, #ECE5D8);
-  --text-primary: #172B1C;
-  --text-secondary: #405244;
-  --text-muted: #728276;
-  --accent-primary: #287A25;
-  --accent-secondary: #557C36;
-  --supporting-neutral: var(--gourmet-food-neutral, #E5DFD3);
-  --border-subtle: rgba(23, 43, 28, 0.1);
-  --border-strong: rgba(23, 43, 28, 0.22);
-  --focus-ring: rgba(40, 122, 37, 0.45);
-  --font-family-body: var(--font-inter);
-  --font-family-heading: var(--font-cormorant);
-  --shadow-subtle: 0 4px 20px rgba(23, 43, 28, 0.06);
-  --shadow-glow: 0 0 30px rgba(40, 122, 37, 0.15);
-}
-
-/* =========================================================================
- * Collection: Tea Theme (Artisanal Botanical Infusions)
- * Pale buttery-yellow (#FAF1BB), warm-cream, muted gold accents, deep brown typography
- * ========================================================================= */
-[data-collection="tea"],
-.theme-tea {
-  --bg-primary: #FAF1BB;
-  --bg-surface: #FDF9E7;
-  --bg-elevated: #F5E89F;
-  --text-primary: #2C1E11;
-  --text-secondary: #543B25;
-  --text-muted: #7D5C3F;
-  --accent-primary: #B88E38;
-  --accent-secondary: #8C6320;
-  --supporting-cream: #FFFDF5;
-  --border-subtle: rgba(78, 54, 32, 0.14);
-  --border-strong: rgba(78, 54, 32, 0.28);
-  --focus-ring: rgba(184, 142, 56, 0.5);
-  --font-family-body: var(--font-inter);
-  --font-family-heading: var(--font-cormorant);
-  --shadow-subtle: 0 4px 20px rgba(54, 35, 18, 0.08);
-  --shadow-glow: 0 0 30px rgba(184, 142, 56, 0.2);
-}
-
-/* =========================================================================
- * Collection B: Heritage Sarees Theme
- * Luxurious Indian heritage, silk textures, craftsmanship & royal burgundy
- * ========================================================================= */
-[data-collection="sarees"],
-.theme-sarees {
-  --bg-primary: #2C0E1A;
-  --bg-surface: #381222;
-  --bg-elevated: #451523;
-  --text-primary: #F6EBD8;
-  --text-secondary: #D4C2A7;
-  --text-muted: #9C8974;
-  --accent-primary: #C5A46D;
-  --accent-secondary: #D9BB85;
-  --supporting-burgundy: #451523;
-  --border-subtle: rgba(197, 164, 109, 0.18);
-  --border-strong: rgba(197, 164, 109, 0.35);
-  --focus-ring: rgba(197, 164, 109, 0.55);
-  --font-family-body: var(--font-inter);
-  --font-family-heading: var(--font-playfair);
-  --shadow-subtle: 0 4px 25px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 30px rgba(197, 164, 109, 0.2);
-}
-
-/* =========================================================================
- * Collection C: Silver Jewellery Theme
- * Modern, minimal, elegant, sculpted & product-focused monochrome luxury
- * ========================================================================= */
-[data-collection="jewellery"],
-.theme-jewellery {
-  --bg-primary: #242326;
-  --bg-surface: #343238;
-  --bg-elevated: #3E3C44;
-  --text-primary: #F7F3EB;
-  --text-secondary: #B9B8B5;
-  --text-muted: #8E8D8A;
-  --accent-primary: #B9B8B5;
-  --accent-secondary: #C6AD82;
-  --supporting-charcoal: #343238;
-  --border-subtle: rgba(185, 184, 181, 0.15);
-  --border-strong: rgba(185, 184, 181, 0.3);
-  --focus-ring: rgba(198, 173, 130, 0.45);
-  --font-family-body: var(--font-inter);
-  --font-family-heading: var(--font-playfair);
-  --shadow-subtle: 0 4px 25px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 30px rgba(198, 173, 130, 0.15);
 }

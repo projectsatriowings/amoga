@@ -1,12 +1,14 @@
 import React from 'react';
 import { PhoneCall, Mail, MapPin, Clock } from 'lucide-react';
 import { CollectionContactForm } from './CollectionContactForm';
-import { getCollectionTheme } from '../themeConfig';
+import { getCollectionTheme, getThemeCssVariables } from '../themeConfig';
 
 export function CollectionContactSection({ collectionId = 'food', className = '' }) {
   const theme = getCollectionTheme(collectionId);
   const palette = theme?.palette || {};
   const contact = theme?.contact || {};
+
+  const themeVars = getThemeCssVariables(theme);
 
   return (
     <section
@@ -14,7 +16,8 @@ export function CollectionContactSection({ collectionId = 'food', className = ''
       className={`scroll-mt-28 py-12 sm:py-16 transition-colors ${className}`}
       aria-labelledby="collection-contact-heading"
       style={{
-        backgroundColor: palette.bg || '#F8F6F0',
+        ...themeVars,
+        backgroundColor: palette.sectionBg || palette.bg || '#F3F0E7',
         color: palette.text || '#292820',
       }}
     >

@@ -181,23 +181,23 @@ export const CheckoutForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
       {/* Notice Banner */}
-      <div className="p-4 bg-[#F8F6F0] rounded-xl border border-[#E5E0D5] text-xs text-[#746F63] flex items-start gap-3">
-        <Info className="w-4 h-4 text-[#3F5A35] shrink-0 mt-0.5" />
+      <div className="p-4 bg-[var(--collection-section-bg)] rounded-xl border border-[var(--collection-border)] text-xs text-[var(--collection-text-muted)] flex items-start gap-3">
+        <Info className="w-4 h-4 text-[var(--collection-accent)] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong className="text-[#292820]">Checkout Simulation Notice:</strong> All customer and delivery information entered below is securely kept for your checkout session. No permanent profile data is shared or stored without verified authorization.
+          <strong className="text-[var(--collection-text)]">Checkout Simulation Notice:</strong> All customer and delivery information entered below is securely kept for your checkout session. No permanent profile data is shared or stored without verified authorization.
         </p>
       </div>
 
       {/* Customer Contact Information Card */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#E5E0D5] shadow-sm space-y-5">
-        <h2 className="font-serif text-xl sm:text-2xl text-[#292820] border-b border-[#E5E0D5] pb-3">
+      <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 sm:p-8 border border-[var(--collection-border)] shadow-sm space-y-5 transition-colors">
+        <h2 className="font-serif text-xl sm:text-2xl text-[var(--collection-heading)] border-b border-[var(--collection-border)] pb-3">
           1. Contact Information
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Full Name */}
           <div className="sm:col-span-2">
-            <label htmlFor="fullName" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+            <label htmlFor="fullName" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
               Full Name <span className="text-[#991B1B]">*</span>
             </label>
             <input
@@ -210,10 +210,10 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.fullName}
               aria-describedby={errors.fullName ? 'fullName-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
                 errors.fullName
                   ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
+                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
               placeholder="e.g. Radhika Sharma"
             />
@@ -227,7 +227,7 @@ export const CheckoutForm = () => {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
               Email Address <span className="text-[#991B1B]">*</span>
             </label>
             <input
@@ -240,10 +240,10 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'email-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
                 errors.email
                   ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
+                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
               placeholder="radhika@example.com"
             />
@@ -257,7 +257,7 @@ export const CheckoutForm = () => {
 
           {/* Phone */}
           <div>
-            <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+            <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
               Phone Number <span className="text-[#991B1B]">*</span>
             </label>
             <input
@@ -270,10 +270,10 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? 'phone-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
                 errors.phone
                   ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
+                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
               placeholder="9876543210"
             />
@@ -288,15 +288,15 @@ export const CheckoutForm = () => {
       </div>
 
       {/* Delivery Address Card */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#E5E0D5] shadow-sm space-y-5">
-        <h2 className="font-serif text-xl sm:text-2xl text-[#292820] border-b border-[#E5E0D5] pb-3">
+      <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 sm:p-8 border border-[var(--collection-border)] shadow-sm space-y-5 transition-colors">
+        <h2 className="font-serif text-xl sm:text-2xl text-[var(--collection-heading)] border-b border-[var(--collection-border)] pb-3">
           2. Delivery Address
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Address Line 1 */}
           <div className="sm:col-span-2">
-            <label htmlFor="addressLine1" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+            <label htmlFor="addressLine1" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
               Address Line 1 <span className="text-[#991B1B]">*</span>
             </label>
             <input
@@ -309,10 +309,10 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.addressLine1}
               aria-describedby={errors.addressLine1 ? 'addressLine1-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
                 errors.addressLine1
                   ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
+                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
               placeholder="House / Flat No., Apartment Name, Street"
             />
@@ -326,8 +326,8 @@ export const CheckoutForm = () => {
 
           {/* Address Line 2 */}
           <div className="sm:col-span-2">
-            <label htmlFor="addressLine2" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
-              Address Line 2 <span className="text-[#746F63] lowercase font-normal">(optional)</span>
+            <label htmlFor="addressLine2" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
+              Address Line 2 <span className="text-[var(--collection-text-muted)] lowercase font-normal">(optional)</span>
             </label>
             <input
               id="addressLine2"
@@ -336,14 +336,14 @@ export const CheckoutForm = () => {
               autoComplete="address-line2"
               value={formData.addressLine2}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15 text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)] text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none"
               placeholder="Landmark, Area or Colony"
             />
           </div>
 
           {/* City */}
           <div>
-            <label htmlFor="city" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+            <label htmlFor="city" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
               City <span className="text-[#991B1B]">*</span>
             </label>
             <input
@@ -356,10 +356,10 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.city}
               aria-describedby={errors.city ? 'city-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
                 errors.city
                   ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
+                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
               placeholder="e.g. Bangalore, Chennai, Mumbai"
             />
@@ -373,7 +373,7 @@ export const CheckoutForm = () => {
 
           {/* State */}
           <div>
-            <label htmlFor="state" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+            <label htmlFor="state" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
               State / Province <span className="text-[#991B1B]">*</span>
             </label>
             <input
@@ -386,10 +386,10 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.state}
               aria-describedby={errors.state ? 'state-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
                 errors.state
                   ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
+                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
               placeholder="e.g. Karnataka, Tamil Nadu"
             />
@@ -403,7 +403,7 @@ export const CheckoutForm = () => {
 
           {/* PIN code */}
           <div>
-            <label htmlFor="pincode" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
+            <label htmlFor="pincode" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
               PIN / Postal Code <span className="text-[#991B1B]">*</span>
             </label>
             <input
@@ -418,10 +418,10 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.pincode}
               aria-describedby={errors.pincode ? 'pincode-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none ${
+              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
                 errors.pincode
                   ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15'
+                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
               placeholder="560001"
             />
@@ -435,8 +435,8 @@ export const CheckoutForm = () => {
 
           {/* Delivery Instructions */}
           <div className="sm:col-span-2">
-            <label htmlFor="instructions" className="block text-xs font-semibold uppercase tracking-wider text-[#292820] mb-1.5">
-              Delivery Instructions <span className="text-[#746F63] lowercase font-normal">(optional)</span>
+            <label htmlFor="instructions" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
+              Delivery Instructions <span className="text-[var(--collection-text-muted)] lowercase font-normal">(optional)</span>
             </label>
             <textarea
               id="instructions"
@@ -444,7 +444,7 @@ export const CheckoutForm = () => {
               rows={2}
               value={formData.instructions}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-[#E5E0D5] focus:border-[#3F5A35] focus:ring-2 focus:ring-[#3F5A35]/15 text-sm text-[#292820] bg-white placeholder:text-[#898477] transition-all outline-none resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)] text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none resize-none"
               placeholder="Gate code, landmark, or delivery time preferences..."
             />
           </div>
@@ -456,15 +456,15 @@ export const CheckoutForm = () => {
         <button
           type="button"
           onClick={() => navigate('/cart')}
-          className="text-xs uppercase tracking-widest font-semibold text-[#746F63] hover:text-[#3F5A35] transition-colors py-3"
+          className="text-xs uppercase tracking-widest font-semibold text-[var(--collection-text-muted)] hover:text-[var(--collection-accent)] transition-colors py-3"
         >
-          ← Return to Shopping Bag
+          &larr; Return to Shopping Bag
         </button>
 
         <button
           type="submit"
           disabled={hasUnpricedItems || payableItemsCount === 0}
-          className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#3F5A35] hover:bg-[#344B2C] text-white font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md shadow-[#3F5A35]/20 disabled:bg-[#898477]/30 disabled:text-[#746F63] disabled:cursor-not-allowed disabled:shadow-none"
+          className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--collection-accent)] hover:bg-[var(--collection-accent-hover)] text-[var(--collection-btn-text,#FFFFFF)] font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md shadow-[var(--collection-accent)]/20 disabled:bg-[var(--collection-text-muted)]/30 disabled:text-[var(--collection-text-muted)] disabled:cursor-not-allowed disabled:shadow-none"
         >
           <span>Continue to Order Review</span>
           <ArrowRight className="w-4 h-4" />

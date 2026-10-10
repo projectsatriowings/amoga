@@ -176,12 +176,12 @@ export function TeaProductDetail() {
               <div className="pt-2 border-t border-[#B88E38]/20 flex items-baseline gap-3">
                 {hasPrice ? (
                   <div className="flex flex-wrap items-baseline gap-3">
-                    <span className="text-3xl font-serif font-bold text-[#2C1E11]">
-                      ₹{product.price}
+                    <span className="text-3xl font-sans font-bold text-[#2C1E11] tabular-nums">
+                      ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                     </span>
                     {product.originalPrice && (
-                      <span className="text-sm text-[#7D5C3F] line-through">
-                        ₹{product.originalPrice}
+                      <span className="text-sm text-[#7D5C3F] line-through font-sans tabular-nums">
+                        ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
                       </span>
                     )}
                     {product.packSize && (

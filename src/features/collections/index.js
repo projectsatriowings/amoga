@@ -1,4 +1,4 @@
-export { COLLECTION_THEMES, getCollectionTheme } from './themeConfig';
+export { COLLECTION_THEMES, getCollectionTheme, getThemeCssVariables } from './themeConfig';
 export { CollectionNavbar } from './components/CollectionNavbar';
 export { CollectionCategoryMenu } from './components/CollectionCategoryMenu';
 export { CollectionContactForm } from './components/CollectionContactForm';

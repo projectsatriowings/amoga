@@ -10,8 +10,11 @@ import { AppFooter } from './AppFooter';
 import { CartDrawer } from '../../features/food/components/CartDrawer';
 import { WishlistDrawer } from '../../features/food/components/WishlistDrawer';
 
+import { useResolvedTheme } from '../../hooks/useResolvedTheme';
+
 export function AppShell({ children }) {
   const location = useLocation();
+  const resolved = useResolvedTheme();
   const activeCollection = getCollectionByPath(location.pathname);
   const isGatekeeper = location.pathname === '/';
   const isFoodRoute = location.pathname.startsWith('/food');
@@ -25,25 +28,18 @@ export function AppShell({ children }) {
     location.pathname === '/cart';
 
   // Apply collection theme data-attribute for tokens.css
-  const collectionTheme = activeCollection
+  const collectionTheme = isCollectionRoute && activeCollection
     ? activeCollection.theme
-    : isCheckoutRoute
-    ? 'checkout'
-    : 'amoga';
+    : resolved.themeId;
 
   return (
     <div
       data-collection={collectionTheme}
-      className={`min-h-screen flex flex-col w-full overflow-x-hidden transition-colors duration-normal ease-smooth ${
-        activeCollection
-          ? `theme-${activeCollection.theme}`
-          : isCheckoutRoute
-          ? 'theme-checkout'
-          : ''
-      }`}
+      className={`min-h-screen flex flex-col w-full overflow-x-hidden transition-colors duration-normal ease-smooth ${resolved.themeClass}`}
       style={{
-        backgroundColor: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
+        ...resolved.cssVariables,
+        backgroundColor: 'var(--collection-page-bg, var(--bg-primary))',
+        color: 'var(--collection-text, var(--text-primary))',
       }}
     >
       {!isGatekeeper && (
@@ -56,11 +52,16 @@ export function AppShell({ children }) {
         ) : isJewelleryRoute ? (
           <JewelleryHeader />
         ) : (
-          <AppHeader activeCollection={activeCollection} />
+          <AppHeader activeCollection={activeCollection || resolved.theme} />
         )
       )}
       <main className="flex-1 w-full flex flex-col">{children}</main>
-      {!isGatekeeper && <AppFooter activeCollection={activeCollection} />}
+      {!isGatekeeper && (
+        <AppFooter
+          activeCollection={activeCollection || resolved.theme}
+          resolvedTheme={resolved}
+        />
+      )}
       {!isGatekeeper && !isCollectionRoute && (
         <>
           <CartDrawer />

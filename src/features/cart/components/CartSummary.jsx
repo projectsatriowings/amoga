@@ -12,29 +12,59 @@ export const CartSummary = () => {
   const isCheckoutDisabled = payableItemsCount === 0 || hasUnpricedItems;
 
   return (
-    <div className="bg-white rounded-2xl p-6 lg:p-8 border border-[#E5E0D5] shadow-sm sticky top-28">
-      <h2 className="font-serif text-2xl text-[#292820] mb-6 flex items-center justify-between">
+    <div
+      className="rounded-2xl p-6 lg:p-8 border shadow-sm sticky top-28 transition-colors duration-200"
+      style={{
+        backgroundColor: 'var(--collection-card-bg)',
+        borderColor: 'var(--collection-border)',
+        color: 'var(--collection-text)',
+      }}
+    >
+      <h2
+        className="font-serif text-2xl mb-6 flex items-center justify-between"
+        style={{ color: 'var(--collection-heading)' }}
+      >
         <span>Order Summary</span>
-        <span className="text-xs font-sans uppercase tracking-wider text-[#746F63] bg-[#F8F6F0] px-2.5 py-1 rounded-full border border-[#E5E0D5]">
+        <span
+          className="text-xs font-sans uppercase tracking-wider px-2.5 py-1 rounded-full border"
+          style={{
+            backgroundColor: 'var(--collection-section-bg)',
+            borderColor: 'var(--collection-border)',
+            color: 'var(--collection-text-muted)',
+          }}
+        >
           {payableItemsCount} {payableItemsCount === 1 ? 'item' : 'items'}
         </span>
       </h2>
 
       {/* Pricing Breakdown */}
-      <div className="space-y-4 text-sm pb-6 border-b border-[#E5E0D5]">
-        <div className="flex justify-between items-baseline text-[#292820]">
-          <span className="font-sans text-[#746F63]">Subtotal (Payable items)</span>
-          <span className="font-serif text-lg font-semibold text-[#292820]">
+      <div
+        className="space-y-4 text-sm pb-6 border-b"
+        style={{ borderColor: 'var(--collection-border)' }}
+      >
+        <div className="flex justify-between items-baseline">
+          <span style={{ color: 'var(--collection-text-muted)' }}>
+            Subtotal (Payable items)
+          </span>
+          <span
+            className="font-sans text-lg font-semibold tabular-nums"
+            style={{ color: 'var(--collection-text)' }}
+          >
             {formatINR(subtotal)}
           </span>
         </div>
 
-        <div className="flex justify-between items-start text-xs text-[#746F63]">
+        <div className="flex justify-between items-start text-xs" style={{ color: 'var(--collection-text-muted)' }}>
           <span>Standard Delivery</span>
-          <span className="text-right italic text-[#3F5A35]">Complimentary during demo preview</span>
+          <span
+            className="text-right italic font-medium"
+            style={{ color: 'var(--collection-accent)' }}
+          >
+            Complimentary during demo preview
+          </span>
         </div>
 
-        <div className="flex justify-between items-start text-xs text-[#746F63]">
+        <div className="flex justify-between items-start text-xs" style={{ color: 'var(--collection-text-muted)' }}>
           <span>Applicable Taxes & Duties</span>
           <span className="text-right italic">Included in displayed product pricing</span>
         </div>
@@ -56,46 +86,77 @@ export const CartSummary = () => {
       {/* Payable Total */}
       <div className="py-6 flex justify-between items-baseline">
         <div>
-          <span className="text-base font-medium text-[#292820] block">Estimated Payable</span>
-          <span className="text-xs text-[#746F63]">Final review on next step</span>
+          <span className="text-base font-medium block" style={{ color: 'var(--collection-text)' }}>
+            Estimated Payable
+          </span>
+          <span className="text-xs" style={{ color: 'var(--collection-text-muted)' }}>
+            Final review on next step
+          </span>
         </div>
-        <span className="font-serif text-3xl font-bold text-[#3F5A35]">
+        <span
+          className="font-sans text-3xl font-bold tabular-nums"
+          style={{ color: 'var(--collection-accent)' }}
+        >
           {formatINR(subtotal)}
         </span>
       </div>
 
       {/* Checkout CTA */}
       <button
+        type="button"
         onClick={() => navigate('/checkout')}
         disabled={isCheckoutDisabled}
-        className={`w-full py-4 px-6 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md ${
+        className={`w-full py-4 px-6 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md cursor-pointer ${
           isCheckoutDisabled
-            ? 'bg-[#898477]/30 text-[#746F63] cursor-not-allowed shadow-none'
-            : 'bg-[#3F5A35] hover:bg-[#344B2C] text-white active:scale-[0.99] shadow-[#3F5A35]/20 hover:shadow-lg'
+            ? 'opacity-40 cursor-not-allowed shadow-none'
+            : 'active:scale-[0.99] hover:shadow-lg'
         }`}
+        style={{
+          backgroundColor: isCheckoutDisabled
+            ? 'var(--collection-border)'
+            : 'var(--collection-accent)',
+          color: 'var(--collection-button-text, #FFFFFF)',
+        }}
+        onMouseEnter={(e) => {
+          if (!isCheckoutDisabled) {
+            e.currentTarget.style.backgroundColor = 'var(--collection-accent-hover)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isCheckoutDisabled) {
+            e.currentTarget.style.backgroundColor = 'var(--collection-accent)';
+          }
+        }}
       >
         <span>Proceed to Checkout</span>
         <ArrowRight className="w-4 h-4" />
       </button>
 
       {/* Micro-assurance */}
-      <div className="mt-6 pt-5 border-t border-[#E5E0D5] space-y-2.5 text-xs text-[#746F63]">
+      <div
+        className="mt-6 pt-5 border-t space-y-2.5 text-xs"
+        style={{
+          borderColor: 'var(--collection-border)',
+          color: 'var(--collection-text-muted)',
+        }}
+      >
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#166534] shrink-0" />
-          <span>Authentic artisanal curation across Food, Tea, Sarees & Silver</span>
+          <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+          <span>Authentic artisanal curation across Amoga collections</span>
         </div>
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#C5A46D] shrink-0" />
-          <span>Multi-collection unified shopping bag</span>
+          <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+          <span>Unified luxury shopping bag & verified pricing</span>
         </div>
       </div>
 
       <div className="mt-6 text-center">
         <Link
           to="/"
-          className="text-xs uppercase tracking-wider text-[#3F5A35] hover:underline font-semibold"
+          className="text-xs uppercase tracking-wider hover:underline font-semibold"
+          style={{ color: 'var(--collection-accent)' }}
         >
-          ← Continue Browsing Collections
+          &larr; Continue Browsing Collections
         </Link>
       </div>
     </div>

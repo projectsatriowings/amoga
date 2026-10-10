@@ -98,7 +98,7 @@ export function TeaProductCard({ product }) {
                 )}
                 {product.originalPrice && (
                   <span className="text-xs text-[#A89F93] line-through tabular-nums">
-                    ₹{product.originalPrice}
+                    ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
                   </span>
                 )}
               </div>

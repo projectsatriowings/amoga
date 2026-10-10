@@ -28,20 +28,22 @@ export const COLLECTION_THEMES = {
 
     // Design Tokens
     palette: {
-      bg: '#F8F6F0',
-      headerBg: '#F8F6F0',
+      bg: '#F3F0E7',
+      sectionBg: '#EAE8DC',
+      headerBg: '#F3F0E7',
       headerText: '#173B2A',
       heading: '#173B2A',
       text: '#292820',
-      mutedText: 'rgba(41, 40, 32, 0.75)',
+      mutedText: '#65675A',
       accent: '#3F7B43',
-      accentHover: '#2E5E32',
-      accentLight: 'rgba(63, 123, 67, 0.1)',
-      border: '#E5E0D5',
-      cardBg: '#FFFFFF',
-      inputBg: '#FFFFFF',
-      inputBorder: '#E5E0D5',
-      focusRing: '#3F7B43',
+      accentHover: '#2F6334',
+      accentLight: 'rgba(63, 123, 67, 0.12)',
+      border: '#D9DCCD',
+      cardBg: '#FAF9F4',
+      inputBg: '#F8F7F0',
+      inputBorder: '#D9DCCD',
+      focusRing: 'rgba(63, 123, 67, 0.45)',
+      buttonText: '#FFFFFF',
       announcementBg: '#173B2A',
       announcementText: '#E5E0D5',
       announcementAccent: '#3F7B43',
@@ -112,21 +114,23 @@ export const COLLECTION_THEMES = {
 
     // Design Tokens (Burgundy & Antique Gold Luxury)
     palette: {
-      bg: '#F8F3EB',
+      bg: '#F3EAE1',
+      sectionBg: '#E9DCD0',
       headerBg: '#2C0E1A',
       headerText: '#F6EBD8',
       heading: '#3B111E',
       text: '#3B111E',
-      mutedText: 'rgba(59, 17, 30, 0.75)',
-      accent: '#B18A50',
-      accentGold: '#C5A46D',
-      accentHover: '#8E6735',
-      accentLight: 'rgba(197, 164, 109, 0.15)',
-      border: '#E4D8C9',
-      cardBg: '#FFFFFF',
-      inputBg: '#FFFFFF',
-      inputBorder: '#E4D8C9',
-      focusRing: '#B18A50',
+      mutedText: '#775B5C',
+      accent: '#6E263A',
+      accentHover: '#501A2B',
+      accentGold: '#B18A50',
+      accentLight: 'rgba(110, 38, 58, 0.12)',
+      border: '#E0CFC0',
+      cardBg: '#FBF5ED',
+      inputBg: '#F8F0E7',
+      inputBorder: '#E0CFC0',
+      focusRing: 'rgba(110, 38, 58, 0.45)',
+      buttonText: '#FFFFFF',
       announcementBg: '#451523',
       announcementText: '#C5A46D',
       announcementAccent: '#F6EBD8',
@@ -197,21 +201,23 @@ export const COLLECTION_THEMES = {
 
     // Design Tokens (Botanical & Calming Earthy Tones)
     palette: {
-      bg: '#F7F5EE',
-      headerBg: '#F7F5EE',
-      headerText: '#254332',
-      heading: '#254332',
-      text: '#292820',
-      mutedText: 'rgba(41, 40, 32, 0.75)',
+      bg: '#F0F1E8',
+      sectionBg: '#E5E9DC',
+      headerBg: '#F0F1E8',
+      headerText: '#263A2D',
+      heading: '#1E3124',
+      text: '#263A2D',
+      mutedText: '#657164',
       accent: '#6C8461',
-      accentHover: '#526A48',
-      accentLight: 'rgba(108, 132, 97, 0.12)',
-      secondarySurface: '#EAE5D7',
-      border: '#E0E1D5',
-      cardBg: '#FFFFFF',
-      inputBg: '#FFFFFF',
-      inputBorder: '#E0E1D5',
-      focusRing: '#6C8461',
+      accentHover: '#506A49',
+      accentLight: 'rgba(108, 132, 97, 0.14)',
+      secondarySurface: '#E5E9DC',
+      border: '#D5DDCE',
+      cardBg: '#F8F8F2',
+      inputBg: '#F5F6EF',
+      inputBorder: '#D5DDCE',
+      focusRing: 'rgba(108, 132, 97, 0.45)',
+      buttonText: '#FFFFFF',
       announcementBg: '#254332',
       announcementText: '#FAF1BB',
       announcementAccent: '#6C8461',
@@ -280,24 +286,26 @@ export const COLLECTION_THEMES = {
     heroImage: jewelleryHero,
     badge: '925 Sterling Craft',
 
-    // Design Tokens (Refined Silver & Charcoal)
+    // Design Tokens (Refined Silver & Cool Neutral)
     palette: {
-      bg: '#F7F7F5',
+      bg: '#F0F1F1',
+      sectionBg: '#E5E7E8',
       headerBg: '#242326',
       headerText: '#F7F3EB',
       heading: '#25272A',
       text: '#25272A',
-      mutedText: 'rgba(37, 39, 42, 0.75)',
-      accent: '#A5A9AE',
+      mutedText: '#65696D',
+      accent: '#737C86',
       accentGold: '#C6AD82',
-      accentHover: '#8A8E94',
-      accentLight: 'rgba(165, 169, 174, 0.15)',
+      accentHover: '#525B65',
+      accentLight: 'rgba(115, 124, 134, 0.14)',
       deepCharcoal: '#34373A',
-      border: '#E2E3E5',
-      cardBg: '#FFFFFF',
-      inputBg: '#FFFFFF',
-      inputBorder: '#E2E3E5',
-      focusRing: '#A5A9AE',
+      border: '#D6D9DC',
+      cardBg: '#F8F9F9',
+      inputBg: '#F4F5F5',
+      inputBorder: '#D6D9DC',
+      focusRing: 'rgba(115, 124, 134, 0.45)',
+      buttonText: '#FFFFFF',
       announcementBg: '#1C1B1E',
       announcementText: '#E2E3E5',
       announcementAccent: '#C6AD82',
@@ -368,11 +376,113 @@ export const COLLECTION_THEMES = {
       provenanceBadge: 'Hallmarked 925 Sterling Silver',
     },
   },
+
+  gourmet: {
+    id: 'gourmet',
+    name: 'Gourmet Food',
+    title: 'GOURMET FOOD',
+    eyebrow: 'PURE ARTISANAL FLAVOUR',
+    subtitle: 'Gourmet Provisions & Botanical Harvests',
+    homePath: '/food',
+    productsPath: '/food/products',
+    heroImage: foodHero,
+    badge: 'Artisanal Harvests',
+
+    palette: {
+      bg: '#F3F0E7',
+      sectionBg: '#EAE6DB',
+      headerBg: '#F3F0E7',
+      headerText: '#173B2A',
+      heading: '#1B351E',
+      text: '#292820',
+      mutedText: '#65675A',
+      accent: '#3F5A35',
+      accentHover: '#2F4528',
+      accentLight: 'rgba(63, 90, 53, 0.12)',
+      border: '#DDD7C9',
+      cardBg: '#FAF8F2',
+      inputBg: '#F7F5ED',
+      inputBorder: '#DDD7C9',
+      focusRing: 'rgba(63, 90, 53, 0.45)',
+      buttonText: '#FFFFFF',
+      announcementBg: '#1B351E',
+      announcementText: '#DDD7C9',
+      announcementAccent: '#3F5A35',
+    },
+
+    announcement: 'Estate Harvests • Slow-Crafted Quality • Certified Organic Ingredients',
+    conciergePhone: '+91 9940018593',
+    categories: [],
+    contact: {
+      heading: 'Gourmet Provisions Concierge',
+      subheading: 'Enquiries for bespoke pantry curations and culinary gifting.',
+      phone1: '+91 9940018593',
+      phone2: '+91 8056700646',
+      email1: 'orders@amoga.com',
+      email2: 'support@amoga.com',
+      hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
+      provenanceTitle: 'Artisanal Pantry Hub',
+      provenanceDesc: 'Craft culinary traditions preserved across regional master growers.',
+      provenanceLocation: 'Tamil Nadu & Kerala Agricultural Estates',
+      provenanceBadge: 'Pure Organic Heritage',
+    },
+  },
+
+  neutral: {
+    id: 'neutral',
+    name: 'Amoga Unified Commerce',
+    title: 'AMOGA COMMERCE',
+    eyebrow: 'UNIFIED LUXURY & HERITAGE',
+    subtitle: 'Curated Selections Across Amoga Houses',
+    homePath: '/',
+    productsPath: '/food/products',
+    heroImage: foodHero,
+    badge: 'Unified Commerce',
+
+    palette: {
+      bg: '#F4F2EC',
+      sectionBg: '#EAE6DB',
+      headerBg: '#F4F2EC',
+      headerText: '#292820',
+      heading: '#1C2D20',
+      text: '#292820',
+      mutedText: '#65675A',
+      accent: '#3F5A35',
+      accentHover: '#2E4426',
+      accentLight: 'rgba(63, 90, 53, 0.12)',
+      border: '#DCD6C7',
+      cardBg: '#FAF9F4',
+      inputBg: '#F7F5ED',
+      inputBorder: '#DCD6C7',
+      focusRing: 'rgba(63, 90, 53, 0.45)',
+      buttonText: '#FFFFFF',
+      announcementBg: '#1C2D20',
+      announcementText: '#DCD6C7',
+      announcementAccent: '#3F5A35',
+    },
+
+    announcement: 'Slow Craft • Timeless Heritage • Transparent Quality Across All Amoga Houses',
+    conciergePhone: '+91 9940018593',
+    categories: [],
+    contact: {
+      heading: 'Amoga Client Care & Concierge Desk',
+      subheading: 'Seamless order support, bespoke gifting advice, and concierge delivery management across all collections.',
+      phone1: '+91 9940018593',
+      phone2: '+91 8056700646',
+      email1: 'concierge@amoga.com',
+      email2: 'support@amoga.com',
+      hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
+      provenanceTitle: 'Amoga Master Curations',
+      provenanceDesc: 'Four artisanal disciplines united under certified provenance standards.',
+      provenanceLocation: 'Pan-India Atelier & Master Artisan Guilds',
+      provenanceBadge: 'Amoga Verified Artisanship',
+    },
+  },
 };
 
 /**
  * Returns configuration for a given collection ID or pathname.
- * Handles aliases (/pantry, /wholesome-pantry, /wellness-tea).
+ * Handles aliases (/pantry, /wholesome-pantry, /wellness-tea, mixed, neutral).
  */
 export function getCollectionTheme(collectionIdOrPath) {
   if (!collectionIdOrPath) return COLLECTION_THEMES.food;
@@ -390,5 +500,44 @@ export function getCollectionTheme(collectionIdOrPath) {
   if (key === 'jewellery' || key === 'silver-jewellery' || key.includes('/jewellery')) {
     return COLLECTION_THEMES.jewellery;
   }
+  if (key === 'gourmet') {
+    return COLLECTION_THEMES.gourmet;
+  }
+  if (key === 'neutral' || key === 'mixed' || key === 'amoga' || key === 'checkout') {
+    return COLLECTION_THEMES.neutral;
+  }
   return COLLECTION_THEMES.food;
+}
+
+/**
+ * Generates an object of CSS variables for the given theme,
+ * ready to apply to inline style or a provider wrapper.
+ */
+export function getThemeCssVariables(themeOrId) {
+  const theme = typeof themeOrId === 'string' ? getCollectionTheme(themeOrId) : (themeOrId || COLLECTION_THEMES.food);
+  const p = theme.palette || {};
+  return {
+    '--collection-page-bg': p.bg || '#F3F0E7',
+    '--collection-section-bg': p.sectionBg || '#EAE8DC',
+    '--collection-card-bg': p.cardBg || '#FAF9F4',
+    '--collection-text': p.text || '#292820',
+    '--collection-text-muted': p.mutedText || '#65675A',
+    '--collection-heading': p.heading || '#173B2A',
+    '--collection-accent': p.accent || '#3F7B43',
+    '--collection-accent-hover': p.accentHover || '#2F6334',
+    '--collection-accent-light': p.accentLight || 'rgba(63, 123, 67, 0.12)',
+    '--collection-border': p.border || '#D9DCCD',
+    '--collection-input-bg': p.inputBg || '#F8F7F0',
+    '--collection-input-border': p.inputBorder || '#D9DCCD',
+    '--collection-focus-ring': p.focusRing || 'rgba(63, 123, 67, 0.45)',
+    '--collection-button-text': p.buttonText || '#FFFFFF',
+    // Fallbacks for standard variables
+    '--bg-primary': p.bg || '#F3F0E7',
+    '--bg-surface': p.cardBg || '#FAF9F4',
+    '--bg-elevated': p.sectionBg || '#EAE8DC',
+    '--text-primary': p.text || '#292820',
+    '--text-secondary': p.mutedText || '#65675A',
+    '--accent-primary': p.accent || '#3F7B43',
+    '--border-subtle': p.border || '#D9DCCD',
+  };
 }

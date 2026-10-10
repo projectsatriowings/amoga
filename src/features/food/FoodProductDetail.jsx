@@ -158,12 +158,12 @@ export function FoodProductDetail() {
               {hasPrice ? (
                 <div className="space-y-0.5">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-[#172B1C]">
-                      ₹{product.price}
+                    <span className="text-3xl font-sans font-bold text-[#172B1C] tabular-nums">
+                      ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                     </span>
                     {product.originalPrice && (
-                      <span className="text-sm text-black/40 line-through">
-                        ₹{product.originalPrice}
+                      <span className="text-sm text-black/40 line-through font-sans tabular-nums">
+                        ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
                       </span>
                     )}
                   </div>

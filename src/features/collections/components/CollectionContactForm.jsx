@@ -380,10 +380,16 @@ export function CollectionContactForm({ theme, collectionId }) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95 active:scale-[0.99]"
+            className="w-full py-3.5 px-5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-[0.99]"
             style={{
-              backgroundColor: palette.heading || palette.accent || '#173B2A',
-              color: palette.announcementText || '#FFFFFF',
+              backgroundColor: palette.accent || '#3F7B43',
+              color: palette.buttonText || '#FFFFFF',
+            }}
+            onMouseEnter={(e) => {
+              if (palette.accentHover) e.currentTarget.style.backgroundColor = palette.accentHover;
+            }}
+            onMouseLeave={(e) => {
+              if (palette.accent) e.currentTarget.style.backgroundColor = palette.accent;
             }}
           >
             {isSubmitting ? (
