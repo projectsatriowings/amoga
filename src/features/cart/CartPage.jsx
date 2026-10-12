@@ -2,18 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShoppingBag,
-  ArrowRight,
-  UtensilsCrossed,
-  Sparkles,
-  Gem,
-  Leaf,
   ShieldAlert,
-  CheckSquare,
-  Square,
   Bookmark,
   Trash2,
   PackageCheck,
-  AlertCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
@@ -170,14 +162,14 @@ export const CartPage = () => {
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="py-16 text-center max-w-3xl mx-auto"
+            className="py-16 text-center max-w-xl mx-auto"
           >
             <div
               className="w-20 h-20 rounded-full border flex items-center justify-center mx-auto mb-6 shadow-xs"
               style={{
                 backgroundColor: 'var(--collection-card-bg)',
                 borderColor: 'var(--collection-border)',
-                color: 'var(--collection-accent)',
+                color: '#267D2A',
               }}
             >
               <ShoppingBag className="w-9 h-9" />
@@ -186,163 +178,21 @@ export const CartPage = () => {
               className="font-serif text-2xl sm:text-3xl mb-3"
               style={{ color: 'var(--collection-heading)' }}
             >
-              Your shopping bag is currently empty
+              Your basket is currently empty
             </h2>
             <p
-              className="text-sm sm:text-base mb-10 leading-relaxed max-w-xl mx-auto"
+              className="text-sm sm:text-base mb-8 leading-relaxed max-w-md mx-auto"
               style={{ color: 'var(--collection-text-muted)' }}
             >
-              Explore our artisanal collections to discover slow-crafted pantry provisions, thoughtfully selected wellness teas, heritage handloom weaves, and hallmarked pure silver adornments.
+              Discover something you'll love.
             </p>
 
-            {/* Collection Discovery Hub: 4 houses */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+            <div className="flex justify-center">
               <Link
-                to="/food"
-                className="group p-5 rounded-2xl border hover:shadow-md transition-all flex flex-col justify-between"
-                style={{
-                  backgroundColor: 'var(--collection-card-bg)',
-                  borderColor: 'var(--collection-border)',
-                }}
+                to="/"
+                className="inline-flex items-center justify-center py-3.5 px-8 rounded-full bg-[#267D2A] text-white font-medium text-sm tracking-wide shadow-sm hover:bg-[#1E6622] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#267D2A] focus-visible:ring-offset-2 transition-all duration-200 motion-reduce:transition-none motion-reduce:transform-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none"
               >
-                <div>
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform"
-                    style={{
-                      backgroundColor: 'rgba(63, 123, 67, 0.12)',
-                      color: '#3F7B43',
-                    }}
-                  >
-                    <UtensilsCrossed className="w-5 h-5" />
-                  </div>
-                  <h3
-                    className="font-serif text-base font-semibold transition-colors"
-                    style={{ color: 'var(--collection-heading)' }}
-                  >
-                    Wholesome Pantry
-                  </h3>
-                  <p className="text-xs mt-1" style={{ color: 'var(--collection-text-muted)' }}>
-                    Comforting soup mixes, nourishing millet blends and flavourful rice podis
-                  </p>
-                </div>
-                <div
-                  className="mt-4 flex items-center text-xs font-semibold uppercase tracking-wider gap-1"
-                  style={{ color: '#3F7B43' }}
-                >
-                  <span>Explore Pantry</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-
-              <Link
-                to="/tea"
-                className="group p-5 rounded-2xl border hover:shadow-md transition-all flex flex-col justify-between"
-                style={{
-                  backgroundColor: 'var(--collection-card-bg)',
-                  borderColor: 'var(--collection-border)',
-                }}
-              >
-                <div>
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform"
-                    style={{
-                      backgroundColor: 'rgba(108, 132, 97, 0.14)',
-                      color: '#6C8461',
-                    }}
-                  >
-                    <Leaf className="w-5 h-5" />
-                  </div>
-                  <h3
-                    className="font-serif text-base font-semibold transition-colors"
-                    style={{ color: 'var(--collection-heading)' }}
-                  >
-                    Wellness Tea
-                  </h3>
-                  <p className="text-xs mt-1" style={{ color: 'var(--collection-text-muted)' }}>
-                    Botanical teas and herbal infusions for your everyday wellness ritual
-                  </p>
-                </div>
-                <div
-                  className="mt-4 flex items-center text-xs font-semibold uppercase tracking-wider gap-1"
-                  style={{ color: '#6C8461' }}
-                >
-                  <span>Explore Tea</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-
-              <Link
-                to="/sarees"
-                className="group p-5 rounded-2xl border hover:shadow-md transition-all flex flex-col justify-between"
-                style={{
-                  backgroundColor: 'var(--collection-card-bg)',
-                  borderColor: 'var(--collection-border)',
-                }}
-              >
-                <div>
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform"
-                    style={{
-                      backgroundColor: 'rgba(110, 38, 58, 0.12)',
-                      color: '#6E263A',
-                    }}
-                  >
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <h3
-                    className="font-serif text-base font-semibold transition-colors"
-                    style={{ color: 'var(--collection-heading)' }}
-                  >
-                    Heritage Sarees
-                  </h3>
-                  <p className="text-xs mt-1" style={{ color: 'var(--collection-text-muted)' }}>
-                    Kanchipuram, Banarasi zari & pure mulberry silk weaves
-                  </p>
-                </div>
-                <div
-                  className="mt-4 flex items-center text-xs font-semibold uppercase tracking-wider gap-1"
-                  style={{ color: '#6E263A' }}
-                >
-                  <span>Explore Sarees</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-
-              <Link
-                to="/jewellery"
-                className="group p-5 rounded-2xl border hover:shadow-md transition-all flex flex-col justify-between"
-                style={{
-                  backgroundColor: 'var(--collection-card-bg)',
-                  borderColor: 'var(--collection-border)',
-                }}
-              >
-                <div>
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform"
-                    style={{
-                      backgroundColor: 'rgba(115, 124, 134, 0.14)',
-                      color: '#737C86',
-                    }}
-                  >
-                    <Gem className="w-5 h-5" />
-                  </div>
-                  <h3
-                    className="font-serif text-base font-semibold transition-colors"
-                    style={{ color: 'var(--collection-heading)' }}
-                  >
-                    Silver Jewellery
-                  </h3>
-                  <p className="text-xs mt-1" style={{ color: 'var(--collection-text-muted)' }}>
-                    92.5 Sterling silver neckpieces, jhumkas, and hallmarked cuffs
-                  </p>
-                </div>
-                <div
-                  className="mt-4 flex items-center text-xs font-semibold uppercase tracking-wider gap-1"
-                  style={{ color: '#737C86' }}
-                >
-                  <span>Explore Silver</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
+                Browse Products
               </Link>
             </div>
           </motion.div>

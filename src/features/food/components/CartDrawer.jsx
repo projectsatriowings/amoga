@@ -155,36 +155,25 @@ export function CartDrawer() {
             {/* Cart Items List */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4 overscroll-contain">
               {items.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center py-12 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-[#EAE6D9] flex items-center justify-center text-[#557C36]">
-                    <ShoppingBag className="w-8 h-8 opacity-60" />
+                <div className="h-full flex flex-col items-center justify-center text-center py-12 px-4 space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-[#EAE6D9] flex items-center justify-center text-[#267D2A] shadow-xs">
+                    <ShoppingBag className="w-8 h-8 opacity-80" aria-hidden="true" />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-base font-serif font-medium">Your basket is currently empty</p>
-                    <p className="text-xs text-[#557C36] max-w-xs">
-                      Explore Amoga's traditional soup mixes, millet mixes, and rice podis.
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-serif font-medium text-[#172B1C]">
+                      Your basket is currently empty
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#405244] max-w-xs leading-relaxed">
+                      Discover something you'll love.
                     </p>
                   </div>
-                  <div className="flex flex-col gap-2 w-full max-w-xs pt-2">
-                    <Link to="/food/products" onClick={closeCart}>
-                      <Button variant="primary" size="sm" collection="food" className="w-full text-xs">
-                        Browse Wholesome Pantry
-                      </Button>
-                    </Link>
-                    <Link to="/tea/products" onClick={closeCart}>
-                      <Button variant="outline" size="sm" collection="tea" className="w-full text-xs">
-                        Browse Wellness Tea
-                      </Button>
-                    </Link>
-                    <Link to="/sarees/products" onClick={closeCart}>
-                      <Button variant="outline" size="sm" collection="sarees" className="w-full text-xs">
-                        Browse Heritage Sarees
-                      </Button>
-                    </Link>
-                    <Link to="/jewellery/products" onClick={closeCart}>
-                      <Button variant="outline" size="sm" collection="jewellery" className="w-full text-xs">
-                        Browse Silver Jewellery
-                      </Button>
+                  <div className="w-full max-w-xs pt-2 flex flex-col items-center">
+                    <Link
+                      to="/"
+                      onClick={closeCart}
+                      className="w-full inline-flex items-center justify-center py-3 px-6 rounded-full bg-[#267D2A] text-white font-medium text-sm tracking-wide shadow-sm hover:bg-[#1E6622] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#267D2A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F1EDE4] transition-all duration-200 motion-reduce:transition-none motion-reduce:transform-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none"
+                    >
+                      Browse Products
                     </Link>
                   </div>
                 </div>
