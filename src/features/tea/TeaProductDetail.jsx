@@ -20,6 +20,7 @@ import { BotanicalSideAnimations } from './components/BotanicalAnimations';
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { useProductDetail } from '../../hooks/useProducts';
+import { BackButton } from '../../components/ui/BackButton';
 
 export function TeaProductDetail() {
   const { slug } = useParams();
@@ -136,22 +137,30 @@ export function TeaProductDetail() {
       <BotanicalSideAnimations />
 
       <Container className="relative z-10">
-        {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-xs text-[#543B25]">
-          <Link to="/" className="hover:text-[#2C1E11] transition-colors">
-            Home
-          </Link>
-          <span>/</span>
-          <Link to="/tea" className="hover:text-[#2C1E11] transition-colors">
-            Wellness Tea
-          </Link>
-          <span>/</span>
-          <Link to="/tea/products" className="hover:text-[#2C1E11] transition-colors">
-            Botanical Brews
-          </Link>
-          <span>/</span>
-          <span className="font-semibold text-[#8C6320] truncate">{product.name}</span>
-        </nav>
+        {/* Breadcrumb Navigation & Theme-Colored Back Button */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <BackButton
+            collection="tea"
+            fallbackTo="/tea/products"
+            label="Back to Teas"
+          />
+
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#543B25]">
+            <Link to="/" className="hover:text-[#2C1E11] transition-colors">
+              Portal
+            </Link>
+            <span>/</span>
+            <Link to="/tea" className="hover:text-[#2C1E11] transition-colors">
+              Wellness Tea
+            </Link>
+            <span>/</span>
+            <Link to="/tea/products" className="hover:text-[#2C1E11] transition-colors">
+              Botanical Brews
+            </Link>
+            <span>/</span>
+            <span className="font-semibold text-[#8C6320] truncate">{product.name}</span>
+          </nav>
+        </div>
 
         {/* Main Product Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 bg-[#FFFDF5] p-6 sm:p-10 rounded-3xl border border-[#B88E38]/30 shadow-lg mb-16">

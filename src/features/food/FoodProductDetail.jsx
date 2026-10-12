@@ -20,6 +20,7 @@ import { Container } from '../../components/ui/Container';
 import { Button } from '../../components/ui/Button';
 import { useProductDetail } from '../../hooks/useProducts';
 import { isValidPrice } from '../../utils/pricing';
+import { BackButton } from '../../components/ui/BackButton';
 
 export function FoodProductDetail() {
   const { slug } = useParams();
@@ -102,29 +103,36 @@ export function FoodProductDetail() {
   return (
     <div className="bg-[#F1EDE4] text-[#172B1C] min-h-screen py-8 sm:py-12">
       <Container>
-        {/* Breadcrumb Navigation */}
-        <nav
-          aria-label="Breadcrumbs"
-          className="flex items-center gap-2 text-xs font-mono text-[#557C36] mb-8 overflow-x-auto whitespace-nowrap pb-1"
-        >
-          <Link to="/" className="hover:underline flex items-center gap-1">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Amoga
-          </Link>
-          <span>/</span>
-          <Link to="/food" className="hover:underline">
-            Wholesome Pantry
-          </Link>
-          <span>/</span>
-          <Link
-            to={`/food/products?category=${product.category}`}
-            className="hover:underline"
+        {/* Breadcrumb Navigation & Theme-Colored Back Button */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <BackButton
+            collection="food"
+            fallbackTo="/food/products"
+            label="Back to Pantry"
+          />
+
+          <nav
+            aria-label="Breadcrumbs"
+            className="flex items-center gap-2 text-xs font-mono text-[#557C36] overflow-x-auto whitespace-nowrap pb-1"
           >
-            {product.categoryName}
-          </Link>
-          <span>/</span>
-          <span className="font-semibold text-[#172B1C]">{product.name}</span>
-        </nav>
+            <Link to="/" className="hover:underline flex items-center gap-1">
+              Amoga Portal
+            </Link>
+            <span>/</span>
+            <Link to="/food" className="hover:underline">
+              Wholesome Pantry
+            </Link>
+            <span>/</span>
+            <Link
+              to={`/food/products?category=${product.category}`}
+              className="hover:underline"
+            >
+              {product.categoryName}
+            </Link>
+            <span>/</span>
+            <span className="font-semibold text-[#172B1C]">{product.name}</span>
+          </nav>
+        </div>
 
         {/* Main Product Presentation */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">

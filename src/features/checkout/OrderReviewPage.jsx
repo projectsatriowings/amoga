@@ -20,6 +20,7 @@ import {
   RefreshCw,
   X,
 } from 'lucide-react';
+import { BackButton } from '../../components/ui/BackButton';
 
 // Pure helper to generate demo reference outside component render scope
 function generateDemoOrderId() {
@@ -336,8 +337,11 @@ export const OrderReviewPage = () => {
   return (
     <div className="min-h-screen bg-[var(--collection-page-bg)] text-[var(--collection-text)] pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-5xl mx-auto">
-        {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="mb-6">
+        {/* Breadcrumb Navigation & Back Action */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <BackButton fallbackTo="/checkout" label="Back to Checkout" />
+
+          <nav aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[var(--collection-text-muted)]">
             <li>
               <Link to="/" className="hover:text-[var(--collection-accent)] transition-colors">
@@ -368,6 +372,7 @@ export const OrderReviewPage = () => {
             </li>
           </ol>
         </nav>
+        </div>
 
         {/* Page Title */}
         <div className="pb-6 border-b border-[var(--collection-border)] mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">

@@ -9,6 +9,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { BackButton } from '../../../components/ui/BackButton';
 
 export function AdminOrderDetail() {
   const { id } = useParams();
@@ -129,13 +130,11 @@ export function AdminOrderDetail() {
     <div className="max-w-5xl mx-auto space-y-6 pb-12">
       {/* Top Header */}
       <div className="flex items-center justify-between">
-        <Link
-          to="/admin/orders"
-          className="inline-flex items-center gap-1.5 text-xs text-[#7A7167] hover:text-[#1A1817] font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to All Orders</span>
-        </Link>
+        <BackButton
+          collection="admin"
+          fallbackTo="/admin/orders"
+          label="Back to All Orders"
+        />
         <span className="text-[10px] font-mono text-[#8C6320]">
           Placed on {new Date(order.createdAt).toLocaleString()}
         </span>

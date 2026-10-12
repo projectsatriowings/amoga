@@ -5,6 +5,7 @@ import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { CheckoutForm } from './components/CheckoutForm';
 import { CheckoutOrderSummary } from './components/CheckoutOrderSummary';
 import { ShoppingBag, ShieldAlert, ArrowLeft, Zap, CheckCircle2 } from 'lucide-react';
+import { BackButton } from '../../components/ui/BackButton';
 
 export const CheckoutPage = () => {
   const getCheckoutItems = useStore((state) => state.getCheckoutItems);
@@ -85,6 +86,8 @@ export const CheckoutPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb Navigation & Return to Bag */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <BackButton fallbackTo="/cart" label="Back to Bag" />
+
           <nav aria-label="Breadcrumb">
             <ol
               className="flex items-center space-x-2 text-xs uppercase tracking-widest"

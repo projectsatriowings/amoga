@@ -15,6 +15,7 @@ import { useStore } from '../../../store/useStore';
 import { Container } from '../../../components/ui/Container';
 import { getCollectionTheme } from '../themeConfig';
 import { CollectionCategoryMenu } from './CollectionCategoryMenu';
+import { BackButton } from '../../../components/ui/BackButton';
 
 export function CollectionNavbar({ collectionId = 'food' }) {
   const theme = getCollectionTheme(collectionId);
@@ -133,16 +134,20 @@ export function CollectionNavbar({ collectionId = 'food' }) {
         <Container>
           <div className="h-20 flex items-center justify-between gap-4">
             {/* Left: Brand Logo & Collection Subtitle */}
-            <div className="flex items-center gap-4 shrink-0">
-              <Link to={theme.homePath} className="flex items-center gap-3 group">
+            <div className="flex items-center gap-3 shrink-0">
+              <Link
+                to="/"
+                title="Return to AMOGA Main Portal"
+                className="flex items-center gap-3 group"
+              >
                 <img
                   src={amogaLogo}
-                  alt={theme.name}
+                  alt="AMOGA Main Portal"
                   className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
                 />
               </Link>
               <span
-                className="hidden xl:inline text-xs font-serif italic pl-3 border-l"
+                className="hidden sm:inline text-xs font-serif italic pl-3 border-l"
                 style={{
                   color: palette.accent || palette.accentGold || '#3F7B43',
                   borderColor: palette.border || '#E5E0D5',
@@ -347,6 +352,20 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                 color: palette.text || '#292820',
               }}
             >
+              {/* Mobile Back Button Action (Only on sub-pages) */}
+              {location.pathname !== theme.homePath && (
+                <div className="pb-3 border-b flex items-center justify-between" style={{ borderColor: palette.border || '#E5E0D5' }}>
+                  <BackButton
+                    collection={collectionId}
+                    fallbackTo={theme.homePath}
+                    label="Back"
+                  />
+                  <span className="text-[10px] font-mono uppercase tracking-wider opacity-60">
+                    {theme.name}
+                  </span>
+                </div>
+              )}
+
               {/* Mobile Search Input */}
               <form onSubmit={handleSearchSubmit} className="relative">
                 <input

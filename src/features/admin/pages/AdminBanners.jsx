@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { BackButton } from '../../../components/ui/BackButton';
 
 export function AdminBanners() {
   const { adminFetch } = useAdminStore();
@@ -122,6 +123,10 @@ export function AdminBanners() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <BackButton collection="admin" fallbackTo="/admin" label="Back to Dashboard" />
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Homepage Banners</h1>

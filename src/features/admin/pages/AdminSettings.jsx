@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, ShieldCheck, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { SystemHealthCard } from '../components/SystemHealthCard';
+import { BackButton } from '../../../components/ui/BackButton';
 
 export function AdminSettings() {
   const { adminFetch, admin } = useAdminStore();
@@ -67,6 +68,10 @@ export function AdminSettings() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
+      <div className="flex items-center justify-between">
+        <BackButton collection="admin" fallbackTo="/admin" label="Back to Dashboard" />
+      </div>
+
       <div className="border-b border-[#E5E0D5] pb-4">
         <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Business & Store Settings</h1>
         <p className="text-xs text-[#7A7167]">

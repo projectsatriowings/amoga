@@ -6,6 +6,7 @@ import { FoodProductCard } from './components/FoodProductCard';
 
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
+import { BackButton } from '../../components/ui/BackButton';
 
 const APPROVED_PANTRY_CATEGORIES = [
   { id: 'all', label: 'All Mixes' },
@@ -113,24 +114,31 @@ export function FoodProductList() {
   return (
     <div className="bg-[#F8F6F0] text-[#292820] min-h-screen py-8 sm:py-12">
       <Container>
-        {/* Breadcrumb Navigation */}
-        <nav
-          aria-label="Breadcrumbs"
-          className="flex items-center gap-2 text-xs font-mono text-[#746F63] mb-6"
-        >
-          <Link to="/" className="hover:text-[#173B2A] flex items-center gap-1">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Amoga Portal
-          </Link>
-          <span>/</span>
-          <Link to="/food" className="hover:text-[#173B2A]">
-            Wholesome Pantry
-          </Link>
-          <span>/</span>
-          <span className="font-semibold text-[#173B2A]">
-            {activeCategoryTitle}
-          </span>
-        </nav>
+        {/* Breadcrumb Navigation & Theme-Colored Back Button */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <BackButton
+            collection="food"
+            fallbackTo="/food"
+            label="Back to Pantry"
+          />
+
+          <nav
+            aria-label="Breadcrumbs"
+            className="flex items-center gap-2 text-xs font-mono text-[#746F63]"
+          >
+            <Link to="/" className="hover:text-[#173B2A] flex items-center gap-1">
+              Amoga Portal
+            </Link>
+            <span>/</span>
+            <Link to="/food" className="hover:text-[#173B2A]">
+              Wholesome Pantry
+            </Link>
+            <span>/</span>
+            <span className="font-semibold text-[#173B2A]">
+              {activeCategoryTitle}
+            </span>
+          </nav>
+        </div>
 
         {/* Inner-Page Header */}
         <div className="mb-8 sm:mb-12 max-w-3xl space-y-3">

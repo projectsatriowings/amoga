@@ -13,6 +13,7 @@ import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { CartItemRow } from './components/CartItemRow';
 import { CartSummary } from './components/CartSummary';
 import { formatINR, isValidPrice } from '../../utils/pricing';
+import { BackButton } from '../../components/ui/BackButton';
 
 export const CartPage = () => {
   const cartState = useStore((state) => state.cart);
@@ -62,29 +63,33 @@ export const CartPage = () => {
       }}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="mb-6">
-          <ol
-            className="flex items-center space-x-2 text-xs uppercase tracking-widest"
-            style={{ color: 'var(--collection-text-muted)' }}
-          >
-            <li>
-              <Link to="/" className="hover:opacity-80 transition-opacity">
-                Portal
-              </Link>
-            </li>
-            <li>
-              <span className="opacity-60">/</span>
-            </li>
-            <li
-              className="font-semibold"
-              style={{ color: 'var(--collection-accent)' }}
-              aria-current="page"
+        {/* Breadcrumb Navigation & Back Action */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <BackButton fallbackTo="/" label="Continue Shopping" />
+
+          <nav aria-label="Breadcrumb">
+            <ol
+              className="flex items-center space-x-2 text-xs uppercase tracking-widest"
+              style={{ color: 'var(--collection-text-muted)' }}
             >
-              Shopping Bag
-            </li>
-          </ol>
-        </nav>
+              <li>
+                <Link to="/" className="hover:opacity-80 transition-opacity">
+                  Portal
+                </Link>
+              </li>
+              <li>
+                <span className="opacity-60">/</span>
+              </li>
+              <li
+                className="font-semibold"
+                style={{ color: 'var(--collection-accent)' }}
+                aria-current="page"
+              >
+                Shopping Bag
+              </li>
+            </ol>
+          </nav>
+        </div>
 
         {/* Page Title & Context */}
         <div

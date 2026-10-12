@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -7,8 +7,52 @@ import {
   Trash2,
   AlertCircle,
   CheckCircle,
+  Upload,
+  Image as ImageIcon,
+  Check,
+  X,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { BackButton } from '../../../components/ui/BackButton';
+
+// Stock imagery imported directly from src/assets/images
+import imgFoodSoups from '../../../assets/images/food-soups-hero.jpg';
+import imgFoodPantry from '../../../assets/images/gatekeeper-food.jpg';
+import imgFoodPodi from '../../../assets/images/food-homepage-ref.jpg';
+import imgTeaBluePea from '../../../assets/images/food-teas-hero.jpg';
+import imgTeaStandee from '../../../assets/images/tea-standee-ref.jpg';
+import imgSareeKanchipuram from '../../../assets/images/saree-kanchipuram.jpg';
+import imgSareeBanarasi from '../../../assets/images/saree-banarasi.jpg';
+import imgSareeTissue from '../../../assets/images/saree-tissue.jpg';
+import imgSareeSoftSilk from '../../../assets/images/saree-soft-silk.jpg';
+import imgJewellerySolstice from '../../../assets/images/jewellery-solstice-ring.jpg';
+import imgJewelleryLumiere from '../../../assets/images/jewellery-lumiere-necklace.jpg';
+import imgJewelleryAurora from '../../../assets/images/jewellery-aurora-ring.jpg';
+import imgJewelleryLeaf from '../../../assets/images/jewellery-leaf-ring.jpg';
+
+const PRESET_COLLECTION_IMAGES = {
+  food: [
+    { label: 'Spiced Moringa Soup', url: imgFoodSoups },
+    { label: 'Millet Pantry Mix', url: imgFoodPantry },
+    { label: 'Traditional Rice Podi', url: imgFoodPodi },
+  ],
+  tea: [
+    { label: 'Butterfly Blue Pea', url: imgTeaBluePea },
+    { label: 'Herbal Botanical Brew', url: imgTeaStandee },
+  ],
+  sarees: [
+    { label: 'Kanchipuram Silk', url: imgSareeKanchipuram },
+    { label: 'Banarasi Pure Brocade', url: imgSareeBanarasi },
+    { label: 'Tissue Handloom Saree', url: imgSareeTissue },
+    { label: 'Soft Silk Drape', url: imgSareeSoftSilk },
+  ],
+  jewellery: [
+    { label: 'Solstice Moonstone Ring', url: imgJewellerySolstice },
+    { label: 'Lumiere Sterling Necklace', url: imgJewelleryLumiere },
+    { label: 'Aurora Sterling Ring', url: imgJewelleryAurora },
+    { label: 'Leaf Motif Sterling Ring', url: imgJewelleryLeaf },
+  ],
+};
 
 const COLLECTION_SUBCATEGORIES = {
   food: [
@@ -53,6 +97,8 @@ export function AdminProductForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [imageError, setImageError] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -218,6 +264,20 @@ export function AdminProductForm() {
     }));
   };
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        if (loadEvt.target?.result) {
+          setFormData((prev) => ({ ...prev, image: loadEvt.target.result }));
+          setImageError(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Variants handlers
   const handleAddVariant = () => {
     setFormData((prev) => ({
@@ -336,13 +396,11 @@ export function AdminProductForm() {
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Top Header */}
       <div className="flex items-center justify-between">
-        <Link
-          to="/admin/products"
-          className="inline-flex items-center gap-1.5 text-xs text-[#7A7167] hover:text-[#1A1817] font-medium"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Products</span>
-        </Link>
+        <BackButton
+          collection="admin"
+          fallbackTo="/admin/products"
+          label="Back to Products"
+        />
         <div className="text-right">
           <span className="text-[10px] font-mono uppercase tracking-wider text-[#8C6320]">
             {isEditing ? 'Editing Mode' : 'New Catalogue Addition'}
@@ -733,34 +791,145 @@ export function AdminProductForm() {
         </div>
 
         {/* Section 4: Imagery */}
-        <div className="bg-[#FBF9F5] p-6 rounded-lg border border-[#E5E0D5] space-y-4">
-          <h2 className="font-serif text-base font-bold text-[#1A1817] border-b border-[#EAE4D9] pb-2">
-            4. Media & Gallery
-          </h2>
+        <div className="bg-[#FBF9F5] p-6 rounded-lg border border-[#E5E0D5] space-y-5">
+          <div className="border-b border-[#EAE4D9] pb-2 flex items-center justify-between">
+            <h2 className="font-serif text-base font-bold text-[#1A1817]">
+              4. Media & Gallery
+            </h2>
+            <span className="text-[10px] font-mono text-[#8C6320]">Instant Image Preview</span>
+          </div>
 
           <div>
             <label className="block text-xs font-semibold text-[#4A423B] uppercase mb-1">
               Primary Image URL *
             </label>
-            <div className="flex gap-3 items-center">
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
               <input
                 type="text"
                 name="image"
                 value={formData.image}
-                onChange={handleInputChange}
+                onChange={(e) => {
+                  handleInputChange(e);
+                  setImageError(false);
+                }}
                 required
-                placeholder="https://... or /images/tea/tea-hibiscus.jpg"
+                placeholder="e.g. /images/sarees/saree-kanchipuram.jpg or https://..."
                 className="flex-1 px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
               />
-              {formData.image && (
-                <img
-                  src={formData.image}
-                  alt="Preview"
-                  className="w-10 h-10 object-cover rounded border border-[#D5CEC2] bg-[#EAE4D9]"
-                  onError={(e) => {
-                    e.target.src = 'https://placehold.co/80x80/f5f2eb/1a1817?text=Preview';
-                  }}
-                />
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#1E1916] hover:bg-[#342D28] text-white rounded text-xs font-medium transition-colors shrink-0 cursor-pointer shadow-xs"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Upload File</span>
+              </button>
+            </div>
+
+            {/* Quick Presets for current collection */}
+            {PRESET_COLLECTION_IMAGES[formData.collectionId] && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] uppercase font-mono text-[#8C6320] font-semibold mr-1">
+                  Catalogue Presets:
+                </span>
+                {PRESET_COLLECTION_IMAGES[formData.collectionId].map((preset) => (
+                  <button
+                    key={preset.url}
+                    type="button"
+                    onClick={() => {
+                      setFormData((p) => ({ ...p, image: preset.url }));
+                      setImageError(false);
+                    }}
+                    className={`text-[11px] px-2.5 py-1 rounded border transition-all cursor-pointer ${
+                      formData.image === preset.url
+                        ? 'bg-[#722F37] text-white border-[#722F37] font-medium'
+                        : 'bg-white hover:bg-[#F0ECE1] text-[#4A423B] border-[#D5CEC2]'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Large Interactive Image Preview Box */}
+            <div className="mt-4 p-4 rounded-xl border border-[#E5E0D5] bg-white/70">
+              <span className="block text-[11px] font-semibold text-[#4A423B] uppercase mb-2">
+                Live Image Preview
+              </span>
+
+              {formData.image ? (
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                  <div className="relative w-40 h-40 rounded-xl overflow-hidden border border-[#D5CEC2] bg-[#FAF8F5] shadow-sm shrink-0">
+                    <img
+                      src={formData.image}
+                      alt="Primary Preview"
+                      onLoad={() => setImageError(false)}
+                      onError={() => setImageError(true)}
+                      className="w-full h-full object-cover"
+                    />
+                    {!imageError && (
+                      <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-emerald-600/90 text-white text-[9px] font-mono tracking-wider">
+                        Active
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-2 text-xs">
+                    {imageError ? (
+                      <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 space-y-1">
+                        <div className="flex items-center gap-1.5 font-semibold">
+                          <AlertCircle className="w-4 h-4 text-rose-600" />
+                          <span>Could not load image at provided URL</span>
+                        </div>
+                        <p className="text-[11px] text-rose-700">
+                          Please verify the URL or click <strong>Upload File</strong> above to choose an image from your computer.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-1">
+                        <div className="flex items-center gap-1.5 font-semibold">
+                          <Check className="w-4 h-4 text-emerald-600" />
+                          <span>Image successfully loaded</span>
+                        </div>
+                        <p className="text-[11px] font-mono text-emerald-700 truncate max-w-md">
+                          {formData.image.startsWith('data:')
+                            ? 'Uploaded local image file'
+                            : formData.image}
+                        </p>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((p) => ({ ...p, image: '' }));
+                        setImageError(false);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] text-rose-700 hover:text-rose-900 font-medium cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Remove image</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-[#D5CEC2] rounded-xl text-center bg-[#FAF8F5]">
+                  <ImageIcon className="w-8 h-8 text-[#A8A096] mb-2" />
+                  <p className="text-xs text-[#7A7167]">No image selected yet.</p>
+                  <p className="text-[11px] text-[#A8A096]">
+                    Paste an image URL, click one of the presets above, or click <strong>Upload File</strong>.
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -780,7 +949,7 @@ export function AdminProductForm() {
               <button
                 type="button"
                 onClick={handleAddGalleryImage}
-                className="px-3 py-1.5 bg-[#1E1916] text-white text-xs font-medium rounded hover:bg-[#2C2520]"
+                className="px-3 py-1.5 bg-[#1E1916] text-white text-xs font-medium rounded hover:bg-[#2C2520] cursor-pointer"
               >
                 Add Image
               </button>
@@ -789,7 +958,7 @@ export function AdminProductForm() {
             {formData.gallery.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2">
                 {formData.gallery.map((url, idx) => (
-                  <div key={idx} className="relative group border border-[#D5CEC2] rounded overflow-hidden">
+                  <div key={idx} className="relative group border border-[#D5CEC2] rounded-lg overflow-hidden shadow-xs">
                     <img
                       src={url}
                       alt={`Gallery ${idx + 1}`}
@@ -801,7 +970,7 @@ export function AdminProductForm() {
                     <button
                       type="button"
                       onClick={() => handleRemoveGalleryImage(idx)}
-                      className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4 text-rose-300" />
                     </button>

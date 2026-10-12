@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, Filter, ChevronLeft, ChevronRight, X, Mail, Phone } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
+import { BackButton } from '../../../components/ui/BackButton';
 
 export function AdminAuditLogs() {
   const { adminFetch } = useAdminStore();
@@ -55,6 +56,10 @@ export function AdminAuditLogs() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <BackButton collection="admin" fallbackTo="/admin" label="Back to Dashboard" />
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Append-Only Forensic Audit Trail</h1>

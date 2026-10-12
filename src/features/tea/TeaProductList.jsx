@@ -7,6 +7,7 @@ import { BotanicalSideAnimations } from './components/BotanicalAnimations';
 
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
+import { BackButton } from '../../components/ui/BackButton';
 
 export function TeaProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -94,14 +95,12 @@ export function TeaProductList() {
 
       <Container className="relative z-10">
         {/* Breadcrumb / Collection Navigation */}
-        <div className="mb-6 flex items-center justify-between">
-          <Link
-            to="/tea"
-            className="inline-flex items-center gap-1.5 text-xs text-[#8C6320] hover:text-[#2C1E11] font-medium transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Wellness Tea Overview</span>
-          </Link>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <BackButton
+            collection="tea"
+            fallbackTo="/tea"
+            label="Back to Wellness Tea"
+          />
 
           <span className="text-xs font-mono text-[#2C1E11] bg-[#FFFDF5]/75 backdrop-blur-md px-3.5 py-1 rounded-full border border-[#B88E38]/30 shadow-xs">
             {filteredProducts.length} Botanical {filteredProducts.length === 1 ? 'Variety' : 'Varieties'} Available

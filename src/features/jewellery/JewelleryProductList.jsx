@@ -15,6 +15,7 @@ import { JewelleryProductCard } from './components/JewelleryProductCard';
 
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
+import { BackButton } from '../../components/ui/BackButton';
 
 export function JewelleryProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -124,22 +125,30 @@ export function JewelleryProductList() {
   return (
     <div className="bg-[#242326] text-[#F7F3EB] min-h-screen py-8 sm:py-12">
       <Container>
-        {/* Breadcrumb Navigation */}
-        <nav
-          aria-label="Catalogue Breadcrumb"
-          className="flex items-center gap-2 text-xs font-mono mb-8 text-[#B9B8B5]"
-        >
-          <Link to="/" className="hover:underline flex items-center gap-1 text-[#B9B8B5]/80">
-            <Home className="w-3.5 h-3.5" />
-            <span>Portal</span>
-          </Link>
-          <span>/</span>
-          <Link to="/jewellery" className="hover:underline text-[#B9B8B5]/80">
-            Silver Jewellery
-          </Link>
-          <span>/</span>
-          <span className="font-semibold text-[#F7F3EB]">Catalogue</span>
-        </nav>
+        {/* Breadcrumb Navigation & Theme-Colored Back Button */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <BackButton
+            collection="jewellery"
+            fallbackTo="/jewellery"
+            label="Back to Jewellery"
+          />
+
+          <nav
+            aria-label="Catalogue Breadcrumb"
+            className="flex items-center gap-2 text-xs font-mono text-[#B9B8B5]"
+          >
+            <Link to="/" className="hover:underline flex items-center gap-1 text-[#B9B8B5]/80">
+              <Home className="w-3.5 h-3.5" />
+              <span>Portal</span>
+            </Link>
+            <span>/</span>
+            <Link to="/jewellery" className="hover:underline text-[#B9B8B5]/80">
+              Silver Jewellery
+            </Link>
+            <span>/</span>
+            <span className="font-semibold text-[#F7F3EB]">Catalogue</span>
+          </nav>
+        </div>
 
         {/* Page Header */}
         <div className="mb-8 space-y-3">

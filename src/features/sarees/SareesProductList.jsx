@@ -15,6 +15,7 @@ import { SareeProductCard } from './components/SareeProductCard';
 
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
+import { BackButton } from '../../components/ui/BackButton';
 
 export function SareesProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -124,22 +125,30 @@ export function SareesProductList() {
   return (
     <div className="bg-[#2C0E1A] text-[#F6EBD8] min-h-screen py-8 sm:py-12">
       <Container>
-        {/* Breadcrumb Navigation */}
-        <nav
-          aria-label="Catalogue Breadcrumb"
-          className="flex items-center gap-2 text-xs font-mono mb-8 text-[#C5A46D]"
-        >
-          <Link to="/" className="hover:underline flex items-center gap-1 text-[#D4C2A7]">
-            <Home className="w-3.5 h-3.5" />
-            <span>Portal</span>
-          </Link>
-          <span>/</span>
-          <Link to="/sarees" className="hover:underline text-[#D4C2A7]">
-            Heritage Sarees
-          </Link>
-          <span>/</span>
-          <span className="font-semibold text-[#F6EBD8]">Catalogue</span>
-        </nav>
+        {/* Breadcrumb Navigation & Theme-Colored Back Button */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <BackButton
+            collection="sarees"
+            fallbackTo="/sarees"
+            label="Back to Sarees"
+          />
+
+          <nav
+            aria-label="Catalogue Breadcrumb"
+            className="flex items-center gap-2 text-xs font-mono text-[#C5A46D]"
+          >
+            <Link to="/" className="hover:underline flex items-center gap-1 text-[#D4C2A7]">
+              <Home className="w-3.5 h-3.5" />
+              <span>Portal</span>
+            </Link>
+            <span>/</span>
+            <Link to="/sarees" className="hover:underline text-[#D4C2A7]">
+              Heritage Sarees
+            </Link>
+            <span>/</span>
+            <span className="font-semibold text-[#F6EBD8]">Catalogue</span>
+          </nav>
+        </div>
 
         {/* Page Header */}
         <div className="mb-8 space-y-3">
