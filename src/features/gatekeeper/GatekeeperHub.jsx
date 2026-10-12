@@ -22,10 +22,87 @@ export function GatekeeperHub() {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
-  // Desktop hover state: null | 0 | 1 | 2
+  // Dynamic collections loaded from database with cached persistence and static fallbacks
+  const [liveCollections, setLiveCollections] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('amoga_gatekeeper_collections');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return COLLECTIONS;
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCollections() {
+      try {
+        const res = await fetch('/api/collections');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const merged = json.data.map((dbCol, idx) => {
+            const staticMatch = COLLECTIONS.find(
+              (c) => c.id === dbCol.id || c.path === `/${dbCol.slug}`
+            );
+            return {
+              ...(staticMatch || {}),
+              id: dbCol.id,
+              name: dbCol.name,
+              title: dbCol.name.toUpperCase(),
+              tagline: dbCol.tagline || (staticMatch ? staticMatch.tagline : 'Curated Universe'),
+              description: dbCol.description || (staticMatch ? staticMatch.description : 'Explore handcrafted artisanal curation.'),
+              accentColor: dbCol.accentColor || (staticMatch ? staticMatch.accentColor : '#722F37'),
+              path: `/${dbCol.slug}`,
+              productsPath: `/${dbCol.slug}/products`,
+              theme: dbCol.theme || dbCol.id,
+              heroImage: staticMatch?.heroImage || null,
+              number: String(idx + 1).padStart(2, '0'),
+              features: staticMatch?.features || ['Artisanal Heritage', 'Authentic Sourcing', 'Verified Catalogue'],
+              badge: staticMatch?.badge || 'Curated Collection',
+              ctaText: 'EXPLORE COLLECTION',
+            };
+          });
+
+          // Prevent unnecessary state updates and layout flicker if data has not changed
+          const hasChanged =
+            merged.length !== liveCollections.length ||
+            merged.some((m, i) => {
+              const cur = liveCollections[i];
+              return (
+                !cur ||
+                cur.id !== m.id ||
+                cur.name !== m.name ||
+                cur.description !== m.description ||
+                cur.tagline !== m.tagline
+              );
+            });
+
+          if (hasChanged && isMounted) {
+            setLiveCollections(merged);
+            try {
+              sessionStorage.setItem('amoga_gatekeeper_collections', JSON.stringify(merged));
+            } catch {
+              // Ignore sessionStorage errors
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load collections from API, using defaults:', err);
+      }
+    }
+    loadCollections();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Desktop hover state
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  // Mobile active index: 0 | 1 | 2
+  // Mobile active index
   const [mobileIndex, setMobileIndex] = useState(0);
 
   // Exit transition states
@@ -39,19 +116,19 @@ export function GatekeeperHub() {
 
       if (e.key === 'ArrowRight') {
         e.preventDefault();
-        setHoveredIndex((prev) => (prev === null ? 0 : (prev + 1) % COLLECTIONS.length));
-        setMobileIndex((prev) => (prev + 1) % COLLECTIONS.length);
+        setHoveredIndex((prev) => (prev === null ? 0 : (prev + 1) % liveCollections.length));
+        setMobileIndex((prev) => (prev + 1) % liveCollections.length);
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         setHoveredIndex((prev) =>
-          prev === null ? COLLECTIONS.length - 1 : (prev - 1 + COLLECTIONS.length) % COLLECTIONS.length
+          prev === null ? liveCollections.length - 1 : (prev - 1 + liveCollections.length) % liveCollections.length
         );
-        setMobileIndex((prev) => (prev - 1 + COLLECTIONS.length) % COLLECTIONS.length);
+        setMobileIndex((prev) => (prev - 1 + liveCollections.length) % liveCollections.length);
       } else if (e.key === 'Escape') {
         setHoveredIndex(null);
       }
     },
-    [isExiting]
+    [isExiting, liveCollections.length]
   );
 
   useEffect(() => {
@@ -97,22 +174,22 @@ export function GatekeeperHub() {
         {/* Ambient Tagline / Visual Context */}
         <div className="hidden sm:flex items-center gap-3 pointer-events-auto">
           <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#F4F4F2]/80 bg-black/35 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-            Four Curated Universes
+            {liveCollections.length} Curated Universes
           </span>
         </div>
       </header>
 
-      {/* Desktop 3-Panel View (>= 768px) */}
+      {/* Desktop Multi-Panel View (>= 768px) */}
       <div
         className="hidden md:flex h-full w-full flex-row overflow-hidden"
         onMouseLeave={() => !isExiting && setHoveredIndex(null)}
       >
-        {COLLECTIONS.map((col, idx) => (
+        {liveCollections.map((col, idx) => (
           <GatekeeperPanel
             key={col.id}
             collection={col}
             index={idx}
-            total={COLLECTIONS.length}
+            total={liveCollections.length}
             isHovered={hoveredIndex === idx}
             isAnyHovered={hoveredIndex !== null}
             isExiting={isExiting}
@@ -126,7 +203,7 @@ export function GatekeeperHub() {
 
       {/* Mobile Swipeable / Tabbed View (< 768px) */}
       <GatekeeperMobile
-        collections={COLLECTIONS}
+        collections={liveCollections}
         activeIndex={mobileIndex}
         onChangeIndex={setMobileIndex}
         onSelect={handleCollectionSelect}

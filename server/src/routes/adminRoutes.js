@@ -16,8 +16,10 @@ import {
 } from '../controllers/adminProductsController.js';
 import {
   listCollections,
+  createCollection,
   updateCollection,
   toggleCollection,
+  deleteCollection,
 } from '../controllers/adminCollectionsController.js';
 import {
   listInventory,
@@ -86,8 +88,10 @@ router.patch('/products/:id/restore', requireAdminAuth(['CATALOGUE_MANAGER']), r
 
 // 3. Collections (Catalogue & Super Admin)
 router.get('/collections', requireAdminAuth(), listCollections);
+router.post('/collections', requireAdminAuth(['CATALOGUE_MANAGER']), createCollection);
 router.put('/collections/:id', requireAdminAuth(['CATALOGUE_MANAGER']), updateCollection);
 router.patch('/collections/:id/toggle', requireAdminAuth(['CATALOGUE_MANAGER']), toggleCollection);
+router.delete('/collections/:id', requireAdminAuth(['CATALOGUE_MANAGER']), deleteCollection);
 
 // 4. Inventory (Catalogue, Order Manager & Super Admin)
 router.get('/inventory', requireAdminAuth(), listInventory);

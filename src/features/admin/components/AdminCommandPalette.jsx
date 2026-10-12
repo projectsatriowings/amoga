@@ -23,11 +23,15 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
   const navigate = useNavigate();
   const { admin } = useAdminStore();
   const [query, setQuery] = useState('');
+
+  // Lock backdrop and background scrolling while command palette is active
+  useBodyScrollLock(Boolean(isOpen));
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
 
@@ -217,24 +221,36 @@ export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4">
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 overscroll-contain select-none"
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 bg-[#161210]/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#161210]/60 backdrop-blur-sm touch-none select-none overscroll-contain"
             onClick={onClose}
           />
 
           {/* Palette Modal */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, scale: 0.96, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -10 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="relative w-full max-w-xl bg-[#FFFFFF] border border-[#E5E0D5] rounded-xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[80vh]"
+            className="relative w-full max-w-xl bg-[#FFFFFF] border border-[#E5E0D5] rounded-xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[80vh] overscroll-contain select-text"
           >
             {/* Search Input Bar */}
             <div className="flex items-center px-4 py-3.5 border-b border-[#E5E0D5] bg-[#FAF8F5]">

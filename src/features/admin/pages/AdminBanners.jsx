@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { BackButton } from '../../../components/ui/BackButton';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminBanners() {
   const { adminFetch } = useAdminStore();
@@ -13,6 +14,19 @@ export function AdminBanners() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Lock body scroll when modal is open
+  useBodyScrollLock(Boolean(modalOpen));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && modalOpen && !submitting) {
+        setModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [modalOpen, submitting]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -231,8 +245,25 @@ export function AdminBanners() {
 
       {/* Create / Edit Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-lg w-full p-6 space-y-4 shadow-xl">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overscroll-contain select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !submitting) setModalOpen(false);
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-lg w-full p-6 space-y-4 shadow-xl overscroll-contain max-h-[90vh] overflow-y-auto select-text"
+          >
             <h3 className="font-serif text-lg font-bold text-[#1A1817]">
               {editingBanner ? 'Edit Homepage Banner' : 'Create Homepage Banner'}
             </h3>

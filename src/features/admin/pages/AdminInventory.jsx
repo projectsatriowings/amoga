@@ -10,6 +10,7 @@ import {
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
 import { BackButton } from '../../../components/ui/BackButton';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminInventory() {
   const { adminFetch } = useAdminStore();
@@ -35,6 +36,20 @@ export function AdminInventory() {
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
+
+  // Lock body and backdrop scrolling
+  useBodyScrollLock(Boolean(adjustTarget || showLogs));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (adjustTarget && !submitting) setAdjustTarget(null);
+        if (showLogs) setShowLogs(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [adjustTarget, showLogs, submitting]);
 
   const fetchInventory = async () => {
     setLoading(true);
@@ -318,8 +333,25 @@ export function AdminInventory() {
 
       {/* Adjust Stock Modal */}
       {adjustTarget && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-md w-full p-6 space-y-4 shadow-xl">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overscroll-contain select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !submitting) setAdjustTarget(null);
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-md w-full p-6 space-y-4 shadow-xl overscroll-contain select-text"
+          >
             <div>
               <h3 className="font-serif text-lg font-bold text-[#1A1817]">Adjust Inventory Stock</h3>
               <p className="text-xs text-[#7A7167]">
@@ -405,22 +437,41 @@ export function AdminInventory() {
 
       {/* Movement Audit Logs Modal */}
       {showLogs && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-2xl w-full p-6 space-y-4 shadow-xl max-h-[80vh] flex flex-col">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overscroll-contain select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowLogs(false);
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-2xl w-full p-6 space-y-4 shadow-xl max-h-[80vh] flex flex-col overscroll-contain select-text"
+          >
             <div className="flex items-center justify-between border-b border-[#EAE4D9] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-[#1A1817]">Inventory Movement Audit Trail</h3>
                 <p className="text-xs text-[#7A7167]">Append-only log of physical and manual adjustments</p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowLogs(false)}
-                className="text-xs px-2 py-1 text-[#7A7167] hover:text-[#1A1817]"
+                className="text-xs px-2 py-1 text-[#7A7167] hover:text-[#1A1817] cursor-pointer"
+                aria-label="Close modal"
               >
                 Close
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 overscroll-contain">
               {logs.length === 0 ? (
                 <p className="text-xs text-[#7A7167] italic text-center py-6">No adjustment logs recorded yet.</p>
               ) : (

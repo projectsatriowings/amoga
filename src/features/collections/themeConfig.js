@@ -506,7 +506,66 @@ export function getCollectionTheme(collectionIdOrPath) {
   if (key === 'neutral' || key === 'mixed' || key === 'amoga' || key === 'checkout') {
     return COLLECTION_THEMES.neutral;
   }
-  return COLLECTION_THEMES.food;
+
+  // Dynamic fallback for newly created custom collections
+  const cleanId = key.replace(/^\/+/, '').split('/')[0];
+  const capName = cleanId.charAt(0).toUpperCase() + cleanId.slice(1);
+  return {
+    id: cleanId,
+    name: capName,
+    title: capName.toUpperCase(),
+    eyebrow: 'AMOGA ATELIER',
+    subtitle: 'Curated Luxury Collection',
+    homePath: `/${cleanId}`,
+    productsPath: `/${cleanId}/products`,
+    heroImage: foodHero,
+    badge: 'Curated Collection',
+    palette: {
+      bg: '#FAF8F5',
+      sectionBg: '#F3EFEA',
+      headerBg: '#FFFFFF',
+      headerText: '#1A1817',
+      heading: '#1A1817',
+      text: '#2C2520',
+      mutedText: '#7A7167',
+      accent: '#722F37',
+      accentHover: '#5C242C',
+      accentLight: 'rgba(114, 47, 55, 0.12)',
+      border: '#E5E0D5',
+      cardBg: '#FFFFFF',
+      inputBg: '#FFFFFF',
+      inputBorder: '#E5E0D5',
+      focusRing: 'rgba(114, 47, 55, 0.35)',
+      buttonText: '#FFFFFF',
+      announcementBg: '#722F37',
+      announcementText: '#FFFFFF',
+      announcementAccent: '#FFFFFF',
+    },
+    announcement: `${capName} • Master Artisans • 100% Verified Provenance`,
+    conciergePhone: '+91 9940018593',
+    categories: [
+      {
+        id: 'all',
+        name: 'All Offerings',
+        tagline: 'Complete curated collection',
+        path: `/${cleanId}/products`,
+        count: 0,
+      },
+    ],
+    contact: {
+      heading: `${capName} Concierge Desk`,
+      subheading: 'Enquiries, bespoke commissions, and telephone assistance.',
+      phone1: '+91 9940018593',
+      phone2: '+91 8056700646',
+      email1: 'orders@amoga.com',
+      email2: 'concierge@amoga.com',
+      hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
+      provenanceTitle: 'Artisan Provenance',
+      provenanceDesc: 'Curated handcrafted heritage offerings.',
+      provenanceLocation: 'India • Serving Worldwide',
+      provenanceBadge: 'Amoga Verified',
+    },
+  };
 }
 
 /**

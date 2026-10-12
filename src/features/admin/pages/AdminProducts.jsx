@@ -13,6 +13,7 @@ import {
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
 import { BackButton } from '../../../components/ui/BackButton';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminProducts() {
   const { adminFetch } = useAdminStore();
@@ -31,6 +32,20 @@ export function AdminProducts() {
   const [targetProduct, setTargetProduct] = useState(null);
   const [modalAction, setModalAction] = useState(null); // 'archive' | 'restore'
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Lock body scroll when modal is displayed
+  useBodyScrollLock(Boolean(targetProduct));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && targetProduct && !actionLoading) {
+        setTargetProduct(null);
+        setModalAction(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [targetProduct, actionLoading]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -323,8 +338,28 @@ export function AdminProducts() {
 
       {/* Confirmation Modal */}
       {targetProduct && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-md w-full p-6 space-y-4 shadow-xl">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overscroll-contain select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !actionLoading) {
+              setTargetProduct(null);
+              setModalAction(null);
+            }
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-md w-full p-6 space-y-4 shadow-xl overscroll-contain select-text"
+          >
             <div className="flex items-center gap-3">
               <div
                 className={`p-2 rounded-full ${

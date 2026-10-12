@@ -47,6 +47,14 @@
     padding: 0;
   }
 
+  /* Prevent backdrop and background scrolling when modals or dialogs are displayed */
+  html.body-scroll-locked,
+  body.body-scroll-locked {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    touch-action: none !important;
+  }
+
   /* Clean, restrained scrollbars preventing bulky OS grey gutter tracks */
   ::-webkit-scrollbar {
     width: 6px;

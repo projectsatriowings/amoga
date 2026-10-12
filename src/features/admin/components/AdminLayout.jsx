@@ -33,6 +33,7 @@ import {
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminCommandPalette } from './AdminCommandPalette';
 import amogaLogo from '../../../assets/images/amoga-logo.png';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminLayout() {
   const location = useLocation();
@@ -43,6 +44,9 @@ export function AdminLayout() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  // Lock body scroll when mobile menu is open
+  useBodyScrollLock(Boolean(mobileMenuOpen));
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -463,21 +467,32 @@ export function AdminLayout() {
       {/* Mobile Drawer Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div
+            className="fixed inset-0 z-50 lg:hidden flex overscroll-contain select-none"
+            onWheel={(e) => {
+              if (e.target === e.currentTarget) e.preventDefault();
+            }}
+            onTouchMove={(e) => {
+              if (e.target === e.currentTarget) e.preventDefault();
+            }}
+          >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#201916]/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-[#201916]/60 backdrop-blur-sm touch-none overscroll-contain"
               onClick={() => setMobileMenuOpen(false)}
             />
 
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              data-modal-dialog
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-72 bg-[#201916] text-[#E8E2D8] flex flex-col h-full z-10 shadow-2xl"
+              className="relative w-72 bg-[#201916] text-[#E8E2D8] flex flex-col h-full z-10 shadow-2xl overscroll-contain select-text"
             >
               <div className="p-4 border-b border-[#38312B] flex items-center justify-between">
                 <Link

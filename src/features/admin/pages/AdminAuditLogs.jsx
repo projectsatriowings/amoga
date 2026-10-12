@@ -3,6 +3,7 @@ import { RefreshCw, Filter, ChevronLeft, ChevronRight, X, Mail, Phone } from 'lu
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
 import { BackButton } from '../../../components/ui/BackButton';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminAuditLogs() {
   const { adminFetch } = useAdminStore();
@@ -15,6 +16,19 @@ export function AdminAuditLogs() {
   const [page, setPage] = useState(1);
   const [expandedLog, setExpandedLog] = useState(null);
   const [showRawJson, setShowRawJson] = useState(false);
+
+  // Lock body scroll when modal is open
+  useBodyScrollLock(Boolean(expandedLog));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && expandedLog) {
+        setExpandedLog(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expandedLog]);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -190,12 +204,24 @@ export function AdminAuditLogs() {
       {/* Payload / Formatted Details Modal */}
       {expandedLog && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto"
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overscroll-contain select-none"
           onClick={(e) => {
             if (e.target === e.currentTarget) setExpandedLog(null);
           }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
         >
-          <div className="bg-[#1C1815] text-[#EAE4DC] border border-[#3E362F] rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl relative my-8">
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#1C1815] text-[#EAE4DC] border border-[#3E362F] rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl relative overscroll-contain max-h-[85vh] overflow-y-auto select-text"
+          >
             {/* Modal Header */}
             <div className="flex items-start justify-between border-b border-[#383029] pb-4">
               <div>

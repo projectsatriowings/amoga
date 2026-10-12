@@ -3,6 +3,7 @@ import { Search, RefreshCw, Eye, X, ChevronLeft, ChevronRight } from 'lucide-rea
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
 import { BackButton } from '../../../components/ui/BackButton';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminCustomers() {
   const { adminFetch } = useAdminStore();
@@ -16,6 +17,19 @@ export function AdminCustomers() {
   // Customer Detail Drawer
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  // Lock body and background scrolling when modal is open
+  useBodyScrollLock(Boolean(selectedCustomer));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedCustomer) {
+        setSelectedCustomer(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCustomer]);
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -181,16 +195,35 @@ export function AdminCustomers() {
 
       {/* Customer Detail Drawer */}
       {selectedCustomer && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-xl w-full p-6 space-y-4 shadow-xl max-h-[85vh] flex flex-col">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overscroll-contain select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedCustomer(null);
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#FBF9F5] border border-[#E5E0D5] rounded-lg max-w-xl w-full p-6 space-y-4 shadow-xl max-h-[85vh] flex flex-col overscroll-contain select-text"
+          >
             <div className="flex items-center justify-between border-b border-[#EAE4D9] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-[#1A1817]">{selectedCustomer.name}</h3>
                 <p className="text-xs font-mono text-[#8C6320]">{selectedCustomer.email}</p>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedCustomer(null)}
-                className="p-1.5 text-[#7A7167] hover:text-[#1A1817]"
+                className="p-1.5 text-[#7A7167] hover:text-[#1A1817] cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -217,7 +250,7 @@ export function AdminCustomers() {
 
             <div>
               <h4 className="font-serif text-sm font-bold text-[#1A1817] mb-2">Order History ({selectedCustomer.orders.length})</h4>
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1 overscroll-contain">
                 {selectedCustomer.orders.map((ord) => (
                   <div key={ord.id} className="p-3 bg-white rounded border border-[#E5E0D5] text-xs flex items-center justify-between">
                     <div>

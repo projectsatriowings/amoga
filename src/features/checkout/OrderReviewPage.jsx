@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { BackButton } from '../../components/ui/BackButton';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 // Pure helper to generate demo reference outside component render scope
 function generateDemoOrderId() {
@@ -73,6 +74,9 @@ export const OrderReviewPage = () => {
   const [createdOrderData, setCreatedOrderData] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
+
+  // Freeze backdrop and page scrolling when payment modal is displayed
+  useBodyScrollLock(Boolean(paymentModalOpen && paymentAttempt));
 
   // Validate customer details safely
   const isCustomerValid =
@@ -634,8 +638,25 @@ export const OrderReviewPage = () => {
 
       {/* Secure Test Payment Gateway Modal */}
       {paymentModalOpen && paymentAttempt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#292820]/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--collection-card-bg)] rounded-3xl max-w-lg w-full border border-[var(--collection-border)] shadow-2xl overflow-hidden flex flex-col transition-colors">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#292820]/60 backdrop-blur-sm animate-fade-in overscroll-contain select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isProcessingPayment) setPaymentModalOpen(false);
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[var(--collection-card-bg)] rounded-3xl max-w-lg w-full border border-[var(--collection-border)] shadow-2xl overflow-hidden flex flex-col transition-colors overscroll-contain select-text"
+          >
             {/* Modal Header */}
             <div className="bg-[var(--collection-text)] text-[var(--collection-page-bg)] px-6 py-5 flex items-center justify-between border-b border-[var(--collection-border)]">
               <div className="flex items-center gap-3">

@@ -20,6 +20,7 @@ import { OrderReviewPage } from '../features/checkout/OrderReviewPage';
 import { DemoOrderConfirmation } from '../features/checkout/DemoOrderConfirmation';
 import { NotFound } from '../components/feedback/NotFound';
 import { RouteErrorBoundary } from '../components/feedback/RouteErrorBoundary';
+import { DynamicStorefront } from '../features/collections/DynamicStorefront';
 
 // Admin Panel Screens
 import { AdminLayout } from '../features/admin/components/AdminLayout';
@@ -228,6 +229,35 @@ export const router = createBrowserRouter([
       { path: 'users', element: <AdminUsers /> },
       { path: 'audit-logs', element: <AdminAuditLogs /> },
     ],
+  },
+
+  // Dynamic Collection Storefronts (Supports any custom collection created in Admin)
+  {
+    path: '/collections/:collectionSlug',
+    element: (
+      <AppShell>
+        <DynamicStorefront />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/:collectionSlug',
+    element: (
+      <AppShell>
+        <DynamicStorefront />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/:collectionSlug/products',
+    element: (
+      <AppShell>
+        <DynamicStorefront />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
   },
 
   // 404 Fallback

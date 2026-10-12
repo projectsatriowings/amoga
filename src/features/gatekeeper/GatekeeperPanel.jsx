@@ -31,7 +31,7 @@ export function GatekeeperPanel({
   const targetFlex = isAnyHovered ? (isHovered ? 2.2 : 0.6) : 1.0;
 
   // Collection-specific palette & typography tokens
-  const themeConfig = {
+  const baseTheme = {
     food: {
       bgColor: '#F8F6F0',
       textColor: '#173B2A',
@@ -73,14 +73,20 @@ export function GatekeeperPanel({
       overlayDim: 'bg-black/50',
     },
   }[collection.id] || {
-    bgColor: '#FAF1BB',
-    textColor: '#2C1E11',
-    accentColor: '#B88E38',
-    eyebrowColor: '#8C6320',
-    descriptionColor: '#543B25',
+    bgColor: '#FAF8F5',
+    textColor: '#1A1817',
+    accentColor: collection.accentColor || '#722F37',
+    eyebrowColor: collection.accentColor || '#722F37',
+    descriptionColor: '#4A423B',
     titleFont: 'font-serif font-normal tracking-wide',
-    gradientStop: 'from-[#FAF1BB] via-[#FAF1BB]/85 to-transparent',
-    overlayDim: 'bg-[#2C1E11]/15',
+    gradientStop: 'from-[#FAF8F5] via-[#FAF8F5]/85 to-transparent',
+    overlayDim: 'bg-black/30',
+  };
+
+  const themeConfig = {
+    ...baseTheme,
+    accentColor: collection.accentColor || baseTheme.accentColor,
+    eyebrowColor: collection.accentColor || baseTheme.eyebrowColor,
   };
 
   const transitionConfig = {

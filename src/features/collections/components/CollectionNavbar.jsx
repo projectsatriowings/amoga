@@ -16,6 +16,7 @@ import { Container } from '../../../components/ui/Container';
 import { getCollectionTheme } from '../themeConfig';
 import { CollectionCategoryMenu } from './CollectionCategoryMenu';
 import { BackButton } from '../../../components/ui/BackButton';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function CollectionNavbar({ collectionId = 'food' }) {
   const theme = getCollectionTheme(collectionId);
@@ -32,6 +33,9 @@ export function CollectionNavbar({ collectionId = 'food' }) {
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(true);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
   const [accountModalOpen, setAccountModalOpen] = useState(false);
+
+  // Lock body scroll when account concierge modal or mobile menu is open
+  useBodyScrollLock(Boolean(accountModalOpen || mobileMenuOpen));
 
   const dropdownButtonRef = useRef(null);
 
@@ -542,10 +546,21 @@ export function CollectionNavbar({ collectionId = 'food' }) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs overscroll-contain select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setAccountModalOpen(false);
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
         >
           <div
-            className="rounded-2xl max-w-sm w-full p-6 space-y-4 border shadow-2xl transition-all"
+            data-modal-dialog
+            onClick={(e) => e.stopPropagation()}
+            className="rounded-2xl max-w-sm w-full p-6 space-y-4 border shadow-2xl transition-all overscroll-contain select-text"
             style={{
               backgroundColor: palette.cardBg || '#FFFFFF',
               borderColor: palette.border || '#E5E0D5',
