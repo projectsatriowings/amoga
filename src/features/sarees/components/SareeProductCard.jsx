@@ -8,6 +8,13 @@ export function SareeProductCard({ product }) {
   const { isInWishlist, toggleWishlistItem, addToCart } = useStore();
   const isWishlisted = isInWishlist(product.id);
   const [justAdded, setJustAdded] = React.useState(false);
+  const addedTimerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+    };
+  }, []);
 
   const hasPrice = product.price !== null && Number(product.price) > 0;
 
@@ -23,6 +30,10 @@ export function SareeProductCard({ product }) {
     const res = addToCart(product, 1, defaultVariant);
     if (res?.success) {
       setJustAdded(true);
+      if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+      addedTimerRef.current = setTimeout(() => {
+        setJustAdded(false);
+      }, 1500);
     }
   };
 
@@ -156,13 +167,22 @@ export function SareeProductCard({ product }) {
               onClick={handleAddToCart}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 justAdded
-                  ? 'bg-emerald-700 text-white'
+                  ? 'bg-[#E5C78B] text-[#2C0E1A] shadow-md'
                   : 'bg-[#C5A46D] text-[#2C0E1A] hover:bg-[#d9bb85]'
               }`}
-              title="Add Saree to Bag"
+              title={justAdded ? 'Added to Bag' : 'Add Saree to Bag'}
             >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Add</span>
+              {justAdded ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Added</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Add</span>
+                </>
+              )}
             </button>
           </div>
         </div>

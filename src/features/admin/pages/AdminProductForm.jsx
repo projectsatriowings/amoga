@@ -10,6 +10,38 @@ import {
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 
+const COLLECTION_SUBCATEGORIES = {
+  food: [
+    { id: 'soups', name: 'Soup Mixes' },
+    { id: 'millets', name: 'Millet Mixes' },
+    { id: 'podis', name: 'Rice Podis' },
+    { id: 'spices', name: 'Spices & Seasonings' },
+    { id: 'oils', name: 'Cold-Pressed Oils' },
+    { id: 'snacks', name: 'Traditional Snacks' },
+    { id: 'superfoods', name: 'Superfoods' },
+    { id: 'honey', name: 'Wild Honey & Preserves' },
+  ],
+  tea: [
+    { id: 'flower', name: 'Botanical Flower Brews' },
+    { id: 'leaf', name: 'Medicinal Leaf Brews' },
+    { id: 'herbal', name: 'Herbal & Root Brews' },
+  ],
+  sarees: [
+    { id: 'silk', name: 'Silk Sarees' },
+    { id: 'traditional', name: 'Traditional Weaves' },
+    { id: 'festive', name: 'Festive Collection' },
+    { id: 'wedding', name: 'Bridal & Wedding Sarees' },
+    { id: 'contemporary', name: 'Contemporary Weaves' },
+  ],
+  jewellery: [
+    { id: 'rings', name: 'Rings' },
+    { id: 'necklaces', name: 'Necklaces & Pendants' },
+    { id: 'earrings', name: 'Earrings' },
+    { id: 'bracelets', name: 'Bracelets & Cuffs' },
+    { id: 'traditional', name: 'Traditional Silver' },
+  ],
+};
+
 export function AdminProductForm() {
   const { id } = useParams();
   const isEditing = Boolean(id);
@@ -27,8 +59,8 @@ export function AdminProductForm() {
     name: '',
     slug: '',
     collectionId: 'food',
-    category: '',
-    categoryName: '',
+    category: 'soups',
+    categoryName: 'Soup Mixes',
     price: '',
     originalPrice: '',
     stockQuantity: 50,
@@ -60,12 +92,18 @@ export function AdminProductForm() {
           if (!prodRes.ok) throw new Error(prodJson.message || 'Product not found');
 
           const p = prodJson.product;
+          const targetCollection = p.collectionId || 'food';
+          const defaultSubcat = COLLECTION_SUBCATEGORIES[targetCollection]?.[0]?.id || '';
+          const defaultSubcatName = COLLECTION_SUBCATEGORIES[targetCollection]?.[0]?.name || '';
+          const initialCategory = p.category || defaultSubcat;
+          const matchedSub = COLLECTION_SUBCATEGORIES[targetCollection]?.find((s) => s.id === initialCategory);
+
           setFormData({
             name: p.name || '',
             slug: p.slug || '',
-            collectionId: p.collectionId || 'food',
-            category: p.category || '',
-            categoryName: p.categoryName || '',
+            collectionId: targetCollection,
+            category: initialCategory,
+            categoryName: p.categoryName || (matchedSub ? matchedSub.name : defaultSubcatName),
             price: p.price !== null ? String(p.price) : '',
             originalPrice: p.originalPrice !== null ? String(p.originalPrice) : '',
             stockQuantity: p.stockQuantity ?? 50,
@@ -101,9 +139,54 @@ export function AdminProductForm() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
+
+      // Auto-generate clean URL slug from product name in the background
+      if (name === 'name') {
+        const autoSlug = value
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        // On new product creation or if previous slug matched previous name slug, auto-update
+        const prevAutoSlug = prev.name
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        if (!isEditing || !prev.slug || prev.slug === prevAutoSlug) {
+          updated.slug = autoSlug;
+        }
+      }
+
+      // When collection changes, dynamically update subcategory dropdown to that collection
+      if (name === 'collectionId') {
+        const available = COLLECTION_SUBCATEGORIES[value] || [];
+        if (available.length > 0) {
+          updated.category = available[0].id;
+          updated.categoryName = available[0].name;
+        } else {
+          updated.category = '';
+          updated.categoryName = '';
+        }
+      }
+
+      return updated;
+    });
+  };
+
+  const handleSubcategoryChange = (e) => {
+    const selectedId = e.target.value;
+    const available = COLLECTION_SUBCATEGORIES[formData.collectionId] || [];
+    const matched = available.find((sub) => sub.id === selectedId);
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      category: selectedId,
+      categoryName: matched ? matched.name : selectedId,
     }));
   };
 
@@ -178,9 +261,17 @@ export function AdminProductForm() {
       if (!formData.description.trim()) throw new Error('Product description is required');
       if (!formData.collectionId) throw new Error('Collection must be selected');
 
+      const autoGeneratedSlug =
+        formData.slug?.trim() ||
+        formData.name
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+
       const payload = {
         name: formData.name.trim(),
-        slug: formData.slug.trim() || undefined,
+        slug: autoGeneratedSlug || undefined,
         collectionId: formData.collectionId,
         category: formData.category || formData.collectionId,
         categoryName: formData.categoryName || formData.category,
@@ -235,6 +326,11 @@ export function AdminProductForm() {
       </div>
     );
   }
+
+  const availableSubcategories = COLLECTION_SUBCATEGORIES[formData.collectionId] || [];
+  const isCustomSubcategory = Boolean(
+    formData.category && !availableSubcategories.some((sub) => sub.id === formData.category)
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
@@ -306,6 +402,30 @@ export function AdminProductForm() {
 
             <div>
               <label className="block text-xs font-semibold text-[#4A423B] uppercase mb-1">
+                Subcategory Tag *
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleSubcategoryChange}
+                required
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
+              >
+                {isCustomSubcategory && (
+                  <option value={formData.category}>
+                    {formData.categoryName || formData.category} (Custom)
+                  </option>
+                )}
+                {availableSubcategories.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-[#4A423B] uppercase mb-1">
                 Product Name *
               </label>
               <input
@@ -315,34 +435,6 @@ export function AdminProductForm() {
                 onChange={handleInputChange}
                 required
                 placeholder="e.g. Royal Kashmiri Saffron or Kanchipuram Gold Silk"
-                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#4A423B] uppercase mb-1">
-                Custom URL Slug
-              </label>
-              <input
-                type="text"
-                name="slug"
-                value={formData.slug}
-                onChange={handleInputChange}
-                placeholder="Auto-generated if left blank"
-                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] font-mono focus:border-[#722F37] outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#4A423B] uppercase mb-1">
-                Subcategory / Tag
-              </label>
-              <input
-                type="text"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                placeholder="e.g. Rare Spice, Botanical Brew, Bridal Katan"
                 className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
               />
             </div>
