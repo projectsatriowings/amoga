@@ -415,8 +415,8 @@ export async function getDashboardMetrics(queryOptions = {}) {
 
   // 4. Calculate Authoritative Financial Metrics
   const paidRevenue = paidPaymentsPeriodAgg._sum.amount ? Number(paidPaymentsPeriodAgg._sum.amount) : 0;
-  const grossSales = validOrdersPeriodAgg._sum.totalAmount ? Number(validOrdersPeriodAgg._sum.totalAmount) : 0;
-  const validOrdersCount = validOrdersPeriodAgg._count || 0;
+  const grossSales = trendOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+  const validOrdersCount = trendOrders.length;
   const averageOrderValue = validOrdersCount > 0 ? Number((grossSales / validOrdersCount).toFixed(2)) : 0;
 
   const totalPaidAttempts = (paidPaymentsPeriodAgg._count || 0) + failedPaymentsCount;

@@ -59,6 +59,7 @@ export function TeaProductDetail() {
   const { addToCart, toggleWishlistItem, isInWishlist, initiateBuyNow, openCart } = useStore();
   const [quantity, setQuantity] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
+  const [addError, setAddError] = useState(null);
 
   // If unknown slug, display graceful not-found state
   if (!product) {
@@ -90,8 +91,6 @@ export function TeaProductDetail() {
 
   const inWishlist = isInWishlist(product.id);
   const hasPrice = product.price !== null;
-
-  const [addError, setAddError] = useState(null);
 
   // Other teas in the collection
   const otherTeas = TEA_PRODUCTS.filter((p) => p.id !== product.id).slice(0, 4);

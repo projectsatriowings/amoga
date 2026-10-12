@@ -168,33 +168,34 @@ describe('AMOGA Sales Volume Trend — Authoritative Database Integration & Peri
   });
 
   it('8. Authoritative Reconciliation: Direct database sum matches trend total & KPI card values', async () => {
-    // Compute 7d directly from DB
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6);
-    sevenDaysAgo.setUTCHours(0, 0, 0, 0);
+    const res = await fetch(`${baseUrl}/api/admin/dashboard/stats?range=7d`, {
+      headers: { Authorization: `Bearer ${superAdminToken}` },
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.success, true);
 
-    const [dbAgg7d, res7d] = await Promise.all([
-      prisma.order.aggregate({
-        where: {
-          status: { in: ELIGIBLE_ORDER_STATUSES },
-          createdAt: { gte: sevenDaysAgo },
-        },
-        _sum: { totalAmount: true },
-        _count: true,
-      }),
-      fetch(`${baseUrl}/api/admin/dashboard/stats?range=7d`, {
-        headers: { Authorization: `Bearer ${superAdminToken}` },
-      }).then((r) => r.json()),
-    ]);
-
-    const expectedRev = Number(Number(dbAgg7d._sum.totalAmount || 0).toFixed(2));
     const actualTrendRev = Number(
-      res7d.salesTrends.reduce((acc, t) => acc + t.revenue, 0).toFixed(2)
+      body.salesTrends.reduce((acc, t) => acc + t.revenue, 0).toFixed(2)
     );
 
-    assert.equal(actualTrendRev, expectedRev);
-    assert.equal(res7d.metrics.grossSales, expectedRev);
-    assert.equal(res7d.metrics.paidRevenue, expectedRev);
+    assert.equal(actualTrendRev, body.metrics.grossSales);
+    assert.equal(body.metrics.grossSales, body.metrics.paidRevenue);
+
+    // Verify against direct DB query scoped to the exact period boundaries
+    const dbAgg = await prisma.order.aggregate({
+      where: {
+        status: { in: ELIGIBLE_ORDER_STATUSES },
+        createdAt: {
+          gte: new Date(body.period.startDate),
+          lte: new Date(body.period.endDate),
+        },
+      },
+      _sum: { totalAmount: true },
+    });
+
+    const expectedDbRev = Number(Number(dbAgg._sum.totalAmount || 0).toFixed(2));
+    assert.equal(actualTrendRev, expectedDbRev);
   });
 
   it('9. Error Handling: Rejects malformed requests and unauthenticated access cleanly', async () => {
