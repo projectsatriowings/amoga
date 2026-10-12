@@ -123,17 +123,38 @@ describe('3. Authoritative Checkout Validation API & Financial Precision', () =>
   });
 
   test('POST /api/checkout/validate rejects unpriced items with 422', async () => {
-    const res = await fetch(`${baseUrl}/checkout/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: [{ productId: 'podi-01', quantity: 1 }], // podi-01 is unpriced
-      }),
+    const unpricedProd = await prisma.product.upsert({
+      where: { sourceId: 'test-unpriced-01' },
+      update: { price: null },
+      create: {
+        sourceId: 'test-unpriced-01',
+        slug: 'test-unpriced-product',
+        name: 'Test Unpriced Catalogue Item',
+        description: 'Test unpriced catalogue product for safeguard verification',
+        collectionId: 'food',
+        category: 'podis',
+        image: '/assets/images/food-soups-hero.jpg',
+        price: null,
+        inStock: true,
+        isActive: true,
+      },
     });
-    assert.strictEqual(res.status, 422);
-    const body = await res.json();
-    assert.strictEqual(body.canCheckout, false);
-    assert.ok(body.errors.some((e) => e.includes('pending client approval')));
+
+    try {
+      const res = await fetch(`${baseUrl}/checkout/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{ productId: unpricedProd.id, quantity: 1 }],
+        }),
+      });
+      assert.strictEqual(res.status, 422);
+      const body = await res.json();
+      assert.strictEqual(body.canCheckout, false);
+      assert.ok(body.errors.some((e) => e.includes('pending client approval')));
+    } finally {
+      await prisma.product.deleteMany({ where: { sourceId: 'test-unpriced-01' } });
+    }
   });
 
   test('POST /api/checkout/validate calculates authoritative totals across collections with integer paise', async () => {

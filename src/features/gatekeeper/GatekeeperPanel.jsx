@@ -125,57 +125,60 @@ export function GatekeeperPanel({
       />
 
       {/* Top Content Area */}
-      <div className="relative z-10 pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 md:px-7 lg:px-8 xl:px-10 flex flex-col items-start w-full">
-        {/* Collection Number & Divider */}
-        <div className="flex items-center gap-3 text-xs sm:text-sm font-mono tracking-widest opacity-80 mb-3 sm:mb-4">
-          <span className="font-semibold">{collection.number}</span>
-          <span
-            className="w-6 sm:w-8 h-[1px]"
-            style={{ backgroundColor: themeConfig.accentColor }}
-          />
+      <div className="relative z-10 pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 md:px-7 lg:px-8 xl:px-10 flex-1 flex flex-col justify-between items-start w-full pb-6 sm:pb-8">
+        {/* Narrative Group */}
+        <div className="w-full flex flex-col items-start">
+          {/* Collection Number & Divider */}
+          <div className="flex items-center gap-3 text-xs sm:text-sm font-mono tracking-widest opacity-80 mb-3 sm:mb-4">
+            <span className="font-semibold">{collection.number}</span>
+            <span
+              className="w-6 sm:w-8 h-[1px]"
+              style={{ backgroundColor: themeConfig.accentColor }}
+            />
+          </div>
+
+          {/* Collection Title */}
+          <motion.h2
+            layout="position"
+            className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl uppercase leading-[1.05] w-full max-w-full ${themeConfig.titleFont}`}
+            style={{ color: themeConfig.textColor }}
+          >
+            {collection.title.split(' ').map((word, wIdx) => (
+              <span key={wIdx} className="block">
+                {word}
+              </span>
+            ))}
+          </motion.h2>
+
+          {/* Eyebrow Subheading */}
+          <motion.div
+            layout="position"
+            className="mt-2 text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase min-h-[1.25rem]"
+            style={{ color: themeConfig.eyebrowColor }}
+          >
+            {collection.eyebrow}
+          </motion.div>
+
+          {/* Description (Fades gracefully in/out on collapse) */}
+          <motion.div
+            animate={{
+              opacity: isCollapsed ? 0 : 1,
+              height: isCollapsed ? 0 : 'auto',
+              marginTop: isCollapsed ? 0 : 16,
+            }}
+            transition={transitionConfig}
+            className="overflow-hidden max-w-sm"
+          >
+            <p
+              className="text-xs sm:text-sm leading-relaxed"
+              style={{ color: themeConfig.descriptionColor }}
+            >
+              {collection.description}
+            </p>
+          </motion.div>
         </div>
 
-        {/* Collection Title */}
-        <motion.h2
-          layout="position"
-          className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl uppercase leading-[1.1] w-full max-w-full ${themeConfig.titleFont}`}
-          style={{ color: themeConfig.textColor }}
-        >
-          {collection.title.split(' ').map((word, wIdx) => (
-            <span key={wIdx} className="inline-block mr-2.5 last:mr-0">
-              {word}
-            </span>
-          ))}
-        </motion.h2>
-
-        {/* Eyebrow Subheading */}
-        <motion.div
-          layout="position"
-          className="mt-2 text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase"
-          style={{ color: themeConfig.eyebrowColor }}
-        >
-          {collection.eyebrow}
-        </motion.div>
-
-        {/* Description (Fades gracefully in/out on collapse) */}
-        <motion.div
-          animate={{
-            opacity: isCollapsed ? 0 : 1,
-            height: isCollapsed ? 0 : 'auto',
-            marginTop: isCollapsed ? 0 : 16,
-          }}
-          transition={transitionConfig}
-          className="overflow-hidden max-w-sm"
-        >
-          <p
-            className="text-xs sm:text-sm leading-relaxed"
-            style={{ color: themeConfig.descriptionColor }}
-          >
-            {collection.description}
-          </p>
-        </motion.div>
-
-        {/* Liquid-Glass CTA Button */}
+        {/* Liquid-Glass CTA Button — Anchored on identical baseline across all panels */}
         <motion.div
           animate={{
             opacity: isCollapsed ? 0 : isExpanded ? 1 : 0.85,
@@ -183,7 +186,7 @@ export function GatekeeperPanel({
             scale: isCollapsed ? 0.95 : 1,
           }}
           transition={transitionConfig}
-          className="mt-6 sm:mt-8"
+          className="mt-auto pt-6 sm:pt-8"
         >
           <LiquidGlassCta
             collectionId={collection.id}

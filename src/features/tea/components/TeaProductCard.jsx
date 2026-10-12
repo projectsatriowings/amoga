@@ -1,21 +1,33 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, Leaf, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, Leaf, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 
 export function TeaProductCard({ product }) {
+  const navigate = useNavigate();
   const { toggleWishlistItem, isInWishlist } = useStore();
   const inWishlist = isInWishlist(product.id);
-  const hasPrice = product.price !== null;
+  const hasPrice = product.price !== null && Number(product.price) > 0;
+
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlistItem(product);
+  };
 
   return (
     <article
-      className="group relative rounded-2xl bg-[#FFFDF5] border border-[#B88E38]/30 shadow-sm hover:shadow-xl hover:border-[#8C6320] transition-all duration-300 flex flex-col justify-between overflow-hidden"
+      className="group relative rounded-2xl bg-[#FFFDF5] border border-[#B88E38]/30 shadow-sm hover:shadow-xl hover:border-[#8C6320] transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer"
       aria-label={product.name}
+      onClick={() => navigate(`/tea/products/${product.slug}`)}
     >
       {/* Card Image Area */}
       <div className="relative aspect-square w-full overflow-hidden bg-[#FAF1BB]/60">
-        <Link to={`/tea/products/${product.slug}`} className="block w-full h-full">
+        <Link
+          to={`/tea/products/${product.slug}`}
+          className="block w-full h-full"
+          onClick={(e) => e.stopPropagation()}
+        >
           <img
             src={product.image}
             alt={product.name}
@@ -41,8 +53,8 @@ export function TeaProductCard({ product }) {
         {/* Wishlist Toggle Button */}
         <button
           type="button"
-          onClick={() => toggleWishlistItem(product)}
-          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all z-10 shadow-sm ${
+          onClick={handleToggleWishlist}
+          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all z-10 shadow-sm cursor-pointer ${
             inWishlist
               ? 'bg-red-50 text-red-500 shadow-md'
               : 'bg-white/80 text-black/60 hover:text-red-500 hover:bg-white'
@@ -70,6 +82,7 @@ export function TeaProductCard({ product }) {
 
           <Link
             to={`/tea/products/${product.slug}`}
+            onClick={(e) => e.stopPropagation()}
             className="block text-lg font-serif font-medium text-[#2C1E11] group-hover:text-[#8C6320] transition-colors line-clamp-1"
           >
             {product.name}
@@ -77,7 +90,7 @@ export function TeaProductCard({ product }) {
 
           {/* Standee Narrative Note */}
           {product.standeeNotes && (
-            <p className="text-xs text-[#543B25] line-clamp-2 leading-relaxed bg-[#FAF1BB] p-2.5 rounded-lg border border-[#B88E38]/25">
+            <p className="text-xs text-[#543B25] line-clamp-2 leading-relaxed bg-[#FAF1BB] p-2.5 rounded-lg border border-[#B88E38]/25 font-sans">
               <span className="font-semibold text-[#8C6320]">Wellness:</span> {product.standeeNotes}
             </p>
           )}
@@ -111,6 +124,7 @@ export function TeaProductCard({ product }) {
 
           <Link
             to={`/tea/products/${product.slug}`}
+            onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium uppercase tracking-wider bg-[#2C1E11] text-[#FAF1BB] hover:bg-[#8C6320] hover:text-white transition-all shadow-sm"
           >
             <span>View Brew</span>

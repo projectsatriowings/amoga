@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   ShoppingBag,
@@ -10,6 +10,7 @@ import {
   Truck,
   Leaf,
   HelpCircle,
+  Zap,
 } from 'lucide-react';
 import { getProductBySlug, getProductsByCategory } from './data/products';
 import { FoodProductCard } from './components/FoodProductCard';
@@ -18,14 +19,20 @@ import { WishlistDrawer } from './components/WishlistDrawer';
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { Button } from '../../components/ui/Button';
+import { useProductDetail } from '../../hooks/useProducts';
+import { isValidPrice } from '../../utils/pricing';
 
 export function FoodProductDetail() {
   const { slug } = useParams();
-  const product = getProductBySlug(slug);
+  const navigate = useNavigate();
+  const staticProduct = getProductBySlug(slug);
+  const { product: apiProduct } = useProductDetail('food', slug, staticProduct);
+  const product = apiProduct || staticProduct;
 
-  const { addToCart, toggleWishlistItem, isInWishlist } = useStore();
+  const { addToCart, toggleWishlistItem, isInWishlist, initiateBuyNow } = useStore();
   const [quantity, setQuantity] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
+  const [addError, setAddError] = useState(null);
 
   // If unknown slug, display graceful not-found state
   if (!product) {
@@ -62,9 +69,32 @@ export function FoodProductDetail() {
     .slice(0, 4);
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
-    setAddedSuccess(true);
-    setTimeout(() => setAddedSuccess(false), 2000);
+    setAddError(null);
+    if (!hasPrice) {
+      setAddError('This item is currently unavailable for purchase.');
+      return;
+    }
+    const res = addToCart(product, quantity);
+    if (res?.success) {
+      setAddedSuccess(true);
+      navigate('/cart');
+    } else {
+      setAddError('Could not add item to cart. Please try again.');
+    }
+  };
+
+  const handleBuyNow = () => {
+    setAddError(null);
+    if (!hasPrice || !isValidPrice(product.price)) {
+      setAddError('This item is currently unavailable for immediate purchase.');
+      return;
+    }
+    const res = initiateBuyNow(product, quantity);
+    if (res?.success) {
+      navigate('/checkout');
+    } else {
+      setAddError('Unable to initiate Buy Now for this item.');
+    }
   };
 
   return (
@@ -227,7 +257,7 @@ export function FoodProductDetail() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Button
                   variant="primary"
                   size="lg"
@@ -237,6 +267,17 @@ export function FoodProductDetail() {
                   className="flex-1 text-sm"
                 >
                   {addedSuccess ? 'Added to Basket!' : 'Add to Cart'}
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  collection="food"
+                  onClick={handleBuyNow}
+                  leftIcon={<Zap className="w-5 h-5 text-[#287A25]" />}
+                  className="flex-1 text-sm bg-white hover:bg-[#E5DFD3]/50 border border-[#287A25]/30 text-[#172B1C] shadow-sm"
+                >
+                  Buy Now
                 </Button>
 
                 <button
@@ -253,6 +294,12 @@ export function FoodProductDetail() {
                   <Heart className={`w-5 h-5 ${inWishlist ? 'fill-red-500' : ''}`} />
                 </button>
               </div>
+
+              {addError && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
+                  {addError}
+                </div>
+              )}
             </div>
 
             {/* Trust Assurances */}

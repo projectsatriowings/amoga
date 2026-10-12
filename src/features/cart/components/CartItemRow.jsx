@@ -1,12 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2, Plus, Minus, AlertCircle } from 'lucide-react';
+import { Trash2, Plus, Minus, AlertCircle, Check, Bookmark } from 'lucide-react';
 import { formatINR, isValidPrice } from '../../../utils/pricing';
 import { useStore } from '../../../store/useStore';
 
 export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
   const storeUpdateQuantity = useStore((state) => state.updateQuantity);
   const storeRemoveFromCart = useStore((state) => state.removeFromCart);
+  const selectedLineIds = useStore((state) => state.selectedLineIds);
+  const toggleSelectItem = useStore((state) => state.toggleSelectItem);
+  const saveForLater = useStore((state) => state.saveForLater);
 
   const handleUpdate = onUpdateQuantity || storeUpdateQuantity;
   const handleRemove = onRemove || storeRemoveFromCart;
@@ -16,6 +19,8 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
   const selectedVariant = item.selectedVariant;
   const lineId = item.id || item.lineId;
   const lineKey = lineId || product.id;
+  const isSelected = Array.isArray(selectedLineIds) ? selectedLineIds.includes(lineKey) : true;
+
   const unitPrice = item.price !== undefined ? item.price : product.price;
   const hasPrice = isValidPrice(unitPrice);
 
@@ -41,15 +46,42 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
 
   return (
     <div
-      className="p-4 sm:p-5 rounded-2xl border shadow-xs transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      className={`p-4 sm:p-5 rounded-2xl border shadow-xs transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+        isSelected ? 'border-[var(--collection-border)]' : 'opacity-75 border-dashed border-black/15 bg-black/[0.01]'
+      }`}
       style={{
         backgroundColor: 'var(--collection-card-bg)',
-        borderColor: 'var(--collection-border)',
         color: 'var(--collection-text)',
       }}
     >
-      {/* Product Image & Info */}
-      <div className="flex items-start gap-4 flex-1 min-w-0">
+      {/* Checkbox, Product Image & Info */}
+      <div className="flex items-start gap-3.5 sm:gap-4 flex-1 min-w-0">
+        {/* Line Item Selection Checkbox */}
+        <div className="pt-2 sm:pt-6 shrink-0">
+          <label
+            className="relative flex items-center justify-center cursor-pointer group"
+            title={isSelected ? 'Deselect item from order' : 'Select item for checkout'}
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => toggleSelectItem(lineKey)}
+              aria-label={`Select ${product.name} for purchase`}
+              className="sr-only"
+            />
+            <div
+              className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                isSelected
+                  ? 'bg-[var(--collection-accent)] border-[var(--collection-accent)] text-white shadow-xs'
+                  : 'bg-white border-black/25 group-hover:border-black/50'
+              }`}
+            >
+              {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+            </div>
+          </label>
+        </div>
+
+        {/* Product Image */}
         <Link to={productUrl} className="shrink-0 group">
           <div
             className="w-20 h-20 rounded-xl overflow-hidden border transition-transform group-hover:scale-[1.03]"
@@ -70,7 +102,8 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
           </div>
         </Link>
 
-        <div className="space-y-1 min-w-0">
+        {/* Product Details */}
+        <div className="space-y-1 min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-2xs ${collectionBadge.color}`}
@@ -83,6 +116,11 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
                 style={{ color: 'var(--collection-text-muted)' }}
               >
                 &bull; {product.categoryName}
+              </span>
+            )}
+            {!isSelected && (
+              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                Not Selected
               </span>
             )}
           </div>
@@ -124,14 +162,11 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
             </div>
           )}
 
-          {/* Unit Price */}
-          <div
-            className="text-xs pt-0.5"
-            style={{ color: 'var(--collection-text-muted)' }}
-          >
+          {/* Unit Price & Quick Save for Later */}
+          <div className="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
             {hasPrice ? (
-              <span>
-                Unit Price:{' '}
+              <span style={{ color: 'var(--collection-text-muted)' }}>
+                Unit:{' '}
                 <strong
                   className="font-sans tabular-nums font-semibold"
                   style={{ color: 'var(--collection-text)' }}
@@ -145,13 +180,24 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
                 Price pending confirmation
               </span>
             )}
+
+            <button
+              type="button"
+              onClick={() => saveForLater(lineKey)}
+              className="inline-flex items-center gap-1 text-xs hover:text-[var(--collection-accent)] transition-colors underline underline-offset-2 opacity-80 hover:opacity-100 cursor-pointer"
+              style={{ color: 'var(--collection-text-muted)' }}
+              title="Move this item to Saved for Later"
+            >
+              <Bookmark className="w-3 h-3" />
+              <span>Save for later</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Quantity & Line Total */}
+      {/* Quantity, Line Total & Remove */}
       <div
-        className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0"
+        className="flex items-center justify-between sm:justify-end gap-5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0"
         style={{ borderColor: 'var(--collection-border)' }}
       >
         {/* Quantity Controls */}
@@ -166,7 +212,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
             type="button"
             onClick={() => handleUpdate(lineKey, quantity - 1)}
             disabled={quantity <= 1}
-            className="p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-80"
+            className="p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-80 cursor-pointer"
             style={{ color: 'var(--collection-text-muted)' }}
             aria-label={`Decrease quantity of ${product.name}`}
           >
@@ -182,7 +228,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
           <button
             type="button"
             onClick={() => handleUpdate(lineKey, quantity + 1)}
-            className="p-1.5 rounded-lg transition-colors hover:opacity-80"
+            className="p-1.5 rounded-lg transition-colors hover:opacity-80 cursor-pointer"
             style={{ color: 'var(--collection-text-muted)' }}
             aria-label={`Increase quantity of ${product.name}`}
           >
@@ -194,7 +240,9 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
         <div className="text-right min-w-[90px]">
           {hasPrice ? (
             <div
-              className="text-base font-sans font-bold tabular-nums"
+              className={`text-base font-sans font-bold tabular-nums ${
+                isSelected ? '' : 'line-through opacity-50'
+              }`}
               style={{ color: 'var(--collection-accent)' }}
             >
               {formatINR(unitPrice * quantity)}

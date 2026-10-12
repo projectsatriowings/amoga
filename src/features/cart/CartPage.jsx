@@ -1,24 +1,64 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, ArrowRight, UtensilsCrossed, Sparkles, Gem, Leaf, ShieldAlert } from 'lucide-react';
+import {
+  ShoppingBag,
+  ArrowRight,
+  UtensilsCrossed,
+  Sparkles,
+  Gem,
+  Leaf,
+  ShieldAlert,
+  CheckSquare,
+  Square,
+  Bookmark,
+  Trash2,
+  PackageCheck,
+  AlertCircle,
+} from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { CartItemRow } from './components/CartItemRow';
 import { CartSummary } from './components/CartSummary';
+import { formatINR, isValidPrice } from '../../utils/pricing';
 
 export const CartPage = () => {
   const cartState = useStore((state) => state.cart);
   const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
+  const selectedLineIds = useStore((state) => state.selectedLineIds || []);
+  const selectAllItems = useStore((state) => state.selectAllItems);
+  const deselectAllItems = useStore((state) => state.deselectAllItems);
+  const getSelectedItems = useStore((state) => state.getSelectedItems);
+  const getSelectedTotals = useStore((state) => state.getSelectedTotals);
   const getCartTotals = useStore((state) => state.getCartTotals);
   const updateQuantity = useStore((state) => state.updateQuantity);
   const removeFromCart = useStore((state) => state.removeFromCart);
   const clearCart = useStore((state) => state.clearCart);
 
+  // Saved for Later state
+  const savedForLaterState = useStore((state) => state.savedForLater);
+  const savedItems = Array.isArray(savedForLaterState?.items) ? savedForLaterState.items : [];
+  const moveToBag = useStore((state) => state.moveToBag);
+  const removeFromSaved = useStore((state) => state.removeFromSaved);
+
   const resolved = useResolvedTheme();
   const shouldReduceMotion = useReducedMotion();
 
-  const { totalItemsCount, hasUnpricedItems } = getCartTotals();
+  const { totalItemsCount } = getCartTotals();
+  const selectedItems = getSelectedItems();
+  const { hasUnpricedItems: hasSelectedUnpriced } = getSelectedTotals();
+  const allSelected = cartItems.length > 0 && selectedLineIds.length >= cartItems.length;
+  const noneSelected = selectedLineIds.length === 0;
+
+  const handleToggleSelectAll = () => {
+    if (allSelected) {
+      deselectAllItems();
+    } else {
+      selectAllItems();
+    }
+  };
+
+  const hasAnyItems = cartItems.length > 0 || savedItems.length > 0;
 
   return (
     <div
@@ -95,20 +135,21 @@ export const CartPage = () => {
               className="mt-2 text-sm sm:text-base font-sans max-w-2xl leading-relaxed"
               style={{ color: 'var(--collection-text-muted)' }}
             >
-              Unified selections across Amoga Wholesome Pantry, Wellness Tea, Heritage Sarees, and Silver Jewellery.
+              Select individual products for immediate checkout or keep unselected provisions saved for later.
             </p>
           </div>
+
           {cartItems.length > 0 && (
             <div className="flex items-center gap-4">
               <span
-                className="text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-full border shadow-2xs"
+                className="text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-full border shadow-2xs font-mono"
                 style={{
                   backgroundColor: 'var(--collection-card-bg)',
                   borderColor: 'var(--collection-border)',
                   color: 'var(--collection-text)',
                 }}
               >
-                {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'} in bag
+                {selectedItems.length} of {cartItems.length} selected
               </span>
               <button
                 type="button"
@@ -123,8 +164,8 @@ export const CartPage = () => {
         </div>
 
         {/* Content Body */}
-        {cartItems.length === 0 ? (
-          /* Empty Bag State */
+        {!hasAnyItems ? (
+          /* Entirely Empty State */
           <motion.div
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -156,7 +197,6 @@ export const CartPage = () => {
 
             {/* Collection Discovery Hub: 4 houses */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
-              {/* 1. Food */}
               <Link
                 to="/food"
                 className="group p-5 rounded-2xl border hover:shadow-md transition-all flex flex-col justify-between"
@@ -181,10 +221,7 @@ export const CartPage = () => {
                   >
                     Wholesome Pantry
                   </h3>
-                  <p
-                    className="text-xs mt-1"
-                    style={{ color: 'var(--collection-text-muted)' }}
-                  >
+                  <p className="text-xs mt-1" style={{ color: 'var(--collection-text-muted)' }}>
                     Comforting soup mixes, nourishing millet blends and flavourful rice podis
                   </p>
                 </div>
@@ -197,7 +234,6 @@ export const CartPage = () => {
                 </div>
               </Link>
 
-              {/* 2. Tea */}
               <Link
                 to="/tea"
                 className="group p-5 rounded-2xl border hover:shadow-md transition-all flex flex-col justify-between"
@@ -222,11 +258,8 @@ export const CartPage = () => {
                   >
                     Wellness Tea
                   </h3>
-                  <p
-                    className="text-xs mt-1"
-                    style={{ color: 'var(--collection-text-muted)' }}
-                  >
-                    Thoughtfully selected botanical teas and herbal infusions for your everyday ritual
+                  <p className="text-xs mt-1" style={{ color: 'var(--collection-text-muted)' }}>
+                    Botanical teas and herbal infusions for your everyday wellness ritual
                   </p>
                 </div>
                 <div
@@ -238,7 +271,6 @@ export const CartPage = () => {
                 </div>
               </Link>
 
-              {/* 3. Sarees */}
               <Link
                 to="/sarees"
                 className="group p-5 rounded-2xl border hover:shadow-md transition-all flex flex-col justify-between"
@@ -263,11 +295,8 @@ export const CartPage = () => {
                   >
                     Heritage Sarees
                   </h3>
-                  <p
-                    className="text-xs mt-1"
-                    style={{ color: 'var(--collection-text-muted)' }}
-                  >
-                    Kanchipuram, Banarasi zari & mulberry silks
+                  <p className="text-xs mt-1" style={{ color: 'var(--collection-text-muted)' }}>
+                    Kanchipuram, Banarasi zari & pure mulberry silk weaves
                   </p>
                 </div>
                 <div
@@ -279,7 +308,6 @@ export const CartPage = () => {
                 </div>
               </Link>
 
-              {/* 4. Jewellery */}
               <Link
                 to="/jewellery"
                 className="group p-5 rounded-2xl border hover:shadow-md transition-all flex flex-col justify-between"
@@ -304,11 +332,8 @@ export const CartPage = () => {
                   >
                     Silver Jewellery
                   </h3>
-                  <p
-                    className="text-xs mt-1"
-                    style={{ color: 'var(--collection-text-muted)' }}
-                  >
-                    92.5 Sterling silver neckpieces, jhumkas & cuffs
+                  <p className="text-xs mt-1" style={{ color: 'var(--collection-text-muted)' }}>
+                    92.5 Sterling silver neckpieces, jhumkas, and hallmarked cuffs
                   </p>
                 </div>
                 <div
@@ -322,41 +347,192 @@ export const CartPage = () => {
             </div>
           </motion.div>
         ) : (
-          /* Active Cart Grid */
+          /* Active Cart & Saved Items Layout */
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Items Column (8 cols) */}
-            <div className="lg:col-span-8 space-y-4">
-              {hasUnpricedItems && (
-                <div className="p-4 bg-amber-50/80 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-start gap-3">
-                  <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h2 className="font-semibold text-sm">Purchase Safeguard Notice</h2>
-                    <p className="mt-1 leading-relaxed text-amber-800">
-                      Items marked with bespoke or unapproved pricing cannot proceed through frontend checkout. Please remove them or await official catalogue appraisal.
-                    </p>
+            <div className="lg:col-span-8 space-y-6">
+              {/* Active Cart Section */}
+              {cartItems.length > 0 && (
+                <div className="space-y-4">
+                  {/* Selection Toolbar */}
+                  <div
+                    className="p-3.5 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs"
+                    style={{
+                      backgroundColor: 'var(--collection-card-bg)',
+                      borderColor: 'var(--collection-border)',
+                    }}
+                  >
+                    <label className="flex items-center gap-2 cursor-pointer font-medium select-none">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={handleToggleSelectAll}
+                        className="sr-only"
+                      />
+                      <div
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                          allSelected
+                            ? 'bg-[var(--collection-accent)] border-[var(--collection-accent)] text-white'
+                            : 'bg-white border-black/30'
+                        }`}
+                      >
+                        {allSelected && <span className="text-[10px] font-bold">✓</span>}
+                      </div>
+                      <span style={{ color: 'var(--collection-heading)' }}>
+                        {allSelected ? 'Deselect All' : 'Select All Items'}
+                      </span>
+                    </label>
+
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-[11px]" style={{ color: 'var(--collection-text-muted)' }}>
+                        {selectedItems.length} of {cartItems.length} lines selected
+                      </span>
+                      {!noneSelected && (
+                        <button
+                          type="button"
+                          onClick={deselectAllItems}
+                          className="hover:underline text-[11px] uppercase tracking-wider font-semibold cursor-pointer"
+                          style={{ color: 'var(--collection-accent)' }}
+                        >
+                          Clear Selection
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {hasSelectedUnpriced && (
+                    <div className="p-4 bg-amber-50/80 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-start gap-3">
+                      <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h2 className="font-semibold text-sm">Selective Checkout Safeguard</h2>
+                        <p className="mt-1 leading-relaxed text-amber-800">
+                          One or more selected items have unapproved prices. You can uncheck them to proceed with your other verified purchases.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cart Item Rows */}
+                  <div className="space-y-3">
+                    <AnimatePresence initial={false}>
+                      {cartItems.map((item) => (
+                        <motion.div
+                          key={item.id || item.lineId}
+                          initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <CartItemRow
+                            item={item}
+                            onUpdateQuantity={updateQuantity}
+                            onRemove={removeFromCart}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </div>
               )}
 
-              <div className="space-y-3">
-                <AnimatePresence initial={false}>
-                  {cartItems.map((item) => (
-                    <motion.div
-                      key={item.id || item.lineId}
-                      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <CartItemRow
-                        item={item}
-                        onUpdateQuantity={updateQuantity}
-                        onRemove={removeFromCart}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
+              {/* Saved For Later Section */}
+              {savedItems.length > 0 && (
+                <div
+                  className="mt-10 p-6 rounded-2xl border space-y-4"
+                  style={{
+                    backgroundColor: 'var(--collection-card-bg)',
+                    borderColor: 'var(--collection-border)',
+                  }}
+                >
+                  <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--collection-border)' }}>
+                    <div className="flex items-center gap-2">
+                      <Bookmark className="w-4 h-4" style={{ color: 'var(--collection-accent)' }} />
+                      <h2
+                        className="font-serif text-lg sm:text-xl font-medium"
+                        style={{ color: 'var(--collection-heading)' }}
+                      >
+                        Saved for Later ({savedItems.length})
+                      </h2>
+                    </div>
+                    <span className="text-xs" style={{ color: 'var(--collection-text-muted)' }}>
+                      Items not included in checkout totals
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {savedItems.map((saved) => {
+                      const sKey = saved.id || saved.lineId;
+                      const hasPrice = isValidPrice(saved.price);
+                      const isAvailable = saved.product?.inStock !== false;
+
+                      return (
+                        <div
+                          key={sKey}
+                          className="p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all"
+                          style={{
+                            backgroundColor: 'var(--collection-section-bg)',
+                            borderColor: 'var(--collection-border)',
+                          }}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <img
+                              src={saved.image}
+                              alt={saved.name}
+                              className="w-16 h-16 rounded-lg object-cover border"
+                              style={{ borderColor: 'var(--collection-border)' }}
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%23eee"/><text x="32" y="32" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="10">Amoga</text></svg>';
+                              }}
+                            />
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <h3
+                                className="text-sm font-medium font-serif truncate"
+                                style={{ color: 'var(--collection-heading)' }}
+                              >
+                                {saved.name}
+                              </h3>
+                              {saved.selectedVariant && (
+                                <div className="text-xs" style={{ color: 'var(--collection-text-muted)' }}>
+                                  Option: {saved.selectedVariant.name}
+                                </div>
+                              )}
+                              <div className="text-xs font-semibold tabular-nums" style={{ color: 'var(--collection-accent)' }}>
+                                {hasPrice ? formatINR(saved.price) : 'Price pending confirmation'}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0" style={{ borderColor: 'var(--collection-border)' }}>
+                            <button
+                              type="button"
+                              onClick={() => moveToBag(sKey)}
+                              disabled={!hasPrice || !isAvailable}
+                              className="px-3.5 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                              style={{
+                                backgroundColor: 'var(--collection-accent)',
+                                color: 'var(--collection-button-text, #FFFFFF)',
+                              }}
+                            >
+                              <PackageCheck className="w-3.5 h-3.5" />
+                              <span>Move to Bag</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => removeFromSaved(sKey)}
+                              className="p-2 rounded-lg text-black/50 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                              title="Remove from saved list"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Bottom browsing banner: all 4 collections */}
               <div

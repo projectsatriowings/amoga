@@ -53,12 +53,15 @@ function buildSimulatedOrder(demoOrderId, customerDetails, items, totals) {
 
 export const OrderReviewPage = () => {
   const navigate = useNavigate();
-  const cartState = useStore((state) => state.cart);
-  const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
+  const getCheckoutItems = useStore((state) => state.getCheckoutItems);
+  const getCheckoutTotals = useStore((state) => state.getCheckoutTotals);
+  const reconcileCartAfterPurchase = useStore((state) => state.reconcileCartAfterPurchase);
+  const checkoutContext = useStore((state) => state.checkoutContext);
   const customerDetails = useStore((state) => state.customerDetails || state.checkout?.customerDetails) || {};
-  const getCartTotals = useStore((state) => state.getCartTotals);
   const setLastCompletedOrder = useStore((state) => state.setLastCompletedOrder);
-  const clearCart = useStore((state) => state.clearCart);
+
+  const checkoutItems = getCheckoutItems();
+  const totals = getCheckoutTotals();
 
   const [simulationError, setSimulationError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,8 +72,6 @@ export const OrderReviewPage = () => {
   const [createdOrderData, setCreatedOrderData] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
-
-  const totals = getCartTotals();
 
   // Validate customer details safely
   const isCustomerValid =
@@ -83,11 +84,11 @@ export const OrderReviewPage = () => {
     Boolean(customerDetails?.pincode?.trim());
 
   // Validate cart eligibility
-  const cartValidation = validateCartForCheckout(cartItems);
+  const cartValidation = validateCartForCheckout(checkoutItems);
 
   const handleInitiatePayment = async () => {
     // 1. Re-validate cart client-side
-    const recheckCart = validateCartForCheckout(cartItems);
+    const recheckCart = validateCartForCheckout(checkoutItems);
     if (!recheckCart.isValid) {
       setSimulationError(recheckCart.errors.join(' '));
       return;
@@ -108,7 +109,7 @@ export const OrderReviewPage = () => {
     try {
       // 3. Submit or resume order in PostgreSQL backend
       const orderResult = await createOrderApi({
-        items: cartItems,
+        items: checkoutItems,
         customer: customerDetails,
         idempotencyKey,
       });
@@ -189,13 +190,13 @@ export const OrderReviewPage = () => {
                     paymentReference: paymentResult.paymentReference,
                     createdAt: getNowIso(),
                     customer: orderResult.customer || { ...customerDetails },
-                    items: orderResult.items || cartItems.map((item) => ({ ...item })),
+                    items: orderResult.items || checkoutItems.map((item) => ({ ...item })),
                     totals: orderResult.totals || { ...totals },
                     isPersistent: true,
                     isDemo: false,
                   };
                   setLastCompletedOrder(completedOrderSnapshot);
-                  clearCart();
+                  reconcileCartAfterPurchase(checkoutItems);
                   navigate(`/order-confirmation/${orderResult.orderReference}`);
                 }
               } catch (verifyErr) {
@@ -234,9 +235,9 @@ export const OrderReviewPage = () => {
 
       // If backend is offline, provide graceful development fallback
       const demoOrderId = generateDemoOrderId();
-      const simulatedOrder = buildSimulatedOrder(demoOrderId, customerDetails, cartItems, totals);
+      const simulatedOrder = buildSimulatedOrder(demoOrderId, customerDetails, checkoutItems, totals);
       setLastCompletedOrder(simulatedOrder);
-      clearCart();
+      reconcileCartAfterPurchase(checkoutItems);
       navigate(`/order-confirmation/${demoOrderId}`);
       return;
     } finally {
@@ -284,14 +285,14 @@ export const OrderReviewPage = () => {
           paymentReference: paymentAttempt.paymentReference,
           createdAt: getNowIso(),
           customer: createdOrderData.customer || { ...customerDetails },
-          items: createdOrderData.items || cartItems.map((item) => ({ ...item })),
+          items: createdOrderData.items || checkoutItems.map((item) => ({ ...item })),
           totals: createdOrderData.totals || { ...totals },
           isPersistent: true,
           isDemo: false,
         };
 
         setLastCompletedOrder(completedOrderSnapshot);
-        clearCart();
+        reconcileCartAfterPurchase(checkoutItems);
         setPaymentModalOpen(false);
         navigate(`/order-confirmation/${createdOrderData.orderReference}`);
         return;
@@ -307,8 +308,8 @@ export const OrderReviewPage = () => {
     }
   };
 
-  // If cart is empty and no active order
-  if (cartItems.length === 0) {
+  // If checkout context is empty and no active order
+  if (checkoutItems.length === 0) {
     return (
       <div className="min-h-screen bg-[var(--collection-page-bg)] text-[var(--collection-text)] pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors">
         <div className="max-w-xl mx-auto text-center py-16 bg-[var(--collection-card-bg)] rounded-2xl p-8 border border-[var(--collection-border)] shadow-sm">
@@ -319,7 +320,7 @@ export const OrderReviewPage = () => {
             No Active Bag for Review
           </h1>
           <p className="text-sm text-[var(--collection-text-muted)] mb-6">
-            There are no items in your shopping bag to review.
+            There are no items selected for purchase to review.
           </p>
           <Link
             to="/cart"
@@ -500,7 +501,7 @@ export const OrderReviewPage = () => {
               </div>
 
               <div className="divide-y divide-[var(--collection-border)]">
-                {cartItems.map((item) => {
+                {checkoutItems.map((item) => {
                   const lineId = item.id || item.lineId;
                   const name = item.name || item.product?.name;
                   const image = item.image || item.product?.image;

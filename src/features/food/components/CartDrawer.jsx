@@ -110,6 +110,8 @@ export function CartDrawer() {
                         ? `/jewellery/products/${product.slug}`
                         : product.collection === 'sarees'
                         ? `/sarees/products/${product.slug}`
+                        : product.collection === 'tea'
+                        ? `/tea/products/${product.slug}`
                         : `/food/products/${product.slug}`;
 
                     return (

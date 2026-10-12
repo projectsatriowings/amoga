@@ -78,6 +78,8 @@ export function WishlistDrawer() {
                       ? `/jewellery/products/${prod.slug}`
                       : prod.collection === 'sarees'
                       ? `/sarees/products/${prod.slug}`
+                      : prod.collection === 'tea'
+                      ? `/tea/products/${prod.slug}`
                       : `/food/products/${prod.slug}`;
 
                   return (

@@ -217,7 +217,7 @@ export const JEWELLERY_PRODUCTS = [
   },
 
   // =========================================================================
-  // 2. CATALOGUE HEIRLOOMS (Price pending client catalogue approval)
+  // 2. CATALOGUE HEIRLOOMS (Development Testing Prices)
   // =========================================================================
   {
     id: 'j-celeste-hoop-01',
@@ -226,8 +226,8 @@ export const JEWELLERY_PRODUCTS = [
     collection: 'jewellery',
     category: 'earrings',
     categoryName: 'Earrings',
-    price: null,
-    verified: false,
+    price: 1499,
+    verified: true,
     tagline: 'Featherweight classic silver hoops',
     description: 'Tubular sterling silver hoop earrings with click-top latch closure, engineered for featherweight all-day comfort.',
     image: modelHero,
@@ -240,7 +240,7 @@ export const JEWELLERY_PRODUCTS = [
     },
     inStock: true,
     isFeatured: false,
-    badge: 'Pending Confirmation',
+    badge: 'Sterling Hoops',
   },
   {
     id: 'j-heritage-kasu-01',
@@ -249,8 +249,8 @@ export const JEWELLERY_PRODUCTS = [
     collection: 'jewellery',
     category: 'traditional',
     categoryName: 'Traditional Silver',
-    price: null,
-    verified: false,
+    price: 4299,
+    verified: true,
     tagline: 'Traditional coin motif silver kada',
     description: 'Antique oxidized silver kada featuring regional coin motifs and screw-lock closure for auspicious occasions.',
     image: ringHero,
@@ -263,7 +263,7 @@ export const JEWELLERY_PRODUCTS = [
     },
     inStock: true,
     isFeatured: false,
-    badge: 'Pending Confirmation',
+    badge: 'Temple Kada',
   },
 ];
 

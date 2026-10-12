@@ -1,21 +1,30 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, Plus, Eye, Check } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, ShoppingBag, Eye, Check } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 
 export function SareeProductCard({ product }) {
+  const navigate = useNavigate();
   const { isInWishlist, toggleWishlistItem, addToCart } = useStore();
   const isWishlisted = isInWishlist(product.id);
   const [justAdded, setJustAdded] = React.useState(false);
 
+  const hasPrice = product.price !== null && Number(product.price) > 0;
+
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!hasPrice) {
+      navigate(`/sarees/products/${product.slug}`);
+      return;
+    }
     // Default to first variant if variants exist
     const defaultVariant = product.variants?.[0] || null;
-    addToCart(product, 1, defaultVariant);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1500);
+    const res = addToCart(product, 1, defaultVariant);
+    if (res?.success) {
+      setJustAdded(true);
+      navigate('/cart');
+    }
   };
 
   const handleToggleWishlist = (e) => {
@@ -24,18 +33,26 @@ export function SareeProductCard({ product }) {
     toggleWishlistItem(product);
   };
 
-  const hasPrice = product.price !== null;
-
   return (
-    <div className="group relative rounded-xl bg-[#381222]/80 border border-[#C5A46D]/20 hover:border-[#C5A46D]/80 transition-all duration-normal flex flex-col overflow-hidden shadow-lg hover:shadow-2xl">
+    <article
+      className="group relative rounded-xl bg-[#381222]/80 border border-[#C5A46D]/20 hover:border-[#C5A46D]/80 transition-all duration-normal flex flex-col overflow-hidden shadow-lg hover:shadow-2xl cursor-pointer"
+      aria-label={product.name}
+      onClick={() => navigate(`/sarees/products/${product.slug}`)}
+    >
       {/* Product Image Container */}
       <div className="relative aspect-[3/4] overflow-hidden bg-[#2C0E1A]">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-slow group-hover:scale-105"
-          loading="lazy"
-        />
+        <Link
+          to={`/sarees/products/${product.slug}`}
+          className="block w-full h-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-slow group-hover:scale-105"
+            loading="lazy"
+          />
+        </Link>
 
         {/* Floating Top Badge */}
         {product.badge && (
@@ -50,7 +67,7 @@ export function SareeProductCard({ product }) {
         <button
           type="button"
           onClick={handleToggleWishlist}
-          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-[#2C0E1A]/80 hover:bg-[#2C0E1A] text-[#F6EBD8] border border-[#C5A46D]/30 backdrop-blur-sm transition-transform active:scale-90"
+          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-[#2C0E1A]/80 hover:bg-[#2C0E1A] text-[#F6EBD8] border border-[#C5A46D]/30 backdrop-blur-sm transition-transform active:scale-90 cursor-pointer"
           aria-label={isWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         >
           <Heart
@@ -79,7 +96,11 @@ export function SareeProductCard({ product }) {
 
           {/* Product Name */}
           <h3 className="font-serif text-lg text-[#F6EBD8] group-hover:text-[#C5A46D] transition-colors line-clamp-1 mt-0.5">
-            <Link to={`/sarees/products/${product.slug}`} className="focus:outline-none">
+            <Link
+              to={`/sarees/products/${product.slug}`}
+              onClick={(e) => e.stopPropagation()}
+              className="focus:outline-none"
+            >
               {product.name}
             </Link>
           </h3>
@@ -112,7 +133,7 @@ export function SareeProductCard({ product }) {
           <div>
             {hasPrice ? (
               <div className="text-base font-sans font-bold text-[#F6EBD8] tabular-nums">
-                ₹{product.price.toLocaleString('en-IN')}
+                ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
               </div>
             ) : (
               <span className="text-[10px] font-mono text-[#C5A46D] bg-[#451523] px-2 py-0.5 rounded border border-[#C5A46D]/20">
@@ -124,6 +145,7 @@ export function SareeProductCard({ product }) {
           <div className="flex items-center gap-2">
             <Link
               to={`/sarees/products/${product.slug}`}
+              onClick={(e) => e.stopPropagation()}
               className="p-2 rounded-lg bg-[#451523] hover:bg-[#581c2d] text-[#F6EBD8] text-xs transition-colors border border-[#C5A46D]/30"
               title="View Product"
             >
@@ -133,18 +155,19 @@ export function SareeProductCard({ product }) {
             <button
               type="button"
               onClick={handleAddToCart}
-              className={`p-2 rounded-lg text-xs transition-all flex items-center justify-center ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 justAdded
                   ? 'bg-emerald-700 text-white'
                   : 'bg-[#C5A46D] text-[#2C0E1A] hover:bg-[#d9bb85]'
               }`}
-              title={justAdded ? 'Added to Bag' : 'Add to Bag'}
+              title="Add Saree to Bag"
             >
-              {justAdded ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Add</span>
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

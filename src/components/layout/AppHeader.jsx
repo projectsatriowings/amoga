@@ -120,13 +120,14 @@ export function AppHeader({ activeCollection }) {
           </div>
 
           <div className="relative">
-            <IconButton
-              icon={<ShoppingBag className="w-4 h-4" />}
-              label={`Cart (${cartCount} items)`}
-              variant="ghost"
-              size="md"
-              onClick={openCart}
-            />
+            <Link to="/cart" aria-label={`Cart (${cartCount} items)`}>
+              <IconButton
+                icon={<ShoppingBag className="w-4 h-4" />}
+                label={`Cart (${cartCount} items)`}
+                variant="ghost"
+                size="md"
+              />
+            </Link>
             {cartCount > 0 && (
               <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[#287A25] text-white text-[10px] font-bold flex items-center justify-center pointer-events-none">
                 {cartCount}

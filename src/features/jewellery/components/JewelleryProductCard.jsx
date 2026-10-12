@@ -1,23 +1,33 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, Plus, Eye, Check } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, ShoppingBag, Eye, Check } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 
 export function JewelleryProductCard({ product }) {
+  const navigate = useNavigate();
   const { isInWishlist, toggleWishlistItem, addToCart } = useStore();
   const isWishlisted = isInWishlist(product.id);
   const [justAdded, setJustAdded] = React.useState(false);
 
-  const hasPrice = product.price !== null;
+  const hasPrice = product.price !== null && Number(product.price) > 0;
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!hasPrice) return;
+    if (!hasPrice) {
+      navigate(`/jewellery/products/${product.slug}`);
+      return;
+    }
 
-    addToCart(product, 1);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1500);
+    const defaultVariant = product.sizes && product.sizes.length > 0
+      ? { id: `size-${product.sizes[0]}`, name: `Size ${product.sizes[0]}` }
+      : null;
+
+    const res = addToCart(product, 1, defaultVariant);
+    if (res?.success) {
+      setJustAdded(true);
+      navigate('/cart');
+    }
   };
 
   const handleToggleWishlist = (e) => {
@@ -27,15 +37,25 @@ export function JewelleryProductCard({ product }) {
   };
 
   return (
-    <div className="group relative rounded-xl bg-[#343238]/70 border border-[#B9B8B5]/15 hover:border-[#B9B8B5]/60 transition-all duration-normal flex flex-col overflow-hidden shadow-lg hover:shadow-2xl">
+    <article
+      className="group relative rounded-xl bg-[#343238]/70 border border-[#B9B8B5]/15 hover:border-[#B9B8B5]/60 transition-all duration-normal flex flex-col overflow-hidden shadow-lg hover:shadow-2xl cursor-pointer"
+      aria-label={product.name}
+      onClick={() => navigate(`/jewellery/products/${product.slug}`)}
+    >
       {/* Product Image Container */}
       <div className="relative aspect-square overflow-hidden bg-[#242326]">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-slow group-hover:scale-105"
-          loading="lazy"
-        />
+        <Link
+          to={`/jewellery/products/${product.slug}`}
+          className="block w-full h-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-slow group-hover:scale-105"
+            loading="lazy"
+          />
+        </Link>
 
         {/* Floating Top Badge */}
         {product.badge && (
@@ -50,7 +70,7 @@ export function JewelleryProductCard({ product }) {
         <button
           type="button"
           onClick={handleToggleWishlist}
-          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-[#242326]/80 hover:bg-[#242326] text-[#F7F3EB] border border-[#B9B8B5]/20 backdrop-blur-sm transition-transform active:scale-90"
+          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-[#242326]/80 hover:bg-[#242326] text-[#F7F3EB] border border-[#B9B8B5]/20 backdrop-blur-sm transition-transform active:scale-90 cursor-pointer"
           aria-label={isWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         >
           <Heart
@@ -79,7 +99,11 @@ export function JewelleryProductCard({ product }) {
 
           {/* Product Name */}
           <h3 className="font-serif text-lg text-[#F7F3EB] group-hover:text-[#B9B8B5] transition-colors line-clamp-1 mt-0.5">
-            <Link to={`/jewellery/products/${product.slug}`} className="focus:outline-none">
+            <Link
+              to={`/jewellery/products/${product.slug}`}
+              onClick={(e) => e.stopPropagation()}
+              className="focus:outline-none"
+            >
               {product.name}
             </Link>
           </h3>
@@ -102,7 +126,7 @@ export function JewelleryProductCard({ product }) {
           <div>
             {hasPrice ? (
               <div className="text-base font-sans font-bold text-[#F7F3EB] tabular-nums">
-                ₹{product.price.toLocaleString('en-IN')}
+                ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
               </div>
             ) : (
               <span className="text-[10px] font-mono text-[#B9B8B5] bg-[#242326] px-2 py-0.5 rounded border border-[#B9B8B5]/20">
@@ -114,36 +138,29 @@ export function JewelleryProductCard({ product }) {
           <div className="flex items-center gap-2">
             <Link
               to={`/jewellery/products/${product.slug}`}
+              onClick={(e) => e.stopPropagation()}
               className="p-2 rounded-lg bg-[#242326] hover:bg-[#3E3C44] text-[#F7F3EB] text-xs transition-colors border border-[#B9B8B5]/20"
               title="View Piece Details"
             >
               <Eye className="w-3.5 h-3.5" />
             </Link>
 
-            {hasPrice ? (
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className={`p-2 rounded-lg text-xs transition-all flex items-center justify-center ${
-                  justAdded
-                    ? 'bg-emerald-700 text-white'
-                    : 'bg-[#B9B8B5] text-[#242326] hover:bg-white'
-                }`}
-                title={justAdded ? 'Added to Bag' : 'Add to Bag'}
-              >
-                {justAdded ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-              </button>
-            ) : (
-              <span
-                className="p-2 rounded-lg bg-[#242326]/50 text-[#B9B8B5]/40 text-xs cursor-not-allowed border border-white/5"
-                title="Purchase unavailable pending confirmed pricing"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </span>
-            )}
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                justAdded
+                  ? 'bg-emerald-700 text-white'
+                  : 'bg-[#B9B8B5] text-[#242326] hover:bg-white'
+              }`}
+              title="Add Piece to Bag"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Add</span>
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

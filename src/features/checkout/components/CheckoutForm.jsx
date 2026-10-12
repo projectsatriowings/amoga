@@ -7,9 +7,9 @@ export const CheckoutForm = () => {
   const navigate = useNavigate();
   const customerDetails = useStore((state) => state.customerDetails || state.checkout?.customerDetails);
   const setCustomerDetails = useStore((state) => state.setCustomerDetails);
-  const getCartTotals = useStore((state) => state.getCartTotals);
+  const getCheckoutTotals = useStore((state) => state.getCheckoutTotals);
 
-  const { payableItemsCount, hasUnpricedItems } = getCartTotals();
+  const { payableItemsCount, hasUnpricedItems } = getCheckoutTotals();
 
   // Local form state safely initialized with empty fallbacks
   const [formData, setFormData] = useState(() => ({

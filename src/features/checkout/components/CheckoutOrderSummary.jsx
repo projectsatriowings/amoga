@@ -2,13 +2,17 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../../store/useStore';
 import { formatINR } from '../../../utils/pricing';
-import { AlertCircle, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ShieldCheck, Zap, CheckCircle2 } from 'lucide-react';
 
 export const CheckoutOrderSummary = ({ compact = false }) => {
-  const cartState = useStore((state) => state.cart);
-  const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
-  const getCartTotals = useStore((state) => state.getCartTotals);
-  const { subtotal, payableItemsCount, hasUnpricedItems, unpricedCount } = getCartTotals();
+  const getCheckoutItems = useStore((state) => state.getCheckoutItems);
+  const getCheckoutTotals = useStore((state) => state.getCheckoutTotals);
+  const checkoutContext = useStore((state) => state.checkoutContext);
+
+  const checkoutItems = getCheckoutItems();
+  const { subtotal, payableItemsCount, hasUnpricedItems, unpricedCount } = getCheckoutTotals();
+
+  const isBuyNow = checkoutContext?.type === 'buy_now';
 
   const getCollectionBadge = (collectionId) => {
     switch (collectionId) {
@@ -28,15 +32,20 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
   return (
     <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 border border-[var(--collection-border)] shadow-sm sticky top-28 transition-colors">
       <div className="flex items-center justify-between pb-4 border-b border-[var(--collection-border)] mb-4">
-        <h2 className="font-serif text-xl text-[var(--collection-heading)]">Your Bag Items</h2>
-        <span className="text-xs uppercase tracking-wider text-[var(--collection-text-muted)] bg-[var(--collection-section-bg)]/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-[var(--collection-border)] shadow-2xs">
-          {payableItemsCount} {payableItemsCount === 1 ? 'item' : 'items'}
+        <div>
+          <h2 className="font-serif text-xl text-[var(--collection-heading)]">Order Review</h2>
+          <span className="text-[11px] font-mono text-[var(--collection-text-muted)]">
+            {isBuyNow ? 'Buy Now Direct Item' : 'Selected Line Items'}
+          </span>
+        </div>
+        <span className="text-xs uppercase tracking-wider text-[var(--collection-text-muted)] bg-[var(--collection-section-bg)]/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-[var(--collection-border)] shadow-2xs font-mono">
+          {payableItemsCount} {payableItemsCount === 1 ? 'unit' : 'units'}
         </span>
       </div>
 
-      {/* Cart item listing */}
+      {/* Checkout item listing (ONLY selected items or buy now item) */}
       <div className={`space-y-3 overflow-y-auto pr-1 ${compact ? 'max-h-60' : 'max-h-80'}`}>
-        {cartItems.map((item) => {
+        {checkoutItems.map((item) => {
           const lineId = item.id || item.lineId;
           const name = item.name || item.product?.name;
           const image = item.image || item.product?.image;
@@ -90,7 +99,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
         <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <p className="leading-snug">
-            {unpricedCount} unpriced item(s) detected. Must be removed before placing order.
+            {unpricedCount} unpriced item(s) detected in checkout. Must be removed before placing order.
           </p>
         </div>
       )}
@@ -98,39 +107,38 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
       {/* Pricing Summary */}
       <div className="mt-5 pt-4 border-t border-[var(--collection-border)] space-y-2.5 text-xs text-[var(--collection-text)]">
         <div className="flex justify-between items-baseline">
-          <span className="text-[var(--collection-text-muted)]">Subtotal</span>
-          <span className="font-sans text-sm font-semibold text-[var(--collection-text)] tabular-nums">
+          <span className="text-[var(--collection-text-muted)]">Items Subtotal</span>
+          <span className="font-semibold tabular-nums text-sm text-[var(--collection-text)]">
             {formatINR(subtotal)}
           </span>
         </div>
-        <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
+        <div className="flex justify-between items-baseline text-[11px] text-[var(--collection-text-muted)]">
           <span>Standard Delivery</span>
-          <span className="italic text-[var(--collection-accent)]">Complimentary</span>
+          <span className="text-[var(--collection-accent)] italic font-medium">
+            Complimentary
+          </span>
         </div>
-        <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
-          <span>Taxes</span>
+        <div className="flex justify-between items-baseline text-[11px] text-[var(--collection-text-muted)]">
+          <span>Taxes & Duties</span>
           <span className="italic">Included</span>
         </div>
-        <div className="pt-3 border-t border-[var(--collection-border)] flex justify-between items-baseline">
-          <span className="text-sm font-semibold text-[var(--collection-heading)]">Payable Total</span>
-          <span className="font-sans text-xl font-bold text-[var(--collection-accent)] tabular-nums">
+        <div className="pt-3 border-t border-[var(--collection-border)] flex justify-between items-baseline text-sm font-semibold">
+          <span className="text-[var(--collection-heading)]">Payable Total</span>
+          <span className="text-xl font-bold font-sans tabular-nums text-[var(--collection-accent)]">
             {formatINR(subtotal)}
           </span>
         </div>
       </div>
 
-      {/* Back to Cart link */}
-      <div className="mt-4 pt-3 border-t border-[var(--collection-border)] flex items-center justify-between text-xs">
+      {/* Return to Bag Link */}
+      <div className="mt-5 pt-4 border-t border-[var(--collection-border)] text-center">
         <Link
           to="/cart"
-          className="text-[var(--collection-accent)] hover:underline font-medium"
+          className="text-xs uppercase tracking-wider font-semibold hover:underline"
+          style={{ color: 'var(--collection-accent)' }}
         >
-          &larr; Edit Items in Bag
+          &larr; Return to Shopping Bag
         </Link>
-        <div className="flex items-center gap-1 text-[11px] text-[var(--collection-accent)]">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Simulated Checkout</span>
-        </div>
       </div>
     </div>
   );

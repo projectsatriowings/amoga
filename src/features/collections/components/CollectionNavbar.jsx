@@ -275,9 +275,8 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               </button>
 
               {/* Cart Button */}
-              <button
-                type="button"
-                onClick={openCart}
+              <Link
+                to="/cart"
                 className="relative p-2 rounded-full hover:bg-black/5 transition-colors"
                 aria-label="View Shopping Cart"
               >
@@ -293,7 +292,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                     {cartCount}
                   </span>
                 )}
-              </button>
+              </Link>
 
               {/* Customer Care / Account Modal Trigger */}
               <button
@@ -445,6 +444,33 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                     </div>
                   )}
                 </div>
+
+                {/* Shopping Bag / Cart */}
+                <Link
+                  to="/cart"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border-t transition-colors"
+                  style={{
+                    borderColor: palette.border || '#E5E0D5',
+                    color: palette.heading || '#173B2A',
+                  }}
+                >
+                  <span className="flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>Shopping Bag</span>
+                  </span>
+                  {cartCount > 0 && (
+                    <span
+                      className="text-white text-[10px] px-2 py-0.5 rounded-full font-mono"
+                      style={{
+                        backgroundColor:
+                          palette.accent || palette.accentGold || '#3F7B43',
+                      }}
+                    >
+                      {cartCount} items
+                    </span>
+                  )}
+                </Link>
 
                 {/* 3. Contact */}
                 <button

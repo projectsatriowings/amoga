@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   ShoppingBag,
@@ -11,6 +11,7 @@ import {
   MapPin,
   HelpCircle,
   PhoneCall,
+  Zap,
 } from 'lucide-react';
 import { getTeaProductBySlug, TEA_PRODUCTS } from './data/products';
 import { TeaProductCard } from './components/TeaProductCard';
@@ -23,6 +24,7 @@ import { useProductDetail } from '../../hooks/useProducts';
 
 export function TeaProductDetail() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const staticProduct = getTeaProductBySlug(slug);
   const { product: apiProduct } = useProductDetail('tea', slug, staticProduct);
 
@@ -50,7 +52,7 @@ export function TeaProductDetail() {
     };
   }, [staticProduct, apiProduct]);
 
-  const { addToCart, toggleWishlistItem, isInWishlist } = useStore();
+  const { addToCart, toggleWishlistItem, isInWishlist, initiateBuyNow } = useStore();
   const [quantity, setQuantity] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
 
@@ -85,14 +87,37 @@ export function TeaProductDetail() {
   const inWishlist = isInWishlist(product.id);
   const hasPrice = product.price !== null;
 
+  const [addError, setAddError] = useState(null);
+
   // Other teas in the collection
   const otherTeas = TEA_PRODUCTS.filter((p) => p.id !== product.id).slice(0, 4);
 
   const handleAddToCart = () => {
+    setAddError(null);
+    if (!hasPrice) {
+      setAddError('This botanical brew is currently awaiting price confirmation.');
+      return;
+    }
     const res = addToCart(product, quantity);
     if (res?.success) {
       setAddedSuccess(true);
-      setTimeout(() => setAddedSuccess(false), 2500);
+      navigate('/cart');
+    } else {
+      setAddError('Could not add brew to bag. Please try again.');
+    }
+  };
+
+  const handleBuyNow = () => {
+    setAddError(null);
+    if (!hasPrice) {
+      setAddError('This botanical brew is currently awaiting price confirmation.');
+      return;
+    }
+    const res = initiateBuyNow(product, quantity);
+    if (res?.success) {
+      navigate('/checkout');
+    } else {
+      setAddError('Could not initiate Buy Now for this brew.');
     }
   };
 
@@ -302,10 +327,20 @@ export function TeaProductDetail() {
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
                   >
                     <ShoppingBag className="w-4 h-4" />
                     <span>{addedSuccess ? 'Added to Bag!' : 'Add to Shopping Bag'}</span>
+                  </button>
+
+                  {/* Buy Now CTA */}
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-[#B88E38] text-[#2C1E11] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Buy Now</span>
                   </button>
                 </div>
               ) : (

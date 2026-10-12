@@ -1,15 +1,37 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, AlertCircle, Sparkles } from 'lucide-react';
+import { ArrowRight, ShieldCheck, AlertCircle, Sparkles, CheckSquare, Square } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { formatINR } from '../../../utils/pricing';
 
 export const CartSummary = () => {
   const navigate = useNavigate();
-  const getCartTotals = useStore((state) => state.getCartTotals);
-  const { subtotal, payableItemsCount, hasUnpricedItems, unpricedCount } = getCartTotals();
+  const getSelectedItems = useStore((state) => state.getSelectedItems);
+  const getSelectedTotals = useStore((state) => state.getSelectedTotals);
+  const cartState = useStore((state) => state.cart);
+  const cartItems = Array.isArray(cartState) ? cartState : (cartState?.items || []);
+  const initiateSelectiveCheckout = useStore((state) => state.initiateSelectiveCheckout);
 
-  const isCheckoutDisabled = payableItemsCount === 0 || hasUnpricedItems;
+  const selectedItems = getSelectedItems();
+  const {
+    subtotal: selectedSubtotal,
+    totalCount: selectedQtyTotal,
+    payableItemsCount,
+    hasUnpricedItems,
+    unpricedCount,
+  } = getSelectedTotals();
+
+  const selectedCount = selectedItems.length;
+  const isSelectionEmpty = selectedCount === 0;
+  const isCheckoutDisabled = isSelectionEmpty || hasUnpricedItems || payableItemsCount === 0;
+
+  const handleCheckoutSelected = () => {
+    if (isCheckoutDisabled) return;
+    const result = initiateSelectiveCheckout();
+    if (result.success) {
+      navigate('/checkout');
+    }
+  };
 
   return (
     <div
@@ -20,22 +42,24 @@ export const CartSummary = () => {
         color: 'var(--collection-text)',
       }}
     >
-      <h2
-        className="font-serif text-2xl mb-6 flex items-center justify-between"
-        style={{ color: 'var(--collection-heading)' }}
-      >
-        <span>Order Summary</span>
+      <div className="flex items-center justify-between pb-4 border-b mb-6" style={{ borderColor: 'var(--collection-border)' }}>
+        <h2
+          className="font-serif text-2xl"
+          style={{ color: 'var(--collection-heading)' }}
+        >
+          Order Summary
+        </h2>
         <span
-          className="text-xs font-sans uppercase tracking-wider px-2.5 py-1 rounded-full border"
+          className="text-xs font-mono uppercase tracking-wider px-2.5 py-1 rounded-full border"
           style={{
             backgroundColor: 'var(--collection-section-bg)',
             borderColor: 'var(--collection-border)',
-            color: 'var(--collection-text-muted)',
+            color: 'var(--collection-accent)',
           }}
         >
-          {payableItemsCount} {payableItemsCount === 1 ? 'item' : 'items'}
+          {selectedCount} of {cartItems.length} selected
         </span>
-      </h2>
+      </div>
 
       {/* Pricing Breakdown */}
       <div
@@ -44,13 +68,13 @@ export const CartSummary = () => {
       >
         <div className="flex justify-between items-baseline">
           <span style={{ color: 'var(--collection-text-muted)' }}>
-            Subtotal (Payable items)
+            Selected Items ({selectedQtyTotal} {selectedQtyTotal === 1 ? 'unit' : 'units'})
           </span>
           <span
             className="font-sans text-lg font-semibold tabular-nums"
             style={{ color: 'var(--collection-text)' }}
           >
-            {formatINR(subtotal)}
+            {formatINR(selectedSubtotal)}
           </span>
         </div>
 
@@ -60,51 +84,64 @@ export const CartSummary = () => {
             className="text-right italic font-medium"
             style={{ color: 'var(--collection-accent)' }}
           >
-            Complimentary during demo preview
+            Complimentary during preview
           </span>
         </div>
 
         <div className="flex justify-between items-start text-xs" style={{ color: 'var(--collection-text-muted)' }}>
           <span>Applicable Taxes & Duties</span>
-          <span className="text-right italic">Included in displayed product pricing</span>
+          <span className="text-right italic">Included in displayed prices</span>
         </div>
       </div>
 
-      {/* Safeguard Warning if unpriced items exist */}
-      {hasUnpricedItems && (
-        <div className="my-5 p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+      {/* Empty Selection State Notice */}
+      {isSelectionEmpty && (
+        <div className="my-5 p-3.5 bg-amber-50/90 border border-amber-300 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold">Checkout Safeguard Active</p>
-            <p className="mt-0.5 text-amber-800/90 leading-relaxed">
-              {unpricedCount} {unpricedCount === 1 ? 'item has' : 'items have'} bespoke pricing pending approval. Please remove unpriced items to proceed to checkout.
+            <p className="font-semibold">No Items Selected for Checkout</p>
+            <p className="mt-0.5 text-amber-800 leading-relaxed">
+              Please check the box next to at least one product in your bag to purchase. Unselected products will remain saved in your bag.
             </p>
           </div>
         </div>
       )}
 
-      {/* Payable Total */}
+      {/* Safeguard Warning if selected items have unpriced items */}
+      {!isSelectionEmpty && hasUnpricedItems && (
+        <div className="my-5 p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">Checkout Safeguard Active</p>
+            <p className="mt-0.5 text-amber-800/90 leading-relaxed">
+              {unpricedCount} selected item has bespoke pricing pending approval. Please deselect it to proceed with your remaining items.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Payable Total for Selected Items */}
       <div className="py-6 flex justify-between items-baseline">
         <div>
           <span className="text-base font-medium block" style={{ color: 'var(--collection-text)' }}>
-            Estimated Payable
+            Selected Payable
           </span>
           <span className="text-xs" style={{ color: 'var(--collection-text-muted)' }}>
-            Final review on next step
+            Authoritatively confirmed at checkout
           </span>
         </div>
         <span
           className="font-sans text-3xl font-bold tabular-nums"
           style={{ color: 'var(--collection-accent)' }}
         >
-          {formatINR(subtotal)}
+          {formatINR(selectedSubtotal)}
         </span>
       </div>
 
-      {/* Checkout CTA */}
+      {/* Checkout Selected Items CTA */}
       <button
         type="button"
-        onClick={() => navigate('/checkout')}
+        onClick={handleCheckoutSelected}
         disabled={isCheckoutDisabled}
         className={`w-full py-4 px-6 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md cursor-pointer ${
           isCheckoutDisabled
@@ -128,7 +165,11 @@ export const CartSummary = () => {
           }
         }}
       >
-        <span>Proceed to Checkout</span>
+        <span>
+          {isSelectionEmpty
+            ? 'Select Items to Checkout'
+            : `Checkout Selected Items (${selectedCount})`}
+        </span>
         <ArrowRight className="w-4 h-4" />
       </button>
 
@@ -142,11 +183,11 @@ export const CartSummary = () => {
       >
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-          <span>Authentic artisanal curation across Amoga collections</span>
+          <span>Selective purchase: unselected items remain in your bag</span>
         </div>
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>Unified luxury shopping bag & verified pricing</span>
+          <span>Authoritative backend prices and integer paise precision</span>
         </div>
       </div>
 

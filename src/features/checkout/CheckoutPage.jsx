@@ -4,17 +4,21 @@ import { useStore } from '../../store/useStore';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { CheckoutForm } from './components/CheckoutForm';
 import { CheckoutOrderSummary } from './components/CheckoutOrderSummary';
-import { ShoppingBag, ShieldAlert } from 'lucide-react';
+import { ShoppingBag, ShieldAlert, ArrowLeft, Zap, CheckCircle2 } from 'lucide-react';
 
 export const CheckoutPage = () => {
-  const cart = useStore((state) => state.cart);
-  const cartItems = Array.isArray(cart) ? cart : (cart?.items || []);
-  const getCartTotals = useStore((state) => state.getCartTotals);
-  const { hasUnpricedItems } = getCartTotals();
+  const getCheckoutItems = useStore((state) => state.getCheckoutItems);
+  const getCheckoutTotals = useStore((state) => state.getCheckoutTotals);
+  const checkoutContext = useStore((state) => state.checkoutContext);
   const resolved = useResolvedTheme();
 
-  // If cart is empty, redirect or prompt customer
-  if (cartItems.length === 0) {
+  const checkoutItems = getCheckoutItems();
+  const { hasUnpricedItems } = getCheckoutTotals();
+
+  const isBuyNow = checkoutContext?.type === 'buy_now';
+
+  // If no items are in checkout context (empty bag or 0 items selected)
+  if (checkoutItems.length === 0) {
     return (
       <div
         className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-normal"
@@ -45,23 +49,24 @@ export const CheckoutPage = () => {
             className="font-serif text-2xl mb-2"
             style={{ color: 'var(--collection-heading)' }}
           >
-            No Items in Checkout
+            No Items Selected for Checkout
           </h1>
           <p
             className="text-sm mb-6 leading-relaxed"
             style={{ color: 'var(--collection-text-muted)' }}
           >
-            Your shopping bag is currently empty. Please select products from our collections before proceeding with checkout.
+            You have not selected any items from your shopping bag for purchase. Please return to your bag and select the products you wish to order.
           </p>
           <Link
             to="/cart"
-            className="inline-flex items-center px-6 py-3 rounded-xl text-sm font-medium transition-all shadow-md cursor-pointer hover:opacity-95"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all shadow-md cursor-pointer hover:opacity-95"
             style={{
               backgroundColor: 'var(--collection-accent)',
               color: 'var(--collection-button-text, #FFFFFF)',
             }}
           >
-            Go to Shopping Bag
+            <ArrowLeft className="w-4 h-4" />
+            <span>Return to Shopping Bag</span>
           </Link>
         </div>
       </div>
@@ -78,54 +83,80 @@ export const CheckoutPage = () => {
       }}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="mb-6">
-          <ol
-            className="flex items-center space-x-2 text-xs uppercase tracking-widest"
-            style={{ color: 'var(--collection-text-muted)' }}
-          >
-            <li>
-              <Link to="/" className="hover:opacity-80 transition-opacity">
-                Portal
-              </Link>
-            </li>
-            <li>
-              <span className="opacity-60">/</span>
-            </li>
-            <li>
-              <Link to="/cart" className="hover:opacity-80 transition-opacity">
-                Bag
-              </Link>
-            </li>
-            <li>
-              <span className="opacity-60">/</span>
-            </li>
-            <li
-              className="font-semibold"
-              style={{ color: 'var(--collection-accent)' }}
-              aria-current="page"
+        {/* Breadcrumb Navigation & Return to Bag */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <nav aria-label="Breadcrumb">
+            <ol
+              className="flex items-center space-x-2 text-xs uppercase tracking-widest"
+              style={{ color: 'var(--collection-text-muted)' }}
             >
-              Checkout & Delivery
-            </li>
-          </ol>
-        </nav>
+              <li>
+                <Link to="/" className="hover:opacity-80 transition-opacity">
+                  Portal
+                </Link>
+              </li>
+              <li>
+                <span className="opacity-60">/</span>
+              </li>
+              <li>
+                <Link to="/cart" className="hover:opacity-80 transition-opacity">
+                  Bag
+                </Link>
+              </li>
+              <li>
+                <span className="opacity-60">/</span>
+              </li>
+              <li
+                className="font-semibold"
+                style={{ color: 'var(--collection-accent)' }}
+                aria-current="page"
+              >
+                Checkout & Delivery
+              </li>
+            </ol>
+          </nav>
+
+          <Link
+            to="/cart"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider hover:underline"
+            style={{ color: 'var(--collection-accent)' }}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to Shopping Bag (Items Preserved)</span>
+          </Link>
+        </div>
 
         {/* Page Title */}
         <div
           className="pb-6 border-b mb-8"
           style={{ borderColor: 'var(--collection-border)' }}
         >
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className="text-[10px] font-mono uppercase tracking-widest font-semibold px-2.5 py-0.5 rounded-full border inline-block"
-              style={{
-                backgroundColor: 'var(--collection-section-bg)',
-                borderColor: 'var(--collection-border)',
-                color: 'var(--collection-accent)',
-              }}
-            >
-              {resolved.isMixed ? 'Amoga Unified Checkout' : `${resolved.theme.name} Checkout`}
-            </span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            {isBuyNow ? (
+              <span
+                className="text-[10px] font-mono uppercase tracking-widest font-semibold px-2.5 py-0.5 rounded-full border inline-flex items-center gap-1"
+                style={{
+                  backgroundColor: 'rgba(234, 88, 12, 0.1)',
+                  borderColor: 'rgba(234, 88, 12, 0.3)',
+                  color: '#C2410C',
+                }}
+              >
+                <Zap className="w-3 h-3" />
+                Buy Now &bull; Immediate Single Item Checkout
+              </span>
+            ) : (
+              <span
+                className="text-[10px] font-mono uppercase tracking-widest font-semibold px-2.5 py-0.5 rounded-full border inline-flex items-center gap-1"
+                style={{
+                  backgroundColor: 'var(--collection-section-bg)',
+                  borderColor: 'var(--collection-border)',
+                  color: 'var(--collection-accent)',
+                }}
+              >
+                <CheckCircle2 className="w-3 h-3" />
+                Selective Checkout &bull; {checkoutItems.length} {checkoutItems.length === 1 ? 'Product' : 'Products'} Selected
+              </span>
+            )}
           </div>
           <h1
             className="font-serif text-3xl sm:text-4xl"
@@ -137,7 +168,9 @@ export const CheckoutPage = () => {
             className="mt-1 text-sm leading-relaxed"
             style={{ color: 'var(--collection-text-muted)' }}
           >
-            Please enter your contact and destination details for this simulated checkout preview.
+            {isBuyNow
+              ? 'Complete your single item purchase. Your existing shopping bag remains completely untouched.'
+              : 'Purchasing only your selected items. Unselected items will remain safely stored in your shopping bag.'}
           </p>
         </div>
 
@@ -148,13 +181,13 @@ export const CheckoutPage = () => {
             <div>
               <h2 className="font-semibold text-sm">Action Required: Unpriced Items</h2>
               <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                Your cart contains items with pricing pending approval. You must return to your shopping bag and remove unpriced items before you can proceed to the final review.
+                Your checkout contains items with pricing pending approval. Please return to your shopping bag and uncheck or remove unpriced items before you can proceed.
               </p>
               <Link
                 to="/cart"
                 className="mt-2 inline-block text-xs font-semibold text-amber-900 underline underline-offset-4"
               >
-                Review and Edit Bag
+                Review and Edit Bag Selection
               </Link>
             </div>
           </div>

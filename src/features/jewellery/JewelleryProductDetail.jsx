@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Home,
   Heart,
@@ -13,6 +13,7 @@ import {
   Eye,
   Sparkles,
   Layers,
+  Zap,
 } from 'lucide-react';
 import { getJewelleryBySlug, JEWELLERY_PRODUCTS } from './data/products';
 import { JewelleryProductCard } from './components/JewelleryProductCard';
@@ -20,18 +21,23 @@ import { CartDrawer } from '../food/components/CartDrawer';
 import { WishlistDrawer } from '../food/components/WishlistDrawer';
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
+import { useProductDetail } from '../../hooks/useProducts';
 
 export function JewelleryProductDetail() {
   const { slug } = useParams();
-  const product = getJewelleryBySlug(slug);
+  const navigate = useNavigate();
+  const staticProduct = getJewelleryBySlug(slug);
+  const { product: apiProduct } = useProductDetail('jewellery', slug, staticProduct);
+  const product = apiProduct || staticProduct;
 
-  const { isInWishlist, toggleWishlistItem, addToCart } = useStore();
+  const { isInWishlist, toggleWishlistItem, addToCart, initiateBuyNow } = useStore();
 
   // State management for gallery, size variants, and quantity
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [addedNotice, setAddedNotice] = useState(false);
+  const [addError, setAddError] = useState(null);
 
   // Derive active size directly during render
   const activeSize =
@@ -72,13 +78,37 @@ export function JewelleryProductDetail() {
   const hasPrice = product.price !== null;
 
   const handleAddToCart = () => {
-    if (!hasPrice) return;
+    setAddError(null);
+    if (!hasPrice) {
+      setAddError('This jewellery piece is currently awaiting confirmed retail pricing.');
+      return;
+    }
 
     // Use variant convention if size is selected
     const variantObj = activeSize ? { id: `size-${activeSize}`, name: `Size ${activeSize}` } : null;
-    addToCart(product, quantity, variantObj);
-    setAddedNotice(true);
-    setTimeout(() => setAddedNotice(false), 2000);
+    const res = addToCart(product, quantity, variantObj);
+    if (res?.success) {
+      setAddedNotice(true);
+      navigate('/cart');
+    } else {
+      setAddError('Could not add piece to bag. Please try again.');
+    }
+  };
+
+  const handleBuyNow = () => {
+    setAddError(null);
+    if (!hasPrice) {
+      setAddError('This jewellery piece is currently awaiting confirmed retail pricing.');
+      return;
+    }
+
+    const variantObj = activeSize ? { id: `size-${activeSize}`, name: `Size ${activeSize}` } : null;
+    const res = initiateBuyNow(product, quantity, variantObj);
+    if (res?.success) {
+      navigate('/checkout');
+    } else {
+      setAddError('Could not initiate Buy Now for this jewellery piece.');
+    }
   };
 
   // Related products from same category, excluding current
@@ -292,16 +322,27 @@ export function JewelleryProductDetail() {
 
                 {/* Add to Cart Button */}
                 {hasPrice ? (
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    className="flex-1 py-3.5 px-6 rounded-xl bg-[#B9B8B5] text-[#242326] font-medium text-xs uppercase tracking-wider hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98]"
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>
-                      {addedNotice ? 'Added to Bag!' : 'Add Piece to Bag'}
-                    </span>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      className="flex-1 py-3.5 px-5 rounded-xl bg-[#B9B8B5] text-[#242326] font-medium text-xs uppercase tracking-wider hover:bg-white transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>
+                        {addedNotice ? 'Added to Bag!' : 'Add Piece to Bag'}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleBuyNow}
+                      className="flex-1 py-3.5 px-5 rounded-xl bg-[#242326] border border-[#B9B8B5]/50 text-[#F7F3EB] font-medium text-xs uppercase tracking-wider hover:bg-[#343238] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
+                    >
+                      <Zap className="w-4 h-4 text-[#B9B8B5]" />
+                      <span>Buy Now</span>
+                    </button>
+                  </>
                 ) : (
                   <button
                     type="button"
@@ -334,6 +375,13 @@ export function JewelleryProductDetail() {
                     Successfully added {quantity} &times; {product.name}
                     {activeSize ? ` (${activeSize})` : ''} to your shared cart.
                   </span>
+                </div>
+              )}
+
+              {addError && (
+                <div className="p-3 rounded-lg bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
+                  <Info className="w-4 h-4 text-rose-400" />
+                  <span>{addError}</span>
                 </div>
               )}
             </div>

@@ -1,21 +1,46 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingBag, Star } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 
 export function FoodProductCard({ product }) {
+  const navigate = useNavigate();
   const { addToCart, toggleWishlistItem, isInWishlist } = useStore();
   const inWishlist = isInWishlist(product.id);
-  const hasPrice = product.price !== null;
+  const hasPrice = product.price !== null && Number(product.price) > 0;
+
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlistItem(product);
+  };
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!hasPrice) {
+      navigate(`/food/products/${product.slug}`);
+      return;
+    }
+    const res = addToCart(product, 1);
+    if (res?.success) {
+      navigate('/cart');
+    }
+  };
 
   return (
     <article
-      className="group relative rounded-2xl bg-[#FFFFFF] border border-[#E5E0D5] hover:border-[#173B2A] shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden"
+      className="group relative rounded-2xl bg-[#FFFFFF] border border-[#E5E0D5] hover:border-[#173B2A] shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer"
       aria-label={product.name}
+      onClick={() => navigate(`/food/products/${product.slug}`)}
     >
       {/* Card Image Area */}
       <div className="relative aspect-square w-full overflow-hidden bg-[#F8F6F0]">
-        <Link to={`/food/products/${product.slug}`} className="block w-full h-full">
+        <Link
+          to={`/food/products/${product.slug}`}
+          className="block w-full h-full"
+          onClick={(e) => e.stopPropagation()}
+        >
           <img
             src={product.image}
             alt={product.name}
@@ -41,8 +66,8 @@ export function FoodProductCard({ product }) {
         {/* Wishlist Toggle Button */}
         <button
           type="button"
-          onClick={() => toggleWishlistItem(product)}
-          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all z-10 shadow-2xs ${
+          onClick={handleToggleWishlist}
+          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all z-10 shadow-2xs cursor-pointer ${
             inWishlist
               ? 'bg-rose-50 text-rose-600 shadow-xs'
               : 'bg-white/85 text-[#746F63] hover:text-rose-600 hover:bg-white'
@@ -65,6 +90,7 @@ export function FoodProductCard({ product }) {
 
           <Link
             to={`/food/products/${product.slug}`}
+            onClick={(e) => e.stopPropagation()}
             className="block text-base font-serif font-medium text-[#173B2A] group-hover:text-[#3F7B43] transition-colors line-clamp-1"
           >
             {product.name}
@@ -112,9 +138,9 @@ export function FoodProductCard({ product }) {
 
           <button
             type="button"
-            onClick={() => addToCart(product, 1)}
+            onClick={handleAddToCart}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#173B2A] text-white hover:bg-[#3F7B43] active:scale-95 text-xs font-mono font-semibold tracking-wide uppercase transition-all shadow-2xs shrink-0 cursor-pointer"
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={`Add ${product.name} to bag`}
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>Add</span>

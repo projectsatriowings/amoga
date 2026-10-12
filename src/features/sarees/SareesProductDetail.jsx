@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Home,
   Heart,
@@ -13,6 +13,7 @@ import {
   Eye,
   Scissors,
   Sparkles,
+  Zap,
 } from 'lucide-react';
 import { getSareeBySlug, SAREE_PRODUCTS } from './data/products';
 import { SareeProductCard } from './components/SareeProductCard';
@@ -20,18 +21,23 @@ import { CartDrawer } from '../food/components/CartDrawer';
 import { WishlistDrawer } from '../food/components/WishlistDrawer';
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
+import { useProductDetail } from '../../hooks/useProducts';
 
 export function SareesProductDetail() {
   const { slug } = useParams();
-  const product = getSareeBySlug(slug);
+  const navigate = useNavigate();
+  const staticProduct = getSareeBySlug(slug);
+  const { product: apiProduct } = useProductDetail('sarees', slug, staticProduct);
+  const product = apiProduct || staticProduct;
 
-  const { isInWishlist, toggleWishlistItem, addToCart } = useStore();
+  const { isInWishlist, toggleWishlistItem, addToCart, initiateBuyNow } = useStore();
 
   // State management for gallery, variants, and quantity
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [addedNotice, setAddedNotice] = useState(false);
+  const [addError, setAddError] = useState(null);
 
   // Derive active variant directly during render
   const selectedVariant =
@@ -73,9 +79,32 @@ export function SareesProductDetail() {
   const hasPrice = product.price !== null;
 
   const handleAddToCart = () => {
-    addToCart(product, quantity, selectedVariant);
-    setAddedNotice(true);
-    setTimeout(() => setAddedNotice(false), 2000);
+    setAddError(null);
+    if (!hasPrice) {
+      setAddError('This saree design is currently awaiting confirmed retail pricing.');
+      return;
+    }
+    const res = addToCart(product, quantity, selectedVariant);
+    if (res?.success) {
+      setAddedNotice(true);
+      navigate('/cart');
+    } else {
+      setAddError('Could not add saree to bag. Please try again.');
+    }
+  };
+
+  const handleBuyNow = () => {
+    setAddError(null);
+    if (!hasPrice) {
+      setAddError('This saree design is currently awaiting confirmed retail pricing.');
+      return;
+    }
+    const res = initiateBuyNow(product, quantity, selectedVariant);
+    if (res?.success) {
+      navigate('/checkout');
+    } else {
+      setAddError('Could not initiate Buy Now for this saree.');
+    }
   };
 
   // Related products from same category, excluding current
@@ -296,12 +325,22 @@ export function SareesProductDetail() {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="flex-1 py-3.5 px-6 rounded-xl bg-[#C5A46D] text-[#2C0E1A] font-medium text-xs uppercase tracking-wider hover:bg-[#d9bb85] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98]"
+                  className="flex-1 py-3.5 px-5 rounded-xl bg-[#C5A46D] text-[#2C0E1A] font-medium text-xs uppercase tracking-wider hover:bg-[#d9bb85] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>
                     {addedNotice ? 'Added to Cart!' : 'Add Saree to Bag'}
                   </span>
+                </button>
+
+                {/* Buy Now Button */}
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="flex-1 py-3.5 px-5 rounded-xl bg-[#451523] border border-[#C5A46D]/60 text-[#F6EBD8] font-medium text-xs uppercase tracking-wider hover:bg-[#5a1b2d] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
+                >
+                  <Zap className="w-4 h-4 text-[#C5A46D]" />
+                  <span>Buy Now</span>
                 </button>
 
                 {/* Wishlist Button */}
@@ -326,6 +365,13 @@ export function SareesProductDetail() {
                     Successfully added {quantity} &times; {product.name}
                     {selectedVariant ? ` (${selectedVariant.name})` : ''} to your shared cart.
                   </span>
+                </div>
+              )}
+
+              {addError && (
+                <div className="p-3 rounded-lg bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
+                  <Info className="w-4 h-4 text-rose-400" />
+                  <span>{addError}</span>
                 </div>
               )}
             </div>
