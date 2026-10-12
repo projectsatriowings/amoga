@@ -1,8 +1,7 @@
 import React from 'react';
 import { CollectionNavbar } from './CollectionNavbar';
 import { CollectionFooter } from './CollectionFooter';
-import { CartDrawer } from '../../food/components/CartDrawer';
-import { WishlistDrawer } from '../../food/components/WishlistDrawer';
+
 import { getCollectionTheme } from '../themeConfig';
 
 export function CollectionLayout({
@@ -26,8 +25,6 @@ export function CollectionLayout({
       <CollectionNavbar collectionId={collectionId} />
       <main className="flex-1 w-full flex flex-col">{children}</main>
       {showFooter && <CollectionFooter collectionId={collectionId} />}
-      <CartDrawer />
-      <WishlistDrawer />
     </div>
   );
 }

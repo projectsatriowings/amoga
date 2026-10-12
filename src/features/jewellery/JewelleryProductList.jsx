@@ -12,8 +12,7 @@ import {
 import { JEWELLERY_PRODUCTS } from './data/products';
 import { JEWELLERY_CATEGORIES } from './data/categories';
 import { JewelleryProductCard } from './components/JewelleryProductCard';
-import { CartDrawer } from '../food/components/CartDrawer';
-import { WishlistDrawer } from '../food/components/WishlistDrawer';
+
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
 
@@ -282,10 +281,6 @@ export function JewelleryProductList() {
           </div>
         )}
       </Container>
-
-      {/* Shopping Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
     </div>
   );
 }

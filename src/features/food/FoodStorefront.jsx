@@ -7,8 +7,6 @@ import { FoodCategoryGrid } from './components/FoodCategoryGrid';
 import { FoodProductCard } from './components/FoodProductCard';
 import { SoupCollectionSection } from './components/SoupCollectionSection';
 import { FoodPromoBanner } from './components/FoodPromoBanner';
-import { CartDrawer } from './components/CartDrawer';
-import { WishlistDrawer } from './components/WishlistDrawer';
 import { Container } from '../../components/ui/Container';
 import { SectionHeading } from '../../components/ui/SectionHeading';
 import { getFeaturedProducts } from './data/products';
@@ -24,10 +22,6 @@ export function FoodStorefront() {
 
   return (
     <div className="bg-[#F8F6F0] text-[#292820] min-h-screen">
-      {/* Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
-
       {/* 1. Hero Section */}
       <FoodHero />
 

@@ -201,19 +201,19 @@ export function AdminProducts() {
             <table className="w-full text-left text-xs text-[#332D28]">
               <thead className="bg-[#F5F2EB] text-[10px] font-mono uppercase tracking-wider text-[#7A7167] border-b border-[#E5E0D5]">
                 <tr>
-                  <th className="px-5 py-3">Product</th>
-                  <th className="px-5 py-3">Collection</th>
-                  <th className="px-5 py-3">Price</th>
-                  <th className="px-5 py-3">Stock</th>
-                  <th className="px-5 py-3">Variants</th>
-                  <th className="px-5 py-3">Status</th>
-                  <th className="px-5 py-3 text-right">Actions</th>
+                  <th className="px-3.5 py-2.5">Product</th>
+                  <th className="px-3.5 py-2.5">Collection</th>
+                  <th className="px-3.5 py-2.5">Price</th>
+                  <th className="px-3.5 py-2.5">Stock</th>
+                  <th className="px-3.5 py-2.5">Variants</th>
+                  <th className="px-3.5 py-2.5">Status</th>
+                  <th className="px-3.5 py-2.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE4D9]">
                 {products.map((p) => (
                   <tr key={p.id} className="hover:bg-[#F5F2EB]/50 transition-colors">
-                    <td className="px-5 py-3">
+                    <td className="px-3.5 py-2.5">
                       <div className="flex items-center gap-3">
                         <img
                           src={p.image || '/placeholder.jpg'}
@@ -229,15 +229,15 @@ export function AdminProducts() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-3.5 py-2.5">
                       <span className="px-2 py-0.5 rounded bg-[#EFEAE1] border border-[#DFD8CC] text-[10px] font-mono uppercase text-[#5C544C]">
                         {p.collection?.name || p.collectionId}
                       </span>
                     </td>
-                    <td className="px-5 py-3 font-sans font-semibold text-[#1A1817] tabular-nums whitespace-nowrap">
+                    <td className="px-3.5 py-2.5 font-sans font-semibold text-[#1A1817] tabular-nums whitespace-nowrap">
                       {p.price !== null ? `₹${p.price.toLocaleString('en-IN')}` : 'Bespoke / Unpriced'}
                     </td>
-                    <td className="px-5 py-3 font-sans tabular-nums">
+                    <td className="px-3.5 py-2.5 font-sans tabular-nums">
                       <span
                         className={`font-semibold ${
                           p.stockQuantity <= 0
@@ -250,10 +250,10 @@ export function AdminProducts() {
                         {p.stockQuantity} units
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-[#7A7167] font-sans tabular-nums">
+                    <td className="px-3.5 py-2.5 text-[#7A7167] font-sans tabular-nums">
                       {p.variants?.length ? `${p.variants.length} options` : 'Standard'}
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-3.5 py-2.5">
                       <span
                         className={`inline-block px-2 py-0.5 rounded text-[10px] font-mono ${
                           p.isActive
@@ -264,7 +264,7 @@ export function AdminProducts() {
                         {p.isActive ? 'Active' : 'Archived'}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-3.5 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Link
                           to={`/admin/products/${p.id}/edit`}

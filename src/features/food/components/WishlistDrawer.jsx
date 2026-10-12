@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, ShoppingBag, Trash2 } from 'lucide-react';
@@ -9,17 +10,73 @@ export function WishlistDrawer() {
   const { wishlist, closeWishlist, toggleWishlistItem, addToCart } = useStore();
   const { items, isOpen } = wishlist;
 
-  return (
+  const savedScrollY = useRef(0);
+  const lastFocusedElement = useRef(null);
+  const originalOverflow = useRef('');
+  const originalPaddingRight = useRef('');
+
+  useEffect(() => {
+    if (isOpen) {
+      const currentScrollY =
+        window.pageYOffset || document.documentElement.scrollTop || window.scrollY || 0;
+      savedScrollY.current = currentScrollY;
+      lastFocusedElement.current = document.activeElement;
+
+      originalOverflow.current = document.body.style.overflow;
+      originalPaddingRight.current = document.body.style.paddingRight;
+
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeWishlist();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = originalOverflow.current || '';
+        document.body.style.paddingRight = originalPaddingRight.current || '';
+
+        window.scrollTo({
+          top: savedScrollY.current,
+          left: 0,
+          behavior: 'instant',
+        });
+
+        if (
+          lastFocusedElement.current &&
+          typeof lastFocusedElement.current.focus === 'function'
+        ) {
+          try {
+            lastFocusedElement.current.focus({ preventScroll: true });
+          } catch {
+            // Ignore focus failures
+          }
+        }
+      };
+    }
+  }, [isOpen, closeWishlist]);
+
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div className="wishlist-drawer-overlay-portal" data-testid="wishlist-drawer-portal">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeWishlist}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity"
             aria-hidden="true"
           />
 
@@ -29,7 +86,7 @@ export function WishlistDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-50 flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-[10000] flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
             role="dialog"
             aria-modal="true"
             aria-label="Wishlist Drawer"
@@ -45,7 +102,7 @@ export function WishlistDrawer() {
               <button
                 type="button"
                 onClick={closeWishlist}
-                className="p-1.5 rounded-full hover:bg-black/5 text-[#172B1C] transition-colors focus-visible:ring-2 focus-visible:ring-[#287A25]"
+                className="p-1.5 rounded-full hover:bg-black/5 text-[#172B1C] transition-colors focus-visible:ring-2 focus-visible:ring-[#287A25] cursor-pointer"
                 aria-label="Close wishlist drawer"
               >
                 <X className="w-5 h-5" />
@@ -66,7 +123,7 @@ export function WishlistDrawer() {
                     </p>
                   </div>
                   <Link to="/food/products" onClick={closeWishlist}>
-                    <Button variant="primary" size="sm" collection="food">
+                    <Button variant="primary" size="sm" collection="food" className="text-xs">
                       Discover Products
                     </Button>
                   </Link>
@@ -85,7 +142,7 @@ export function WishlistDrawer() {
                   return (
                     <div
                       key={prod.id}
-                      className="p-3.5 rounded-xl bg-white border border-[#172B1C]/8 flex items-center gap-3 shadow-sm"
+                      className="p-3.5 rounded-xl bg-white border border-[#172B1C]/8 flex items-center gap-3 shadow-sm hover:border-[#287A25]/30 transition-colors"
                     >
                       <img
                         src={prod.image}
@@ -115,16 +172,18 @@ export function WishlistDrawer() {
                         <button
                           type="button"
                           onClick={() => addToCart(prod, 1)}
-                          className="p-2 rounded-md bg-[#287A25] text-white hover:bg-[#1E5C1B] transition-colors"
+                          className="p-2 rounded-md bg-[#287A25] text-white hover:bg-[#1E5C1B] transition-colors cursor-pointer"
                           title="Add to cart"
+                          aria-label={`Add ${prod.name} to cart`}
                         >
                           <ShoppingBag className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => toggleWishlistItem(prod)}
-                          className="p-2 rounded-md hover:bg-black/5 text-black/40 hover:text-red-500 transition-colors"
+                          className="p-2 rounded-md hover:bg-black/5 text-black/40 hover:text-red-500 transition-colors cursor-pointer"
                           title="Remove from wishlist"
+                          aria-label={`Remove ${prod.name} from wishlist`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -135,8 +194,9 @@ export function WishlistDrawer() {
               )}
             </div>
           </motion.aside>
-        </>
+        </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

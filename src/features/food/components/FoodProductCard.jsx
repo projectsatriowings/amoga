@@ -23,9 +23,6 @@ export function FoodProductCard({ product }) {
       return;
     }
     const res = addToCart(product, 1);
-    if (res?.success) {
-      navigate('/cart');
-    }
   };
 
   return (

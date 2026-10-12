@@ -3,8 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ArrowLeft, SlidersHorizontal, PackageSearch, Sparkles } from 'lucide-react';
 import { FOOD_PRODUCTS } from './data/products';
 import { FoodProductCard } from './components/FoodProductCard';
-import { CartDrawer } from './components/CartDrawer';
-import { WishlistDrawer } from './components/WishlistDrawer';
+
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
 
@@ -113,10 +112,6 @@ export function FoodProductList() {
 
   return (
     <div className="bg-[#F8F6F0] text-[#292820] min-h-screen py-8 sm:py-12">
-      {/* Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
-
       <Container>
         {/* Breadcrumb Navigation */}
         <nav

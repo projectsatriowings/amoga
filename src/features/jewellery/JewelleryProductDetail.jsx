@@ -17,8 +17,7 @@ import {
 } from 'lucide-react';
 import { getJewelleryBySlug, JEWELLERY_PRODUCTS } from './data/products';
 import { JewelleryProductCard } from './components/JewelleryProductCard';
-import { CartDrawer } from '../food/components/CartDrawer';
-import { WishlistDrawer } from '../food/components/WishlistDrawer';
+
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { useProductDetail } from '../../hooks/useProducts';
@@ -89,7 +88,6 @@ export function JewelleryProductDetail() {
     const res = addToCart(product, quantity, variantObj);
     if (res?.success) {
       setAddedNotice(true);
-      navigate('/cart');
     } else {
       setAddError('Could not add piece to bag. Please try again.');
     }
@@ -494,10 +492,6 @@ export function JewelleryProductDetail() {
           </div>
         )}
       </Container>
-
-      {/* Shopping Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
     </div>
   );
 }

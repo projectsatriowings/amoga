@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Plus, Minus, ShoppingBag, AlertCircle } from 'lucide-react';
@@ -8,6 +9,68 @@ import { Button } from '../../../components/ui/Button';
 export function CartDrawer() {
   const { cart, closeCart, updateQuantity, removeFromCart, clearCart } = useStore();
   const { items, isOpen } = cart;
+
+  const savedScrollY = useRef(0);
+  const lastFocusedElement = useRef(null);
+  const originalOverflow = useRef('');
+  const originalPaddingRight = useRef('');
+
+  // Manage body scroll locking, scroll position preservation and keyboard accessibility
+  useEffect(() => {
+    if (isOpen) {
+      // 1. Capture current scroll position immediately before opening drawer
+      const currentScrollY =
+        window.pageYOffset || document.documentElement.scrollTop || window.scrollY || 0;
+      savedScrollY.current = currentScrollY;
+      lastFocusedElement.current = document.activeElement;
+
+      // 2. Prevent background page scrolling while drawer is active
+      originalOverflow.current = document.body.style.overflow;
+      originalPaddingRight.current = document.body.style.paddingRight;
+
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+      document.body.style.overflow = 'hidden';
+
+      // 3. Close on Escape key press
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeCart();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+
+        // 4. Safely restore original body styles
+        document.body.style.overflow = originalOverflow.current || '';
+        document.body.style.paddingRight = originalPaddingRight.current || '';
+
+        // 5. Restore the exact scroll position from before the drawer opened
+        window.scrollTo({
+          top: savedScrollY.current,
+          left: 0,
+          behavior: 'instant',
+        });
+
+        // 6. Restore focus to triggering control without scrolling background
+        if (
+          lastFocusedElement.current &&
+          typeof lastFocusedElement.current.focus === 'function'
+        ) {
+          try {
+            lastFocusedElement.current.focus({ preventScroll: true });
+          } catch {
+            // Ignore focus failures
+          }
+        }
+      };
+    }
+  }, [isOpen, closeCart]);
 
   // Calculate totals ONLY for verified priced items
   const pricedItems = items.filter((item) => item.product.price !== null);
@@ -20,17 +83,19 @@ export function CartDrawer() {
 
   const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div className="cart-drawer-overlay-portal" data-testid="cart-drawer-portal">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeCart}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity"
             aria-hidden="true"
           />
 
@@ -40,7 +105,7 @@ export function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-50 flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-[10000] flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
             role="dialog"
             aria-modal="true"
             aria-label="Shopping Cart Drawer"
@@ -56,7 +121,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 onClick={closeCart}
-                className="p-1.5 rounded-full hover:bg-black/5 text-[#172B1C] transition-colors focus-visible:ring-2 focus-visible:ring-[#287A25]"
+                className="p-1.5 rounded-full hover:bg-black/5 text-[#172B1C] transition-colors focus-visible:ring-2 focus-visible:ring-[#287A25] cursor-pointer"
                 aria-label="Close cart drawer"
               >
                 <X className="w-5 h-5" />
@@ -169,7 +234,7 @@ export function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(lineKey, quantity - 1)}
-                                className="p-1 hover:text-[#287A25] transition-colors"
+                                className="p-1 hover:text-[#287A25] transition-colors cursor-pointer"
                                 aria-label="Decrease quantity"
                               >
                                 <Minus className="w-3 h-3" />
@@ -180,7 +245,7 @@ export function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(lineKey, quantity + 1)}
-                                className="p-1 hover:text-[#287A25] transition-colors"
+                                className="p-1 hover:text-[#287A25] transition-colors cursor-pointer"
                                 aria-label="Increase quantity"
                               >
                                 <Plus className="w-3 h-3" />
@@ -192,7 +257,7 @@ export function CartDrawer() {
                         <button
                           type="button"
                           onClick={() => removeFromCart(lineKey)}
-                          className="text-black/30 hover:text-red-600 transition-colors p-1"
+                          className="text-black/30 hover:text-red-600 transition-colors p-1 cursor-pointer"
                           aria-label={`Remove ${product.name} from cart`}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -225,7 +290,7 @@ export function CartDrawer() {
                 </div>
 
                 <div className="text-[11px] text-[#557C36]">
-                  Taxes calculated at checkout in Phase 4. Free shipping available above ₹999.
+                  Taxes calculated at checkout. Free shipping available above ₹999.
                 </div>
 
                 <div className="flex flex-col gap-2 pt-1">
@@ -254,7 +319,7 @@ export function CartDrawer() {
                   <button
                     type="button"
                     onClick={clearCart}
-                    className="text-[11px] text-black/50 hover:text-red-600 transition-colors py-1 text-center font-mono"
+                    className="text-[11px] text-black/50 hover:text-red-600 transition-colors py-1 text-center font-mono cursor-pointer"
                   >
                     Clear All Items
                   </button>
@@ -262,8 +327,9 @@ export function CartDrawer() {
               </div>
             )}
           </motion.aside>
-        </>
+        </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

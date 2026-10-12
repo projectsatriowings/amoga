@@ -14,8 +14,7 @@ import {
 } from 'lucide-react';
 import { getProductBySlug, getProductsByCategory } from './data/products';
 import { FoodProductCard } from './components/FoodProductCard';
-import { CartDrawer } from './components/CartDrawer';
-import { WishlistDrawer } from './components/WishlistDrawer';
+
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { Button } from '../../components/ui/Button';
@@ -77,7 +76,6 @@ export function FoodProductDetail() {
     const res = addToCart(product, quantity);
     if (res?.success) {
       setAddedSuccess(true);
-      navigate('/cart');
     } else {
       setAddError('Could not add item to cart. Please try again.');
     }
@@ -99,10 +97,6 @@ export function FoodProductDetail() {
 
   return (
     <div className="bg-[#F1EDE4] text-[#172B1C] min-h-screen py-8 sm:py-12">
-      {/* Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
-
       <Container>
         {/* Breadcrumb Navigation */}
         <nav

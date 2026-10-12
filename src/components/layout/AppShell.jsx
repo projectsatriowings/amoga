@@ -62,7 +62,7 @@ export function AppShell({ children }) {
           resolvedTheme={resolved}
         />
       )}
-      {!isGatekeeper && !isCollectionRoute && (
+      {!isGatekeeper && (
         <>
           <CartDrawer />
           <WishlistDrawer />

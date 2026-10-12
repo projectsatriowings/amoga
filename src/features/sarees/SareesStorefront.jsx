@@ -4,8 +4,7 @@ import { SareeFeaturedGrid } from './components/SareeFeaturedGrid';
 import { SareeCategoryGrid } from './components/SareeCategoryGrid';
 import { EditorialTextileFeature } from './components/EditorialTextileFeature';
 import { SareePromoBanner } from './components/SareePromoBanner';
-import { CartDrawer } from '../food/components/CartDrawer';
-import { WishlistDrawer } from '../food/components/WishlistDrawer';
+
 
 export function SareesStorefront() {
   return (
@@ -24,10 +23,6 @@ export function SareesStorefront() {
 
       {/* 5. Promotional Campaign Banner */}
       <SareePromoBanner />
-
-      {/* Shopping Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
     </div>
   );
 }

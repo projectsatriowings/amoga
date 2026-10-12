@@ -6,8 +6,7 @@ import { Container } from '../../components/ui/Container';
 import { BotanicalSideAnimations } from './components/BotanicalAnimations';
 import { TeaProductCard } from './components/TeaProductCard';
 import { TEA_PRODUCTS } from './data/products';
-import { CartDrawer } from '../food/components/CartDrawer';
-import { WishlistDrawer } from '../food/components/WishlistDrawer';
+
 import { useProducts } from '../../hooks/useProducts';
 
 export function TeaStorefront() {
@@ -26,10 +25,6 @@ export function TeaStorefront() {
 
   return (
     <div className="relative bg-[#FAF1BB] text-[#2C1E11] min-h-screen overflow-hidden">
-      {/* Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
-
       {/* Decorative Botanical Side Animations (Left & Right Gutters) */}
       <BotanicalSideAnimations />
 

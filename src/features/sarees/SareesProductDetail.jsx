@@ -17,8 +17,7 @@ import {
 } from 'lucide-react';
 import { getSareeBySlug, SAREE_PRODUCTS } from './data/products';
 import { SareeProductCard } from './components/SareeProductCard';
-import { CartDrawer } from '../food/components/CartDrawer';
-import { WishlistDrawer } from '../food/components/WishlistDrawer';
+
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { useProductDetail } from '../../hooks/useProducts';
@@ -87,7 +86,6 @@ export function SareesProductDetail() {
     const res = addToCart(product, quantity, selectedVariant);
     if (res?.success) {
       setAddedNotice(true);
-      navigate('/cart');
     } else {
       setAddError('Could not add saree to bag. Please try again.');
     }
@@ -484,10 +482,6 @@ export function SareesProductDetail() {
           </div>
         )}
       </Container>
-
-      {/* Shopping Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
     </div>
   );
 }

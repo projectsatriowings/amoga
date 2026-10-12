@@ -43,6 +43,8 @@ export function CollectionNavbar({ collectionId = 'food' }) {
   const isCategoriesActive = location.pathname.startsWith(theme.productsPath);
   const isContactActive = location.hash.includes('contact');
 
+  const scrolledForHashRef = useRef(false);
+
   // Handle smooth scroll to contact section
   const handleContactClick = useCallback(
     (e) => {
@@ -54,9 +56,6 @@ export function CollectionNavbar({ collectionId = 'food' }) {
         const contactEl = document.getElementById('contact');
         if (contactEl) {
           contactEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          if (window.location.hash !== '#contact') {
-            window.history.pushState(null, '', '#contact');
-          }
         }
       };
 
@@ -69,19 +68,29 @@ export function CollectionNavbar({ collectionId = 'food' }) {
     [location.pathname, navigate, theme.homePath]
   );
 
-  // Auto-scroll if page loads or changes with #contact hash
+  // One-time auto-scroll if user arrives via #contact link
   useEffect(() => {
-    if (
-      location.pathname === theme.homePath &&
-      (location.hash === '#contact' || window.location.hash === '#contact')
-    ) {
-      const timer = setTimeout(() => {
-        const contactEl = document.getElementById('contact');
-        if (contactEl) {
-          contactEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 150);
-      return () => clearTimeout(timer);
+    if (location.pathname === theme.homePath && location.hash === '#contact') {
+      if (!scrolledForHashRef.current) {
+        scrolledForHashRef.current = true;
+        const timer = setTimeout(() => {
+          const contactEl = document.getElementById('contact');
+          if (contactEl) {
+            contactEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          // Clean hash so subsequent cart updates or drawer state changes never re-trigger contact scroll
+          if (typeof window !== 'undefined' && window.history?.replaceState) {
+            window.history.replaceState(
+              null,
+              '',
+              window.location.pathname + window.location.search
+            );
+          }
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      scrolledForHashRef.current = false;
     }
   }, [location.pathname, location.hash, theme.homePath]);
 
@@ -275,9 +284,10 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               </button>
 
               {/* Cart Button */}
-              <Link
-                to="/cart"
-                className="relative p-2 rounded-full hover:bg-black/5 transition-colors"
+              <button
+                type="button"
+                onClick={openCart}
+                className="relative p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
                 aria-label="View Shopping Cart"
               >
                 <ShoppingBag className="w-5 h-5" />
@@ -292,7 +302,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                     {cartCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {/* Customer Care / Account Modal Trigger */}
               <button
@@ -446,14 +456,18 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                 </div>
 
                 {/* Shopping Bag / Cart */}
-                <Link
-                  to="/cart"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border-t transition-colors"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openCart();
+                  }}
+                  className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border-t transition-colors cursor-pointer text-left"
                   style={{
                     borderColor: palette.border || '#E5E0D5',
                     color: palette.heading || '#173B2A',
                   }}
+                  aria-label="Open Shopping Bag"
                 >
                   <span className="flex items-center gap-2">
                     <ShoppingBag className="w-4 h-4" />
@@ -470,7 +484,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                       {cartCount} items
                     </span>
                   )}
-                </Link>
+                </button>
 
                 {/* 3. Contact */}
                 <button

@@ -16,8 +16,7 @@ import {
 import { getTeaProductBySlug, TEA_PRODUCTS } from './data/products';
 import { TeaProductCard } from './components/TeaProductCard';
 import { BotanicalSideAnimations } from './components/BotanicalAnimations';
-import { CartDrawer } from '../food/components/CartDrawer';
-import { WishlistDrawer } from '../food/components/WishlistDrawer';
+
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { useProductDetail } from '../../hooks/useProducts';
@@ -101,7 +100,6 @@ export function TeaProductDetail() {
     const res = addToCart(product, quantity);
     if (res?.success) {
       setAddedSuccess(true);
-      navigate('/cart');
     } else {
       setAddError('Could not add brew to bag. Please try again.');
     }
@@ -123,10 +121,6 @@ export function TeaProductDetail() {
 
   return (
     <div className="relative bg-[#FAF1BB] text-[#2C1E11] min-h-screen py-8 sm:py-12 overflow-hidden">
-      {/* Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
-
       {/* Decorative Botanical Side Animations */}
       <BotanicalSideAnimations />
 

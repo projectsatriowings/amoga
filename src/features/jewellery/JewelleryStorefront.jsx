@@ -4,8 +4,7 @@ import { JewelleryFeaturedGrid } from './components/JewelleryFeaturedGrid';
 import { JewelleryCategoryGrid } from './components/JewelleryCategoryGrid';
 import { JewelleryEditorialFeature } from './components/JewelleryEditorialFeature';
 import { JewelleryPromoBanner } from './components/JewelleryPromoBanner';
-import { CartDrawer } from '../food/components/CartDrawer';
-import { WishlistDrawer } from '../food/components/WishlistDrawer';
+
 
 export function JewelleryStorefront() {
   return (
@@ -24,10 +23,6 @@ export function JewelleryStorefront() {
 
       {/* 5. Promotional Consultation Banner */}
       <JewelleryPromoBanner />
-
-      {/* Shopping Drawers */}
-      <CartDrawer />
-      <WishlistDrawer />
     </div>
   );
 }

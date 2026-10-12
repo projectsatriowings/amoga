@@ -26,7 +26,6 @@ export function JewelleryProductCard({ product }) {
     const res = addToCart(product, 1, defaultVariant);
     if (res?.success) {
       setJustAdded(true);
-      navigate('/cart');
     }
   };
 
