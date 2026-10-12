@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Layers, ShieldCheck, Clock } from 'lucide-react';
+import { ShoppingBag, Layers, ShieldCheck, Clock, Users } from 'lucide-react';
 
 export function SecondaryKpiRow({ metrics = {} }) {
   const {
@@ -8,25 +8,26 @@ export function SecondaryKpiRow({ metrics = {} }) {
     totalUnitsSold = 0,
     paymentSuccessRate = 100,
     pendingPayments = 0,
+    uniqueCustomersCount = 0,
   } = metrics;
 
   const items = [
     {
       id: 'total-orders',
-      label: 'Total Orders',
+      label: 'Orders in Window',
       value: totalOrders,
       suffix: '',
-      subtext: 'Lifetime transactions recorded',
+      subtext: 'Transactions within reporting window',
       icon: ShoppingBag,
       color: '#762F39',
       bg: 'bg-[#762F39]/10',
     },
     {
       id: 'units-sold',
-      label: 'Units Dispatched',
+      label: 'Units Sold',
       value: totalUnitsSold,
       suffix: ' units',
-      subtext: 'Across all active collections',
+      subtext: 'Across eligible completed orders',
       icon: Layers,
       color: '#3F5A35',
       bg: 'bg-[#3F5A35]/10',
@@ -36,7 +37,7 @@ export function SecondaryKpiRow({ metrics = {} }) {
       label: 'Payment Success Rate',
       value: paymentSuccessRate,
       suffix: '%',
-      subtext: 'Authoritative HMAC verified',
+      subtext: 'Verified capture efficiency',
       icon: ShieldCheck,
       color: '#166534',
       bg: 'bg-[#166534]/10',
@@ -46,7 +47,7 @@ export function SecondaryKpiRow({ metrics = {} }) {
       label: 'Pending Inquiries',
       value: pendingPayments,
       suffix: ' awaiting',
-      subtext: 'Customer checkout sessions',
+      subtext: 'Uncompleted checkout sessions',
       icon: Clock,
       color: '#B08A4D',
       bg: 'bg-[#B08A4D]/10',

@@ -13,6 +13,7 @@ export function CartDrawer() {
   const savedScrollY = useRef(0);
   const lastFocusedElement = useRef(null);
   const originalOverflow = useRef('');
+  const originalHtmlOverflow = useRef('');
   const originalPaddingRight = useRef('');
 
   // Manage body scroll locking, scroll position preservation and keyboard accessibility
@@ -24,8 +25,9 @@ export function CartDrawer() {
       savedScrollY.current = currentScrollY;
       lastFocusedElement.current = document.activeElement;
 
-      // 2. Prevent background page scrolling while drawer is active
+      // 2. Prevent background page scrolling while drawer is active on both html and body
       originalOverflow.current = document.body.style.overflow;
+      originalHtmlOverflow.current = document.documentElement.style.overflow;
       originalPaddingRight.current = document.body.style.paddingRight;
 
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -33,8 +35,21 @@ export function CartDrawer() {
         document.body.style.paddingRight = `${scrollBarWidth}px`;
       }
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
 
-      // 3. Close on Escape key press
+      // 3. Actively intercept wheel & touchmove outside the drawer panel to completely stop background scrolling
+      const preventBackgroundScroll = (e) => {
+        const drawerPanel = document.querySelector('[role="dialog"][aria-label="Shopping Cart Drawer"]');
+        if (drawerPanel && drawerPanel.contains(e.target)) {
+          return;
+        }
+        e.preventDefault();
+      };
+
+      window.addEventListener('wheel', preventBackgroundScroll, { passive: false });
+      window.addEventListener('touchmove', preventBackgroundScroll, { passive: false });
+
+      // 4. Close on Escape key press
       const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
           e.preventDefault();
@@ -45,19 +60,22 @@ export function CartDrawer() {
 
       return () => {
         window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('wheel', preventBackgroundScroll);
+        window.removeEventListener('touchmove', preventBackgroundScroll);
 
-        // 4. Safely restore original body styles
+        // 5. Safely restore original body & html styles
         document.body.style.overflow = originalOverflow.current || '';
+        document.documentElement.style.overflow = originalHtmlOverflow.current || '';
         document.body.style.paddingRight = originalPaddingRight.current || '';
 
-        // 5. Restore the exact scroll position from before the drawer opened
+        // 6. Restore the exact scroll position from before the drawer opened
         window.scrollTo({
           top: savedScrollY.current,
           left: 0,
           behavior: 'instant',
         });
 
-        // 6. Restore focus to triggering control without scrolling background
+        // 7. Restore focus to triggering control without scrolling background
         if (
           lastFocusedElement.current &&
           typeof lastFocusedElement.current.focus === 'function'
@@ -72,16 +90,22 @@ export function CartDrawer() {
     }
   }, [isOpen, closeCart]);
 
-  // Calculate totals ONLY for verified priced items
-  const pricedItems = items.filter((item) => item.product.price !== null);
-  const unpricedItems = items.filter((item) => item.product.price === null);
+  // Calculate totals ONLY for verified priced items (defensively supporting nested or flat product objects)
+  const pricedItems = items.filter((item) => {
+    const p = item.product || item;
+    return p?.price !== null && p?.price !== undefined;
+  });
+  const unpricedItems = items.filter((item) => {
+    const p = item.product || item;
+    return p?.price === null || p?.price === undefined;
+  });
 
-  const verifiedSubtotal = pricedItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
-  );
+  const verifiedSubtotal = pricedItems.reduce((sum, item) => {
+    const price = item.price ?? item.product?.price ?? 0;
+    return sum + price * (item.quantity || 1);
+  }, 0);
 
-  const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   if (typeof document === 'undefined') return null;
 
@@ -95,7 +119,7 @@ export function CartDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeCart}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity touch-none overscroll-contain select-none"
             aria-hidden="true"
           />
 
@@ -105,7 +129,7 @@ export function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-[10000] flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-[10000] flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10 overscroll-contain"
             role="dialog"
             aria-modal="true"
             aria-label="Shopping Cart Drawer"
@@ -129,7 +153,7 @@ export function CartDrawer() {
             </div>
 
             {/* Cart Items List */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 overscroll-contain">
               {items.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center py-12 space-y-4">
                   <div className="w-16 h-16 rounded-full bg-[#EAE6D9] flex items-center justify-center text-[#557C36]">
@@ -167,17 +191,20 @@ export function CartDrawer() {
               ) : (
                 <>
                   {items.map((item) => {
-                    const { product, quantity, selectedVariant } = item;
-                    const lineKey = item.id || product.id;
-                    const hasPrice = product.price !== null;
+                    const product = item.product || item;
+                    const quantity = item.quantity || 1;
+                    const selectedVariant = item.selectedVariant;
+                    const lineKey = item.id || item.lineId || product?.id;
+                    const itemPrice = item.price ?? product?.price;
+                    const hasPrice = itemPrice !== null && itemPrice !== undefined;
                     const productUrl =
-                      product.collection === 'jewellery'
+                      product?.collection === 'jewellery'
                         ? `/jewellery/products/${product.slug}`
-                        : product.collection === 'sarees'
+                        : product?.collection === 'sarees'
                         ? `/sarees/products/${product.slug}`
-                        : product.collection === 'tea'
+                        : product?.collection === 'tea'
                         ? `/tea/products/${product.slug}`
-                        : `/food/products/${product.slug}`;
+                        : `/food/products/${product?.slug || ''}`;
 
                     return (
                       <div
@@ -185,8 +212,8 @@ export function CartDrawer() {
                         className="p-3.5 rounded-xl bg-white border border-[#172B1C]/8 flex items-start gap-3 shadow-sm hover:border-[#287A25]/30 transition-colors"
                       >
                         <img
-                          src={product.image}
-                          alt={product.name}
+                          src={product?.image || item.image}
+                          alt={product?.name || item.name}
                           className="w-16 h-16 rounded-lg object-cover shrink-0 bg-[#EAE6D9]"
                         />
 
@@ -196,11 +223,11 @@ export function CartDrawer() {
                             onClick={closeCart}
                             className="text-sm font-medium hover:text-[#287A25] transition-colors line-clamp-1 block"
                           >
-                            {product.name}
+                            {product?.name || item.name}
                           </Link>
 
                           <div className="flex items-center gap-2 text-[11px] text-[#557C36] font-mono">
-                            <span>{product.categoryName}</span>
+                            <span>{product?.categoryName || 'Botanical Blend'}</span>
                             {selectedVariant && (
                               <span className="flex items-center gap-1 text-black/60">
                                 &bull;
@@ -216,7 +243,7 @@ export function CartDrawer() {
                           <div className="flex items-center justify-between pt-1">
                             {hasPrice ? (
                               <div className="text-sm font-sans font-semibold text-[#172B1C] tabular-nums">
-                                ₹{(product.price * quantity).toLocaleString('en-IN')}
+                                ₹{((itemPrice || 0) * quantity).toLocaleString('en-IN')}
                                 {quantity > 1 && (
                                   <span className="text-[10px] font-normal text-black/50 ml-1 tabular-nums">
                                     (₹{product.price.toLocaleString('en-IN')} each)

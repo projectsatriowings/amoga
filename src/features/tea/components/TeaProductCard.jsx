@@ -5,7 +5,7 @@ import { useStore } from '../../../store/useStore';
 
 export function TeaProductCard({ product }) {
   const navigate = useNavigate();
-  const { toggleWishlistItem, isInWishlist } = useStore();
+  const { toggleWishlistItem, isInWishlist, addToCart } = useStore();
   const inWishlist = isInWishlist(product.id);
   const hasPrice = product.price !== null && Number(product.price) > 0;
 
@@ -15,18 +15,39 @@ export function TeaProductCard({ product }) {
     toggleWishlistItem(product);
   };
 
+  const handleCardClick = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    navigate(`/tea/products/${product.slug}`);
+  };
+
+  const handleLinkClick = (e) => {
+    e.stopPropagation();
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  };
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!hasPrice) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      navigate(`/tea/products/${product.slug}`);
+      return;
+    }
+    addToCart(product, 1);
+  };
+
   return (
     <article
       className="group relative rounded-2xl bg-[#FFFDF5] border border-[#B88E38]/30 shadow-sm hover:shadow-xl hover:border-[#8C6320] transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer"
       aria-label={product.name}
-      onClick={() => navigate(`/tea/products/${product.slug}`)}
+      onClick={handleCardClick}
     >
       {/* Card Image Area */}
       <div className="relative aspect-square w-full overflow-hidden bg-[#FAF1BB]/60">
         <Link
           to={`/tea/products/${product.slug}`}
           className="block w-full h-full"
-          onClick={(e) => e.stopPropagation()}
+          onClick={handleLinkClick}
         >
           <img
             src={product.image}
@@ -82,7 +103,7 @@ export function TeaProductCard({ product }) {
 
           <Link
             to={`/tea/products/${product.slug}`}
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleLinkClick}
             className="block text-lg font-serif font-medium text-[#2C1E11] group-hover:text-[#8C6320] transition-colors line-clamp-1"
           >
             {product.name}
@@ -101,16 +122,16 @@ export function TeaProductCard({ product }) {
           <div>
             {hasPrice ? (
               <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-base font-serif font-bold text-[#2C1E11]">
+                <span className="text-base font-sans font-semibold text-[#2C1E11] tabular-nums font-numeric">
                   ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                 </span>
                 {product.packSize && (
-                  <span className="text-[10px] font-mono text-[#8C6320] opacity-80">
+                  <span className="text-[10px] font-sans text-[#8C6320] opacity-85 tabular-nums font-numeric">
                     ({product.packSize})
                   </span>
                 )}
                 {product.originalPrice && (
-                  <span className="text-xs text-[#7D5C3F] line-through">
+                  <span className="text-xs text-[#7D5C3F] line-through font-sans tabular-nums font-numeric">
                     ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
                   </span>
                 )}
@@ -122,14 +143,27 @@ export function TeaProductCard({ product }) {
             )}
           </div>
 
-          <Link
-            to={`/tea/products/${product.slug}`}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium uppercase tracking-wider bg-[#2C1E11] text-[#FAF1BB] hover:bg-[#8C6320] hover:text-white transition-all shadow-sm"
-          >
-            <span>View Brew</span>
-            <ArrowRight className="w-3 h-3" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/tea/products/${product.slug}`}
+              onClick={handleLinkClick}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#8C6320] hover:text-[#2C1E11] hover:bg-[#FAF1BB]/60 transition-colors"
+            >
+              View
+            </Link>
+
+            {hasPrice && (
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] hover:bg-[#8C6320] hover:text-white active:scale-95 text-xs font-sans font-semibold uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer"
+                aria-label={`Add ${product.name} to bag`}
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Add</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </article>

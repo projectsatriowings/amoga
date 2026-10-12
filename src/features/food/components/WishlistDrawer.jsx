@@ -13,6 +13,7 @@ export function WishlistDrawer() {
   const savedScrollY = useRef(0);
   const lastFocusedElement = useRef(null);
   const originalOverflow = useRef('');
+  const originalHtmlOverflow = useRef('');
   const originalPaddingRight = useRef('');
 
   useEffect(() => {
@@ -23,6 +24,7 @@ export function WishlistDrawer() {
       lastFocusedElement.current = document.activeElement;
 
       originalOverflow.current = document.body.style.overflow;
+      originalHtmlOverflow.current = document.documentElement.style.overflow;
       originalPaddingRight.current = document.body.style.paddingRight;
 
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -30,6 +32,18 @@ export function WishlistDrawer() {
         document.body.style.paddingRight = `${scrollBarWidth}px`;
       }
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+
+      const preventBackgroundScroll = (e) => {
+        const drawerPanel = document.querySelector('[role="dialog"][aria-label="Wishlist Drawer"]');
+        if (drawerPanel && drawerPanel.contains(e.target)) {
+          return;
+        }
+        e.preventDefault();
+      };
+
+      window.addEventListener('wheel', preventBackgroundScroll, { passive: false });
+      window.addEventListener('touchmove', preventBackgroundScroll, { passive: false });
 
       const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
@@ -41,7 +55,11 @@ export function WishlistDrawer() {
 
       return () => {
         window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('wheel', preventBackgroundScroll);
+        window.removeEventListener('touchmove', preventBackgroundScroll);
+
         document.body.style.overflow = originalOverflow.current || '';
+        document.documentElement.style.overflow = originalHtmlOverflow.current || '';
         document.body.style.paddingRight = originalPaddingRight.current || '';
 
         window.scrollTo({
@@ -76,7 +94,7 @@ export function WishlistDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeWishlist}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity touch-none overscroll-contain select-none"
             aria-hidden="true"
           />
 
@@ -86,7 +104,7 @@ export function WishlistDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-[10000] flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#F1EDE4] text-[#172B1C] shadow-2xl z-[10000] flex flex-col justify-between overflow-hidden border-l border-[#172B1C]/10 overscroll-contain"
             role="dialog"
             aria-modal="true"
             aria-label="Wishlist Drawer"
@@ -110,7 +128,7 @@ export function WishlistDrawer() {
             </div>
 
             {/* Wishlist Items List */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 overscroll-contain">
               {items.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center py-12 space-y-4">
                   <div className="w-16 h-16 rounded-full bg-[#E5DFD3] flex items-center justify-center text-[#557C36]">

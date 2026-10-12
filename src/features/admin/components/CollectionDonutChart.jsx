@@ -50,7 +50,7 @@ export function CollectionDonutChart({ collectionPerformance = [] }) {
       color: '#762F39',
       icon: Sparkles,
     };
-    const percentage = totalRevenue > 0 ? (item.totalRevenue / totalRevenue) * 100 : 25;
+    const percentage = totalRevenue > 0 ? (item.totalRevenue / totalRevenue) * 100 : 0;
     return {
       id: colId,
       label: config.label,

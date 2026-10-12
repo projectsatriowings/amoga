@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -27,6 +27,11 @@ export function TeaProductDetail() {
   const staticProduct = getTeaProductBySlug(slug);
   const { product: apiProduct } = useProductDetail('tea', slug, staticProduct);
 
+  // Always reset scroll to top on mount or when navigating to another brew
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [slug]);
+
   // Safely combine API updates with rich static botanical catalogue metadata
   const product = useMemo(() => {
     if (!staticProduct && !apiProduct) return null;
@@ -51,7 +56,7 @@ export function TeaProductDetail() {
     };
   }, [staticProduct, apiProduct]);
 
-  const { addToCart, toggleWishlistItem, isInWishlist, initiateBuyNow } = useStore();
+  const { addToCart, toggleWishlistItem, isInWishlist, initiateBuyNow, openCart } = useStore();
   const [quantity, setQuantity] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
 
@@ -92,6 +97,10 @@ export function TeaProductDetail() {
   const otherTeas = TEA_PRODUCTS.filter((p) => p.id !== product.id).slice(0, 4);
 
   const handleAddToCart = () => {
+    if (addedSuccess) {
+      openCart();
+      return;
+    }
     setAddError(null);
     if (!hasPrice) {
       setAddError('This botanical brew is currently awaiting price confirmation.');
@@ -100,6 +109,9 @@ export function TeaProductDetail() {
     const res = addToCart(product, quantity);
     if (res?.success) {
       setAddedSuccess(true);
+      setTimeout(() => {
+        setAddedSuccess(false);
+      }, 3000);
     } else {
       setAddError('Could not add brew to bag. Please try again.');
     }
@@ -218,16 +230,16 @@ export function TeaProductDetail() {
               <div className="pt-2 border-t border-[#B88E38]/20 flex items-baseline gap-3">
                 {hasPrice ? (
                   <div className="flex flex-wrap items-baseline gap-3">
-                    <span className="text-3xl font-sans font-bold text-[#2C1E11] tabular-nums">
+                    <span className="text-3xl font-sans font-bold text-[#2C1E11] tabular-nums font-numeric">
                       ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                     </span>
                     {product.originalPrice && (
-                      <span className="text-sm text-[#7D5C3F] line-through font-sans tabular-nums">
+                      <span className="text-sm text-[#7D5C3F] line-through font-sans tabular-nums font-numeric">
                         ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
                       </span>
                     )}
                     {product.packSize && (
-                      <span className="text-xs font-mono font-medium text-[#8C6320] bg-white/80 px-2.5 py-0.5 rounded-full border border-[#B88E38]/25">
+                      <span className="text-xs font-sans font-medium text-[#8C6320] bg-white/80 px-2.5 py-0.5 rounded-full border border-[#B88E38]/25 tabular-nums font-numeric">
                         {product.packSize}
                       </span>
                     )}
@@ -306,7 +318,7 @@ export function TeaProductDetail() {
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="font-mono text-sm font-semibold">{quantity}</span>
+                    <span className="font-sans text-sm font-semibold tabular-nums font-numeric">{quantity}</span>
                     <button
                       type="button"
                       onClick={() => setQuantity((q) => q + 1)}

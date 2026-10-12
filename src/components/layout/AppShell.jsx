@@ -27,6 +27,13 @@ export function AppShell({ children }) {
     location.pathname.startsWith('/order-confirmation') ||
     location.pathname === '/cart';
 
+  // Reset window scroll position when changing routes (unless a hash anchor like #contact is targeted)
+  React.useEffect(() => {
+    if (!location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [location.pathname, location.hash]);
+
   // Apply collection theme data-attribute for tokens.css
   const collectionTheme = isCollectionRoute && activeCollection
     ? activeCollection.theme

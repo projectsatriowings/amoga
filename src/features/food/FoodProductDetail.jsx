@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -27,6 +27,10 @@ export function FoodProductDetail() {
   const staticProduct = getProductBySlug(slug);
   const { product: apiProduct } = useProductDetail('food', slug, staticProduct);
   const product = apiProduct || staticProduct;
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [slug]);
 
   const { addToCart, toggleWishlistItem, isInWishlist, initiateBuyNow } = useStore();
   const [quantity, setQuantity] = useState(1);

@@ -120,6 +120,11 @@ describe('Amoga Admin API Integration & RBAC Security Suite', () => {
         where: { isActive: true, OR: [{ inStock: false }, { stockQuantity: { lte: 0 } }] },
       }),
       prisma.orderItem.aggregate({
+        where: {
+          order: {
+            status: { in: ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED'] }
+          }
+        },
         _sum: { quantity: true },
       }),
       prisma.payment.count({

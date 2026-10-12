@@ -1,63 +1,14 @@
 import { prisma } from '../config/prisma.js';
+import { getSalesReportMetrics } from '../services/adminAnalyticsService.js';
 
 export async function getSalesReport(req, res) {
   try {
     const { startDate, endDate } = req.query;
-
-    const where = {};
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) {
-        const e = new Date(endDate);
-        e.setHours(23, 59, 59, 999);
-        where.createdAt.lte = e;
-      }
-    }
-
-    const [orders, payments] = await Promise.all([
-      prisma.order.findMany({
-        where,
-        select: {
-          id: true,
-          status: true,
-          totalAmount: true,
-          subtotal: true,
-          createdAt: true,
-        },
-      }),
-      prisma.payment.findMany({
-        where,
-        select: {
-          id: true,
-          status: true,
-          amount: true,
-          provider: true,
-          createdAt: true,
-        },
-      }),
-    ]);
-
-    const totalOrdersPlaced = orders.length;
-    const paidOrders = orders.filter((o) =>
-      ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED'].includes(o.status)
-    );
-    const grossRevenue = paidOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
-    const capturedPayments = payments.filter((p) => p.status === 'SUCCEEDED');
-    const netCapturedRevenue = capturedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const aov = paidOrders.length > 0 ? grossRevenue / paidOrders.length : 0;
+    const report = await getSalesReportMetrics({ startDate, endDate });
 
     return res.status(200).json({
       success: true,
-      report: {
-        totalOrdersPlaced,
-        paidOrdersCount: paidOrders.length,
-        grossRevenue: Number(grossRevenue.toFixed(2)),
-        netCapturedRevenue: Number(netCapturedRevenue.toFixed(2)),
-        averageOrderValue: Number(aov.toFixed(2)),
-        paymentsCapturedCount: capturedPayments.length,
-        failedPaymentsCount: payments.filter((p) => p.status === 'FAILED').length,
-      },
+      report,
     });
   } catch (err) {
     console.error('[ADMIN SALES REPORT ERROR]:', err);
