@@ -331,6 +331,14 @@ export async function updateProduct(req, res) {
 
       // Handle variant syncing if variants provided
       if (Array.isArray(variants)) {
+        const keptIds = variants.filter((v) => v.id).map((v) => v.id);
+        await tx.productVariant.deleteMany({
+          where: {
+            productId: id,
+            id: { notIn: keptIds },
+          },
+        });
+
         for (const v of variants) {
           if (v.id) {
             await tx.productVariant.update({

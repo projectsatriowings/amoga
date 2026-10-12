@@ -11,6 +11,8 @@ import {
   Image as ImageIcon,
   Check,
   X,
+  Palette,
+  Tag,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { BackButton } from '../../../components/ui/BackButton';
@@ -85,6 +87,37 @@ const COLLECTION_SUBCATEGORIES = {
     { id: 'traditional', name: 'Traditional Silver' },
   ],
 };
+
+const COMMON_COLOR_PRESETS = [
+  { name: 'Royal Wine', hex: '#451523' },
+  { name: 'Temple Crimson', hex: '#7A1C28' },
+  { name: 'Peacock Indigo', hex: '#1C3A4B' },
+  { name: 'Antique Gold', hex: '#C5A46D' },
+  { name: 'Forest Emerald', hex: '#1E4620' },
+  { name: 'Rose Gold', hex: '#B76E79' },
+  { name: 'Sterling Silver', hex: '#B9B8B5' },
+  { name: 'Midnight Jet', hex: '#1A1817' },
+];
+
+const COMMON_SIZE_PRESETS = [
+  'US 5',
+  'US 6',
+  'US 7',
+  'US 8',
+  'US 9',
+  'Standard (6.3m)',
+  'With Stitched Blouse',
+];
+
+const COMMON_WEIGHT_PRESETS = [
+  '50 g',
+  '100 g',
+  '200 g',
+  '250 g',
+  '500 g',
+  '1 kg',
+  'Pack of 2',
+];
 
 export function AdminProductForm() {
   const { id } = useParams();
@@ -162,14 +195,25 @@ export function AdminProductForm() {
             gallery: Array.isArray(p.gallery) ? p.gallery : [],
             specs: p.specs || {},
             variants: Array.isArray(p.variants)
-              ? p.variants.map((v) => ({
-                  id: v.id,
-                  name: v.name,
-                  sku: v.sku || '',
-                  price: v.price !== null ? String(v.price) : '',
-                  stockQuantity: v.stockQuantity ?? 25,
-                  inStock: Boolean(v.inStock),
-                }))
+              ? p.variants.map((v) => {
+                  const attrs = typeof v.attributes === 'object' && v.attributes !== null ? v.attributes : {};
+                  const hexVal = v.hex || attrs.hex || '';
+                  const sizeVal = attrs.size || '';
+                  const weightVal = attrs.weight || '';
+                  const detectedType = attrs.type || (hexVal ? 'color' : sizeVal ? 'size' : weightVal ? 'weight' : 'custom');
+                  return {
+                    id: v.id,
+                    name: v.name || '',
+                    sku: v.sku || '',
+                    type: detectedType,
+                    hex: hexVal || (detectedType === 'color' ? '#451523' : ''),
+                    size: sizeVal,
+                    weight: weightVal,
+                    price: v.price !== null ? String(v.price) : '',
+                    stockQuantity: v.stockQuantity ?? 25,
+                    inStock: v.inStock !== undefined ? Boolean(v.inStock) : true,
+                  };
+                })
               : [],
           });
         }
@@ -279,20 +323,48 @@ export function AdminProductForm() {
   };
 
   // Variants handlers
-  const handleAddVariant = () => {
+  const handleAddVariant = (variantType = null) => {
+    // Smart default type depending on collection if not specified
+    const type = variantType || (
+      formData.collectionId === 'sarees'
+        ? 'color'
+        : formData.collectionId === 'jewellery'
+        ? 'size'
+        : formData.collectionId === 'food' || formData.collectionId === 'tea'
+        ? 'weight'
+        : 'color'
+    );
+
+    const basePrefix = (formData.collectionId || 'PROD').substring(0, 3).toUpperCase();
+    const rand = Math.floor(100 + Math.random() * 900);
+    const suggestedSku = `${basePrefix}-${rand}-${formData.variants.length + 1}`;
+
     setFormData((prev) => ({
       ...prev,
       variants: [
         ...prev.variants,
         {
           name: '',
-          sku: '',
+          sku: suggestedSku,
+          type,
+          hex: type === 'color' ? '#7A1C28' : '',
+          size: '',
+          weight: '',
           price: prev.price || '',
           stockQuantity: 25,
           inStock: true,
         },
       ],
     }));
+  };
+
+  const handleGenerateVariantSku = (idx) => {
+    const v = formData.variants[idx];
+    const prefix = (formData.collectionId || 'PROD').substring(0, 3).toUpperCase();
+    const nameSlug = (v.name || 'VAR').substring(0, 4).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const rand = Math.floor(10 + Math.random() * 90);
+    const sku = `${prefix}-${nameSlug || 'V'}-${rand}`;
+    handleVariantChange(idx, 'sku', sku);
   };
 
   const handleVariantChange = (index, field, value) => {
@@ -346,14 +418,30 @@ export function AdminProductForm() {
         image: formData.image.trim() || '/placeholder-luxury.jpg',
         gallery: formData.gallery,
         specs: formData.specs,
-        variants: formData.variants.map((v) => ({
-          ...(v.id ? { id: v.id } : {}),
-          name: v.name.trim(),
-          sku: v.sku ? v.sku.trim() : null,
-          price: v.price !== '' ? Number(v.price) : null,
-          stockQuantity: Number(v.stockQuantity) || 0,
-          inStock: Boolean(v.inStock),
-        })),
+        variants: formData.variants.map((v) => {
+          const attributes = {
+            type: v.type || 'custom',
+          };
+          if (v.type === 'color' || v.hex) {
+            attributes.hex = v.hex || '#451523';
+          }
+          if (v.type === 'size' || v.size) {
+            attributes.size = v.size || v.name;
+          }
+          if (v.type === 'weight' || v.weight) {
+            attributes.weight = v.weight || v.name;
+          }
+
+          return {
+            ...(v.id ? { id: v.id } : {}),
+            name: v.name.trim(),
+            sku: v.sku ? v.sku.trim() : null,
+            price: v.price !== '' ? Number(v.price) : null,
+            stockQuantity: Number(v.stockQuantity) || 0,
+            inStock: Boolean(v.inStock),
+            attributes,
+          };
+        }),
       };
 
       const endpoint = isEditing ? `/api/admin/products/${id}` : '/api/admin/products';
@@ -982,73 +1070,334 @@ export function AdminProductForm() {
         </div>
 
         {/* Section 5: Variants Builder */}
-        <div className="bg-[#FBF9F5] p-6 rounded-lg border border-[#E5E0D5] space-y-4">
-          <div className="flex items-center justify-between border-b border-[#EAE4D9] pb-2">
+        <div className="bg-[#FBF9F5] p-6 rounded-xl border border-[#E5E0D5] space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EAE4D9] pb-3">
             <div>
-              <h2 className="font-serif text-base font-bold text-[#1A1817]">5. Product Variants (Optional)</h2>
-              <p className="text-[11px] text-[#7A7167]">For sizes, packs, weights, colors, or ring sizes.</p>
+              <h2 className="font-serif text-base font-bold text-[#1A1817] flex items-center gap-2">
+                <span>5. Product Variants (Optional)</span>
+                {formData.variants.length > 0 && (
+                  <span className="text-xs font-normal text-[#7A7167] bg-[#EFEAE1] px-2 py-0.5 rounded-full">
+                    {formData.variants.length} defined
+                  </span>
+                )}
+              </h2>
+              <p className="text-[11px] text-[#7A7167] mt-0.5">
+                Configure color shades with swatches, ring/chain sizes, net weights, SKUs, and inventory.
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={handleAddVariant}
-              className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#EFEAE1] border border-[#DFD8CC] rounded text-xs font-medium text-[#4A423B] hover:bg-[#E5E0D5]"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Variant</span>
-            </button>
+
+            {/* Quick Add Buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleAddVariant('color')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#722F37] text-white rounded-lg text-xs font-medium hover:bg-[#5C242C] transition-colors shadow-xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Color Shade</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAddVariant('size')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#D5CEC2] text-[#4A423B] rounded-lg text-xs font-medium hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Size</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAddVariant('weight')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#D5CEC2] text-[#4A423B] rounded-lg text-xs font-medium hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Weight / Pack</span>
+              </button>
+            </div>
           </div>
 
           {formData.variants.length === 0 ? (
-            <p className="text-xs text-[#8C8377] italic py-2">
-              No specific variants defined. This product is sold as a standard single offering.
-            </p>
+            <div className="p-6 rounded-xl border border-dashed border-[#D5CEC2] text-center bg-white/60">
+              <p className="text-xs text-[#7A7167] mb-2">
+                No variants added yet. This product is currently sold as a standard single offering.
+              </p>
+              <p className="text-[11px] text-[#8C8377]">
+                Click <strong>+ Color Shade</strong>, <strong>+ Size</strong>, or <strong>+ Weight / Pack</strong> above to create product options.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {formData.variants.map((variant, idx) => (
-                <div key={idx} className="p-3 bg-white rounded border border-[#E5E0D5] grid grid-cols-1 sm:grid-cols-5 gap-3 items-center">
-                  <div className="sm:col-span-2">
-                    <label className="block text-[10px] font-mono text-[#7A7167] uppercase mb-0.5">Variant Name</label>
-                    <input
-                      type="text"
-                      value={variant.name}
-                      onChange={(e) => handleVariantChange(idx, 'name', e.target.value)}
-                      placeholder="e.g. 100g Pouch / Size US 7"
-                      className="w-full px-2.5 py-1.5 border border-[#D5CEC2] rounded text-xs"
-                      required
-                    />
+                <div
+                  key={idx}
+                  className="p-4 bg-white rounded-xl border border-[#E5E0D5] shadow-xs space-y-3 relative hover:border-[#D5CEC2] transition-colors"
+                >
+                  {/* Variant Card Top Row */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#F0ECE1]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-[#EFEAE1] text-[#4A423B] flex items-center justify-center text-xs font-mono font-bold">
+                        {idx + 1}
+                      </span>
+
+                      {/* Variant Type Selector */}
+                      <select
+                        value={variant.type || 'color'}
+                        onChange={(e) => handleVariantChange(idx, 'type', e.target.value)}
+                        className="px-2 py-1 rounded bg-[#FAF8F5] border border-[#D5CEC2] text-xs font-medium text-[#4A423B]"
+                      >
+                        <option value="color">Color / Shade</option>
+                        <option value="size">Size / Dimension</option>
+                        <option value="weight">Weight / Pack</option>
+                        <option value="custom">General / Custom</option>
+                      </select>
+
+                      {variant.type === 'color' && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E5E0D5]">
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
+                            style={{ backgroundColor: variant.hex || '#451523' }}
+                          />
+                          <span className="text-[10px] font-mono text-[#7A7167]">
+                            {variant.hex || '#451523'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {/* In-Stock Status Toggle Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleVariantChange(idx, 'inStock', !variant.inStock)}
+                        className={`text-[11px] font-medium px-2.5 py-1 rounded-md border flex items-center gap-1.5 cursor-pointer transition-colors ${
+                          variant.inStock
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                            : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100'
+                        }`}
+                      >
+                        {variant.inStock ? (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                            <span>In Stock</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                            <span>Out of Stock</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Delete Variant */}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveVariant(idx)}
+                        className="p-1.5 text-rose-700 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                        title="Remove Variant"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-mono text-[#7A7167] uppercase mb-0.5">Price (₹)</label>
-                    <input
-                      type="number"
-                      value={variant.price}
-                      onChange={(e) => handleVariantChange(idx, 'price', e.target.value)}
-                      placeholder="e.g. 1850"
-                      className="w-full px-2.5 py-1.5 border border-[#D5CEC2] rounded text-xs font-mono"
-                    />
+                  {/* Primary Fields Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    {/* Variant Name Input (Spans 5 cols) */}
+                    <div className="md:col-span-5">
+                      <label className="block text-[10px] font-mono text-[#7A7167] uppercase mb-1">
+                        {variant.type === 'color'
+                          ? 'Color / Shade Name'
+                          : variant.type === 'size'
+                          ? 'Size Label'
+                          : variant.type === 'weight'
+                          ? 'Weight / Pack Label'
+                          : 'Variant Name'} *
+                      </label>
+                      <input
+                        type="text"
+                        value={variant.name}
+                        onChange={(e) => handleVariantChange(idx, 'name', e.target.value)}
+                        placeholder={
+                          variant.type === 'color'
+                            ? 'e.g. Royal Wine, Temple Crimson'
+                            : variant.type === 'size'
+                            ? 'e.g. US 7, Standard (6.3m)'
+                            : variant.type === 'weight'
+                            ? 'e.g. 100g Pouch, Pack of 2'
+                            : 'Variant Title'
+                        }
+                        className="w-full px-2.5 py-1.5 border border-[#D5CEC2] rounded-lg text-xs bg-white text-[#1A1817] focus:ring-1 focus:ring-[#722F37]"
+                        required
+                      />
+                    </div>
+
+                    {/* SKU Code (Spans 3 cols) */}
+                    <div className="md:col-span-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-mono text-[#7A7167] uppercase">
+                          SKU Code
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateVariantSku(idx)}
+                          className="text-[9px] text-[#722F37] hover:underline cursor-pointer font-medium"
+                        >
+                          Auto Gen
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={variant.sku}
+                        onChange={(e) => handleVariantChange(idx, 'sku', e.target.value)}
+                        placeholder="e.g. SAR-WINE-01"
+                        className="w-full px-2.5 py-1.5 border border-[#D5CEC2] rounded-lg text-xs font-mono uppercase bg-white text-[#1A1817]"
+                      />
+                    </div>
+
+                    {/* Price Override (Spans 2 cols) */}
+                    <div className="md:col-span-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-mono text-[#7A7167] uppercase">
+                          Price (₹)
+                        </label>
+                        {formData.price && (
+                          <button
+                            type="button"
+                            onClick={() => handleVariantChange(idx, 'price', formData.price)}
+                            className="text-[9px] text-[#722F37] hover:underline cursor-pointer font-medium"
+                            title="Copy base product price"
+                          >
+                            Base
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="number"
+                        value={variant.price}
+                        onChange={(e) => handleVariantChange(idx, 'price', e.target.value)}
+                        placeholder={formData.price || 'Price'}
+                        className="w-full px-2.5 py-1.5 border border-[#D5CEC2] rounded-lg text-xs font-mono bg-white text-[#1A1817]"
+                      />
+                    </div>
+
+                    {/* Stock Units (Spans 2 cols) */}
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-mono text-[#7A7167] uppercase mb-1">
+                        Stock (Units)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={variant.stockQuantity}
+                        onChange={(e) => handleVariantChange(idx, 'stockQuantity', e.target.value)}
+                        className="w-full px-2.5 py-1.5 border border-[#D5CEC2] rounded-lg text-xs font-mono bg-white text-[#1A1817]"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-mono text-[#7A7167] uppercase mb-0.5">Stock (Units)</label>
-                    <input
-                      type="number"
-                      value={variant.stockQuantity}
-                      onChange={(e) => handleVariantChange(idx, 'stockQuantity', e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-[#D5CEC2] rounded text-xs font-mono"
-                    />
-                  </div>
+                  {/* Contextual Color Picker Row (Only when type === 'color') */}
+                  {variant.type === 'color' && (
+                    <div className="p-2.5 rounded-lg bg-[#FAF8F5] border border-[#EAE4D9] flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <label className="text-[10px] font-mono uppercase text-[#7A7167] font-semibold">
+                          Color Swatch:
+                        </label>
+                        <input
+                          type="color"
+                          value={variant.hex || '#451523'}
+                          onChange={(e) => handleVariantChange(idx, 'hex', e.target.value)}
+                          className="w-7 h-7 rounded border border-[#D5CEC2] cursor-pointer p-0.5 bg-white"
+                          title="Pick custom color"
+                        />
+                        <input
+                          type="text"
+                          value={variant.hex || ''}
+                          onChange={(e) => handleVariantChange(idx, 'hex', e.target.value)}
+                          placeholder="#451523"
+                          className="w-20 px-2 py-1 border border-[#D5CEC2] rounded text-xs font-mono uppercase bg-white"
+                        />
+                      </div>
 
-                  <div className="flex items-center justify-end pt-3 sm:pt-0">
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveVariant(idx)}
-                      className="p-1.5 text-rose-700 hover:bg-rose-50 rounded"
-                      title="Remove Variant"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                      {/* Quick Palette Chips */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] text-[#8C8377] font-medium mr-1">
+                          Presets:
+                        </span>
+                        {COMMON_COLOR_PRESETS.map((clr) => (
+                          <button
+                            key={clr.hex}
+                            type="button"
+                            onClick={() => {
+                              handleVariantChange(idx, 'hex', clr.hex);
+                              if (!variant.name) handleVariantChange(idx, 'name', clr.name);
+                            }}
+                            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border transition-all cursor-pointer ${
+                              variant.hex === clr.hex
+                                ? 'border-[#722F37] bg-white font-semibold ring-1 ring-[#722F37]'
+                                : 'border-[#E0D9CE] bg-white/80 hover:bg-white text-[#4A423B]'
+                            }`}
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0"
+                              style={{ backgroundColor: clr.hex }}
+                            />
+                            <span>{clr.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contextual Size Quick Chips (When type === 'size') */}
+                  {variant.type === 'size' && (
+                    <div className="p-2 rounded-lg bg-[#FAF8F5] border border-[#EAE4D9] flex flex-wrap items-center gap-1.5 text-xs">
+                      <span className="text-[10px] text-[#8C8377] font-medium mr-1">
+                        Common Sizes:
+                      </span>
+                      {COMMON_SIZE_PRESETS.map((sz) => (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => {
+                            handleVariantChange(idx, 'name', sz);
+                            handleVariantChange(idx, 'size', sz);
+                          }}
+                          className={`px-2 py-0.5 rounded text-[10px] border transition-all cursor-pointer ${
+                            variant.name === sz
+                              ? 'border-[#722F37] bg-white font-semibold text-[#722F37]'
+                              : 'border-[#E0D9CE] bg-white hover:bg-[#F0ECE1] text-[#4A423B]'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Contextual Weight Quick Chips (When type === 'weight') */}
+                  {variant.type === 'weight' && (
+                    <div className="p-2 rounded-lg bg-[#FAF8F5] border border-[#EAE4D9] flex flex-wrap items-center gap-1.5 text-xs">
+                      <span className="text-[10px] text-[#8C8377] font-medium mr-1">
+                        Common Weights:
+                      </span>
+                      {COMMON_WEIGHT_PRESETS.map((wt) => (
+                        <button
+                          key={wt}
+                          type="button"
+                          onClick={() => {
+                            handleVariantChange(idx, 'name', wt);
+                            handleVariantChange(idx, 'weight', wt);
+                          }}
+                          className={`px-2 py-0.5 rounded text-[10px] border transition-all cursor-pointer ${
+                            variant.name === wt
+                              ? 'border-[#722F37] bg-white font-semibold text-[#722F37]'
+                              : 'border-[#E0D9CE] bg-white hover:bg-[#F0ECE1] text-[#4A423B]'
+                          }`}
+                        >
+                          {wt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
