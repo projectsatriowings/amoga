@@ -10,7 +10,6 @@ import {
   ShoppingBag,
   CreditCard,
   Users,
-  Image as ImageIcon,
   Sparkles,
   BarChart3,
   Settings,
@@ -99,20 +98,6 @@ export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
       category: 'Commerce & Sales',
       path: '/admin/customers',
       icon: Users,
-    },
-    {
-      id: 'banners',
-      title: 'Hero Banners & Visual CMS',
-      category: 'Content & Marketing',
-      path: '/admin/banners',
-      icon: ImageIcon,
-    },
-    {
-      id: 'homepage',
-      title: 'Storefront CMS Sections',
-      category: 'Content & Marketing',
-      path: '/admin/homepage',
-      icon: Sparkles,
     },
     {
       id: 'promotions',

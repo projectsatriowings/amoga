@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Search, RefreshCw, History, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CreditCard, Search, RefreshCw, History, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
 import { BackButton } from '../../../components/ui/BackButton';
@@ -16,6 +16,8 @@ export function AdminPayments() {
   const [status, setStatus] = useState('ALL');
   const [provider, setProvider] = useState('ALL');
   const [orderRef, setOrderRef] = useState('');
+  const [debouncedOrderRef, setDebouncedOrderRef] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const [page, setPage] = useState(1);
 
   // Webhook Events Audit Modal
@@ -35,16 +37,28 @@ export function AdminPayments() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showEvents]);
 
-  const fetchPayments = async () => {
+  // Live auto-search debounce
+  useEffect(() => {
+    if (orderRef !== debouncedOrderRef) {
+      setIsSearching(true);
+    }
+    const timer = setTimeout(() => {
+      setDebouncedOrderRef(orderRef);
+      setPage(1);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [orderRef]);
+
+  const fetchPayments = async (targetPage = page, query = debouncedOrderRef) => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({
-        page: String(page),
+        page: String(targetPage),
         limit: '10',
         status,
         provider,
-        orderReference: orderRef,
+        orderReference: query || '',
       });
 
       const res = await adminFetch(`/api/admin/payments?${params.toString()}`);
@@ -56,12 +70,13 @@ export function AdminPayments() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setIsSearching(false);
     }
   };
 
   useEffect(() => {
-    fetchPayments();
-  }, [page, status, provider]);
+    fetchPayments(page, debouncedOrderRef);
+  }, [page, status, provider, debouncedOrderRef]);
 
   const fetchWebhookEvents = async () => {
     setEventsLoading(true);
@@ -112,27 +127,46 @@ export function AdminPayments() {
 
       {/* Filter Bar */}
       <div className="bg-[#FBF9F5] p-4 rounded-lg border border-[#E5E0D5] flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="flex-1 flex items-center gap-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(1);
+            fetchPayments(1, orderRef);
+          }}
+          className="flex-1 flex items-center gap-2"
+        >
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#8C8377]" />
             <input
               type="text"
-              placeholder="Search by order reference..."
+              placeholder="Search by order reference in real-time..."
               value={orderRef}
               onChange={(e) => setOrderRef(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:outline-none focus:border-[#722F37]"
+              className="w-full pl-9 pr-8 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:outline-none focus:border-[#722F37]"
             />
+            {isSearching ? (
+              <RefreshCw className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-[#8C8377] animate-spin" />
+            ) : orderRef ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setOrderRef('');
+                  setDebouncedOrderRef('');
+                  setPage(1);
+                }}
+                className="absolute right-2.5 top-2 text-[#8C8377] hover:text-[#1A1817]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : null}
           </div>
           <button
-            onClick={() => {
-              setPage(1);
-              fetchPayments();
-            }}
-            className="px-3 py-1.5 bg-[#1E1916] text-white text-xs font-medium rounded hover:bg-[#2C2520]"
+            type="submit"
+            className="px-3 py-1.5 bg-[#1E1916] text-white text-xs font-medium rounded hover:bg-[#2C2520] transition-colors"
           >
             Search
           </button>
-        </div>
+        </form>
 
         <div className="flex items-center gap-2">
           <select
@@ -167,7 +201,7 @@ export function AdminPayments() {
 
       {/* Payments Table */}
       <div className="bg-[#FBF9F5] rounded-lg border border-[#E5E0D5] overflow-hidden">
-        {loading ? (
+        {loading && payments.length === 0 ? (
           <div className="p-12 text-center text-xs text-[#7A7167]">
             <div className="w-6 h-6 border-2 border-[#722F37] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
             <span>Loading payment records...</span>

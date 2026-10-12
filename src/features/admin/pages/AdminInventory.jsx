@@ -6,6 +6,7 @@ import {
   History,
   ChevronLeft,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
@@ -23,6 +24,8 @@ export function AdminInventory() {
   const [collectionId, setCollectionId] = useState('all');
   const [statusFilter, setStatusFilter] = useState(''); // '' | 'low' | 'out'
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const [page, setPage] = useState(1);
 
   // Stock Adjustment Modal
@@ -51,15 +54,27 @@ export function AdminInventory() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [adjustTarget, showLogs, submitting]);
 
-  const fetchInventory = async () => {
+  // Live auto-search debounce
+  useEffect(() => {
+    if (search !== debouncedSearch) {
+      setIsSearching(true);
+    }
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const fetchInventory = async (targetPage = page, query = debouncedSearch) => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({
-        page: String(page),
+        page: String(targetPage),
         limit: '10',
         collectionId,
-        q: search,
+        q: query || '',
       });
       if (statusFilter) params.append('status', statusFilter);
 
@@ -72,12 +87,13 @@ export function AdminInventory() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setIsSearching(false);
     }
   };
 
   useEffect(() => {
-    fetchInventory();
-  }, [page, collectionId, statusFilter]);
+    fetchInventory(page, debouncedSearch);
+  }, [page, collectionId, statusFilter, debouncedSearch]);
 
   const handleOpenAdjust = (item, variant = null) => {
     setAdjustTarget({
@@ -170,27 +186,46 @@ export function AdminInventory() {
 
       {/* Filter Bar */}
       <div className="bg-[#FBF9F5] p-4 rounded-lg border border-[#E5E0D5] flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="flex-1 flex items-center gap-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(1);
+            fetchInventory(1, search);
+          }}
+          className="flex-1 flex items-center gap-2"
+        >
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#8C8377]" />
             <input
               type="text"
-              placeholder="Search product stock..."
+              placeholder="Search product stock in real-time..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:outline-none focus:border-[#722F37]"
+              className="w-full pl-9 pr-8 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:outline-none focus:border-[#722F37]"
             />
+            {isSearching ? (
+              <RefreshCw className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-[#8C8377] animate-spin" />
+            ) : search ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setDebouncedSearch('');
+                  setPage(1);
+                }}
+                className="absolute right-2.5 top-2 text-[#8C8377] hover:text-[#1A1817]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : null}
           </div>
           <button
-            onClick={() => {
-              setPage(1);
-              fetchInventory();
-            }}
-            className="px-3 py-1.5 bg-[#1E1916] text-white text-xs font-medium rounded hover:bg-[#2C2520]"
+            type="submit"
+            className="px-3 py-1.5 bg-[#1E1916] text-white text-xs font-medium rounded hover:bg-[#2C2520] transition-colors"
           >
             Search
           </button>
-        </div>
+        </form>
 
         <div className="flex items-center gap-2">
           <select
@@ -225,7 +260,7 @@ export function AdminInventory() {
 
       {/* Inventory Table */}
       <div className="bg-[#FBF9F5] rounded-lg border border-[#E5E0D5] overflow-hidden">
-        {loading ? (
+        {loading && inventory.length === 0 ? (
           <div className="p-12 text-center text-xs text-[#7A7167]">
             <div className="w-6 h-6 border-2 border-[#722F37] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
             <span>Loading live stock records...</span>

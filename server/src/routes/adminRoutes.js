@@ -42,13 +42,6 @@ import {
   getCustomerByEmail,
 } from '../controllers/adminCustomersController.js';
 import {
-  listBanners,
-  createBanner,
-  updateBanner,
-  toggleBanner,
-  deleteBanner,
-} from '../controllers/adminBannersController.js';
-import {
   listCoupons,
   createCoupon,
   toggleCoupon,
@@ -113,14 +106,7 @@ router.get('/payments/:id', requireAdminAuth(), getPaymentById);
 router.get('/customers', requireAdminAuth(), listCustomers);
 router.get('/customers/:email', requireAdminAuth(), getCustomerByEmail);
 
-// 8. Banners & Homepage CMS (Content Manager & Super Admin)
-router.get('/banners', requireAdminAuth(), listBanners);
-router.post('/banners', requireAdminAuth(['CONTENT_MANAGER']), createBanner);
-router.put('/banners/:id', requireAdminAuth(['CONTENT_MANAGER']), updateBanner);
-router.patch('/banners/:id/toggle', requireAdminAuth(['CONTENT_MANAGER']), toggleBanner);
-router.delete('/banners/:id', requireAdminAuth(['CONTENT_MANAGER']), deleteBanner);
-
-// 9. Promotions & Coupons (Content Manager & Super Admin)
+// 8. Promotions & Coupons (Content Manager & Super Admin)
 router.get('/coupons', requireAdminAuth(), listCoupons);
 router.post('/coupons', requireAdminAuth(['CONTENT_MANAGER']), createCoupon);
 router.patch('/coupons/:id/toggle', requireAdminAuth(['CONTENT_MANAGER']), toggleCoupon);

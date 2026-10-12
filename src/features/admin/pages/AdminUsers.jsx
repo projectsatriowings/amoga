@@ -275,7 +275,7 @@ export function AdminUsers() {
                 >
                   <option value="CATALOGUE_MANAGER">Catalogue Manager (Products, Collections, Stock)</option>
                   <option value="ORDER_MANAGER">Order Manager (Orders, Fulfilment, Payments, Clients)</option>
-                  <option value="CONTENT_MANAGER">Content Manager (Banners, CMS, Promotions)</option>
+                  <option value="CONTENT_MANAGER">Content Manager (Promotions, Discounts)</option>
                   <option value="SUPER_ADMIN">Super Admin (Unrestricted System Access)</option>
                 </select>
               </div>

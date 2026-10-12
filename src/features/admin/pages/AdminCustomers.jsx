@@ -12,7 +12,9 @@ export function AdminCustomers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Customer Detail Drawer
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -31,14 +33,27 @@ export function AdminCustomers() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedCustomer]);
 
-  const fetchCustomers = async () => {
-    setLoading(true);
+  // Live auto-search: automatically trigger search as user types
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      setDebouncedSearch(search);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const fetchCustomers = async (searchQuery = debouncedSearch, targetPage = page) => {
+    if (customers.length === 0) {
+      setLoading(true);
+    } else {
+      setIsSearching(true);
+    }
     setError(null);
     try {
       const params = new URLSearchParams({
-        page: String(page),
+        page: String(targetPage),
         limit: '10',
-        q: search,
+        q: searchQuery,
       });
 
       const res = await adminFetch(`/api/admin/customers?${params.toString()}`);
@@ -50,17 +65,19 @@ export function AdminCustomers() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setIsSearching(false);
     }
   };
 
   useEffect(() => {
-    fetchCustomers();
-  }, [page]);
+    fetchCustomers(debouncedSearch, page);
+  }, [page, debouncedSearch]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setPage(1);
-    fetchCustomers();
+    setDebouncedSearch(search);
+    fetchCustomers(search, 1);
   };
 
   const handleOpenDetail = async (email) => {
@@ -108,20 +125,40 @@ export function AdminCustomers() {
             placeholder="Search by customer name, email, phone number, or city..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:outline-none focus:border-[#722F37]"
+            className="w-full pl-9 pr-9 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:outline-none focus:border-[#722F37]"
           />
+          <div className="absolute right-2.5 top-2.5 flex items-center gap-1.5">
+            {isSearching && (
+              <RefreshCw className="w-3.5 h-3.5 text-[#722F37] animate-spin" />
+            )}
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setDebouncedSearch('');
+                  setPage(1);
+                  fetchCustomers('', 1);
+                }}
+                className="text-[#8C8377] hover:text-[#1A1817] cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
         <button
           type="submit"
-          className="px-4 py-1.5 bg-[#1E1916] text-white text-xs font-medium rounded hover:bg-[#2C2520]"
+          className="px-4 py-1.5 bg-[#1E1916] text-white text-xs font-medium rounded hover:bg-[#2C2520] cursor-pointer"
         >
-          Search
+          {isSearching ? 'Searching...' : 'Search'}
         </button>
       </form>
 
       {/* Customers Table */}
       <div className="bg-[#FBF9F5] rounded-lg border border-[#E5E0D5] overflow-hidden">
-        {loading ? (
+        {loading && customers.length === 0 ? (
           <div className="p-12 text-center text-xs text-[#7A7167]">
             <div className="w-6 h-6 border-2 border-[#722F37] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
             <span>Loading customer directory...</span>

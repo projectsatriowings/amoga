@@ -7,7 +7,6 @@ import ordersRoutes from './ordersRoutes.js';
 import paymentsRoutes from './paymentsRoutes.js';
 import adminRoutes from './adminRoutes.js';
 import contactRoutes from './contactRoutes.js';
-import { listPublicBanners } from '../controllers/adminBannersController.js';
 
 const router = Router();
 
@@ -19,9 +18,6 @@ router.use('/orders', ordersRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/admin', adminRoutes);
 router.use('/contact', contactRoutes);
-
-// Public storefront CMS banners
-router.get('/banners', listPublicBanners);
 
 export default router;
 

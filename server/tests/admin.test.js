@@ -311,16 +311,7 @@ describe('Amoga Admin API Integration & RBAC Security Suite', () => {
     }
   });
 
-  it('10. Homepage CMS Banners: Public endpoint returns only published banners', async () => {
-    const res = await fetch(`${baseUrl}/api/banners`);
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.equal(body.success, true);
-    assert.ok(Array.isArray(body.banners));
-    assert.ok(body.banners.every((b) => b.isPublished === true));
-  });
-
-  it('11. Promotional Coupons: Checkout apply-coupon endpoint calculates authoritative discount', async () => {
+  it('10. Promotional Coupons: Checkout apply-coupon endpoint calculates authoritative discount', async () => {
     const res = await fetch(`${baseUrl}/api/checkout/apply-coupon`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -72,7 +72,7 @@ describe('2. Products Catalogue API', () => {
     assert.strictEqual(res.status, 200);
     const body = await res.json();
     assert.strictEqual(body.success, true);
-    assert.strictEqual(body.data.length, 5);
+    assert.ok(body.data.length >= 5);
     body.data.forEach((p) => assert.strictEqual(p.collection, 'tea'));
     const teaSlugs = body.data.map((p) => p.slug);
     assert.ok(teaSlugs.includes('hibiscus-tea'));

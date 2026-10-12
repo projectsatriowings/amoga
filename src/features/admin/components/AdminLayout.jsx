@@ -9,7 +9,6 @@ import {
   ShoppingBag,
   CreditCard,
   Users,
-  Image as ImageIcon,
   Sparkles,
   BarChart3,
   Settings,
@@ -110,8 +109,6 @@ export function AdminLayout() {
     {
       title: 'CONTENT & MARKETING',
       items: [
-        { label: 'Homepage Banners', path: '/admin/banners', icon: ImageIcon },
-        { label: 'Storefront CMS', path: '/admin/homepage', icon: Sparkles },
         { label: 'Promotions', path: '/admin/promotions', icon: Sparkles },
         { label: 'Reports & Export', path: '/admin/reports', icon: BarChart3 },
       ],
@@ -161,8 +158,6 @@ export function AdminLayout() {
   else if (currentPath === '/admin/orders') pageTitle = 'Customer Order Stream';
   else if (currentPath === '/admin/payments') pageTitle = 'Payment Reconciliation';
   else if (currentPath === '/admin/customers') pageTitle = 'Customer Profiles';
-  else if (currentPath === '/admin/banners') pageTitle = 'Hero Banner CMS';
-  else if (currentPath === '/admin/homepage') pageTitle = 'Storefront CMS Sections';
   else if (currentPath === '/admin/promotions') pageTitle = 'Coupons & Promotions';
   else if (currentPath === '/admin/reports') pageTitle = 'Business Intelligence & Exports';
   else if (currentPath === '/admin/settings') pageTitle = 'Atelier Settings';
@@ -277,29 +272,45 @@ export function AdminLayout() {
 
         {/* User Footer */}
         <div className="p-3 border-t border-[#38312B] bg-[#161210] shrink-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-[#3D332C] text-[#B08A4D] font-mono text-xs flex items-center justify-center font-bold flex-shrink-0 border border-[#B08A4D]/30">
+          {isCollapsed ? (
+            <div className="flex flex-col items-center gap-2 py-1 justify-center">
+              <div
+                title={admin.name || 'Account'}
+                className="w-8 h-8 rounded-full bg-[#3D332C] text-[#B08A4D] font-mono text-xs flex items-center justify-center font-bold shrink-0 border border-[#B08A4D]/30"
+              >
                 {admin.name ? admin.name[0].toUpperCase() : 'A'}
               </div>
-              {!isCollapsed && (
-                <div className="overflow-hidden">
+              <button
+                onClick={handleLogout}
+                title="Sign Out"
+                className="p-1.5 text-[#A89F93] hover:text-rose-400 hover:bg-[#2C2520] rounded-md transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#3D332C] text-[#B08A4D] font-mono text-xs flex items-center justify-center font-bold shrink-0 border border-[#B08A4D]/30">
+                  {admin.name ? admin.name[0].toUpperCase() : 'A'}
+                </div>
+                <div className="min-w-0">
                   <p className="text-xs font-medium text-[#F8F6F0] truncate">{admin.name}</p>
-                  <span className={`inline-block text-[9px] px-1.5 py-0.2 rounded font-mono font-medium ${roleBadge.bg}`}>
+                  <span className={`inline-block text-[9px] px-1.5 py-0.5 rounded font-mono font-medium truncate ${roleBadge.bg}`}>
                     {roleBadge.label}
                   </span>
                 </div>
-              )}
-            </div>
+              </div>
 
-            <button
-              onClick={handleLogout}
-              title="Sign Out"
-              className="p-1.5 text-[#A89F93] hover:text-rose-400 hover:bg-[#2C2520] rounded-md transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+              <button
+                onClick={handleLogout}
+                title="Sign Out"
+                className="p-1.5 text-[#A89F93] hover:text-rose-400 hover:bg-[#2C2520] rounded-md transition-colors shrink-0"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </motion.aside>
 
