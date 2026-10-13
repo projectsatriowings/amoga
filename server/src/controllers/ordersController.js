@@ -21,6 +21,7 @@ export async function postOrder(req, res, next) {
       idempotencyKey,
       couponCode,
       isDemo,
+      customerId: req.customerId || null,
     });
 
     if (result.isDuplicate) {

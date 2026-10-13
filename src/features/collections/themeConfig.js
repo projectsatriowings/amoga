@@ -648,24 +648,41 @@ export function getCollectionTheme(collectionIdOrPath, directOverride = null) {
       if (tc.accentColor) p.accent = tc.accentColor;
       if (tc.buttonBg) {
         p.buttonBg = tc.buttonBg;
-        p.announcementBg = tc.buttonBg;
+        if (tc.announcementBg) {
+          p.announcementBg = tc.announcementBg;
+        } else if (!isDarkColor(p.bg)) {
+          p.announcementBg = tc.buttonBg;
+        }
       }
       if (tc.buttonText) p.buttonText = tc.buttonText;
       if (tc.borderColor) p.border = tc.borderColor;
+
+      const darkBg = isDarkColor(p.bg);
       if (tc.headingColor) {
-        p.heading = tc.headingColor;
+        const darkHeading = isDarkColor(tc.headingColor);
+        if (darkBg && darkHeading) {
+          p.heading = tc.textColor || '#F7F3EB';
+        } else {
+          p.heading = tc.headingColor;
+        }
       } else if (tc.secondaryColor) {
-        // Guard against contrast failure:
-        // If the background is dark (e.g. Sarees #2C0E1A), NEVER use a dark secondary color (#451523) for heading!
-        const darkBg = isDarkColor(p.bg);
         const darkSec = isDarkColor(tc.secondaryColor);
         if (darkBg && darkSec) {
           p.heading = tc.textColor || '#F6EBD8';
         } else {
           p.heading = tc.secondaryColor;
         }
-      } else if (isDarkColor(p.bg) && (!p.heading || isDarkColor(p.heading))) {
+      } else if (darkBg && (!p.heading || isDarkColor(p.heading))) {
         p.heading = p.text || '#F6EBD8';
+      }
+
+      if (darkBg) {
+        p.headerBg = tc.bgColor || p.bg || '#242326';
+        p.headerText = tc.textColor || p.text || '#F7F3EB';
+        if (!tc.announcementBg) {
+          p.announcementBg = '#18171A';
+          p.announcementText = '#E2E3E5';
+        }
       }
       if (tc.inputBg) p.inputBg = tc.inputBg;
       if (tc.inputText) p.inputText = tc.inputText;

@@ -18,6 +18,9 @@ import { CartPage } from '../features/cart/CartPage';
 import { CheckoutPage } from '../features/checkout/CheckoutPage';
 import { OrderReviewPage } from '../features/checkout/OrderReviewPage';
 import { DemoOrderConfirmation } from '../features/checkout/DemoOrderConfirmation';
+import { CustomerAccountPage } from '../features/account/pages/CustomerAccountPage';
+import { CustomerAuthPage } from '../features/account/pages/CustomerAuthPage';
+import { OrderTrackingPage } from '../features/tracking/OrderTrackingPage';
 import { NotFound } from '../components/feedback/NotFound';
 import { RouteErrorBoundary } from '../components/feedback/RouteErrorBoundary';
 import { DynamicStorefront } from '../features/collections/DynamicStorefront';
@@ -197,6 +200,67 @@ export const router = createBrowserRouter([
       </AppShell>
     ),
     errorElement: <RouteErrorBoundary />,
+  },
+
+  // Customer Account & Profile Routes
+  {
+    path: '/account',
+    element: (
+      <AppShell>
+        <CustomerAccountPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/account/login',
+    element: (
+      <AppShell>
+        <CustomerAuthPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/account/register',
+    element: (
+      <AppShell>
+        <CustomerAuthPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/login',
+    element: <Navigate to="/account/login" replace />,
+  },
+  {
+    path: '/register',
+    element: <Navigate to="/account/login?mode=register" replace />,
+  },
+
+  // Dedicated Order Tracking Routes
+  {
+    path: '/track',
+    element: (
+      <AppShell>
+        <OrderTrackingPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/track/:orderReference',
+    element: (
+      <AppShell>
+        <OrderTrackingPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/order-tracking',
+    element: <Navigate to="/track" replace />,
   },
 
   // Dedicated Admin Atelier Routes

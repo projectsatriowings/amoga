@@ -155,6 +155,11 @@ model Order {
   // Carrier & Fulfilment tracking
   carrier               String?
   trackingNumber        String?
+  trackingUrl           String?
+
+  // Customer relation
+  customerId            String?
+  customer              Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   // Mode and metadata
   isDemo                Boolean       @default(false)
@@ -163,11 +168,84 @@ model Order {
 
   items                 OrderItem[]
   payments              Payment[]
+  trackingEvents        OrderTrackingEvent[]
 
   @@index([orderReference])
   @@index([customerEmail])
+  @@index([customerId])
   @@index([createdAt])
   @@map("orders")
+}
+
+model Customer {
+  id                    String            @id @default(uuid())
+  email                 String            @unique
+  name                  String
+  phone                 String?
+  passwordHash          String
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  sessions              CustomerSession[]
+  addresses             CustomerAddress[]
+  orders                Order[]
+
+  @@map("customers")
+}
+
+model CustomerSession {
+  id                    String        @id @default(uuid())
+  customerId            String
+  tokenHash             String        @unique
+  expiresAt             DateTime
+  createdAt             DateTime      @default(now())
+
+  customer              Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([tokenHash])
+  @@map("customer_sessions")
+}
+
+model CustomerAddress {
+  id                    String        @id @default(uuid())
+  customerId            String
+  label                 String?       // e.g. 'Home', 'Work', 'Estate'
+  fullName              String
+  phone                 String
+  addressLine1          String
+  addressLine2          String?
+  city                  String
+  state                 String
+  pincode               String
+  isDefault             Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  customer              Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@map("customer_addresses")
+}
+
+model OrderTrackingEvent {
+  id                    String        @id @default(uuid())
+  orderId               String
+  status                OrderStatus
+  title                 String        // e.g. 'Order Confirmed', 'Processing at Atelier', 'Shipped', 'Out for Delivery', 'Delivered'
+  description           String?       @db.Text
+  location              String?       // e.g. 'Chennai Fulfillment Centre'
+  carrier               String?
+  trackingNumber        String?
+  actor                 String?       // 'System' or admin email
+  createdAt             DateTime      @default(now())
+
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("order_tracking_events")
 }
 
 model Payment {

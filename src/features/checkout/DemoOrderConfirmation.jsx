@@ -150,6 +150,25 @@ export const DemoOrderConfirmation = () => {
                 </span>
               </div>
 
+              {/* Action Buttons: Track Order & My Account */}
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  to={`/track/${encodeURIComponent(orderId)}`}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-bold uppercase tracking-wider shadow-md transition-all hover:scale-105"
+                >
+                  <Truck className="w-4 h-4 text-[#C5A46D]" />
+                  <span>Track Order Live</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  to="/account?tab=orders"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#2C0E1A] border border-[#DDD5C7] text-xs font-semibold tracking-wider transition-all shadow-sm"
+                >
+                  <User className="w-3.5 h-3.5 text-[#8C6320]" />
+                  <span>View in My Account</span>
+                </Link>
+              </div>
+
               {/* Explicit Test Mode Disclaimer */}
               <div className="mt-6 p-4 max-w-2xl mx-auto bg-amber-50 rounded-2xl border border-amber-300/80 text-left text-xs sm:text-sm text-amber-950 flex items-start gap-3">
                 <Info className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />

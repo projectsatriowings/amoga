@@ -144,6 +144,9 @@ export async function getOrderById(req, res) {
         payments: {
           orderBy: { createdAt: 'desc' },
         },
+        trackingEvents: {
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
 
@@ -172,6 +175,7 @@ export async function getOrderById(req, res) {
           ...p,
           amount: Number(p.amount),
         })),
+        trackingEvents: order.trackingEvents || [],
       },
       allowedNextStatuses: VALID_TRANSITIONS[order.status] || [],
     });
@@ -222,6 +226,27 @@ export async function updateOrderStatus(req, res) {
       data: { status: targetStatus },
     });
 
+    const statusTitles = {
+      CONFIRMED: 'Order Confirmed',
+      PROCESSING: 'Processing at Atelier',
+      DISPATCHED: 'Dispatched with Logistics Partner',
+      DELIVERED: 'Delivered to Customer',
+      CANCELLED: 'Order Cancelled',
+    };
+
+    // Record formal tracking event in database
+    await prisma.orderTrackingEvent.create({
+      data: {
+        orderId: order.id,
+        status: targetStatus,
+        title: statusTitles[targetStatus] || `Order ${targetStatus}`,
+        description: reason?.trim() || `Status updated to ${targetStatus} by concierge staff.`,
+        carrier: order.carrier,
+        trackingNumber: order.trackingNumber,
+        actor: req.admin.email,
+      },
+    }).catch((err) => console.warn('[ADMIN ORDER TRACKING EVENT ERROR]:', err.message));
+
     await logAdminAction({
       adminId: req.admin.id,
       adminEmail: req.admin.email,
@@ -256,7 +281,7 @@ export async function updateOrderStatus(req, res) {
 export async function updateOrderTracking(req, res) {
   try {
     const { id } = req.params;
-    const { carrier, trackingNumber } = req.body;
+    const { carrier, trackingNumber, trackingUrl } = req.body;
 
     const order = await prisma.order.findUnique({ where: { id } });
     if (!order) {
@@ -266,10 +291,24 @@ export async function updateOrderTracking(req, res) {
     const updated = await prisma.order.update({
       where: { id },
       data: {
-        carrier: carrier ? carrier.trim() : null,
-        trackingNumber: trackingNumber ? trackingNumber.trim() : null,
+        carrier: carrier !== undefined ? (carrier ? carrier.trim() : null) : order.carrier,
+        trackingNumber: trackingNumber !== undefined ? (trackingNumber ? trackingNumber.trim() : null) : order.trackingNumber,
+        trackingUrl: trackingUrl !== undefined ? (trackingUrl ? trackingUrl.trim() : null) : order.trackingUrl,
       },
     });
+
+    // Record tracking update event
+    await prisma.orderTrackingEvent.create({
+      data: {
+        orderId: order.id,
+        status: order.status,
+        title: 'Logistics Details Updated',
+        description: `Carrier set to ${carrier || order.carrier || 'Unassigned'}, Waybill: ${trackingNumber || order.trackingNumber || 'Unassigned'}`,
+        carrier: updated.carrier,
+        trackingNumber: updated.trackingNumber,
+        actor: req.admin.email,
+      },
+    }).catch(() => {});
 
     await logAdminAction({
       adminId: req.admin.id,
@@ -277,7 +316,7 @@ export async function updateOrderTracking(req, res) {
       action: 'ORDER_TRACKING_UPDATE',
       entityType: 'Order',
       entityId: order.orderReference,
-      details: { carrier, trackingNumber },
+      details: { carrier: updated.carrier, trackingNumber: updated.trackingNumber, trackingUrl: updated.trackingUrl },
     });
 
     return res.status(200).json({
@@ -287,6 +326,7 @@ export async function updateOrderTracking(req, res) {
         id: updated.id,
         carrier: updated.carrier,
         trackingNumber: updated.trackingNumber,
+        trackingUrl: updated.trackingUrl,
       },
     });
   } catch (err) {

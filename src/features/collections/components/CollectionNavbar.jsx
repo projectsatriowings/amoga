@@ -194,6 +194,11 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   src={amogaLogo}
                   alt="AMOGA Main Portal"
                   className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+                  style={
+                    collectionId === 'jewellery'
+                      ? { filter: 'grayscale(1) brightness(1.75)' }
+                      : undefined
+                  }
                 />
               </Link>
               <span
@@ -331,8 +336,9 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={openWishlist}
-                className="relative p-2 rounded-full hover:bg-black/5 transition-colors"
+                className="relative p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
                 aria-label="View Wishlist"
+                style={{ color: palette.headerText || palette.text || '#FFFFFF' }}
               >
                 <Heart className="w-5 h-5" />
                 {wishlistCount > 0 && (
@@ -352,8 +358,9 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={openCart}
-                className="relative p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+                className="relative p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
                 aria-label="View Shopping Cart"
+                style={{ color: palette.headerText || palette.text || '#FFFFFF' }}
               >
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
@@ -373,8 +380,9 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={() => setAccountModalOpen(true)}
-                className="p-2 rounded-full hover:bg-black/5 transition-colors"
+                className="p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
                 aria-label="Customer Care & Assistance"
+                style={{ color: palette.headerText || palette.text || '#FFFFFF' }}
               >
                 <User className="w-5 h-5" />
               </button>
@@ -649,13 +657,17 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={() => setAccountModalOpen(false)}
-                className="p-1 rounded-full hover:bg-black/5"
+                className="p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
                 aria-label="Close dialog"
+                style={{ color: palette.text || '#F7F3EB' }}
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs leading-relaxed font-sans opacity-80">
+            <p
+              className="text-xs leading-relaxed font-sans opacity-90"
+              style={{ color: palette.text || '#F7F3EB' }}
+            >
               For direct telephone order placement, bespoke assistance, and dispatch tracking:
             </p>
             <div
@@ -663,7 +675,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               style={{
                 backgroundColor: palette.bg || '#F8F6F0',
                 borderColor: palette.border || '#E5E0D5',
-                color: palette.heading || '#173B2A',
+                color: palette.text || '#F7F3EB',
               }}
             >
               <div>Phone: {theme.contact?.phone1}</div>
@@ -671,12 +683,41 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <div>Email: {theme.contact?.email1}</div>
               <div>Hours: {theme.contact?.hours}</div>
             </div>
+
+            <div className="pt-1 flex items-center justify-between text-xs">
+              <Link
+                to="/account"
+                onClick={() => setAccountModalOpen(false)}
+                className="hover:underline font-medium"
+                style={{ color: palette.accent || palette.accentGold || '#C5A46D' }}
+              >
+                My Patron Account →
+              </Link>
+              <Link
+                to="/track"
+                onClick={() => setAccountModalOpen(false)}
+                className="hover:underline font-medium"
+                style={{ color: palette.accent || palette.accentGold || '#C5A46D' }}
+              >
+                Track Order →
+              </Link>
+            </div>
+
             <button
               type="button"
               onClick={() => setAccountModalOpen(false)}
-              className="w-full py-2.5 rounded-xl text-white text-xs font-medium uppercase tracking-wider transition-colors"
+              className="w-full py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all hover:opacity-90 active:scale-[0.99] cursor-pointer shadow-sm"
               style={{
-                backgroundColor: palette.heading || palette.accent || '#173B2A',
+                backgroundColor:
+                  palette.buttonBg ||
+                  (palette.bg === '#2C0E1A' || collectionId === 'sarees'
+                    ? (palette.accentGold || palette.accent || '#C5A46D')
+                    : (palette.heading || palette.accent || '#173B2A')),
+                color:
+                  palette.buttonText ||
+                  (palette.bg === '#2C0E1A' || collectionId === 'sarees'
+                    ? '#2C0E1A'
+                    : '#FFFFFF'),
               }}
             >
               Close

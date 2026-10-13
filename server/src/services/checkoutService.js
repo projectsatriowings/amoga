@@ -177,7 +177,7 @@ export async function resolveAndValidateCart(cartItems = []) {
 /**
  * Creates a persistent order with database transaction and strict idempotency guarantees
  */
-export async function createOrder({ items, customer, idempotencyKey = null, couponCode = null, isDemo = false }) {
+export async function createOrder({ items, customer, idempotencyKey = null, couponCode = null, isDemo = false, customerId = null }) {
   // 1. Strict Idempotency Validation
   if (idempotencyKey) {
     const existingOrder = await prisma.order.findUnique({
@@ -393,6 +393,20 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
   const taxPaise = Math.round((validation.subtotalPaise * taxPercentage) / (100 + taxPercentage));
   const taxAmountRupees = Number((taxPaise / 100).toFixed(2));
 
+  // Resolve customer ID if registered
+  const customerEmailClean = customer.email.trim().toLowerCase();
+  let resolvedCustomerId = customerId || null;
+  if (!resolvedCustomerId) {
+    try {
+      const existingCust = await prisma.customer.findUnique({
+        where: { email: customerEmailClean },
+      });
+      if (existingCust) resolvedCustomerId = existingCust.id;
+    } catch {
+      // non-blocking
+    }
+  }
+
   // 5. Atomic database transaction
   const createdOrder = await prisma.$transaction(async (tx) => {
     // Atomically increment coupon usage count if applied
@@ -415,8 +429,9 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
         taxAmount: taxAmountRupees,
         discountAmount: discountAmountRupees,
         totalAmount: totalAmountRupees,
+        customerId: resolvedCustomerId,
         customerName: customer.fullName.trim(),
-        customerEmail: customer.email.trim().toLowerCase(),
+        customerEmail: customerEmailClean,
         customerPhone: customer.phone.trim(),
         addressLine1: customer.addressLine1.trim(),
         addressLine2: customer.addressLine2 ? customer.addressLine2.trim() : null,
@@ -441,6 +456,17 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
       },
       include: {
         items: true,
+      },
+    });
+
+    // Create initial order tracking event
+    await tx.orderTrackingEvent.create({
+      data: {
+        orderId: order.id,
+        status: 'PENDING_CONFIRMATION',
+        title: 'Order Placed',
+        description: 'Order created and awaiting payment authorization at Amoga Atelier.',
+        actor: 'System',
       },
     });
 

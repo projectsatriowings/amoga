@@ -358,6 +358,16 @@ export async function verifyPaymentCallback({
       },
     });
 
+    await tx.orderTrackingEvent.create({
+      data: {
+        orderId: order.id,
+        status: 'CONFIRMED',
+        title: 'Order Confirmed',
+        description: 'Payment authorized and verified. Order confirmed for atelier processing.',
+        actor: 'System (Verified Payment)',
+      },
+    });
+
     return { updatedPayment, updatedOrder };
   });
 
@@ -449,6 +459,16 @@ export async function processWebhook({ rawBody, headers }) {
             data: {
               status: 'CONFIRMED',
               paymentStatus: 'SUCCEEDED',
+            },
+          });
+
+          await tx.orderTrackingEvent.create({
+            data: {
+              orderId: payment.orderId,
+              status: 'CONFIRMED',
+              title: 'Order Confirmed',
+              description: 'Payment captured via provider webhook. Order confirmed for atelier processing.',
+              actor: 'System (Webhook)',
             },
           });
         }

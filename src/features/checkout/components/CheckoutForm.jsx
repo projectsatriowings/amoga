@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, AlertCircle, Info } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
+import { useCustomerStore } from '../../account/store/useCustomerStore';
 
 export const CheckoutForm = () => {
   const navigate = useNavigate();
@@ -57,6 +58,62 @@ export const CheckoutForm = () => {
       return changed ? next : prev;
     });
   }, [customerDetails]);
+
+  const { customer, isAuthenticated, addresses, fetchAddresses } = useCustomerStore();
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+  // Load customer addresses if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAddresses();
+    }
+  }, [isAuthenticated, fetchAddresses]);
+
+  // Autofill from logged-in customer profile if fields are empty
+  useEffect(() => {
+    if (!customer) return;
+    setFormData((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      if (!dirtyFieldsRef.current.has('fullName') && !prev.fullName && customer.name) {
+        next.fullName = customer.name;
+        changed = true;
+      }
+      if (!dirtyFieldsRef.current.has('email') && !prev.email && customer.email) {
+        next.email = customer.email;
+        changed = true;
+      }
+      if (!dirtyFieldsRef.current.has('phone') && !prev.phone && customer.phone) {
+        next.phone = customer.phone;
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [customer]);
+
+  const handleSelectAddress = (addr) => {
+    setSelectedAddressId(addr.id);
+    setFormData((prev) => ({
+      ...prev,
+      addressLine1: addr.addressLine1 || '',
+      addressLine2: addr.addressLine2 || '',
+      city: addr.city || '',
+      state: addr.state || '',
+      pincode: addr.pincode || '',
+      phone: prev.phone || addr.phone || '',
+    }));
+    dirtyFieldsRef.current.add('addressLine1');
+    dirtyFieldsRef.current.add('city');
+    dirtyFieldsRef.current.add('state');
+    dirtyFieldsRef.current.add('pincode');
+    setErrors((prev) => ({
+      ...prev,
+      addressLine1: null,
+      city: null,
+      state: null,
+      pincode: null,
+    }));
+  };
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -359,6 +416,70 @@ export const CheckoutForm = () => {
         >
           2. Delivery Address
         </h2>
+
+        {/* Authenticated Patron Saved Addresses Selector */}
+        {isAuthenticated && addresses && addresses.length > 0 && (
+          <div
+            className="p-4 rounded-xl border space-y-3"
+            style={{
+              backgroundColor: 'var(--collection-input-bg)',
+              borderColor: 'var(--collection-border)',
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase font-serif tracking-widest text-[#722F37] font-semibold">
+                Saved Residences & Ateliers
+              </span>
+              <span className="text-[11px] text-[#8C7A6B]">
+                Click an address to autofill
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {addresses.map((addr) => {
+                const isSelected = selectedAddressId === addr.id;
+                return (
+                  <button
+                    key={addr.id}
+                    type="button"
+                    onClick={() => handleSelectAddress(addr)}
+                    className={`text-left p-3 rounded-lg border transition-all text-xs cursor-pointer ${
+                      isSelected
+                        ? 'border-[#722F37] bg-[#722F37]/10 ring-1 ring-[#722F37]'
+                        : 'border-[#E6DCCD] hover:border-[#C5A46D] bg-white/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-semibold text-[#2C0E1A]">
+                        {addr.label || 'Residence'}
+                      </span>
+                      {addr.isDefault && (
+                        <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#C5A46D]/20 text-[#722F37] font-semibold">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[#5C554E] truncate">{addr.addressLine1}</p>
+                    <p className="text-[#8C7A6B] text-[11px]">
+                      {addr.city}, {addr.state} — {addr.pincode}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {!isAuthenticated && (
+          <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-[#E6DCCD] bg-[#FAF7F2]/60 text-xs text-[#6A635B]">
+            <span>Checking out as guest?</span>
+            <a
+              href="/account/login?redirect=/checkout"
+              className="text-[#722F37] font-semibold hover:underline"
+            >
+              Sign In to use Saved Residences →
+            </a>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Address Line 1 */}

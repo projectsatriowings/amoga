@@ -290,30 +290,35 @@ export function AppFooter({ activeCollection }) {
             </ul>
           </div>
 
-          {/* Policy Placeholders */}
+          {/* Client Concierge & Store Policies */}
           <div className="space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-widest font-semibold opacity-90">
-              Store Policies
+              Client Concierge
             </h4>
-            <ul className="space-y-2 text-xs opacity-70">
+            <ul className="space-y-2 text-xs opacity-75">
               <li>
-                <span className="cursor-not-allowed" title="Formal policy document awaiting client upload in Phase 4">
-                  Shipping Terms (Pending)
+                <Link to="/track" className="hover:opacity-100 hover:underline">
+                  Track Any Order
+                </Link>
+              </li>
+              <li>
+                <Link to="/account" className="hover:opacity-100 hover:underline">
+                  My Patron Account
+                </Link>
+              </li>
+              <li>
+                <Link to="/account?tab=orders" className="hover:opacity-100 hover:underline">
+                  Order History Dossier
+                </Link>
+              </li>
+              <li>
+                <span className="opacity-60 cursor-not-allowed" title="Client concierge document">
+                  Shipping Terms
                 </span>
               </li>
               <li>
-                <span className="cursor-not-allowed" title="Formal policy document awaiting client upload in Phase 4">
-                  Returns & Refunds (Pending)
-                </span>
-              </li>
-              <li>
-                <span className="cursor-not-allowed" title="Formal policy document awaiting client upload in Phase 4">
-                  Privacy Policy (Pending)
-                </span>
-              </li>
-              <li>
-                <span className="cursor-not-allowed" title="Formal policy document awaiting client upload in Phase 4">
-                  Terms of Service (Pending)
+                <span className="opacity-60 cursor-not-allowed" title="Client concierge document">
+                  Returns & Care
                 </span>
               </li>
             </ul>

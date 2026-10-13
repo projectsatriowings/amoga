@@ -29,6 +29,7 @@ export function AdminOrderDetail() {
   // Tracking state
   const [carrier, setCarrier] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [trackingUrl, setTrackingUrl] = useState('');
   const [updatingTracking, setUpdatingTracking] = useState(false);
   const [trackingMessage, setTrackingMessage] = useState(null);
 
@@ -43,6 +44,7 @@ export function AdminOrderDetail() {
       setAllowedNextStatuses(json.allowedNextStatuses || []);
       setCarrier(json.order.carrier || '');
       setTrackingNumber(json.order.trackingNumber || '');
+      setTrackingUrl(json.order.trackingUrl || '');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -94,6 +96,7 @@ export function AdminOrderDetail() {
         body: JSON.stringify({
           carrier,
           trackingNumber,
+          trackingUrl,
         }),
       });
 
@@ -285,6 +288,42 @@ export function AdminOrderDetail() {
               />
             </div>
 
+            <div>
+              <label className="block text-[11px] font-mono uppercase text-[#4A423B] mb-1">
+                Carrier Web Tracking Link (optional)
+              </label>
+              <input
+                type="url"
+                placeholder="https://www.bluedart.com/tracking/..."
+                value={trackingUrl}
+                onChange={(e) => setTrackingUrl(e.target.value)}
+                className="w-full px-3 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs font-mono"
+              />
+            </div>
+
+            {order.trackingNumber && (
+              <div className="pt-1 flex items-center justify-between text-[11px]">
+                <a
+                  href={`/track/${order.orderReference}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[#722F37] font-semibold hover:underline"
+                >
+                  View Amoga Live Tracking Page ↗
+                </a>
+                {order.trackingUrl && (
+                  <a
+                    href={order.trackingUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[#8C6320] font-semibold hover:underline"
+                  >
+                    Carrier Portal ↗
+                  </a>
+                )}
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={updatingTracking}
@@ -453,6 +492,67 @@ export function AdminOrderDetail() {
                 </div>
               </div>
             ))
+          )}
+        </div>
+      </div>
+
+      {/* Milestone History & Tracking Events */}
+      <div className="bg-[#FBF9F5] rounded-lg border border-[#E5E0D5] overflow-hidden">
+        <div className="p-4 border-b border-[#E5E0D5] bg-[#F5F2EB] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#8C6320]" />
+            <h2 className="font-serif text-sm font-bold text-[#1A1817]">
+              Live Milestone History & Atelier Activity Log ({order.trackingEvents?.length || 0})
+            </h2>
+          </div>
+          <a
+            href={`/track/${order.orderReference}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-[#722F37] hover:underline font-semibold"
+          >
+            Open Patron Live Tracking ↗
+          </a>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {(!order.trackingEvents || order.trackingEvents.length === 0) ? (
+            <p className="text-xs text-[#7A7167] italic">No tracking milestones recorded yet.</p>
+          ) : (
+            <div className="relative pl-6 space-y-4 border-l-2 border-[#E5E0D5]">
+              {order.trackingEvents.map((evt) => (
+                <div key={evt.id} className="relative">
+                  <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-[#722F37] border-2 border-[#FBF9F5]" />
+                  <div className="bg-white p-3.5 rounded border border-[#E5E0D5]">
+                    <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                      <span className="font-serif font-bold text-xs text-[#1A1817]">
+                        {evt.title}
+                      </span>
+                      <span className="text-[10px] font-mono text-[#8C6320]">
+                        {new Date(evt.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    {evt.description && (
+                      <p className="text-xs text-[#5C544C] mb-2">{evt.description}</p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-[#7A7167]">
+                      <span className="px-1.5 py-0.5 rounded bg-[#FAF7F2] border border-[#E5E0D5]">
+                        Status: {evt.status}
+                      </span>
+                      {evt.carrier && (
+                        <span>Carrier: {evt.carrier}</span>
+                      )}
+                      {evt.trackingNumber && (
+                        <span>AWB: {evt.trackingNumber}</span>
+                      )}
+                      {evt.actor && (
+                        <span className="text-[#722F37] font-semibold">Actor: {evt.actor}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
