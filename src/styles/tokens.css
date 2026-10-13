@@ -74,6 +74,7 @@
   --collection-page-bg: #F3F0E7;
   --collection-section-bg: #EAE8DC;
   --collection-card-bg: #FAF9F4;
+  --collection-card-border: #D9DCCD;
   --collection-text: #292820;
   --collection-text-muted: #65675A;
   --collection-heading: #173B2A;
@@ -82,9 +83,18 @@
   --collection-accent-light: rgba(63, 123, 67, 0.12);
   --collection-border: #D9DCCD;
   --collection-input-bg: #F8F7F0;
+  --collection-input-text: #292820;
+  --collection-input-placeholder: #728276;
   --collection-input-border: #D9DCCD;
   --collection-focus-ring: rgba(63, 123, 67, 0.45);
+  --collection-button-bg: #3F7B43;
   --collection-button-text: #FFFFFF;
+  --collection-btn-text: #FFFFFF;
+  --collection-notice-bg: #EAE8DC;
+  --collection-notice-border: #D9DCCD;
+  --collection-notice-text: #292820;
+  --collection-notice-title: #173B2A;
+  --collection-notice-icon: #3F7B43;
 
   --bg-primary: #F3F0E7;
   --bg-surface: #FAF9F4;
@@ -108,6 +118,7 @@
   --collection-page-bg: #FAF1BB;
   --collection-section-bg: #FAF1BB;
   --collection-card-bg: #FFFDF5;
+  --collection-card-border: rgba(184, 142, 56, 0.35);
   --collection-text: #2C1E11;
   --collection-text-muted: #543B25;
   --collection-heading: #2C1E11;
@@ -116,9 +127,18 @@
   --collection-accent-light: rgba(184, 142, 56, 0.15);
   --collection-border: rgba(184, 142, 56, 0.28);
   --collection-input-bg: #FFFDF5;
+  --collection-input-text: #2C1E11;
+  --collection-input-placeholder: #7D5C3F;
   --collection-input-border: #B88E38;
   --collection-focus-ring: rgba(184, 142, 56, 0.45);
+  --collection-button-bg: #8C6320;
   --collection-button-text: #FAF1BB;
+  --collection-btn-text: #FAF1BB;
+  --collection-notice-bg: #F5E8A3;
+  --collection-notice-border: rgba(184, 142, 56, 0.35);
+  --collection-notice-text: #2C1E11;
+  --collection-notice-title: #2C1E11;
+  --collection-notice-icon: #8C6320;
 
   --bg-primary: #FAF1BB;
   --bg-surface: #FFFDF5;
@@ -135,37 +155,47 @@
   --font-family-heading: var(--font-cormorant);
 }
 
-/* Heritage Sarees: Premium textile-inspired aesthetic */
+/* Heritage Sarees: Coordinated deep burgundy & antique gold luxury aesthetic */
 [data-collection="sarees"],
 [data-collection="heritage-sarees"],
 .theme-sarees {
-  --collection-page-bg: #F3EAE1;
-  --collection-section-bg: #E9DCD0;
-  --collection-card-bg: #FBF5ED;
-  --collection-text: #3B111E;
-  --collection-text-muted: #775B5C;
-  --collection-heading: #3B111E;
-  --collection-accent: #6E263A;
-  --collection-accent-hover: #501A2B;
-  --collection-accent-gold: #B18A50;
-  --collection-accent-light: rgba(110, 38, 58, 0.12);
-  --collection-border: #E0CFC0;
-  --collection-input-bg: #F8F0E7;
-  --collection-input-border: #E0CFC0;
-  --collection-focus-ring: rgba(110, 38, 58, 0.45);
-  --collection-button-text: #FFFFFF;
+  --collection-page-bg: #2C0E1A;
+  --collection-section-bg: #35121F;
+  --collection-card-bg: #35121F;
+  --collection-card-border: #C5A46D;
+  --collection-text: #F6EBD8;
+  --collection-text-muted: #D8C6AD;
+  --collection-heading: #F6EBD8;
+  --collection-accent: #C5A46D;
+  --collection-accent-hover: #B18A50;
+  --collection-accent-gold: #C5A46D;
+  --collection-accent-light: rgba(197, 164, 109, 0.15);
+  --collection-border: rgba(197, 164, 109, 0.35);
+  --collection-input-bg: #F6EBD8;
+  --collection-input-text: #292820;
+  --collection-input-placeholder: #746F63;
+  --collection-input-border: #C5A46D;
+  --collection-focus-ring: rgba(197, 164, 109, 0.45);
+  --collection-button-bg: #C5A46D;
+  --collection-button-text: #2C0E1A;
+  --collection-btn-text: #2C0E1A;
+  --collection-notice-bg: #35121F;
+  --collection-notice-border: rgba(197, 164, 109, 0.45);
+  --collection-notice-text: #F6EBD8;
+  --collection-notice-title: #C5A46D;
+  --collection-notice-icon: #C5A46D;
 
-  --bg-primary: #F3EAE1;
-  --bg-surface: #FBF5ED;
-  --bg-elevated: #E9DCD0;
-  --text-primary: #3B111E;
-  --text-secondary: #775B5C;
-  --text-muted: #957879;
-  --accent-primary: #6E263A;
+  --bg-primary: #2C0E1A;
+  --bg-surface: #35121F;
+  --bg-elevated: #35121F;
+  --text-primary: #F6EBD8;
+  --text-secondary: #D8C6AD;
+  --text-muted: #B8A58D;
+  --accent-primary: #C5A46D;
   --accent-secondary: #B18A50;
-  --border-subtle: #E0CFC0;
-  --border-strong: #CBB4A1;
-  --focus-ring: rgba(110, 38, 58, 0.45);
+  --border-subtle: rgba(197, 164, 109, 0.35);
+  --border-strong: #C5A46D;
+  --focus-ring: rgba(197, 164, 109, 0.45);
   --font-family-body: var(--font-inter);
   --font-family-heading: var(--font-playfair);
 }
@@ -177,6 +207,7 @@
   --collection-page-bg: #F0F1F1;
   --collection-section-bg: #E5E7E8;
   --collection-card-bg: #F8F9F9;
+  --collection-card-border: #D6D9DC;
   --collection-text: #25272A;
   --collection-text-muted: #65696D;
   --collection-heading: #25272A;
@@ -185,9 +216,18 @@
   --collection-accent-light: rgba(115, 124, 134, 0.14);
   --collection-border: #D6D9DC;
   --collection-input-bg: #F4F5F5;
+  --collection-input-text: #25272A;
+  --collection-input-placeholder: #65696D;
   --collection-input-border: #D6D9DC;
   --collection-focus-ring: rgba(115, 124, 134, 0.45);
-  --collection-button-text: #FFFFFF;
+  --collection-button-bg: #25272A;
+  --collection-button-text: #FAFBFB;
+  --collection-btn-text: #FAFBFB;
+  --collection-notice-bg: #E5E7E8;
+  --collection-notice-border: #D6D9DC;
+  --collection-notice-text: #25272A;
+  --collection-notice-title: #25272A;
+  --collection-notice-icon: #525B65;
 
   --bg-primary: #F0F1F1;
   --bg-surface: #F8F9F9;
@@ -210,6 +250,7 @@
   --collection-page-bg: #F3F0E7;
   --collection-section-bg: #EAE6DB;
   --collection-card-bg: #FAF8F2;
+  --collection-card-border: #DDD7C9;
   --collection-text: #292820;
   --collection-text-muted: #65675A;
   --collection-heading: #1B351E;
@@ -218,9 +259,18 @@
   --collection-accent-light: rgba(63, 90, 53, 0.12);
   --collection-border: #DDD7C9;
   --collection-input-bg: #F7F5ED;
+  --collection-input-text: #292820;
+  --collection-input-placeholder: #65675A;
   --collection-input-border: #DDD7C9;
   --collection-focus-ring: rgba(63, 90, 53, 0.45);
+  --collection-button-bg: #3F5A35;
   --collection-button-text: #FFFFFF;
+  --collection-btn-text: #FFFFFF;
+  --collection-notice-bg: #EAE6DB;
+  --collection-notice-border: #DDD7C9;
+  --collection-notice-text: #292820;
+  --collection-notice-title: #1B351E;
+  --collection-notice-icon: #3F5A35;
 
   --bg-primary: #F3F0E7;
   --bg-surface: #FAF8F2;
@@ -247,6 +297,7 @@
   --collection-page-bg: #F4F2EC;
   --collection-section-bg: #EAE6DB;
   --collection-card-bg: #FAF9F4;
+  --collection-card-border: #DCD6C7;
   --collection-text: #292820;
   --collection-text-muted: #65675A;
   --collection-heading: #1C2D20;
@@ -254,10 +305,19 @@
   --collection-accent-hover: #2E4426;
   --collection-accent-light: rgba(63, 90, 53, 0.12);
   --collection-border: #DCD6C7;
-  --collection-input-bg: #F7F5ED;
+  --collection-input-bg: #FFFFFF;
+  --collection-input-text: #292820;
+  --collection-input-placeholder: #65675A;
   --collection-input-border: #DCD6C7;
   --collection-focus-ring: rgba(63, 90, 53, 0.45);
+  --collection-button-bg: #3F5A35;
   --collection-button-text: #FFFFFF;
+  --collection-btn-text: #FFFFFF;
+  --collection-notice-bg: #EAE6DB;
+  --collection-notice-border: #DCD6C7;
+  --collection-notice-text: #292820;
+  --collection-notice-title: #1C2D20;
+  --collection-notice-icon: #3F5A35;
 
   --bg-primary: #F4F2EC;
   --bg-surface: #FAF9F4;
@@ -272,4 +332,10 @@
   --focus-ring: rgba(63, 90, 53, 0.45);
   --font-family-body: var(--font-inter);
   --font-family-heading: var(--font-playfair);
+}
+
+/* Dedicated accessible checkout input styling */
+.checkout-input::placeholder {
+  color: var(--collection-input-placeholder, #746F63) !important;
+  opacity: 1;
 }

@@ -2,6 +2,8 @@ import { create } from 'zustand';
 
 const TOKEN_KEY = 'amoga_admin_token';
 const USER_KEY = 'amoga_admin_user';
+const DEV_MODE_KEY = 'amoga_developer_mode_active';
+const VALID_DEV_PASSCODES = ['dev2026', 'amoga-dev', 'developer', 'amoga2026'];
 
 export const useAdminStore = create((set, get) => ({
   token: localStorage.getItem(TOKEN_KEY) || null,
@@ -16,6 +18,36 @@ export const useAdminStore = create((set, get) => ({
   isAuthenticated: Boolean(localStorage.getItem(TOKEN_KEY)),
   isLoading: false,
   error: null,
+
+  // Developer Mode (Protects Collections Architecture & Audit Trail for developers only)
+  isDeveloperMode: localStorage.getItem(DEV_MODE_KEY) === 'true',
+  devModalOpen: false,
+
+  setDevModalOpen: (open) => set({ devModalOpen: Boolean(open) }),
+
+  unlockDeveloperMode: (passcode) => {
+    const trimmed = (passcode || '').trim().toLowerCase();
+    if (VALID_DEV_PASSCODES.includes(trimmed)) {
+      localStorage.setItem(DEV_MODE_KEY, 'true');
+      set({ isDeveloperMode: true, devModalOpen: false });
+      return { success: true };
+    }
+    return { success: false, error: 'Incorrect developer passcode. Access denied.' };
+  },
+
+  lockDeveloperMode: () => {
+    localStorage.removeItem(DEV_MODE_KEY);
+    set({ isDeveloperMode: false });
+  },
+
+  toggleDeveloperMode: () => {
+    const { isDeveloperMode } = get();
+    if (isDeveloperMode) {
+      get().lockDeveloperMode();
+    } else {
+      set({ devModalOpen: true });
+    }
+  },
 
   login: async (email, password) => {
     set({ isLoading: true, error: null });

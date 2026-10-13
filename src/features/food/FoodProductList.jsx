@@ -32,13 +32,30 @@ export function FoodProductList() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState('featured');
 
-  // Synchronize internal state with URL search params (e.g. when navigated via header dropdown)
+  // Synchronize internal state with URL search params when navigated externally
   React.useEffect(() => {
     setSelectedCategory(searchParams.get('category') || 'all');
-    setSearchQuery(searchParams.get('q') || '');
+    const urlQ = searchParams.get('q') || '';
+    if (urlQ !== searchQuery.trim() && !searchQuery.startsWith(urlQ)) {
+      setSearchQuery(urlQ);
+    }
   }, [searchParams]);
 
-  // Update URL parameters when filters change
+  // Debounced URL sync so typing is completely smooth and does not overwrite spaces
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const newParams = new URLSearchParams(searchParams);
+      if (!searchQuery.trim()) {
+        newParams.delete('q');
+      } else {
+        newParams.set('q', searchQuery.trim());
+      }
+      setSearchParams(newParams, { replace: true });
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Update URL parameters when category changes
   const handleCategoryChange = (catId) => {
     setSelectedCategory(catId);
     const newParams = new URLSearchParams(searchParams);
@@ -52,20 +69,13 @@ export function FoodProductList() {
 
   const handleSearchChange = (val) => {
     setSearchQuery(val);
-    const newParams = new URLSearchParams(searchParams);
-    if (!val.trim()) {
-      newParams.delete('q');
-    } else {
-      newParams.set('q', val.trim());
-    }
-    setSearchParams(newParams);
   };
 
   const clearAllFilters = () => {
     setSelectedCategory('all');
     setSearchQuery('');
     setSortBy('featured');
-    setSearchParams({});
+    setSearchParams({}, { replace: true });
   };
 
   // Filter & Sort Logic

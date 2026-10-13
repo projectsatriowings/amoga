@@ -33,11 +33,25 @@ export function JewelleryProductList() {
   const [searchInput, setSearchInput] = useState(currentQuery);
   const [prevQuery, setPrevQuery] = useState(currentQuery);
 
-  // Sync search input with URL query without useEffect cascading render
+  // Sync search input with URL query when navigation changes externally
   if (prevQuery !== currentQuery) {
     setPrevQuery(currentQuery);
     setSearchInput(currentQuery);
   }
+
+  // Debounced URL sync so typing never causes re-renders or delays
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const nextParams = new URLSearchParams(searchParams);
+      if (searchInput.trim()) {
+        nextParams.set('q', searchInput.trim());
+      } else {
+        nextParams.delete('q');
+      }
+      setSearchParams(nextParams, { replace: true });
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const handleCategoryChange = (categoryId) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -57,16 +71,16 @@ export function JewelleryProductList() {
     } else {
       nextParams.delete('q');
     }
-    setSearchParams(nextParams);
+    setSearchParams(nextParams, { replace: true });
   };
 
   const handleClearFilters = () => {
     setSearchInput('');
-    setSearchParams(new URLSearchParams());
+    setSearchParams(new URLSearchParams(), { replace: true });
     setSortBy('featured');
   };
 
-  // Filter and sort products
+  // Filter and sort products reactively based on live searchInput
   const filteredProducts = useMemo(() => {
     let result = [...apiProducts];
 
@@ -76,8 +90,8 @@ export function JewelleryProductList() {
     }
 
     // Search query filter (search by name, tagline, description, specs)
-    if (currentQuery.trim()) {
-      const q = currentQuery.toLowerCase().trim();
+    if (searchInput.trim()) {
+      const q = searchInput.toLowerCase().trim();
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
@@ -117,7 +131,7 @@ export function JewelleryProductList() {
     }
 
     return result;
-  }, [apiProducts, currentCategory, currentQuery, sortBy]);
+  }, [apiProducts, currentCategory, searchInput, sortBy]);
 
   const activeCategoryObj =
     JEWELLERY_CATEGORIES.find((c) => c.id === currentCategory) || JEWELLERY_CATEGORIES[0];
@@ -192,7 +206,7 @@ export function JewelleryProductList() {
                     setSearchInput('');
                     const nextParams = new URLSearchParams(searchParams);
                     nextParams.delete('q');
-                    setSearchParams(nextParams);
+                    setSearchParams(nextParams, { replace: true });
                   }}
                   className="absolute right-2.5 top-2.5 text-[#F7F3EB]/50 hover:text-[#F7F3EB]"
                 >

@@ -4,10 +4,28 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Compass, Sparkles, Check } from 'lucide-react';
 import foodHeroImg from '../../../assets/images/gatekeeper-food.jpg';
 import { Container } from '../../../components/ui/Container';
+import { useCollection } from '../../../hooks/useCollection';
 
 export function FoodHero() {
+  const { collection } = useCollection('food');
+
+  const tagline = (collection?.tagline || 'THE GOODNESS OF TRADITION').toUpperCase();
+  const heading = (collection?.heroHeading || collection?.name || 'WHOLESOME PANTRY').toUpperCase();
+  const subheading = collection?.heroSubheading || 'Traditional blends for everyday nourishment.';
+  const description = collection?.description || 'Discover traditional Indian blends made for everyday cooking, from comforting soup mixes to nourishing millet blends and flavourful rice podis.';
+  const heroImage = collection?.heroImage || foodHeroImg;
+
+  const tc = collection?.themeConfig || {};
+  const accentColor = collection?.accentColor || tc.accentColor || tc.primaryColor || '#3F7B43';
+  const headingColor = tc.secondaryColor || '#173B2A';
+  const bgColor = tc.bgColor || '#F8F6F0';
+  const textColor = tc.textColor || '#292820';
+
   return (
-    <section className="relative overflow-hidden bg-[#F8F6F0] py-12 sm:py-16 lg:py-24 border-b border-[#E5E0D5]">
+    <section
+      className="relative overflow-hidden py-12 sm:py-16 lg:py-24 border-b border-[#E5E0D5] transition-colors"
+      style={{ backgroundColor: bgColor }}
+    >
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Left Column: Editorial Headline & Messaging */}
@@ -18,19 +36,36 @@ export function FoodHero() {
             className="lg:col-span-7 space-y-6"
           >
             {/* Eyebrow Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#3F7B43]/10 backdrop-blur-md border border-[#3F7B43]/20 text-[#3F7B43] text-xs font-mono font-semibold tracking-widest uppercase shadow-2xs">
+            <div
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full backdrop-blur-md border text-xs font-mono font-semibold tracking-widest uppercase shadow-2xs"
+              style={{
+                backgroundColor: `${accentColor}1A`,
+                borderColor: `${accentColor}33`,
+                color: accentColor,
+              }}
+            >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>THE GOODNESS OF TRADITION</span>
+              <span>{tagline}</span>
             </div>
 
             {/* Large Uppercase Collection Heading */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-[#173B2A] leading-[1.08] tracking-tight uppercase">
-              WHOLESOME PANTRY
-            </h1>
+            <div className="space-y-2">
+              <h1
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.08] tracking-tight uppercase"
+                style={{ color: headingColor }}
+              >
+                {heading}
+              </h1>
+              {subheading && (
+                <p className="text-base sm:text-lg font-serif italic opacity-90" style={{ color: headingColor }}>
+                  {subheading}
+                </p>
+              )}
+            </div>
 
             {/* Approved Hero Description */}
-            <p className="text-base sm:text-lg text-[#292820]/80 max-w-xl leading-relaxed font-sans">
-              Discover traditional Indian blends made for everyday cooking, from comforting soup mixes to nourishing millet blends and flavourful rice podis.
+            <p className="text-base sm:text-lg max-w-xl leading-relaxed font-sans" style={{ color: `${textColor}CC` }}>
+              {description}
             </p>
 
             {/* Category Highlights */}
@@ -79,7 +114,7 @@ export function FoodHero() {
           >
             <div className="relative rounded-3xl overflow-hidden shadow-xl border border-[#E5E0D5] bg-[#FFFFFF] aspect-[4/3] sm:aspect-square">
               <img
-                src={foodHeroImg}
+                src={heroImage}
                 alt="Amoga Wholesome Pantry Collection"
                 className="w-full h-full object-cover object-center"
               />

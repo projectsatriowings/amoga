@@ -12,13 +12,14 @@ export async function postOrder(req, res, next) {
       });
     }
 
-    const { items, customer, idempotencyKey } = parseResult.data;
+    const { items, customer, idempotencyKey, couponCode } = parseResult.data;
     const isDemo = Boolean(req.body.isDemo);
 
     const result = await createOrder({
       items,
       customer,
       idempotencyKey,
+      couponCode,
       isDemo,
     });
 

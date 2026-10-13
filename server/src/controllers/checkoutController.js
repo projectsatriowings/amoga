@@ -28,15 +28,21 @@ export async function validateCheckoutCart(req, res, next) {
       });
     }
 
+    const shippingAmount = result.shipping?.amount || 0.0;
+    const isComplimentary = result.shipping?.isComplimentary ?? (shippingAmount === 0);
+    const totalAmount = Number((result.subtotal + shippingAmount).toFixed(2));
+
     return res.status(200).json({
       success: true,
       canCheckout: true,
       lines: result.lines,
       totals: {
         subtotal: result.subtotal,
-        shippingAmount: 0.0,
-        taxAmount: 0.0,
-        totalAmount: result.subtotal,
+        shippingAmount,
+        isComplimentaryShipping: isComplimentary,
+        freeShippingThreshold: result.shipping?.freeShippingThreshold ?? 2000,
+        taxPercentage: result.taxPercentage ?? 5,
+        totalAmount,
         payableCount: result.payableCount,
         totalCount: result.totalCount,
       },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingBag, Heart, Shield, RefreshCw, AlertCircle } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Heart, Shield, RefreshCw, AlertCircle, Search, X } from 'lucide-react';
 import { CollectionLayout } from './components/CollectionLayout';
 import { Container } from '../../components/ui/Container';
 import { BackButton } from '../../components/ui/BackButton';
@@ -94,7 +94,21 @@ export function DynamicStorefront() {
     );
   }
 
-  const accentColor = collection.accentColor || '#722F37';
+  const tc = collection.themeConfig || {};
+  const accentColor = collection.accentColor || tc.accentColor || tc.primaryColor || '#722F37';
+  const bgColor = tc.bgColor || '#FAF8F5';
+  const surfaceColor = tc.surfaceColor || '#FFFFFF';
+  const textColor = tc.textColor || '#1A1817';
+  const mutedTextColor = tc.mutedTextColor || '#5C544C';
+  const borderColor = tc.borderColor || '#E5E0D5';
+  const buttonBg = tc.buttonBg || accentColor;
+  const buttonText = tc.buttonText || '#FFFFFF';
+
+  const heading = collection.heroHeading || collection.name;
+  const subheading = collection.heroSubheading;
+  const tagline = collection.tagline;
+  const description = collection.description;
+  const heroImage = collection.heroImage;
 
   // Extract distinct subcategories
   const distinctCategories = Array.from(
@@ -118,10 +132,11 @@ export function DynamicStorefront() {
     <CollectionLayout collectionId={collection.id}>
       {/* 1. Hero Showcase Section */}
       <section
-        className="relative overflow-hidden border-b transition-colors py-16 sm:py-24"
+        className="relative overflow-hidden border-b transition-colors py-14 sm:py-20"
         style={{
-          backgroundColor: '#FAF8F5',
-          borderColor: '#E5E0D5',
+          backgroundColor: bgColor,
+          borderColor: borderColor,
+          color: textColor,
         }}
       >
         <div
@@ -133,36 +148,72 @@ export function DynamicStorefront() {
         />
 
         <Container>
-          <div className="max-w-3xl mx-auto text-center space-y-4 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E0D5] text-[11px] font-mono tracking-wider uppercase shadow-2xs">
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: accentColor }}
-              />
-              <span style={{ color: accentColor }} className="font-semibold">
-                {collection.name}
-              </span>
-              <span className="text-[#A8A096]">&bull;</span>
-              <span className="text-[#7A7167]">Curated Collection</span>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
+            <div className={heroImage ? "lg:col-span-7 space-y-4" : "max-w-3xl mx-auto text-center space-y-4 lg:col-span-12"}>
+              {tagline && (
+                <div
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-mono tracking-wider uppercase shadow-2xs"
+                  style={{
+                    backgroundColor: surfaceColor,
+                    borderColor: borderColor,
+                  }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: accentColor }}
+                  />
+                  <span style={{ color: accentColor }} className="font-semibold">
+                    {tagline}
+                  </span>
+                </div>
+              )}
 
-            <h1 className="font-serif text-3xl sm:text-5xl text-[#1A1817] tracking-tight leading-tight">
-              {collection.tagline || collection.name}
-            </h1>
+              <div className="space-y-1">
+                <h1
+                  className="font-serif text-3xl sm:text-5xl tracking-tight leading-tight uppercase"
+                  style={{ color: textColor }}
+                >
+                  {heading}
+                </h1>
+                {subheading && (
+                  <p className="font-serif italic text-base sm:text-lg opacity-85" style={{ color: accentColor }}>
+                    {subheading}
+                  </p>
+                )}
+              </div>
 
-            <p className="text-xs sm:text-sm text-[#5C544C] max-w-xl mx-auto leading-relaxed">
-              {collection.description ||
-                'Discover Amoga\'s curated catalogue created with timeless dedication to quality, craftsmanship, and verified provenance.'}
-            </p>
-
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
-              <span
-                className="text-xs font-mono px-3.5 py-1.5 rounded-full text-white font-semibold shadow-xs"
-                style={{ backgroundColor: accentColor }}
+              <p
+                className="text-xs sm:text-sm max-w-xl leading-relaxed"
+                style={{ color: mutedTextColor }}
               >
-                {products.length} Registered Offerings
-              </span>
+                {description ||
+                  'Discover Amoga\'s curated catalogue created with timeless dedication to quality, craftsmanship, and verified provenance.'}
+              </p>
+
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <span
+                  className="text-xs font-mono px-3.5 py-1.5 rounded-full font-semibold shadow-xs"
+                  style={{ backgroundColor: buttonBg, color: buttonText }}
+                >
+                  {products.length} Registered Offerings
+                </span>
+              </div>
             </div>
+
+            {heroImage && (
+              <div className="lg:col-span-5">
+                <div
+                  className="relative rounded-2xl overflow-hidden shadow-xl border aspect-[4/3] sm:aspect-square"
+                  style={{ borderColor: borderColor, backgroundColor: surfaceColor }}
+                >
+                  <img
+                    src={heroImage}
+                    alt={collection.name}
+                    className="w-full h-full object-cover object-center"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </Container>
       </section>
@@ -204,14 +255,25 @@ export function DynamicStorefront() {
             </div>
 
             {/* In-Collection Search Input */}
-            <div className="w-full sm:w-64">
+            <div className="w-full sm:w-64 relative">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2 text-[#7A7167] pointer-events-none" />
               <input
                 type="text"
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 placeholder={`Search in ${collection.name}...`}
-                className="w-full px-3 py-1.5 bg-[#FAF8F5] border border-[#E5E0D5] rounded-full text-xs outline-none focus:ring-1"
+                className="w-full pl-8 pr-7 py-1.5 bg-[#FAF8F5] border border-[#E5E0D5] rounded-full text-xs outline-none focus:ring-1"
               />
+              {searchFilter && (
+                <button
+                  type="button"
+                  onClick={() => setSearchFilter('')}
+                  className="absolute right-2.5 top-1.5 text-[#7A7167] hover:text-[#1A1817] p-0.5 cursor-pointer"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </Container>

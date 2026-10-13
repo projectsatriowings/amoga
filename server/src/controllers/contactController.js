@@ -20,37 +20,52 @@ export const submitContactForm = async (req, res, next) => {
     const { fullName, email, phone, subject, message, collectionId } = parseResult.data;
     const inquiryReference = `INQ-${Date.now().toString(36).toUpperCase()}`;
 
-    // Safely persist inquiry in audit_logs for staff without changing core commerce schema
+    // 1. Persist directly in dedicated customer_inquiries database model
+    const inquiry = await prisma.customerInquiry.create({
+      data: {
+        reference: inquiryReference,
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone ? phone.trim() : null,
+        subject: subject.trim(),
+        message: message.trim(),
+        collectionId: collectionId || 'general',
+        status: 'NEW',
+      },
+    });
+
+    // 2. Log in append-only AuditLog
     try {
       await prisma.auditLog.create({
         data: {
-          adminEmail: email,
+          adminEmail: email.trim().toLowerCase(),
           action: 'CUSTOMER_INQUIRY',
-          entityType: 'ContactInquiry',
-          entityId: inquiryReference,
+          entityType: 'CustomerInquiry',
+          entityId: inquiry.reference,
+          status: 'SUCCESS',
           details: {
-            inquiryReference,
-            fullName,
-            email,
-            phone: phone || null,
-            subject,
-            message,
-            collectionId: collectionId || 'general',
+            inquiryReference: inquiry.reference,
+            inquiryId: inquiry.id,
+            fullName: inquiry.fullName,
+            email: inquiry.email,
+            phone: inquiry.phone,
+            subject: inquiry.subject,
+            collectionId: inquiry.collectionId,
             userAgent: req.headers['user-agent']?.slice(0, 200) || 'unknown',
             ip: req.ip || 'unknown',
             submittedAt: new Date().toISOString(),
           },
         },
       });
-    } catch (dbErr) {
-      // Non-fatal logging to ensure contact submission response succeeds even if audit logging encounters an issue
-      console.warn('[Contact] Inquiry persistence warning:', dbErr.message);
+    } catch (auditErr) {
+      console.warn('[Contact] Audit logging warning:', auditErr.message);
     }
 
     return res.status(200).json({
       success: true,
       message: 'Thank you for reaching out. Your enquiry has been received by our concierge desk.',
-      inquiryReference,
+      inquiryReference: inquiry.reference,
+      inquiryId: inquiry.id,
     });
   } catch (error) {
     next(error);

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { LiquidGlassCta } from './LiquidGlassCta';
+import { COLLECTIONS } from '../../data/collections';
 
 /**
  * GatekeeperMobile Component
@@ -165,8 +166,14 @@ export function GatekeeperMobile({
             {/* Bottom Photography & CTA */}
             <div className="relative w-full h-56 sm:h-64 my-4 rounded-xl overflow-hidden shadow-lg border border-black/10 dark:border-white/10">
               <img
-                src={current.heroImage}
+                src={current.heroImage || COLLECTIONS.find((c) => c.id === current.id)?.heroImage}
                 alt={`Amoga ${current.name}`}
+                onError={(e) => {
+                  const fallback = COLLECTIONS.find((c) => c.id === current.id)?.heroImage;
+                  if (fallback && e.currentTarget.src !== fallback) {
+                    e.currentTarget.src = fallback;
+                  }
+                }}
                 className="w-full h-full object-cover object-center"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />

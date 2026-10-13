@@ -29,12 +29,16 @@ export async function createCoupon(req, res) {
   try {
     const {
       code,
+      name,
+      description,
       discountType,
       discountValue,
       minOrderAmount,
       maxDiscountAmount,
       usageLimit,
+      startsAt,
       expiresAt,
+      applicableCollections,
       isActive = true,
     } = req.body;
 
@@ -60,19 +64,23 @@ export async function createCoupon(req, res) {
     const coupon = await prisma.coupon.create({
       data: {
         code: cleanCode,
+        name: name ? name.trim() : null,
+        description: description ? description.trim() : null,
         discountType: discountType === 'FIXED' ? 'FIXED' : 'PERCENTAGE',
         discountValue: Number(discountValue),
         minOrderAmount: minOrderAmount ? Number(minOrderAmount) : null,
         maxDiscountAmount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
         usageLimit: usageLimit ? parseInt(usageLimit, 10) : null,
+        startsAt: startsAt ? new Date(startsAt) : null,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
+        applicableCollections: Array.isArray(applicableCollections) ? applicableCollections : null,
         isActive: Boolean(isActive),
       },
     });
 
     await logAdminAction({
-      adminId: req.admin.id,
-      adminEmail: req.admin.email,
+      adminId: req.admin?.id,
+      adminEmail: req.admin?.email || 'admin@amoga.com',
       action: 'COUPON_CREATE',
       entityType: 'Coupon',
       entityId: coupon.code,
@@ -97,6 +105,117 @@ export async function createCoupon(req, res) {
   }
 }
 
+export async function updateCoupon(req, res) {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      description,
+      discountType,
+      discountValue,
+      minOrderAmount,
+      maxDiscountAmount,
+      usageLimit,
+      startsAt,
+      expiresAt,
+      applicableCollections,
+      isActive,
+    } = req.body;
+
+    const existing = await prisma.coupon.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Coupon not found' });
+    }
+
+    const updated = await prisma.coupon.update({
+      where: { id },
+      data: {
+        name: name !== undefined ? (name ? name.trim() : null) : undefined,
+        description: description !== undefined ? (description ? description.trim() : null) : undefined,
+        discountType: discountType !== undefined ? (discountType === 'FIXED' ? 'FIXED' : 'PERCENTAGE') : undefined,
+        discountValue: discountValue !== undefined ? Number(discountValue) : undefined,
+        minOrderAmount: minOrderAmount !== undefined ? (minOrderAmount ? Number(minOrderAmount) : null) : undefined,
+        maxDiscountAmount: maxDiscountAmount !== undefined ? (maxDiscountAmount ? Number(maxDiscountAmount) : null) : undefined,
+        usageLimit: usageLimit !== undefined ? (usageLimit ? parseInt(usageLimit, 10) : null) : undefined,
+        startsAt: startsAt !== undefined ? (startsAt ? new Date(startsAt) : null) : undefined,
+        expiresAt: expiresAt !== undefined ? (expiresAt ? new Date(expiresAt) : null) : undefined,
+        applicableCollections: applicableCollections !== undefined ? (Array.isArray(applicableCollections) ? applicableCollections : null) : undefined,
+        isActive: isActive !== undefined ? Boolean(isActive) : undefined,
+      },
+    });
+
+    await logAdminAction({
+      adminId: req.admin?.id,
+      adminEmail: req.admin?.email || 'admin@amoga.com',
+      action: 'COUPON_UPDATE',
+      entityType: 'Coupon',
+      entityId: existing.code,
+      details: { code: existing.code, isActive: updated.isActive },
+    });
+
+    return res.status(200).json({
+      success: true,
+      coupon: {
+        ...updated,
+        discountValue: Number(updated.discountValue),
+        minOrderAmount: updated.minOrderAmount ? Number(updated.minOrderAmount) : null,
+        maxDiscountAmount: updated.maxDiscountAmount ? Number(updated.maxDiscountAmount) : null,
+      },
+    });
+  } catch (err) {
+    console.error('[ADMIN UPDATE COUPON ERROR]:', err);
+    return res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to update coupon',
+    });
+  }
+}
+
+export async function deleteCoupon(req, res) {
+  try {
+    const { id } = req.params;
+    const existing = await prisma.coupon.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Coupon not found' });
+    }
+
+    if (existing.usedCount > 0) {
+      // If coupon was already used in historical orders, safely deactivate rather than delete
+      const deactivated = await prisma.coupon.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      return res.status(200).json({
+        success: true,
+        message: `Coupon was deactivated because it has ${existing.usedCount} historical redemptions.`,
+        coupon: deactivated,
+      });
+    }
+
+    await prisma.coupon.delete({ where: { id } });
+
+    await logAdminAction({
+      adminId: req.admin?.id,
+      adminEmail: req.admin?.email || 'admin@amoga.com',
+      action: 'COUPON_DELETE',
+      entityType: 'Coupon',
+      entityId: existing.code,
+      details: { code: existing.code },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Coupon deleted successfully',
+    });
+  } catch (err) {
+    console.error('[ADMIN DELETE COUPON ERROR]:', err);
+    return res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to delete coupon',
+    });
+  }
+}
+
 export async function toggleCoupon(req, res) {
   try {
     const { id } = req.params;
@@ -112,8 +231,8 @@ export async function toggleCoupon(req, res) {
     });
 
     await logAdminAction({
-      adminId: req.admin.id,
-      adminEmail: req.admin.email,
+      adminId: req.admin?.id,
+      adminEmail: req.admin?.email || 'admin@amoga.com',
       action: newActive ? 'COUPON_ACTIVATE' : 'COUPON_DEACTIVATE',
       entityType: 'Coupon',
       entityId: existing.code,
@@ -125,6 +244,8 @@ export async function toggleCoupon(req, res) {
       coupon: {
         ...updated,
         discountValue: Number(updated.discountValue),
+        minOrderAmount: updated.minOrderAmount ? Number(updated.minOrderAmount) : null,
+        maxDiscountAmount: updated.maxDiscountAmount ? Number(updated.maxDiscountAmount) : null,
       },
     });
   } catch (err) {
@@ -137,11 +258,11 @@ export async function toggleCoupon(req, res) {
 }
 
 /**
- * Public checkout endpoint to authoritative validate coupon against order subtotal
+ * Public checkout endpoint to authoritative validate coupon against order subtotal & collections
  */
 export async function validateCheckoutCoupon(req, res) {
   try {
-    const { code, subtotal } = req.body;
+    const { code, subtotal, items = [] } = req.body;
     if (!code) {
       return res.status(400).json({ error: 'INVALID_INPUT', message: 'Coupon code required' });
     }
@@ -154,35 +275,73 @@ export async function validateCheckoutCoupon(req, res) {
     if (!coupon || !coupon.isActive) {
       return res.status(404).json({
         valid: false,
-        message: 'Invalid or inactive coupon code',
+        message: 'Invalid or inactive promotional coupon code',
       });
     }
 
-    if (coupon.expiresAt && new Date() > new Date(coupon.expiresAt)) {
+    const now = new Date();
+    if (coupon.startsAt && now < new Date(coupon.startsAt)) {
       return res.status(422).json({
         valid: false,
-        message: 'This coupon has expired',
+        message: `This coupon will become active on ${new Date(coupon.startsAt).toLocaleDateString()}`,
+      });
+    }
+
+    if (coupon.expiresAt && now > new Date(coupon.expiresAt)) {
+      return res.status(422).json({
+        valid: false,
+        message: 'This promotional code has expired',
       });
     }
 
     if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
       return res.status(422).json({
         valid: false,
-        message: 'This coupon has reached its maximum usage limit',
+        message: 'This coupon has reached its maximum global usage cap',
       });
+    }
+
+    // Applicable collections check if set
+    let applicableCollections = [];
+    if (coupon.applicableCollections) {
+      try {
+        applicableCollections = Array.isArray(coupon.applicableCollections)
+          ? coupon.applicableCollections
+          : JSON.parse(coupon.applicableCollections);
+      } catch {
+        applicableCollections = [];
+      }
+    }
+
+    let eligibleSubtotal = Number(subtotal) || 0;
+
+    if (applicableCollections.length > 0 && Array.isArray(items) && items.length > 0) {
+      // Calculate subtotal of eligible items only
+      const eligibleItems = items.filter((item) =>
+        applicableCollections.includes(item.collectionId || item.collection)
+      );
+
+      if (eligibleItems.length === 0) {
+        return res.status(422).json({
+          valid: false,
+          message: `This coupon is exclusively valid for items in: ${applicableCollections.join(', ')}`,
+        });
+      }
+
+      eligibleSubtotal = eligibleItems.reduce((acc, it) => acc + (Number(it.price || 0) * (it.quantity || 1)), 0);
     }
 
     const orderSubtotal = Number(subtotal) || 0;
     if (coupon.minOrderAmount && orderSubtotal < Number(coupon.minOrderAmount)) {
       return res.status(422).json({
         valid: false,
-        message: `Minimum order of ₹${Number(coupon.minOrderAmount).toLocaleString()} required for this coupon`,
+        message: `Minimum order subtotal of ₹${Number(coupon.minOrderAmount).toLocaleString()} required for this coupon`,
       });
     }
 
     let discountAmount = 0;
     if (coupon.discountType === 'PERCENTAGE') {
-      discountAmount = (orderSubtotal * Number(coupon.discountValue)) / 100;
+      discountAmount = (eligibleSubtotal * Number(coupon.discountValue)) / 100;
       if (coupon.maxDiscountAmount && discountAmount > Number(coupon.maxDiscountAmount)) {
         discountAmount = Number(coupon.maxDiscountAmount);
       }
@@ -190,16 +349,19 @@ export async function validateCheckoutCoupon(req, res) {
       discountAmount = Number(coupon.discountValue);
     }
 
-    // Ensure discount does not exceed subtotal
+    // Ensure discount does not exceed subtotal and is not negative
     discountAmount = Math.min(orderSubtotal, Math.max(0, discountAmount));
 
     return res.status(200).json({
       valid: true,
       code: coupon.code,
+      name: coupon.name || coupon.code,
+      description: coupon.description,
       discountType: coupon.discountType,
       discountValue: Number(coupon.discountValue),
       discountAmount: Number(discountAmount.toFixed(2)),
-      message: `Coupon "${coupon.code}" applied successfully!`,
+      applicableCollections,
+      message: `Coupon "${coupon.code}" applied successfully! (₹${Number(discountAmount.toFixed(2)).toLocaleString()} saved)`,
     });
   } catch (err) {
     console.error('[VALIDATE COUPON ERROR]:', err);

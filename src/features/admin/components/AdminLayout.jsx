@@ -9,10 +9,10 @@ import {
   ShoppingBag,
   CreditCard,
   Users,
+  MessageSquare,
   Sparkles,
   BarChart3,
   Settings,
-  ShieldCheck,
   History,
   LogOut,
   ExternalLink,
@@ -28,21 +28,35 @@ import {
   User,
   CheckCircle2,
   RefreshCw,
+  Code2,
+  Terminal,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminCommandPalette } from './AdminCommandPalette';
+import { DeveloperUnlockModal } from './DeveloperUnlockModal';
 import amogaLogo from '../../../assets/images/amoga-logo.png';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { admin, isAuthenticated, logout, checkSession } = useAdminStore();
+  const {
+    admin,
+    isAuthenticated,
+    logout,
+    checkSession,
+    isDeveloperMode,
+    devModalOpen,
+    setDevModalOpen,
+    toggleDeveloperMode,
+    lockDeveloperMode,
+  } = useAdminStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const logoClicksRef = React.useRef({ count: 0, lastTime: 0 });
 
   // Lock body scroll when mobile menu is open
   useBodyScrollLock(Boolean(mobileMenuOpen));
@@ -55,9 +69,22 @@ export function AdminLayout() {
     }
   }, [isAuthenticated, navigate, checkSession]);
 
-  // Global Ctrl+K / Cmd+K listener
+  // Global Ctrl+K / Cmd+K (Search) and Developer Mode shortcut listeners
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Toggle Developer Mode: Ctrl+Alt+D or Ctrl+Shift+X (prevents Chrome "Bookmark all tabs" conflict)
+      const isDevShortcut =
+        ((e.metaKey || e.ctrlKey) && e.altKey && e.key.toLowerCase() === 'd') ||
+        ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'x') ||
+        ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'd');
+
+      if (isDevShortcut) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleDeveloperMode();
+        return;
+      }
+      // Open Command Palette
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setCommandPaletteOpen((prev) => !prev);
@@ -65,7 +92,22 @@ export function AdminLayout() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [toggleDeveloperMode]);
+
+  // Hidden 5-click logo trigger to unlock developer mode
+  const handleLogoClick = () => {
+    const now = Date.now();
+    if (now - logoClicksRef.current.lastTime > 2500) {
+      logoClicksRef.current = { count: 1, lastTime: now };
+    } else {
+      logoClicksRef.current.count += 1;
+      logoClicksRef.current.lastTime = now;
+      if (logoClicksRef.current.count >= 5) {
+        logoClicksRef.current = { count: 0, lastTime: 0 };
+        toggleDeveloperMode();
+      }
+    }
+  };
 
   if (!isAuthenticated || !admin) {
     return (
@@ -83,6 +125,9 @@ export function AdminLayout() {
   const role = admin.role || 'CATALOGUE_MANAGER';
   const isSuperAdmin = role === 'SUPER_ADMIN';
 
+  // Navigation Groups:
+  // Note: Collections Architecture and Audit Trail are hidden from client administration.
+  // They are only visible under DEVELOPER ARCHITECTURE when Developer Mode is active.
   const navGroups = [
     {
       title: 'OVERVIEW',
@@ -94,7 +139,6 @@ export function AdminLayout() {
       title: 'CATALOGUE & STOCK',
       items: [
         { label: 'Products', path: '/admin/products', icon: Package },
-        { label: 'Collections', path: '/admin/collections', icon: FolderTree },
         { label: 'Inventory', path: '/admin/inventory', icon: Boxes },
       ],
     },
@@ -104,6 +148,7 @@ export function AdminLayout() {
         { label: 'Orders', path: '/admin/orders', icon: ShoppingBag },
         { label: 'Payments', path: '/admin/payments', icon: CreditCard },
         { label: 'Customers', path: '/admin/customers', icon: Users },
+        { label: 'Customer Inquiries', path: '/admin/customer-inquiries', icon: MessageSquare },
       ],
     },
     {
@@ -117,14 +162,20 @@ export function AdminLayout() {
       title: 'SYSTEM & SETTINGS',
       items: [
         { label: 'Settings', path: '/admin/settings', icon: Settings },
-        ...(isSuperAdmin
-          ? [
-              { label: 'Staff & Roles', path: '/admin/users', icon: ShieldCheck },
-              { label: 'Audit Trail', path: '/admin/audit-logs', icon: History },
-            ]
-          : []),
       ],
     },
+    ...(isDeveloperMode
+      ? [
+          {
+            title: 'DEVELOPER ARCHITECTURE',
+            isDevGroup: true,
+            items: [
+              { label: 'Collections', path: '/admin/collections', icon: FolderTree, devBadge: 'DEV' },
+              { label: 'Audit Trail', path: '/admin/audit-logs', icon: History, devBadge: 'DEV' },
+            ],
+          },
+        ]
+      : []),
   ];
 
   const handleLogout = async () => {
@@ -161,7 +212,6 @@ export function AdminLayout() {
   else if (currentPath === '/admin/promotions') pageTitle = 'Coupons & Promotions';
   else if (currentPath === '/admin/reports') pageTitle = 'Business Intelligence & Exports';
   else if (currentPath === '/admin/settings') pageTitle = 'Atelier Settings';
-  else if (currentPath === '/admin/users') pageTitle = 'Staff Authorization & Roles';
   else if (currentPath === '/admin/audit-logs') pageTitle = 'System Audit Trail';
 
   return (
@@ -194,6 +244,7 @@ export function AdminLayout() {
         >
           <Link
             to="/admin"
+            onClick={handleLogoClick}
             className="flex items-center gap-2.5 transition-opacity hover:opacity-90 overflow-hidden"
             title="Amoga Atelier Admin"
           >
@@ -230,9 +281,24 @@ export function AdminLayout() {
           {navGroups.map((group) => (
             <div key={group.title} className="space-y-1">
               {!isCollapsed && (
-                <p className="px-3 text-[9px] uppercase font-mono tracking-wider text-[#A89F93]/70 font-semibold">
-                  {group.title}
-                </p>
+                <div className="px-3 flex items-center justify-between">
+                  <p className={`text-[9px] uppercase font-mono tracking-wider font-semibold ${
+                    group.isDevGroup ? 'text-[#B08A4D]' : 'text-[#A89F93]/70'
+                  }`}>
+                    {group.title}
+                  </p>
+                  {group.isDevGroup && (
+                    <button
+                      type="button"
+                      onClick={lockDeveloperMode}
+                      title="Lock Developer Mode (Return to Client View)"
+                      className="inline-flex items-center gap-1 text-[8px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 hover:bg-rose-500/25 hover:text-rose-200 border border-amber-500/40 transition-colors cursor-pointer"
+                    >
+                      <Lock className="w-2.5 h-2.5" />
+                      <span>LOCK</span>
+                    </button>
+                  )}
+                </div>
               )}
               {group.items.map((item) => {
                 const Icon = item.icon;
@@ -259,10 +325,15 @@ export function AdminLayout() {
                         transition={{ type: 'spring', damping: 25, stiffness: 350 }}
                       />
                     )}
-                    <span className="relative z-10 flex items-center gap-3">
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#A89F93]'}`} />
-                      {!isCollapsed && <span>{item.label}</span>}
+                    <span className="relative z-10 flex items-center gap-3 flex-1 min-w-0">
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : item.devBadge ? 'text-[#B08A4D]' : 'text-[#A89F93]'}`} />
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
                     </span>
+                    {!isCollapsed && item.devBadge && (
+                      <span className="relative z-10 text-[8px] font-mono px-1 py-0.2 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded ml-auto">
+                        {item.devBadge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -358,6 +429,19 @@ export function AdminLayout() {
               <span className="text-[#B08A4D]">Razorpay Test</span>
             </div>
 
+            {/* Developer Mode Active Indicator Badge */}
+            {isDeveloperMode && (
+              <button
+                onClick={lockDeveloperMode}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-900 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer"
+                title="Developer Mode Active • Click to Lock"
+              >
+                <Code2 className="w-3.5 h-3.5 text-amber-700" />
+                <span className="hidden sm:inline font-bold">DEV MODE</span>
+                <span className="text-[10px] text-amber-800 underline ml-0.5">Lock</span>
+              </button>
+            )}
+
             {/* Public Storefront Link */}
             <Link
               to="/"
@@ -441,7 +525,7 @@ export function AdminLayout() {
                     initial={{ opacity: 0, scale: 0.95, y: 5 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                    className="absolute right-0 mt-2 w-48 bg-[#FFFFFF] border border-[#E5E0D5] rounded-xl shadow-xl py-1 z-30"
+                    className="absolute right-0 mt-2 w-52 bg-[#FFFFFF] border border-[#E5E0D5] rounded-xl shadow-xl py-1 z-30"
                   >
                     <div className="px-3 py-2 border-b border-[#F8F6F0]">
                       <p className="text-xs font-medium text-[#292820]">{admin.name}</p>
@@ -455,9 +539,10 @@ export function AdminLayout() {
                       <Settings className="w-3.5 h-3.5 text-[#746F63]" />
                       <span>Settings</span>
                     </Link>
+
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-700 hover:bg-rose-50 text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-700 hover:bg-rose-50 text-left border-t border-[#F8F6F0]"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Sign Out</span>
@@ -576,6 +661,12 @@ export function AdminLayout() {
           </div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
+
+        {/* Developer Mode Unlock Modal */}
+        <DeveloperUnlockModal
+          isOpen={devModalOpen}
+          onClose={() => setDevModalOpen(false)}
+        />
+      </div>
+    );
+  }

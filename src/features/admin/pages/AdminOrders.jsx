@@ -27,12 +27,15 @@ export function AdminOrders() {
   const [page, setPage] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Live auto-search debounce
+  // Live auto-search debounce: start filtering automatically as words are typed
   useEffect(() => {
+    if (search !== debouncedSearch) {
+      setIsSearching(true);
+    }
     const timer = setTimeout(() => {
       setPage(1);
       setDebouncedSearch(search);
-    }, 250);
+    }, 150);
     return () => clearTimeout(timer);
   }, [search]);
 

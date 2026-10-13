@@ -42,6 +42,9 @@ export function useResolvedTheme(explicitCollectionId = null) {
     return Array.isArray(cartState) ? cartState : (cartState?.items || []);
   }, [cartState]);
 
+  const checkoutContext = useStore((state) => state.checkoutContext);
+  const selectedLineIds = useStore((state) => state.selectedLineIds);
+
   const pathname = location.pathname;
 
   const resolution = useMemo(() => {
@@ -101,10 +104,20 @@ export function useResolvedTheme(explicitCollectionId = null) {
       pathname.startsWith('/order-confirmation');
 
     if (isCartOrCheckoutFlow) {
-      if (cartItems.length > 0) {
-        // Collect unique collections in bag
+      // For checkout & order review routes, evaluate items actively selected for checkout
+      let itemsToEvaluate = cartItems;
+      if (pathname.startsWith('/checkout')) {
+        const storeState = useStore.getState();
+        const checkoutItems = storeState.getCheckoutItems ? storeState.getCheckoutItems() : [];
+        if (checkoutItems.length > 0) {
+          itemsToEvaluate = checkoutItems;
+        }
+      }
+
+      if (itemsToEvaluate.length > 0) {
+        // Collect unique collections in bag or selective checkout
         const collectionSet = new Set();
-        cartItems.forEach((item) => {
+        itemsToEvaluate.forEach((item) => {
           const col =
             item.collectionId ||
             item.product?.collection ||
@@ -120,7 +133,7 @@ export function useResolvedTheme(explicitCollectionId = null) {
 
         const uniqueCollections = Array.from(collectionSet);
 
-        // Case A: Exactly 1 collection in bag -> Use that collection's rich theme
+        // Case A: Exactly 1 collection in checkout -> Use that collection's rich theme
         if (uniqueCollections.length === 1) {
           const matchedId = uniqueCollections[0];
           const matchedTheme = getCollectionTheme(matchedId);
@@ -160,7 +173,7 @@ export function useResolvedTheme(explicitCollectionId = null) {
       isMixed: false,
       source: 'default',
     };
-  }, [explicitCollectionId, pathname, cartItems]);
+  }, [explicitCollectionId, pathname, cartItems, checkoutContext, selectedLineIds]);
 
   // Persist browsed collection when visiting route or single collection cart
   useEffect(() => {

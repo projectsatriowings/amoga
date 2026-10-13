@@ -173,7 +173,7 @@ describe('3. Authoritative Checkout Validation API & Financial Precision', () =>
     assert.strictEqual(body.canCheckout, true);
     assert.strictEqual(body.totals.subtotal, 498 + 2499);
     assert.strictEqual(body.totals.payableCount, 3);
-    assert.strictEqual(body.totals.totalAmount, 2997);
+    assert.strictEqual(body.totals.totalAmount, body.totals.subtotal + (body.totals.shippingAmount || 0));
   });
 
   test('POST /api/checkout/validate rejects invalid quantities', async () => {

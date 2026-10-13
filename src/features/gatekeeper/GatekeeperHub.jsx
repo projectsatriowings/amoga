@@ -51,14 +51,18 @@ export function GatekeeperHub() {
               ...(staticMatch || {}),
               id: dbCol.id,
               name: dbCol.name,
-              title: dbCol.name.toUpperCase(),
+              title: (dbCol.heroHeading || dbCol.name || (staticMatch ? staticMatch.title : 'COLLECTION')).toUpperCase(),
               tagline: dbCol.tagline || (staticMatch ? staticMatch.tagline : 'Curated Universe'),
+              eyebrow: (dbCol.tagline || (staticMatch ? staticMatch.eyebrow : 'THE GOODNESS OF TRADITION')).toUpperCase(),
+              subtitle: dbCol.heroSubheading || (staticMatch ? staticMatch.subtitle : ''),
               description: dbCol.description || (staticMatch ? staticMatch.description : 'Explore handcrafted artisanal curation.'),
               accentColor: dbCol.accentColor || (staticMatch ? staticMatch.accentColor : '#722F37'),
               path: `/${dbCol.slug}`,
               productsPath: `/${dbCol.slug}/products`,
               theme: dbCol.theme || dbCol.id,
-              heroImage: staticMatch?.heroImage || null,
+              heroImage: dbCol.cardImage || dbCol.heroImage || staticMatch?.heroImage || null,
+              cardImage: dbCol.cardImage || dbCol.heroImage || staticMatch?.cardImage || null,
+              themeConfig: dbCol.themeConfig || null,
               number: String(idx + 1).padStart(2, '0'),
               features: staticMatch?.features || ['Artisanal Heritage', 'Authentic Sourcing', 'Verified Catalogue'],
               badge: staticMatch?.badge || 'Curated Collection',
@@ -66,21 +70,7 @@ export function GatekeeperHub() {
             };
           });
 
-          // Prevent unnecessary state updates and layout flicker if data has not changed
-          const hasChanged =
-            merged.length !== liveCollections.length ||
-            merged.some((m, i) => {
-              const cur = liveCollections[i];
-              return (
-                !cur ||
-                cur.id !== m.id ||
-                cur.name !== m.name ||
-                cur.description !== m.description ||
-                cur.tagline !== m.tagline
-              );
-            });
-
-          if (hasChanged && isMounted) {
+          if (isMounted) {
             setLiveCollections(merged);
             try {
               sessionStorage.setItem('amoga_gatekeeper_collections', JSON.stringify(merged));
@@ -93,9 +83,40 @@ export function GatekeeperHub() {
         console.error('Failed to load collections from API, using defaults:', err);
       }
     }
+
     loadCollections();
+
+    // Listen to cross-tab updates via BroadcastChannel
+    let channel = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        channel = new BroadcastChannel('amoga_collections_sync');
+        channel.onmessage = (event) => {
+          if (event.data?.type === 'COLLECTIONS_INVALIDATED') {
+            loadCollections();
+          }
+        };
+      } catch {
+        // Non-blocking
+      }
+    }
+
+    // When user switches back to this tab, silently revalidate
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadCollections();
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
     return () => {
       isMounted = false;
+      if (channel) {
+        channel.close();
+      }
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
     };
   }, []);
 

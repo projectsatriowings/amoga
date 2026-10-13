@@ -10,23 +10,25 @@ import {
   ShoppingBag,
   CreditCard,
   Users,
+  MessageSquare,
   Sparkles,
   BarChart3,
   Settings,
-  ShieldCheck,
   History,
   ExternalLink,
   ArrowRight,
   Command,
   X,
   AlertTriangle,
+  Terminal,
+  Code2,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 
 export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
   const navigate = useNavigate();
-  const { admin } = useAdminStore();
+  const { admin, isDeveloperMode, toggleDeveloperMode } = useAdminStore();
   const [query, setQuery] = useState('');
 
   // Lock backdrop and background scrolling while command palette is active
@@ -53,14 +55,6 @@ export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
       path: '/admin/products',
       icon: Package,
       shortcut: 'G P',
-    },
-    {
-      id: 'collections',
-      title: 'Collections & Categories',
-      category: 'Catalogue & Stock',
-      path: '/admin/collections',
-      icon: FolderTree,
-      shortcut: 'G C',
     },
     {
       id: 'inventory',
@@ -100,6 +94,14 @@ export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
       icon: Users,
     },
     {
+      id: 'inquiries',
+      title: 'Customer Inquiries & Concierge Desk',
+      category: 'Commerce & Sales',
+      path: '/admin/customer-inquiries',
+      icon: MessageSquare,
+      shortcut: 'G Q',
+    },
+    {
       id: 'promotions',
       title: 'Promotional Coupons & Rules',
       category: 'Content & Marketing',
@@ -120,21 +122,37 @@ export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
       path: '/admin/settings',
       icon: Settings,
     },
-    ...(isSuperAdmin
+    ...(isDeveloperMode
       ? [
           {
-            id: 'users',
-            title: 'Staff Roles & Authorization',
-            category: 'System & Settings',
-            path: '/admin/users',
-            icon: ShieldCheck,
+            id: 'collections',
+            title: 'Collections Architecture',
+            category: 'Developer Architecture',
+            path: '/admin/collections',
+            icon: FolderTree,
+            shortcut: 'G C',
           },
           {
             id: 'audit',
             title: 'Audit Trail & Event Logs',
-            category: 'System & Settings',
+            category: 'Developer Architecture',
             path: '/admin/audit-logs',
             icon: History,
+          },
+        ]
+      : []),
+    ...((isDeveloperMode || query.toLowerCase().includes('dev') || query.toLowerCase().includes('code'))
+      ? [
+          {
+            id: 'dev-mode-toggle',
+            title: isDeveloperMode ? 'Lock Developer Mode (Return to Client View)' : 'Unlock Developer Mode (Passcode Required)',
+            category: 'Developer Architecture',
+            action: () => {
+              onClose();
+              toggleDeveloperMode();
+            },
+            icon: Terminal,
+            shortcut: 'Ctrl+Alt+D',
           },
         ]
       : []),

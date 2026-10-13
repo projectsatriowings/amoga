@@ -4,12 +4,37 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Compass } from 'lucide-react';
 import modelHero from '../../../assets/images/jewellery-model-hero.jpg';
 import { Container } from '../../../components/ui/Container';
+import { useCollection } from '../../../hooks/useCollection';
 
 export function JewelleryHero() {
+  const { collection } = useCollection('jewellery');
+
+  const tagline = (collection?.tagline || 'Timeless Elegance • Pure Silver').toUpperCase();
+  const heading = collection?.heroHeading || 'Silver, Sculpted with Meaning';
+  const subheading = collection?.heroSubheading || '';
+  const description = collection?.description || 'Explore a considered collection of silver jewellery for everyday elegance and special occasions. Handcrafted contours, minimalist geometry, and lasting precious-metal quality designed to be worn effortlessly.';
+  const heroImage = collection?.heroImage || modelHero;
+
+  const tc = collection?.themeConfig || {};
+  const accentColor = collection?.accentColor || tc.accentColor || tc.primaryColor || '#B9B8B5';
+  const bgColor = tc.bgColor || '#242326';
+  const textColor = tc.textColor || '#F7F3EB';
+  const mutedText = tc.mutedTextColor || '#B9B8B5';
+
   return (
-    <section className="relative overflow-hidden bg-[#242326] text-[#F7F3EB] border-b border-[#B9B8B5]/15">
+    <section
+      className="relative overflow-hidden border-b transition-colors"
+      style={{
+        backgroundColor: bgColor,
+        color: textColor,
+        borderColor: `${accentColor}26`,
+      }}
+    >
       {/* Subtle Ambient Silver Light */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#B9B8B5]/5 rounded-full blur-3xl pointer-events-none" />
+      <div
+        className="absolute top-0 right-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-10"
+        style={{ backgroundColor: accentColor }}
+      />
       <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#343238]/40 rounded-full blur-2xl pointer-events-none" />
 
       <Container>
@@ -22,31 +47,43 @@ export function JewelleryHero() {
             className="lg:col-span-5 relative flex items-center justify-center order-2 lg:order-1"
           >
             {/* Left Vertical Ribbon */}
-            <div className="hidden sm:flex flex-col items-center gap-3 absolute -left-8 top-1/2 -translate-y-1/2 text-[10px] font-mono uppercase tracking-[0.25em] text-[#B9B8B5]/60 select-none">
+            <div
+              className="hidden sm:flex flex-col items-center gap-3 absolute -left-8 top-1/2 -translate-y-1/2 text-[10px] font-mono uppercase tracking-[0.25em] select-none opacity-60"
+              style={{ color: accentColor }}
+            >
               <span className="rotate-180 [writing-mode:vertical-rl]">Crafted with Purity</span>
-              <span className="w-1.5 h-1.5 rotate-45 border border-[#B9B8B5]" />
+              <span className="w-1.5 h-1.5 rotate-45 border" style={{ borderColor: accentColor }} />
             </div>
 
             {/* Main Portrait Card Frame */}
-            <div className="relative w-full max-w-md rounded-2xl overflow-hidden border border-[#B9B8B5]/25 shadow-2xl bg-[#343238]">
+            <div
+              className="relative w-full max-w-md rounded-2xl overflow-hidden border shadow-2xl bg-[#343238]"
+              style={{ borderColor: `${accentColor}40` }}
+            >
               <img
-                src={modelHero}
+                src={heroImage}
                 alt="Amoga Pure Silver Jewellery Editorial Showcase"
                 className="w-full h-auto aspect-[3/4] object-cover object-top"
               />
 
               {/* Bottom Subtle Caption Overlay */}
-              <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-[#242326] via-[#242326]/80 to-transparent">
+              <div
+                className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t via-black/60 to-transparent"
+                style={{ from: bgColor }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-[10px] font-mono uppercase tracking-widest text-[#B9B8B5]">
+                    <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: accentColor }}>
                       Modern Heirlooms
                     </div>
-                    <div className="font-serif text-sm text-[#F7F3EB]">
-                      Pure 925 Sterling Silver
+                    <div className="font-serif text-sm" style={{ color: textColor }}>
+                      {subheading || 'Pure 925 Sterling Silver'}
                     </div>
                   </div>
-                  <span className="text-xs font-mono text-[#B9B8B5] px-2 py-0.5 rounded bg-[#343238] border border-[#B9B8B5]/20">
+                  <span
+                    className="text-xs font-mono px-2 py-0.5 rounded bg-[#343238] border"
+                    style={{ color: accentColor, borderColor: `${accentColor}33` }}
+                  >
                     Artisanal
                   </span>
                 </div>
@@ -62,22 +99,36 @@ export function JewelleryHero() {
             className="lg:col-span-7 space-y-6 lg:pl-6 order-1 lg:order-2"
           >
             {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#343238]/70 backdrop-blur-md border border-[#B9B8B5]/30 text-[#B9B8B5] text-xs font-mono uppercase tracking-widest shadow-2xs">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md border text-xs font-mono uppercase tracking-widest shadow-2xs"
+              style={{
+                backgroundColor: '#343238B3',
+                borderColor: `${accentColor}4D`,
+                color: accentColor,
+              }}
+            >
               <Sparkles className="w-3.5 h-3.5 text-[#C6AD82]" />
-              <span>Timeless Elegance &bull; Pure Silver</span>
+              <span>{tagline}</span>
             </div>
 
             {/* Editorial Title */}
             <div className="space-y-2">
-              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#F7F3EB] leading-[1.1] tracking-tight">
-                Silver, Sculpted <br />
-                <span className="italic text-[#B9B8B5]">with Meaning.</span>
+              <h1
+                className="font-serif text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight"
+                style={{ color: textColor }}
+              >
+                {heading}
               </h1>
+              {subheading && (
+                <p className="font-serif italic text-base sm:text-lg opacity-90" style={{ color: accentColor }}>
+                  {subheading}
+                </p>
+              )}
             </div>
 
             {/* Supporting Copy */}
-            <p className="text-sm sm:text-base text-[#B9B8B5] leading-relaxed max-w-xl font-sans">
-              Explore a considered collection of silver jewellery for everyday elegance and special occasions. Handcrafted contours, minimalist geometry, and lasting precious-metal quality designed to be worn effortlessly.
+            <p className="text-sm sm:text-base leading-relaxed max-w-xl font-sans" style={{ color: mutedText }}>
+              {description}
             </p>
 
             {/* Highlights Grid */}

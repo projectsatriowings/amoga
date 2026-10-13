@@ -133,12 +133,42 @@ export async function resolveAndValidateCart(cartItems = []) {
 
   const subtotalRupees = Number((subtotalPaise / 100).toFixed(2));
 
+  let shippingAmount = 0;
+  let isComplimentary = true;
+  let freeShippingThreshold = 2000;
+  let shippingStandardRate = 0;
+  let taxPercentage = 5;
+
+  try {
+    const storeSettings = await prisma.storeSetting.findUnique({
+      where: { id: 'default' },
+    });
+    if (storeSettings) {
+      freeShippingThreshold = Number(storeSettings.freeShippingThreshold || 2000);
+      shippingStandardRate = Number(storeSettings.shippingStandardRate || 0);
+      taxPercentage = Number(storeSettings.taxPercentage || 5);
+      if (subtotalRupees < freeShippingThreshold) {
+        shippingAmount = shippingStandardRate;
+        isComplimentary = shippingStandardRate === 0;
+      }
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+
   return {
     isValid: errors.length === 0 && lines.length > 0,
     errors,
     lines,
     subtotal: subtotalRupees,
     subtotalPaise,
+    shipping: {
+      amount: shippingAmount,
+      isComplimentary,
+      freeShippingThreshold,
+      standardRate: shippingStandardRate,
+    },
+    taxPercentage,
     totalCount,
     payableCount,
   };
@@ -147,7 +177,7 @@ export async function resolveAndValidateCart(cartItems = []) {
 /**
  * Creates a persistent order with database transaction and strict idempotency guarantees
  */
-export async function createOrder({ items, customer, idempotencyKey = null, isDemo = false }) {
+export async function createOrder({ items, customer, idempotencyKey = null, couponCode = null, isDemo = false }) {
   // 1. Strict Idempotency Validation
   if (idempotencyKey) {
     const existingOrder = await prisma.order.findUnique({
@@ -214,6 +244,7 @@ export async function createOrder({ items, customer, idempotencyKey = null, isDe
           subtotal: Number(existingOrder.subtotal.toFixed(2)),
           shippingAmount: Number(existingOrder.shippingAmount.toFixed(2)),
           taxAmount: Number(existingOrder.taxAmount.toFixed(2)),
+          discountAmount: Number(existingOrder.discountAmount.toFixed(2)),
           totalAmount: Number(existingOrder.totalAmount.toFixed(2)),
         },
         createdAt: existingOrder.createdAt,
@@ -230,20 +261,148 @@ export async function createOrder({ items, customer, idempotencyKey = null, isDe
     throw error;
   }
 
-  // 3. Generate Cryptographically Secure Reference & Guest Access Token
+  // 3. Authoritative Coupon Validation & Discount Calculation
+  let appliedCoupon = null;
+  let discountPaise = 0;
+
+  if (couponCode && typeof couponCode === 'string' && couponCode.trim()) {
+    const cleanCode = couponCode.trim().toUpperCase();
+    const coupon = await prisma.coupon.findUnique({
+      where: { code: cleanCode },
+    });
+
+    if (!coupon || !coupon.isActive) {
+      const err = new Error(`Promotional coupon "${cleanCode}" is invalid or inactive`);
+      err.status = 422;
+      err.details = [err.message];
+      throw err;
+    }
+
+    const now = new Date();
+    if (coupon.startsAt && now < new Date(coupon.startsAt)) {
+      const err = new Error(`Promotional coupon "${cleanCode}" is not yet active`);
+      err.status = 422;
+      err.details = [err.message];
+      throw err;
+    }
+
+    if (coupon.expiresAt && now > new Date(coupon.expiresAt)) {
+      const err = new Error(`Promotional coupon "${cleanCode}" has expired`);
+      err.status = 422;
+      err.details = [err.message];
+      throw err;
+    }
+
+    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+      const err = new Error(`Promotional coupon "${cleanCode}" has reached its maximum global usage cap`);
+      err.status = 422;
+      err.details = [err.message];
+      throw err;
+    }
+
+    if (coupon.minOrderAmount) {
+      const minOrderPaise = Math.round(Number(coupon.minOrderAmount) * 100);
+      if (validation.subtotalPaise < minOrderPaise) {
+        const err = new Error(
+          `Minimum order subtotal of ₹${Number(coupon.minOrderAmount).toLocaleString()} required for coupon "${cleanCode}"`
+        );
+        err.status = 422;
+        err.details = [err.message];
+        throw err;
+      }
+    }
+
+    // Applicable collections check
+    let eligibleSubtotalPaise = validation.subtotalPaise;
+    let applicableCollections = [];
+    if (coupon.applicableCollections) {
+      try {
+        applicableCollections = Array.isArray(coupon.applicableCollections)
+          ? coupon.applicableCollections
+          : JSON.parse(coupon.applicableCollections);
+      } catch {
+        applicableCollections = [];
+      }
+    }
+
+    if (applicableCollections.length > 0) {
+      const eligibleLines = validation.lines.filter((l) =>
+        applicableCollections.includes(l.collectionId)
+      );
+      if (eligibleLines.length === 0) {
+        const err = new Error(
+          `Coupon "${cleanCode}" is exclusively valid for items in: ${applicableCollections.join(', ')}`
+        );
+        err.status = 422;
+        err.details = [err.message];
+        throw err;
+      }
+      eligibleSubtotalPaise = eligibleLines.reduce((acc, l) => acc + l.lineTotalPaise, 0);
+    }
+
+    if (coupon.discountType === 'PERCENTAGE') {
+      discountPaise = Math.floor((eligibleSubtotalPaise * Number(coupon.discountValue)) / 100);
+      if (coupon.maxDiscountAmount) {
+        const maxPaise = Math.round(Number(coupon.maxDiscountAmount) * 100);
+        if (discountPaise > maxPaise) discountPaise = maxPaise;
+      }
+    } else {
+      discountPaise = Math.round(Number(coupon.discountValue) * 100);
+    }
+
+    // Cap at order subtotal paise so total is never negative
+    discountPaise = Math.min(validation.subtotalPaise, Math.max(0, discountPaise));
+    appliedCoupon = coupon;
+  }
+
+  // 4. Generate Cryptographically Secure Reference & Guest Access Token
   const orderReference = generateOrderReference();
   const guestAccessToken = generateGuestAccessToken();
   const guestAccessTokenHash = hashGuestAccessToken(guestAccessToken);
 
-  // Authoritative financial totals in exact integer paise
-  const subtotalRupees = validation.subtotal;
-  const shippingAmountRupees = 0.0;
-  const taxAmountRupees = 0.0;
-  const discountAmountRupees = 0.0;
-  const totalAmountRupees = subtotalRupees;
+  // Authoritative financial totals in exact integer paise incorporating store shipping & tax settings
+  let shippingPaise = 0;
+  let taxPercentage = 5.0;
 
-  // 4. Atomic database transaction
+  try {
+    const storeSettings = await prisma.storeSetting.findUnique({
+      where: { id: 'default' },
+    });
+    if (storeSettings) {
+      taxPercentage = Number(storeSettings.taxPercentage || 5);
+      const freeThresholdPaise = Math.round(Number(storeSettings.freeShippingThreshold || 2000) * 100);
+      const standardRatePaise = Math.round(Number(storeSettings.shippingStandardRate || 0) * 100);
+
+      // If discounted subtotal is below free shipping threshold, charge standard shipping
+      const netSubtotalPaise = Math.max(0, validation.subtotalPaise - discountPaise);
+      if (netSubtotalPaise < freeThresholdPaise) {
+        shippingPaise = standardRatePaise;
+      }
+    }
+  } catch (err) {
+    console.warn('[CHECKOUT] Store settings read error, defaulting to complimentary shipping:', err.message);
+  }
+
+  const subtotalRupees = validation.subtotal;
+  const shippingAmountRupees = Number((shippingPaise / 100).toFixed(2));
+  const discountAmountRupees = Number((discountPaise / 100).toFixed(2));
+  const totalAmountPaise = Math.max(0, validation.subtotalPaise - discountPaise + shippingPaise);
+  const totalAmountRupees = Number((totalAmountPaise / 100).toFixed(2));
+
+  // Taxes are inclusive in prices (GST on luxury craft goods), recorded for accounting compliance
+  const taxPaise = Math.round((validation.subtotalPaise * taxPercentage) / (100 + taxPercentage));
+  const taxAmountRupees = Number((taxPaise / 100).toFixed(2));
+
+  // 5. Atomic database transaction
   const createdOrder = await prisma.$transaction(async (tx) => {
+    // Atomically increment coupon usage count if applied
+    if (appliedCoupon) {
+      await tx.coupon.update({
+        where: { id: appliedCoupon.id },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
+
     const order = await tx.order.create({
       data: {
         orderReference,
@@ -294,10 +453,12 @@ export async function createOrder({ items, customer, idempotencyKey = null, isDe
     guestAccessToken, // Returned to client once so guest can view their confirmation
     status: createdOrder.status,
     currency: createdOrder.currency,
+    appliedCoupon: appliedCoupon ? appliedCoupon.code : null,
     totals: {
       subtotal: Number(createdOrder.subtotal.toFixed(2)),
       shippingAmount: Number(createdOrder.shippingAmount.toFixed(2)),
       taxAmount: Number(createdOrder.taxAmount.toFixed(2)),
+      discountAmount: Number(createdOrder.discountAmount.toFixed(2)),
       totalAmount: Number(createdOrder.totalAmount.toFixed(2)),
     },
     customer: {

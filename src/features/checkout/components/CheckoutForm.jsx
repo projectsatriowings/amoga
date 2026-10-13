@@ -180,25 +180,57 @@ export const CheckoutForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
-      {/* Notice Banner */}
-      <div className="p-4 bg-[var(--collection-section-bg)] rounded-xl border border-[var(--collection-border)] text-xs text-[var(--collection-text-muted)] flex items-start gap-3">
-        <Info className="w-4 h-4 text-[var(--collection-accent)] shrink-0 mt-0.5" />
+      {/* Coordinated Notice Banner */}
+      <div
+        className="p-4 rounded-xl border text-xs flex items-start gap-3 shadow-xs transition-colors"
+        style={{
+          backgroundColor: 'var(--collection-notice-bg)',
+          borderColor: 'var(--collection-notice-border)',
+          color: 'var(--collection-notice-text)',
+        }}
+      >
+        <Info
+          className="w-4 h-4 shrink-0 mt-0.5"
+          style={{ color: 'var(--collection-notice-icon)' }}
+        />
         <p className="leading-relaxed">
-          <strong className="text-[var(--collection-text)]">Checkout Simulation Notice:</strong> All customer and delivery information entered below is securely kept for your checkout session. No permanent profile data is shared or stored without verified authorization.
+          <strong
+            className="font-semibold"
+            style={{ color: 'var(--collection-notice-title)' }}
+          >
+            Checkout Simulation Notice:
+          </strong>{' '}
+          All customer and delivery information entered below is securely kept for your checkout session. No permanent profile data is shared or stored without verified authorization.
         </p>
       </div>
 
       {/* Customer Contact Information Card */}
-      <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 sm:p-8 border border-[var(--collection-border)] shadow-sm space-y-5 transition-colors">
-        <h2 className="font-serif text-xl sm:text-2xl text-[var(--collection-heading)] border-b border-[var(--collection-border)] pb-3">
+      <div
+        className="rounded-2xl p-6 sm:p-8 border shadow-sm space-y-5 transition-colors"
+        style={{
+          backgroundColor: 'var(--collection-card-bg)',
+          borderColor: 'var(--collection-card-border, var(--collection-border))',
+        }}
+      >
+        <h2
+          className="font-serif text-xl sm:text-2xl border-b pb-3"
+          style={{
+            color: 'var(--collection-heading)',
+            borderColor: 'var(--collection-border)',
+          }}
+        >
           1. Contact Information
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Full Name */}
           <div className="sm:col-span-2">
-            <label htmlFor="fullName" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              Full Name <span className="text-[#991B1B]">*</span>
+            <label
+              htmlFor="fullName"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              Full Name <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="fullName"
@@ -210,15 +242,20 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.fullName}
               aria-describedby={errors.fullName ? 'fullName-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
+              className={`checkout-input w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${
                 errors.fullName
-                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
+                  ? 'border-[#DC2626] bg-red-500/10 focus:ring-2 focus:ring-[#DC2626]/30'
+                  : 'focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: errors.fullName ? '#DC2626' : 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="e.g. Radhika Sharma"
             />
             {errors.fullName && (
-              <p id="fullName-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
+              <p id="fullName-error" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errors.fullName}</span>
               </p>
@@ -227,8 +264,12 @@ export const CheckoutForm = () => {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              Email Address <span className="text-[#991B1B]">*</span>
+            <label
+              htmlFor="email"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              Email Address <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="email"
@@ -240,15 +281,20 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'email-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
+              className={`checkout-input w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${
                 errors.email
-                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
+                  ? 'border-[#DC2626] bg-red-500/10 focus:ring-2 focus:ring-[#DC2626]/30'
+                  : 'focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: errors.email ? '#DC2626' : 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="radhika@example.com"
             />
             {errors.email && (
-              <p id="email-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
+              <p id="email-error" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errors.email}</span>
               </p>
@@ -257,8 +303,12 @@ export const CheckoutForm = () => {
 
           {/* Phone */}
           <div>
-            <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              Phone Number <span className="text-[#991B1B]">*</span>
+            <label
+              htmlFor="phone"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              Phone Number <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="phone"
@@ -270,15 +320,20 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? 'phone-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
+              className={`checkout-input w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${
                 errors.phone
-                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
+                  ? 'border-[#DC2626] bg-red-500/10 focus:ring-2 focus:ring-[#DC2626]/30'
+                  : 'focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: errors.phone ? '#DC2626' : 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="9876543210"
             />
             {errors.phone && (
-              <p id="phone-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
+              <p id="phone-error" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errors.phone}</span>
               </p>
@@ -288,16 +343,32 @@ export const CheckoutForm = () => {
       </div>
 
       {/* Delivery Address Card */}
-      <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 sm:p-8 border border-[var(--collection-border)] shadow-sm space-y-5 transition-colors">
-        <h2 className="font-serif text-xl sm:text-2xl text-[var(--collection-heading)] border-b border-[var(--collection-border)] pb-3">
+      <div
+        className="rounded-2xl p-6 sm:p-8 border shadow-sm space-y-5 transition-colors"
+        style={{
+          backgroundColor: 'var(--collection-card-bg)',
+          borderColor: 'var(--collection-card-border, var(--collection-border))',
+        }}
+      >
+        <h2
+          className="font-serif text-xl sm:text-2xl border-b pb-3"
+          style={{
+            color: 'var(--collection-heading)',
+            borderColor: 'var(--collection-border)',
+          }}
+        >
           2. Delivery Address
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Address Line 1 */}
           <div className="sm:col-span-2">
-            <label htmlFor="addressLine1" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              Address Line 1 <span className="text-[#991B1B]">*</span>
+            <label
+              htmlFor="addressLine1"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              Address Line 1 <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="addressLine1"
@@ -309,15 +380,20 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.addressLine1}
               aria-describedby={errors.addressLine1 ? 'addressLine1-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
+              className={`checkout-input w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${
                 errors.addressLine1
-                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
+                  ? 'border-[#DC2626] bg-red-500/10 focus:ring-2 focus:ring-[#DC2626]/30'
+                  : 'focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: errors.addressLine1 ? '#DC2626' : 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="House / Flat No., Apartment Name, Street"
             />
             {errors.addressLine1 && (
-              <p id="addressLine1-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
+              <p id="addressLine1-error" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errors.addressLine1}</span>
               </p>
@@ -326,8 +402,12 @@ export const CheckoutForm = () => {
 
           {/* Address Line 2 */}
           <div className="sm:col-span-2">
-            <label htmlFor="addressLine2" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              Address Line 2 <span className="text-[var(--collection-text-muted)] lowercase font-normal">(optional)</span>
+            <label
+              htmlFor="addressLine2"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              Address Line 2 <span className="lowercase font-normal" style={{ color: 'var(--collection-text-muted)' }}>(optional)</span>
             </label>
             <input
               id="addressLine2"
@@ -336,15 +416,24 @@ export const CheckoutForm = () => {
               autoComplete="address-line2"
               value={formData.addressLine2}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)] text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none"
+              className="checkout-input w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[var(--collection-focus-ring)] text-sm transition-all outline-none"
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="Landmark, Area or Colony"
             />
           </div>
 
           {/* City */}
           <div>
-            <label htmlFor="city" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              City <span className="text-[#991B1B]">*</span>
+            <label
+              htmlFor="city"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              City <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="city"
@@ -356,15 +445,20 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.city}
               aria-describedby={errors.city ? 'city-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
+              className={`checkout-input w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${
                 errors.city
-                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
+                  ? 'border-[#DC2626] bg-red-500/10 focus:ring-2 focus:ring-[#DC2626]/30'
+                  : 'focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: errors.city ? '#DC2626' : 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="e.g. Bangalore, Chennai, Mumbai"
             />
             {errors.city && (
-              <p id="city-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
+              <p id="city-error" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errors.city}</span>
               </p>
@@ -373,8 +467,12 @@ export const CheckoutForm = () => {
 
           {/* State */}
           <div>
-            <label htmlFor="state" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              State / Province <span className="text-[#991B1B]">*</span>
+            <label
+              htmlFor="state"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              State / Province <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="state"
@@ -386,15 +484,20 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.state}
               aria-describedby={errors.state ? 'state-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
+              className={`checkout-input w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${
                 errors.state
-                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
+                  ? 'border-[#DC2626] bg-red-500/10 focus:ring-2 focus:ring-[#DC2626]/30'
+                  : 'focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: errors.state ? '#DC2626' : 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="e.g. Karnataka, Tamil Nadu"
             />
             {errors.state && (
-              <p id="state-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
+              <p id="state-error" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errors.state}</span>
               </p>
@@ -403,8 +506,12 @@ export const CheckoutForm = () => {
 
           {/* PIN code */}
           <div>
-            <label htmlFor="pincode" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              PIN / Postal Code <span className="text-[#991B1B]">*</span>
+            <label
+              htmlFor="pincode"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              PIN / Postal Code <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="pincode"
@@ -418,15 +525,20 @@ export const CheckoutForm = () => {
               onBlur={handleBlur}
               aria-invalid={!!errors.pincode}
               aria-describedby={errors.pincode ? 'pincode-error' : undefined}
-              className={`w-full px-4 py-3 rounded-xl border text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none ${
+              className={`checkout-input w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${
                 errors.pincode
-                  ? 'border-[#991B1B] bg-red-50/20 focus:ring-2 focus:ring-[#991B1B]/20'
-                  : 'border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
+                  ? 'border-[#DC2626] bg-red-500/10 focus:ring-2 focus:ring-[#DC2626]/30'
+                  : 'focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
               }`}
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: errors.pincode ? '#DC2626' : 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="560001"
             />
             {errors.pincode && (
-              <p id="pincode-error" className="mt-1 text-xs text-[#991B1B] flex items-center gap-1 font-medium">
+              <p id="pincode-error" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{errors.pincode}</span>
               </p>
@@ -435,8 +547,12 @@ export const CheckoutForm = () => {
 
           {/* Delivery Instructions */}
           <div className="sm:col-span-2">
-            <label htmlFor="instructions" className="block text-xs font-semibold uppercase tracking-wider text-[var(--collection-text)] mb-1.5">
-              Delivery Instructions <span className="text-[var(--collection-text-muted)] lowercase font-normal">(optional)</span>
+            <label
+              htmlFor="instructions"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              Delivery Instructions <span className="lowercase font-normal" style={{ color: 'var(--collection-text-muted)' }}>(optional)</span>
             </label>
             <textarea
               id="instructions"
@@ -444,7 +560,12 @@ export const CheckoutForm = () => {
               rows={2}
               value={formData.instructions}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-[var(--collection-input-border)] focus:border-[var(--collection-accent)] focus:ring-2 focus:ring-[var(--collection-focus-ring)] text-sm text-[var(--collection-text)] bg-[var(--collection-input-bg)] placeholder:text-[var(--collection-text-muted)]/70 transition-all outline-none resize-none"
+              className="checkout-input w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[var(--collection-focus-ring)] text-sm transition-all outline-none resize-none"
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: 'var(--collection-input-border, var(--collection-border))',
+              }}
               placeholder="Gate code, landmark, or delivery time preferences..."
             />
           </div>
@@ -456,7 +577,8 @@ export const CheckoutForm = () => {
         <button
           type="button"
           onClick={() => navigate('/cart')}
-          className="text-xs uppercase tracking-widest font-semibold text-[var(--collection-text-muted)] hover:text-[var(--collection-accent)] transition-colors py-3"
+          className="text-xs uppercase tracking-widest font-semibold transition-colors py-3 hover:underline cursor-pointer"
+          style={{ color: 'var(--collection-text-muted)' }}
         >
           &larr; Return to Shopping Bag
         </button>
@@ -464,7 +586,11 @@ export const CheckoutForm = () => {
         <button
           type="submit"
           disabled={hasUnpricedItems || payableItemsCount === 0}
-          className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--collection-accent)] hover:bg-[var(--collection-accent-hover)] text-[var(--collection-btn-text,#FFFFFF)] font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md shadow-[var(--collection-accent)]/20 disabled:bg-[var(--collection-text-muted)]/30 disabled:text-[var(--collection-text-muted)] disabled:cursor-not-allowed disabled:shadow-none"
+          className="w-full sm:w-auto px-8 py-4 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2.5 transition-all shadow-md cursor-pointer hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+          style={{
+            backgroundColor: 'var(--collection-button-bg, var(--collection-accent))',
+            color: 'var(--collection-button-text, #FFFFFF)',
+          }}
         >
           <span>Continue to Order Review</span>
           <ArrowRight className="w-4 h-4" />

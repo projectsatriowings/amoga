@@ -37,7 +37,7 @@ export function AdminPayments() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showEvents]);
 
-  // Live auto-search debounce
+  // Live auto-search debounce: start filtering automatically as words are typed
   useEffect(() => {
     if (orderRef !== debouncedOrderRef) {
       setIsSearching(true);
@@ -45,7 +45,7 @@ export function AdminPayments() {
     const timer = setTimeout(() => {
       setDebouncedOrderRef(orderRef);
       setPage(1);
-    }, 250);
+    }, 150);
     return () => clearTimeout(timer);
   }, [orderRef]);
 

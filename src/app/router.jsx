@@ -37,8 +37,9 @@ import { AdminCustomers } from '../features/admin/pages/AdminCustomers';
 import { AdminPromotions } from '../features/admin/pages/AdminPromotions';
 import { AdminReports } from '../features/admin/pages/AdminReports';
 import { AdminSettings } from '../features/admin/pages/AdminSettings';
-import { AdminUsers } from '../features/admin/pages/AdminUsers';
 import { AdminAuditLogs } from '../features/admin/pages/AdminAuditLogs';
+import { AdminCustomerInquiries } from '../features/admin/pages/AdminCustomerInquiries';
+import { DeveloperOnlyRoute } from '../features/admin/components/DeveloperOnlyRoute';
 
 /**
  * React Router Configuration for Amoga E-Commerce Storefront & Admin Atelier
@@ -213,17 +214,38 @@ export const router = createBrowserRouter([
       { path: 'products', element: <AdminProducts /> },
       { path: 'products/new', element: <AdminProductForm /> },
       { path: 'products/:id/edit', element: <AdminProductForm /> },
-      { path: 'collections', element: <AdminCollections /> },
+      {
+        path: 'collections',
+        element: (
+          <DeveloperOnlyRoute
+            pageTitle="Collection Architecture"
+            description="Collections and category mapping control storefront taxonomy and database routes. This page is protected for technical developers."
+          >
+            <AdminCollections />
+          </DeveloperOnlyRoute>
+        ),
+      },
       { path: 'inventory', element: <AdminInventory /> },
       { path: 'orders', element: <AdminOrders /> },
       { path: 'orders/:id', element: <AdminOrderDetail /> },
       { path: 'payments', element: <AdminPayments /> },
       { path: 'customers', element: <AdminCustomers /> },
+      { path: 'customer-inquiries', element: <AdminCustomerInquiries /> },
       { path: 'promotions', element: <AdminPromotions /> },
       { path: 'reports', element: <AdminReports /> },
       { path: 'settings', element: <AdminSettings /> },
-      { path: 'users', element: <AdminUsers /> },
-      { path: 'audit-logs', element: <AdminAuditLogs /> },
+      { path: 'users', element: <Navigate to="/admin" replace /> },
+      {
+        path: 'audit-logs',
+        element: (
+          <DeveloperOnlyRoute
+            pageTitle="System Audit Trail"
+            description="The Audit Trail records administrative mutation telemetry, IP tracking, and system actor history. This page is protected for technical developers."
+          >
+            <AdminAuditLogs />
+          </DeveloperOnlyRoute>
+        ),
+      },
     ],
   },
 

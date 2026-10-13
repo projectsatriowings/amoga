@@ -99,14 +99,60 @@ export function CollectionNavbar({ collectionId = 'food' }) {
     }
   }, [location.pathname, location.hash, theme.homePath]);
 
+  // Keep navbar search query in sync with page URL query when on products page
+  useEffect(() => {
+    if (location.pathname === theme.productsPath) {
+      const urlQ = new URLSearchParams(location.search).get('q') || '';
+      if (urlQ !== searchQuery.trim() && !searchQuery.startsWith(urlQ)) {
+        setSearchQuery(urlQ);
+      }
+    }
+  }, [location.pathname, location.search, theme.productsPath]);
+
+  // Live filter as user types
+  useEffect(() => {
+    if (location.pathname === theme.productsPath) {
+      const timer = setTimeout(() => {
+        const sp = new URLSearchParams(location.search);
+        if (searchQuery.trim()) {
+          sp.set('q', searchQuery.trim());
+        } else {
+          sp.delete('q');
+        }
+        const newSearch = sp.toString() ? `?${sp.toString()}` : '';
+        if (location.search !== newSearch) {
+          navigate(`${theme.productsPath}${newSearch}`, { replace: true });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    } else if (searchQuery.trim().length >= 2) {
+      // Auto-navigate to products listing when typing search words from other pages
+      const timer = setTimeout(() => {
+        navigate(`${theme.productsPath}?q=${encodeURIComponent(searchQuery.trim())}`);
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [searchQuery, location.pathname, location.search, theme.productsPath, navigate]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(
         `${theme.productsPath}?q=${encodeURIComponent(searchQuery.trim())}`
       );
-      setSearchQuery('');
       setMobileMenuOpen(false);
+    } else if (location.pathname === theme.productsPath) {
+      navigate(theme.productsPath, { replace: true });
+    }
+  };
+
+  const handleClearNavbarSearch = () => {
+    setSearchQuery('');
+    if (location.pathname === theme.productsPath) {
+      const sp = new URLSearchParams(location.search);
+      sp.delete('q');
+      const newSearch = sp.toString() ? `?${sp.toString()}` : '';
+      navigate(`${theme.productsPath}${newSearch}`, { replace: true });
     }
   };
 
@@ -258,7 +304,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search catalogue..."
-                  className="w-full pl-9 pr-3 py-1.5 rounded-full text-xs border transition-colors outline-none focus:ring-1"
+                  className="w-full pl-9 pr-7 py-1.5 rounded-full text-xs border transition-colors outline-none focus:ring-1"
                   style={{
                     backgroundColor: palette.cardBg || '#FFFFFF',
                     borderColor: palette.border || '#E5E0D5',
@@ -269,6 +315,16 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   className="w-3.5 h-3.5 absolute left-3 pointer-events-none"
                   style={{ color: palette.accent || palette.accentGold || '#3F7B43' }}
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearNavbarSearch}
+                    className="absolute right-2.5 text-stone-400 hover:text-stone-800 p-0.5 cursor-pointer"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </form>
 
               {/* Wishlist Button */}
@@ -377,7 +433,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search catalogue..."
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl text-xs border outline-none"
+                  className="w-full pl-9 pr-8 py-2.5 rounded-xl text-xs border outline-none"
                   style={{
                     backgroundColor: palette.inputBg || '#FFFFFF',
                     borderColor: palette.inputBorder || '#E5E0D5',
@@ -388,6 +444,16 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   className="w-4 h-4 absolute left-3 top-3 pointer-events-none"
                   style={{ color: palette.accent || palette.accentGold || '#3F7B43' }}
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearNavbarSearch}
+                    className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-800 p-1 cursor-pointer"
+                    title="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </form>
 
               {/* Minimal Nav: Home | Categories | Contact */}

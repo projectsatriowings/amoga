@@ -49,7 +49,16 @@ export function hashSessionToken(token) {
 /**
  * Helper to write append-only audit trail
  */
-export async function logAdminAction({ adminId, adminEmail, action, entityType, entityId, details }) {
+export async function logAdminAction({
+  adminId,
+  adminEmail,
+  action,
+  entityType,
+  entityId,
+  status = 'SUCCESS',
+  failureReason = null,
+  details,
+}) {
   try {
     await prisma.auditLog.create({
       data: {
@@ -58,6 +67,8 @@ export async function logAdminAction({ adminId, adminEmail, action, entityType, 
         action,
         entityType,
         entityId: entityId ? String(entityId) : null,
+        status: status || 'SUCCESS',
+        failureReason: failureReason || null,
         details: details || {},
       },
     });

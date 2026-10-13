@@ -8,12 +8,25 @@ import { TeaProductCard } from './components/TeaProductCard';
 import { TEA_PRODUCTS } from './data/products';
 
 import { useProducts } from '../../hooks/useProducts';
+import { useCollection } from '../../hooks/useCollection';
 
 export function TeaStorefront() {
+  const { collection } = useCollection('tea');
   const { products: apiProducts } = useProducts({
     collection: 'tea',
     fallbackData: TEA_PRODUCTS,
   });
+
+  const tagline = (collection?.tagline || 'BOTANICAL WELLNESS').toUpperCase();
+  const heading = (collection?.heroHeading || collection?.name || 'WELLNESS TEA').toUpperCase();
+  const subheading = collection?.heroSubheading || '';
+  const description = collection?.description || 'Discover thoughtfully selected botanical teas and herbal infusions for your everyday tea ritual.';
+  const heroImage = collection?.heroImage || teaHero;
+
+  const tc = collection?.themeConfig || {};
+  const accentColor = collection?.accentColor || tc.accentColor || tc.primaryColor || '#65815A';
+  const bgColor = tc.bgColor || '#FAF1BB';
+  const textColor = tc.textColor || '#2C1E11';
 
   const displayProducts = React.useMemo(() => {
     const raw = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
@@ -24,30 +37,55 @@ export function TeaStorefront() {
   }, [apiProducts]);
 
   return (
-    <div className="relative bg-[#FAF1BB] text-[#2C1E11] min-h-screen overflow-hidden">
+    <div
+      className="relative min-h-screen overflow-hidden transition-colors"
+      style={{ backgroundColor: bgColor, color: textColor }}
+    >
       {/* Decorative Botanical Side Animations (Left & Right Gutters) */}
       <BotanicalSideAnimations />
 
       {/* 1. Hero Section */}
-      <section className="relative z-10 pt-12 sm:pt-16 pb-16 sm:pb-24 border-b border-[#B88E38]/25 bg-gradient-to-b from-[#FAF1BB] via-[#F8EEA6] to-[#FAF1BB]">
+      <section
+        className="relative z-10 pt-12 sm:pt-16 pb-16 sm:pb-24 border-b border-[#B88E38]/25 transition-colors"
+        style={{
+          background: `linear-gradient(to bottom, ${bgColor}, #F8EEA6, ${bgColor})`,
+        }}
+      >
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Narrative */}
             <div className="lg:col-span-7 space-y-6">
               {/* Eyebrow text */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#B88E38]/20 backdrop-blur-md border border-[#B88E38]/40 text-[#8C6320] text-xs font-mono tracking-widest uppercase font-semibold shadow-2xs">
-                <Leaf className="w-3.5 h-3.5 text-[#B88E38]" />
-                <span>BOTANICAL WELLNESS</span>
+              <div
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full backdrop-blur-md border text-xs font-mono tracking-widest uppercase font-semibold shadow-2xs"
+                style={{
+                  backgroundColor: `${accentColor}25`,
+                  borderColor: `${accentColor}40`,
+                  color: accentColor,
+                }}
+              >
+                <Leaf className="w-3.5 h-3.5" style={{ color: accentColor }} />
+                <span>{tagline}</span>
               </div>
 
               {/* Hero Heading */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-[#2C1E11] leading-[1.08] tracking-tight uppercase">
-                WELLNESS TEA
-              </h1>
+              <div className="space-y-2">
+                <h1
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.08] tracking-tight uppercase"
+                  style={{ color: textColor }}
+                >
+                  {heading}
+                </h1>
+                {subheading && (
+                  <p className="text-base sm:text-lg font-serif italic opacity-85" style={{ color: textColor }}>
+                    {subheading}
+                  </p>
+                )}
+              </div>
 
               {/* Hero Description */}
-              <p className="text-base sm:text-lg text-[#543B25] leading-relaxed max-w-xl font-sans">
-                Discover thoughtfully selected botanical teas and herbal infusions for your everyday tea ritual.
+              <p className="text-base sm:text-lg leading-relaxed max-w-xl font-sans" style={{ color: `${textColor}D9` }}>
+                {description}
               </p>
 
               {/* Botanical Ritual Pillars */}
@@ -90,7 +128,7 @@ export function TeaStorefront() {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-[#B88E38]/30 bg-[#FFFDF5] aspect-square">
                 <img
-                  src={teaHero}
+                  src={heroImage}
                   alt="Amoga Wellness Tea Collection"
                   className="w-full h-full object-cover object-center"
                 />

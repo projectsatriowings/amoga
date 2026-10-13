@@ -17,7 +17,8 @@
     "db:migrate": "npm --prefix server run prisma:migrate",
     "db:seed": "npm --prefix server run prisma:seed",
     "test:server": "npm --prefix server test",
-    "test:all": "node test-phase6.js && npm --prefix server test && node test-routes.js"
+    "test:contrast": "node --loader ./image-loader.js test-checkout-contrast.js",
+    "test:all": "node --loader ./image-loader.js test-checkout-contrast.js && node test-phase6.js && npm --prefix server test && node test-routes.js"
   },
   "dependencies": {
     "framer-motion": "^14.0.0",

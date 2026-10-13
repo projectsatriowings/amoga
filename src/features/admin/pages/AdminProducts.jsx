@@ -50,12 +50,15 @@ export function AdminProducts() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [targetProduct, actionLoading]);
 
-  // Live auto-search debounce
+  // Live auto-search debounce: start filtering automatically as words are typed
   useEffect(() => {
+    if (search !== debouncedSearch) {
+      setIsSearching(true);
+    }
     const timer = setTimeout(() => {
       setPage(1);
       setDebouncedSearch(search);
-    }, 250);
+    }, 150);
     return () => clearTimeout(timer);
   }, [search]);
 

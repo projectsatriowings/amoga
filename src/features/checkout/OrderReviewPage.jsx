@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { formatINR, validateCartForCheckout } from '../../utils/pricing';
@@ -7,6 +7,8 @@ import {
   createPaymentOrderApi,
   verifyPaymentApi,
   testSimulatePaymentApi,
+  applyCouponApi,
+  validateCartApi,
 } from '../../services/checkoutApi';
 import {
   ShieldAlert,
@@ -19,9 +21,11 @@ import {
   Lock,
   RefreshCw,
   X,
+  Tag,
 } from 'lucide-react';
 import { BackButton } from '../../components/ui/BackButton';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 
 // Pure helper to generate demo reference outside component render scope
 function generateDemoOrderId() {
@@ -61,12 +65,79 @@ export const OrderReviewPage = () => {
   const checkoutContext = useStore((state) => state.checkoutContext);
   const customerDetails = useStore((state) => state.customerDetails || state.checkout?.customerDetails) || {};
   const setLastCompletedOrder = useStore((state) => state.setLastCompletedOrder);
+  const resolved = useResolvedTheme();
 
   const checkoutItems = getCheckoutItems();
   const totals = getCheckoutTotals();
 
   const [simulationError, setSimulationError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState(null);
+
+  // Authoritative server shipping from store settings
+  const [serverShipping, setServerShipping] = useState({
+    amount: 0,
+    isComplimentary: true,
+    freeShippingThreshold: 2000,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    if (checkoutItems.length > 0) {
+      validateCartApi(checkoutItems)
+        .then((res) => {
+          if (isMounted && res?.totals) {
+            setServerShipping({
+              amount: res.totals.shippingAmount || 0,
+              isComplimentary: res.totals.isComplimentaryShipping ?? (res.totals.shippingAmount === 0),
+              freeShippingThreshold: res.totals.freeShippingThreshold || 2000,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [checkoutItems]);
+
+  const discountAmount = appliedCoupon?.discountAmount || 0;
+  const shippingFee = serverShipping.isComplimentary ? 0 : serverShipping.amount;
+  const finalPayableTotal = Math.max(0, (totals.subtotal || 0) - discountAmount + shippingFee);
+
+  const handleApplyCoupon = async (e) => {
+    if (e) e.preventDefault();
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await applyCouponApi({
+        code: couponInput.trim(),
+        subtotal: totals.subtotal,
+        items: checkoutItems,
+      });
+      if (res && res.valid) {
+        setAppliedCoupon(res);
+        setCouponInput('');
+      } else {
+        setCouponError(res?.message || 'Invalid promotion code');
+      }
+    } catch (err) {
+      setCouponError(err.message || 'Failed to apply coupon');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError(null);
+  };
 
   // Payment Modal States
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -112,11 +183,12 @@ export const OrderReviewPage = () => {
     const idempotencyKey = generateIdempotencyKey();
 
     try {
-      // 3. Submit or resume order in PostgreSQL backend
+      // 3. Submit or resume order in PostgreSQL backend with applied coupon
       const orderResult = await createOrderApi({
         items: checkoutItems,
         customer: customerDetails,
         idempotencyKey,
+        couponCode: appliedCoupon?.code,
       });
 
       if (orderResult && orderResult.orderReference) {
@@ -316,20 +388,50 @@ export const OrderReviewPage = () => {
   // If checkout context is empty and no active order
   if (checkoutItems.length === 0) {
     return (
-      <div className="min-h-screen bg-[var(--collection-page-bg)] text-[var(--collection-text)] pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors">
-        <div className="max-w-xl mx-auto text-center py-16 bg-[var(--collection-card-bg)] rounded-2xl p-8 border border-[var(--collection-border)] shadow-sm">
-          <div className="w-16 h-16 rounded-full bg-[var(--collection-section-bg)] border border-[var(--collection-border)] flex items-center justify-center mx-auto mb-4 text-[var(--collection-accent)]">
+      <div
+        className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors"
+        style={{
+          ...resolved.cssVariables,
+          backgroundColor: 'var(--collection-page-bg)',
+          color: 'var(--collection-text)',
+        }}
+      >
+        <div
+          className="max-w-xl mx-auto text-center py-16 rounded-2xl p-8 border shadow-sm"
+          style={{
+            backgroundColor: 'var(--collection-card-bg)',
+            borderColor: 'var(--collection-border)',
+          }}
+        >
+          <div
+            className="w-16 h-16 rounded-full border flex items-center justify-center mx-auto mb-4"
+            style={{
+              backgroundColor: 'var(--collection-section-bg)',
+              borderColor: 'var(--collection-border)',
+              color: 'var(--collection-accent)',
+            }}
+          >
             <ShoppingBag className="w-8 h-8" />
           </div>
-          <h1 className="font-serif text-2xl text-[var(--collection-heading)] mb-2">
+          <h1
+            className="font-serif text-2xl mb-2"
+            style={{ color: 'var(--collection-heading)' }}
+          >
             No Active Bag for Review
           </h1>
-          <p className="text-sm text-[var(--collection-text-muted)] mb-6">
+          <p
+            className="text-sm mb-6"
+            style={{ color: 'var(--collection-text-muted)' }}
+          >
             There are no items selected for purchase to review.
           </p>
           <Link
             to="/cart"
-            className="inline-flex items-center px-6 py-3 rounded-xl bg-[var(--collection-accent)] text-[var(--collection-btn-text,#FFFFFF)] text-sm font-medium hover:bg-[var(--collection-accent-hover)] transition-all shadow-md"
+            className="inline-flex items-center px-6 py-3 rounded-xl text-sm font-medium transition-all shadow-md cursor-pointer hover:opacity-95"
+            style={{
+              backgroundColor: 'var(--collection-button-bg, var(--collection-accent))',
+              color: 'var(--collection-button-text, #FFFFFF)',
+            }}
           >
             Return to Shopping Bag
           </Link>
@@ -339,7 +441,14 @@ export const OrderReviewPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--collection-page-bg)] text-[var(--collection-text)] pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors">
+    <div
+      className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors"
+      style={{
+        ...resolved.cssVariables,
+        backgroundColor: 'var(--collection-page-bg)',
+        color: 'var(--collection-text)',
+      }}
+    >
       <div className="max-w-5xl mx-auto">
         {/* Breadcrumb Navigation & Back Action */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -395,13 +504,26 @@ export const OrderReviewPage = () => {
         </div>
 
         {/* Demo Disclaimer Banner */}
-        <div className="p-5 bg-amber-50/90 rounded-2xl border border-amber-300/80 text-amber-950 text-xs sm:text-sm mb-8 flex items-start gap-3.5 shadow-sm">
-          <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+        <div
+          className="p-5 rounded-2xl border text-xs sm:text-sm mb-8 flex items-start gap-3.5 shadow-xs transition-colors"
+          style={{
+            backgroundColor: 'var(--collection-notice-bg)',
+            borderColor: 'var(--collection-notice-border)',
+            color: 'var(--collection-notice-text)',
+          }}
+        >
+          <ShieldAlert
+            className="w-5 h-5 shrink-0 mt-0.5"
+            style={{ color: 'var(--collection-notice-icon)' }}
+          />
           <div className="leading-relaxed">
-            <h2 className="font-semibold text-amber-900">
+            <h2
+              className="font-semibold text-sm"
+              style={{ color: 'var(--collection-notice-title)' }}
+            >
               Simulated Demonstration Notice
             </h2>
-            <p className="mt-1 text-amber-800/90">
+            <p className="mt-1 opacity-90">
               This application is in frontend presentation mode. <strong>No actual payment gateway is connected</strong>, no credit cards are charged, and no real fulfilment order is dispatched. Clicking the completion button simulates the order confirmation experience with non-production reference records.
             </p>
           </div>
@@ -576,18 +698,86 @@ export const OrderReviewPage = () => {
                     {formatINR(totals.subtotal)}
                   </span>
                 </div>
+
+                {appliedCoupon && (
+                  <div className="flex justify-between items-baseline text-emerald-700 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Promotional Discount ({appliedCoupon.code})</span>
+                    </span>
+                    <span className="tabular-nums font-semibold">- {formatINR(discountAmount)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
                   <span>Standard Shipping</span>
-                  <span className="italic text-[var(--collection-accent)]">Complimentary (Demo)</span>
+                  <span className="italic text-[var(--collection-accent)]">Complimentary</span>
                 </div>
                 <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
                   <span>Taxes & Duties</span>
                   <span className="italic">Included</span>
                 </div>
-                <div className="pt-4 border-t border-[var(--collection-border)] flex justify-between items-baseline">
-                  <span className="text-sm font-semibold text-[var(--collection-heading)]">Total Amount</span>
-                  <span className="font-sans text-2xl font-bold text-[var(--collection-accent)] tabular-nums">
-                    {formatINR(totals.subtotal)}
+
+                {/* Promo Code Input / Active Badge */}
+                <div className="pt-3 border-t border-[var(--collection-border)]">
+                  <label className="block text-[11px] font-semibold text-[var(--collection-heading)] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-[var(--collection-accent)]" />
+                    <span>Have a Promo Code?</span>
+                  </label>
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+                      <div>
+                        <div className="font-mono font-bold tracking-wider">{appliedCoupon.code}</div>
+                        <div className="text-[10px] text-emerald-700">
+                          {appliedCoupon.message || `Saved ₹${appliedCoupon.discountAmount}`}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="text-[11px] text-rose-600 hover:text-rose-800 font-semibold uppercase tracking-wider px-2 py-1 rounded hover:bg-rose-50 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleApplyCoupon} className="space-y-1.5">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="e.g. WELCOME10"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          className="checkout-input flex-1 px-3 py-2 text-xs font-mono uppercase rounded-xl border focus:outline-none focus:ring-2 focus:ring-[var(--collection-focus-ring)]"
+                          style={{
+                            backgroundColor: 'var(--collection-input-bg)',
+                            borderColor: 'var(--collection-input-border, var(--collection-border))',
+                            color: 'var(--collection-input-text, #292820)',
+                          }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={couponLoading || !couponInput.trim()}
+                          className="px-4 py-2 text-xs font-semibold rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                          style={{
+                            backgroundColor: 'var(--collection-button-bg, var(--collection-accent))',
+                            color: 'var(--collection-button-text, #FFFFFF)',
+                          }}
+                        >
+                          {couponLoading ? 'Checking...' : 'Apply'}
+                        </button>
+                      </div>
+                      {couponError && (
+                        <p className="text-[11px] text-rose-600 leading-tight">{couponError}</p>
+                      )}
+                    </form>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t flex justify-between items-baseline" style={{ borderColor: 'var(--collection-border)' }}>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--collection-heading)' }}>Total Amount</span>
+                  <span className="font-sans text-2xl font-bold tabular-nums" style={{ color: 'var(--collection-accent)' }}>
+                    {formatINR(finalPayableTotal)}
                   </span>
                 </div>
               </div>
@@ -598,15 +788,15 @@ export const OrderReviewPage = () => {
                   type="button"
                   onClick={handleInitiatePayment}
                   disabled={!cartValidation.isValid || !isCustomerValid || isSubmitting}
-                  className={`w-full py-4 px-5 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2 text-center transition-all shadow-md ${
-                    !cartValidation.isValid || !isCustomerValid || isSubmitting
-                      ? 'bg-[var(--collection-text-muted)]/30 text-[var(--collection-text-muted)] cursor-not-allowed shadow-none'
-                      : 'bg-[var(--collection-accent)] hover:bg-[var(--collection-accent-hover)] text-[var(--collection-btn-text,#FFFFFF)] active:scale-[0.99] shadow-[var(--collection-accent)]/20 hover:shadow-lg'
-                  }`}
+                  className="w-full py-4 px-5 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2 text-center transition-all shadow-md cursor-pointer hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                  style={{
+                    backgroundColor: 'var(--collection-button-bg, var(--collection-accent))',
+                    color: 'var(--collection-button-text, #FFFFFF)',
+                  }}
                 >
                   <CreditCard className="w-4 h-4 shrink-0" />
                   <span>
-                    {isSubmitting ? 'Initiating Payment Order...' : `Proceed to Secure Payment — ${formatINR(totals.subtotal)}`}
+                    {isSubmitting ? 'Initiating Payment Order...' : `Proceed to Secure Payment — ${formatINR(finalPayableTotal)}`}
                   </span>
                 </button>
 
@@ -746,7 +936,11 @@ export const OrderReviewPage = () => {
                   type="button"
                   onClick={() => handleExecutePaymentSimulation('success')}
                   disabled={isProcessingPayment}
-                  className="w-full py-3.5 px-4 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2 bg-[var(--collection-accent)] hover:bg-[var(--collection-accent-hover)] text-[var(--collection-btn-text,#FFFFFF)] shadow-md transition-all active:scale-[0.99] disabled:opacity-50"
+                  className="w-full py-3.5 px-4 rounded-xl font-medium tracking-wide flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer hover:opacity-95"
+                  style={{
+                    backgroundColor: 'var(--collection-button-bg, var(--collection-accent))',
+                    color: 'var(--collection-button-text, #FFFFFF)',
+                  }}
                 >
                   {isProcessingPayment ? (
                     <>

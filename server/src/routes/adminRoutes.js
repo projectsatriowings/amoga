@@ -44,8 +44,11 @@ import {
 import {
   listCoupons,
   createCoupon,
+  updateCoupon,
   toggleCoupon,
+  deleteCoupon,
 } from '../controllers/adminCouponsController.js';
+import { uploadImage } from '../controllers/adminUploadController.js';
 import {
   getSalesReport,
   exportCsv,
@@ -57,7 +60,15 @@ import {
   createAdminUser,
   toggleAdminUser,
   listAuditLogs,
+  getAuditLogById,
 } from '../controllers/adminSettingsController.js';
+import {
+  listInquiries,
+  getInquiryById,
+  updateInquiryStatus,
+  updateInquiryNotes,
+  assignInquiry,
+} from '../controllers/adminInquiriesController.js';
 
 const router = Router();
 
@@ -67,6 +78,9 @@ router.post('/auth/login', loginAdmin);
 // ================= PROTECTED ADMIN ROUTES =================
 router.post('/auth/logout', requireAdminAuth(), logoutAdmin);
 router.get('/auth/me', requireAdminAuth(), getAdminProfile);
+
+// 0. Asset Uploads (Catalogue & Content Managers)
+router.post('/upload', requireAdminAuth(['CATALOGUE_MANAGER', 'CONTENT_MANAGER']), uploadImage);
 
 // 1. Dashboard Overview
 router.get('/dashboard/stats', requireAdminAuth(), getDashboardStats);
@@ -106,10 +120,19 @@ router.get('/payments/:id', requireAdminAuth(), getPaymentById);
 router.get('/customers', requireAdminAuth(), listCustomers);
 router.get('/customers/:email', requireAdminAuth(), getCustomerByEmail);
 
+// 7.5 Customer Inquiries (Order Manager, Content Manager & Super Admin)
+router.get('/inquiries', requireAdminAuth(['ORDER_MANAGER', 'CONTENT_MANAGER']), listInquiries);
+router.get('/inquiries/:id', requireAdminAuth(['ORDER_MANAGER', 'CONTENT_MANAGER']), getInquiryById);
+router.patch('/inquiries/:id/status', requireAdminAuth(['ORDER_MANAGER', 'CONTENT_MANAGER']), updateInquiryStatus);
+router.patch('/inquiries/:id/notes', requireAdminAuth(['ORDER_MANAGER', 'CONTENT_MANAGER']), updateInquiryNotes);
+router.patch('/inquiries/:id/assign', requireAdminAuth(['ORDER_MANAGER', 'CONTENT_MANAGER']), assignInquiry);
+
 // 8. Promotions & Coupons (Content Manager & Super Admin)
 router.get('/coupons', requireAdminAuth(), listCoupons);
 router.post('/coupons', requireAdminAuth(['CONTENT_MANAGER']), createCoupon);
+router.put('/coupons/:id', requireAdminAuth(['CONTENT_MANAGER']), updateCoupon);
 router.patch('/coupons/:id/toggle', requireAdminAuth(['CONTENT_MANAGER']), toggleCoupon);
+router.delete('/coupons/:id', requireAdminAuth(['CONTENT_MANAGER']), deleteCoupon);
 
 // 10. Reports & Exports (Super Admin, Order Manager)
 router.get('/reports/sales', requireAdminAuth(['ORDER_MANAGER']), getSalesReport);
@@ -122,5 +145,6 @@ router.get('/users', requireAdminAuth(['SUPER_ADMIN']), listAdminUsers);
 router.post('/users', requireAdminAuth(['SUPER_ADMIN']), createAdminUser);
 router.patch('/users/:id/toggle', requireAdminAuth(['SUPER_ADMIN']), toggleAdminUser);
 router.get('/audit-logs', requireAdminAuth(['SUPER_ADMIN']), listAuditLogs);
+router.get('/audit-logs/:id', requireAdminAuth(['SUPER_ADMIN']), getAuditLogById);
 
 export default router;

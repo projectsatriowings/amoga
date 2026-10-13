@@ -30,6 +30,11 @@ describe('1. Payment Order Creation API', () => {
   let guestToken;
 
   before(async () => {
+    await prisma.storeSetting.update({
+      where: { id: 'default' },
+      data: { shippingStandardRate: 0, freeShippingThreshold: 2000 },
+    }).catch(() => {});
+
     // Create an eligible order for testing payment creation
     const orderRes = await fetch(`${baseUrl}/orders`, {
       method: 'POST',

@@ -4,12 +4,37 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Compass } from 'lucide-react';
 import sareeModelHero from '../../../assets/images/saree-model-hero.jpg';
 import { Container } from '../../../components/ui/Container';
+import { useCollection } from '../../../hooks/useCollection';
 
 export function SareeHero() {
+  const { collection } = useCollection('sarees');
+
+  const tagline = (collection?.tagline || 'Heritage Collection • Timeless Elegance').toUpperCase();
+  const heading = collection?.heroHeading || 'The Heritage in Every Drape';
+  const subheading = collection?.heroSubheading || '';
+  const description = collection?.description || "Discover Amoga's curated collection of traditional silk sarees, crafted with timeless artistry, royal heritage, and unmatched elegance. From auspicious temple borders to shimmering festive weaves.";
+  const heroImage = collection?.heroImage || sareeModelHero;
+
+  const tc = collection?.themeConfig || {};
+  const accentColor = collection?.accentColor || tc.accentColor || tc.primaryColor || '#C5A46D';
+  const bgColor = tc.bgColor || '#2C0E1A';
+  const textColor = tc.textColor || '#F6EBD8';
+  const mutedText = tc.mutedTextColor || '#D4C2A7';
+
   return (
-    <section className="relative overflow-hidden bg-[#2C0E1A] text-[#F6EBD8] border-b border-[#C5A46D]/20">
+    <section
+      className="relative overflow-hidden border-b transition-colors"
+      style={{
+        backgroundColor: bgColor,
+        color: textColor,
+        borderColor: `${accentColor}33`,
+      }}
+    >
       {/* Subtle Gold Ambient Glow */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#C5A46D]/10 rounded-full blur-3xl pointer-events-none" />
+      <div
+        className="absolute top-0 right-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-20"
+        style={{ backgroundColor: accentColor }}
+      />
       <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#451523]/40 rounded-full blur-2xl pointer-events-none" />
 
       <Container>
@@ -22,31 +47,43 @@ export function SareeHero() {
             className="lg:col-span-5 relative flex items-center justify-center"
           >
             {/* Left Vertical Ribbon */}
-            <div className="hidden sm:flex flex-col items-center gap-3 absolute -left-8 top-1/2 -translate-y-1/2 text-[10px] font-mono uppercase tracking-[0.25em] text-[#C5A46D]/70 select-none">
+            <div
+              className="hidden sm:flex flex-col items-center gap-3 absolute -left-8 top-1/2 -translate-y-1/2 text-[10px] font-mono uppercase tracking-[0.25em] select-none opacity-70"
+              style={{ color: accentColor }}
+            >
               <span className="rotate-180 [writing-mode:vertical-rl]">Tradition in Every Thread</span>
-              <span className="w-1.5 h-1.5 rotate-45 border border-[#C5A46D]" />
+              <span className="w-1.5 h-1.5 rotate-45 border" style={{ borderColor: accentColor }} />
             </div>
 
             {/* Main Portrait Card Frame */}
-            <div className="relative w-full max-w-md rounded-2xl overflow-hidden border-2 border-[#C5A46D]/30 shadow-2xl bg-[#381222]">
+            <div
+              className="relative w-full max-w-md rounded-2xl overflow-hidden border-2 shadow-2xl bg-[#381222]"
+              style={{ borderColor: `${accentColor}4D` }}
+            >
               <img
-                src={sareeModelHero}
+                src={heroImage}
                 alt="Amoga Heritage Kanchipuram Silk Saree Drape"
                 className="w-full h-auto aspect-[3/4] object-cover object-top"
               />
 
               {/* Bottom Subtle Caption Overlay */}
-              <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-[#2C0E1A] via-[#2C0E1A]/80 to-transparent">
+              <div
+                className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t via-black/60 to-transparent"
+                style={{ from: bgColor }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-[10px] font-mono uppercase tracking-widest text-[#C5A46D]">
+                    <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: accentColor }}>
                       Temple Heritage
                     </div>
-                    <div className="font-serif text-sm text-[#F6EBD8]">
-                      Authentic Kanchipuram Drape
+                    <div className="font-serif text-sm" style={{ color: textColor }}>
+                      {subheading || 'Authentic Kanchipuram Drape'}
                     </div>
                   </div>
-                  <span className="text-xs font-mono text-[#C5A46D] px-2 py-0.5 rounded bg-[#451523] border border-[#C5A46D]/30">
+                  <span
+                    className="text-xs font-mono px-2 py-0.5 rounded bg-[#451523] border"
+                    style={{ color: accentColor, borderColor: `${accentColor}4D` }}
+                  >
                     Pure Silk
                   </span>
                 </div>
@@ -62,22 +99,36 @@ export function SareeHero() {
             className="lg:col-span-7 space-y-6 lg:pl-6"
           >
             {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#451523]/70 backdrop-blur-md border border-[#C5A46D]/30 text-[#C5A46D] text-xs font-mono uppercase tracking-widest shadow-2xs">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md border text-xs font-mono uppercase tracking-widest shadow-2xs"
+              style={{
+                backgroundColor: '#451523B3',
+                borderColor: `${accentColor}4D`,
+                color: accentColor,
+              }}
+            >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Heritage Collection &bull; Timeless Elegance</span>
+              <span>{tagline}</span>
             </div>
 
             {/* Editorial Title */}
             <div className="space-y-2">
-              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#F6EBD8] leading-[1.1] tracking-tight">
-                The Heritage <br />
-                <span className="italic text-[#C5A46D]">in Every Drape</span>
+              <h1
+                className="font-serif text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight"
+                style={{ color: textColor }}
+              >
+                {heading}
               </h1>
+              {subheading && (
+                <p className="font-serif italic text-base sm:text-lg opacity-90" style={{ color: accentColor }}>
+                  {subheading}
+                </p>
+              )}
             </div>
 
             {/* Supporting Copy */}
-            <p className="text-sm sm:text-base text-[#D4C2A7] leading-relaxed max-w-xl font-sans">
-              Discover Amoga's curated collection of traditional silk sarees, crafted with timeless artistry, royal heritage, and unmatched elegance. From auspicious temple borders to shimmering festive weaves.
+            <p className="text-sm sm:text-base leading-relaxed max-w-xl font-sans" style={{ color: mutedText }}>
+              {description}
             </p>
 
             {/* Highlights Grid */}

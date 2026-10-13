@@ -35,10 +35,13 @@ export function AdminCustomers() {
 
   // Live auto-search: automatically trigger search as user types
   useEffect(() => {
+    if (search !== debouncedSearch) {
+      setIsSearching(true);
+    }
     const timer = setTimeout(() => {
       setPage(1);
       setDebouncedSearch(search);
-    }, 250);
+    }, 150);
     return () => clearTimeout(timer);
   }, [search]);
 

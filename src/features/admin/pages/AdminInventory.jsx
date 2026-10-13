@@ -54,7 +54,7 @@ export function AdminInventory() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [adjustTarget, showLogs, submitting]);
 
-  // Live auto-search debounce
+  // Live auto-search debounce: start filtering automatically as words are typed
   useEffect(() => {
     if (search !== debouncedSearch) {
       setIsSearching(true);
@@ -62,7 +62,7 @@ export function AdminInventory() {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
-    }, 250);
+    }, 150);
     return () => clearTimeout(timer);
   }, [search]);
 

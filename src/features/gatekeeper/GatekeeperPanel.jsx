@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { LiquidGlassCta } from './LiquidGlassCta';
+import { COLLECTIONS } from '../../data/collections';
 
 /**
  * GatekeeperPanel Component
@@ -83,10 +84,14 @@ export function GatekeeperPanel({
     overlayDim: 'bg-black/30',
   };
 
+  const customPalette = collection.themeConfig || {};
   const themeConfig = {
     ...baseTheme,
-    accentColor: collection.accentColor || baseTheme.accentColor,
-    eyebrowColor: collection.accentColor || baseTheme.eyebrowColor,
+    bgColor: customPalette.bgColor || baseTheme.bgColor,
+    textColor: customPalette.textColor || baseTheme.textColor,
+    accentColor: collection.accentColor || customPalette.accentColor || baseTheme.accentColor,
+    eyebrowColor: collection.accentColor || customPalette.accentColor || baseTheme.eyebrowColor,
+    descriptionColor: customPalette.mutedTextColor || baseTheme.descriptionColor,
   };
 
   const transitionConfig = {
@@ -214,8 +219,14 @@ export function GatekeeperPanel({
 
         {/* Collection Photography */}
         <motion.img
-          src={collection.heroImage}
+          src={collection.heroImage || COLLECTIONS.find((c) => c.id === collection.id)?.heroImage}
           alt={`Amoga ${collection.name}`}
+          onError={(e) => {
+            const fallback = COLLECTIONS.find((c) => c.id === collection.id)?.heroImage;
+            if (fallback && e.currentTarget.src !== fallback) {
+              e.currentTarget.src = fallback;
+            }
+          }}
           animate={{
             scale: isExpanded ? 1.05 : 1.0,
           }}

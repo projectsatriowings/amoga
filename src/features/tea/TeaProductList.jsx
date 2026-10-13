@@ -23,26 +23,36 @@ export function TeaProductList() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState('featured');
 
-  // Sync searchQuery when searchParams query changes
+  // Sync searchQuery when searchParams query changes externally
   React.useEffect(() => {
-    setSearchQuery(searchParams.get('q') || '');
+    const urlQ = searchParams.get('q') || '';
+    if (urlQ !== searchQuery.trim() && !searchQuery.startsWith(urlQ)) {
+      setSearchQuery(urlQ);
+    }
   }, [searchParams]);
+
+  // Debounced URL sync so typing is completely smooth and does not overwrite spaces
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const newParams = new URLSearchParams(searchParams);
+      if (!searchQuery.trim()) {
+        newParams.delete('q');
+      } else {
+        newParams.set('q', searchQuery.trim());
+      }
+      setSearchParams(newParams, { replace: true });
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleSearchChange = (val) => {
     setSearchQuery(val);
-    const newParams = new URLSearchParams(searchParams);
-    if (!val.trim()) {
-      newParams.delete('q');
-    } else {
-      newParams.set('q', val.trim());
-    }
-    setSearchParams(newParams);
   };
 
   const clearAllFilters = () => {
     setSearchQuery('');
     setSortBy('featured');
-    setSearchParams({});
+    setSearchParams({}, { replace: true });
   };
 
   // Filter & Sort Logic
