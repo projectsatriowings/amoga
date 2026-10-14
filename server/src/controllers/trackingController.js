@@ -76,22 +76,27 @@ function buildMilestones(order, trackingEvents) {
   const statusOrder = ['PENDING_PAYMENT', 'PENDING_CONFIRMATION', 'CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED'];
   const currentIndex = statusOrder.indexOf(status);
 
+  const isFullyDelivered = status === 'DELIVERED';
+
   return steps.map((s, idx) => {
     const stepIdx = statusOrder.indexOf(s.key);
     let state = 'UPCOMING';
     if (isCancelled) {
       state = 'CANCELLED';
-    } else if (stepIdx < currentIndex) {
+    } else if (isFullyDelivered || stepIdx < currentIndex) {
       state = 'COMPLETED';
     } else if (stepIdx === currentIndex) {
+      state = 'CURRENT';
+    } else if (idx === 0 && currentIndex < 2 && !isCancelled) {
+      // Order placed and pending payment/confirmation - confirmation step is actively in progress
       state = 'CURRENT';
     }
 
     return {
       ...s,
       state,
-      isPassed: stepIdx <= currentIndex && !isCancelled,
-      isCurrent: stepIdx === currentIndex && !isCancelled,
+      isPassed: (isFullyDelivered || stepIdx <= currentIndex || (idx === 0 && currentIndex < 2)) && !isCancelled,
+      isCurrent: !isFullyDelivered && (stepIdx === currentIndex || (idx === 0 && currentIndex < 2)) && !isCancelled,
     };
   });
 }

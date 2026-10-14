@@ -16,6 +16,7 @@ import { SareeProductCard } from './components/SareeProductCard';
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function SareesProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -185,6 +186,9 @@ export function SareesProductList() {
               'Explore our curated collection of verified heritage weaves and artisanal handlooms.'}
           </p>
         </div>
+
+        {/* Call to Order Assistance Banner */}
+        <CallToOrderAssistance variant="banner" className="mb-6 bg-[#381222]/90 border-[#C5A46D]/25 text-[#F6EBD8]" />
 
         {/* Filter and Search Bar Controls */}
         <div className="mb-8 p-4 rounded-xl bg-[#381222]/90 border border-[#C5A46D]/25 shadow-lg space-y-4">

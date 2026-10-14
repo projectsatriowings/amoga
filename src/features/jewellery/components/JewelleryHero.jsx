@@ -5,6 +5,7 @@ import { ArrowRight, Sparkles, Compass } from 'lucide-react';
 import modelHero from '../../../assets/images/jewellery-model-hero.jpg';
 import { Container } from '../../../components/ui/Container';
 import { useCollection } from '../../../hooks/useCollection';
+import { CallToOrderAssistance } from '../../../components/common/CallToOrderAssistance';
 
 export function JewelleryHero() {
   const { collection } = useCollection('jewellery');
@@ -156,6 +157,8 @@ export function JewelleryHero() {
                 <span>Explore Jewellery</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
+
+              <CallToOrderAssistance variant="hero" />
 
               <a
                 href="#featured"

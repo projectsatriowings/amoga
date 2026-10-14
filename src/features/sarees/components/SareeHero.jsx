@@ -5,6 +5,7 @@ import { ArrowRight, Sparkles, Compass } from 'lucide-react';
 import sareeModelHero from '../../../assets/images/saree-model-hero.jpg';
 import { Container } from '../../../components/ui/Container';
 import { useCollection } from '../../../hooks/useCollection';
+import { CallToOrderAssistance } from '../../../components/common/CallToOrderAssistance';
 
 export function SareeHero() {
   const { collection } = useCollection('sarees');
@@ -148,7 +149,7 @@ export function SareeHero() {
             </div>
 
             {/* Call to Actions */}
-            <div className="flex flex-wrap items-center gap-4 pt-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-4">
               <Link
                 to="/sarees/products"
                 className="px-6 py-3.5 rounded-xl bg-[#C5A46D] text-[#2C0E1A] font-medium text-xs uppercase tracking-wider hover:bg-[#d9bb85] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl active:scale-[0.98]"
@@ -157,9 +158,14 @@ export function SareeHero() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
+              <CallToOrderAssistance
+                variant="hero"
+                className="rounded-xl border-[#C5A46D]/40 text-[#F6EBD8] bg-[#451523]/80 hover:bg-[#581c2d]"
+              />
+
               <a
                 href="#collections"
-                className="px-6 py-3.5 rounded-xl bg-[#451523] text-[#F6EBD8] border border-[#C5A46D]/30 font-medium text-xs uppercase tracking-wider hover:bg-[#581c2d] hover:border-[#C5A46D] transition-all flex items-center gap-2"
+                className="px-5 py-3.5 rounded-xl bg-[#451523] text-[#F6EBD8] border border-[#C5A46D]/30 font-medium text-xs uppercase tracking-wider hover:bg-[#581c2d] hover:border-[#C5A46D] transition-all flex items-center gap-2"
               >
                 <Compass className="w-4 h-4 text-[#C5A46D]" />
                 <span>View Collections</span>

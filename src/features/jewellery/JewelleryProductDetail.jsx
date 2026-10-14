@@ -25,6 +25,7 @@ import { useProductDetail } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
 import { resolveAvailability } from '../../utils/inventory';
 import { RestockModal } from '../../components/ui/RestockModal';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function JewelleryProductDetail() {
   const { slug } = useParams();
@@ -445,6 +446,9 @@ export function JewelleryProductDetail() {
                   <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
                 </button>
               </div>
+
+              {/* Call to Order Assistance */}
+              <CallToOrderAssistance variant="pdp" className="mt-2 bg-[#343238] border-[#B9B8B5]/25 text-[#F7F3EB]" />
 
               {addedNotice && (
                 <div className="p-3 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs flex items-center gap-2">

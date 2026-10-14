@@ -5,6 +5,7 @@ import amogaLogo from '../../assets/images/amoga-logo.png';
 import { COLLECTIONS } from '../../data/collections';
 import { Container } from '../ui/Container';
 import { CollectionContactSection } from '../../features/collections/components/CollectionContactSection';
+import { CallToOrderAssistance } from '../common/CallToOrderAssistance';
 
 const CURRENT_YEAR = 2026;
 
@@ -68,50 +69,84 @@ export function AppFooter({ activeCollection }) {
             </p>
 
             {isFood && (
-              <div className="p-3.5 rounded-xl bg-white/60 border border-[#172B1C]/10 max-w-sm space-y-1 text-xs">
+              <div className="p-3.5 rounded-xl bg-white/60 border border-[#172B1C]/10 max-w-sm space-y-1.5 text-xs">
                 <div className="flex items-center gap-2 font-semibold text-[#287A25]">
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>Orders & Wholesale Enquiries:</span>
                 </div>
-                <div className="font-mono text-[#172B1C]">
-                  +91 9940018593 &bull; +91 8056700646
+                <div className="font-mono text-[#172B1C] flex items-center gap-2 flex-wrap">
+                  <a href="tel:+919940018593" className="hover:underline font-semibold">+91 9940018593</a>
+                  <span>&bull;</span>
+                  <a href="tel:+918056700646" className="hover:underline font-semibold">+91 8056700646</a>
+                </div>
+                <div className="text-[11px] opacity-75 flex items-center gap-2 flex-wrap">
+                  <span>Mon – Sat • 9:00 AM – 7:00 PM IST</span>
+                  <span>&bull;</span>
+                  <a href="mailto:orders@amoga.com" className="hover:underline text-[#287A25]">orders@amoga.com</a>
                 </div>
               </div>
             )}
 
             {isTea && (
-              <div className="p-3.5 rounded-xl bg-white/70 border border-[#B88E38]/25 max-w-sm space-y-1 text-xs">
+              <div className="p-3.5 rounded-xl bg-white/70 border border-[#B88E38]/25 max-w-sm space-y-1.5 text-xs">
                 <div className="flex items-center gap-2 font-semibold text-[#8C6320]">
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>Tea Orders & Botanical Inquiries:</span>
                 </div>
-                <div className="font-mono text-[#2C1E11]">
-                  +91 9940018593 &bull; +91 8056700646
+                <div className="font-mono text-[#2C1E11] flex items-center gap-2 flex-wrap">
+                  <a href="tel:+919940018593" className="hover:underline font-semibold">+91 9940018593</a>
+                  <span>&bull;</span>
+                  <a href="tel:+918056700646" className="hover:underline font-semibold">+91 8056700646</a>
+                </div>
+                <div className="text-[11px] opacity-75 flex items-center gap-2 flex-wrap">
+                  <span>Mon – Sat • 9:00 AM – 7:00 PM IST</span>
+                  <span>&bull;</span>
+                  <a href="mailto:orders@amoga.com" className="hover:underline text-[#8C6320]">orders@amoga.com</a>
                 </div>
               </div>
             )}
 
             {isSarees && (
-              <div className="p-3.5 rounded-xl bg-[#381222] border border-[#C5A46D]/20 max-w-sm space-y-1 text-xs">
+              <div className="p-3.5 rounded-xl bg-[#381222] border border-[#C5A46D]/20 max-w-sm space-y-1.5 text-xs">
                 <div className="flex items-center gap-2 font-semibold text-[#C5A46D]">
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>Bridal Concierge & Private Appointments:</span>
                 </div>
-                <div className="font-mono text-[#F6EBD8]">
-                  +91 9940018593 &bull; +91 8056700646
+                <div className="font-mono text-[#F6EBD8] flex items-center gap-2 flex-wrap">
+                  <a href="tel:+919940018593" className="hover:underline font-semibold">+91 9940018593</a>
+                  <span>&bull;</span>
+                  <a href="tel:+918056700646" className="hover:underline font-semibold">+91 8056700646</a>
+                </div>
+                <div className="text-[11px] opacity-75 flex items-center gap-2 flex-wrap">
+                  <span>Mon – Sat • 9:00 AM – 7:00 PM IST</span>
+                  <span>&bull;</span>
+                  <a href="mailto:orders@amoga.com" className="hover:underline text-[#C5A46D]">orders@amoga.com</a>
                 </div>
               </div>
             )}
 
             {isJewellery && (
-              <div className="p-3.5 rounded-xl bg-[#343238] border border-[#B9B8B5]/20 max-w-sm space-y-1 text-xs">
+              <div className="p-3.5 rounded-xl bg-[#343238] border border-[#B9B8B5]/20 max-w-sm space-y-1.5 text-xs">
                 <div className="flex items-center gap-2 font-semibold text-[#B9B8B5]">
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>Silver Sizing & Care Consultations:</span>
                 </div>
-                <div className="font-mono text-[#F7F3EB]">
-                  +91 9940018593 &bull; +91 8056700646
+                <div className="font-mono text-[#F7F3EB] flex items-center gap-2 flex-wrap">
+                  <a href="tel:+919940018593" className="hover:underline font-semibold">+91 9940018593</a>
+                  <span>&bull;</span>
+                  <a href="tel:+918056700646" className="hover:underline font-semibold">+91 8056700646</a>
                 </div>
+                <div className="text-[11px] opacity-75 flex items-center gap-2 flex-wrap">
+                  <span>Mon – Sat • 9:00 AM – 7:00 PM IST</span>
+                  <span>&bull;</span>
+                  <a href="mailto:orders@amoga.com" className="hover:underline text-[#B9B8B5]">orders@amoga.com</a>
+                </div>
+              </div>
+            )}
+
+            {!isFood && !isTea && !isSarees && !isJewellery && (
+              <div className="p-3.5 rounded-xl bg-white/[0.05] border border-current/10 max-w-sm">
+                <CallToOrderAssistance variant="footer" />
               </div>
             )}
           </div>

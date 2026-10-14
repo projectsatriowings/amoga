@@ -9,14 +9,19 @@ import {
   Menu,
   X,
   ChevronDown,
+  Truck,
+  LogOut,
+  Sparkles,
 } from 'lucide-react';
 import amogaLogo from '../../../assets/images/amoga-logo.png';
 import { useStore } from '../../../store/useStore';
+import { useCustomerStore } from '../../account/store/useCustomerStore';
 import { Container } from '../../../components/ui/Container';
 import { getCollectionTheme } from '../themeConfig';
 import { CollectionCategoryMenu } from './CollectionCategoryMenu';
 import { BackButton } from '../../../components/ui/BackButton';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
+import { GlobalProfileMenu } from '../../../components/layout/GlobalProfileMenu';
 
 export function CollectionNavbar({ collectionId = 'food' }) {
   const theme = getCollectionTheme(collectionId);
@@ -28,14 +33,14 @@ export function CollectionNavbar({ collectionId = 'food' }) {
   const prefersReducedMotion = useReducedMotion();
   const { cart, wishlist, openCart, openWishlist } = useStore();
 
+  const { customer, isAuthenticated, logout } = useCustomerStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(true);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
-  const [accountModalOpen, setAccountModalOpen] = useState(false);
 
-  // Lock body scroll when account concierge modal or mobile menu is open
-  useBodyScrollLock(Boolean(accountModalOpen || mobileMenuOpen));
+  // Lock body scroll when mobile menu is open
+  useBodyScrollLock(Boolean(mobileMenuOpen));
 
   const dropdownButtonRef = useRef(null);
 
@@ -194,11 +199,6 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   src={amogaLogo}
                   alt="AMOGA Main Portal"
                   className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
-                  style={
-                    collectionId === 'jewellery'
-                      ? { filter: 'grayscale(1) brightness(1.75)' }
-                      : undefined
-                  }
                 />
               </Link>
               <span
@@ -376,16 +376,12 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                 )}
               </button>
 
-              {/* Customer Care / Account Modal Trigger */}
-              <button
-                type="button"
-                onClick={() => setAccountModalOpen(true)}
-                className="p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
-                aria-label="Customer Care & Assistance"
-                style={{ color: palette.headerText || palette.text || '#FFFFFF' }}
-              >
-                <User className="w-5 h-5" />
-              </button>
+              {/* Customer Account Global Profile Menu */}
+              <GlobalProfileMenu
+                collectionId={collectionId}
+                buttonStyle={{ color: palette.headerText || palette.text || '#FFFFFF' }}
+                triggerClassName="hover:bg-white/10"
+              />
 
               {/* Mobile Menu Hamburger */}
               <button
@@ -599,7 +595,80 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   Contact
                 </button>
 
-                <div className="pt-3">
+                {/* Account Services in Mobile Drawer */}
+                <div className="pt-2 border-t space-y-1 text-xs" style={{ borderColor: palette.border || '#E5E0D5' }}>
+                  <div className="text-[10px] uppercase tracking-widest font-mono opacity-60 px-3 py-1">
+                    Patron Account
+                  </div>
+                  {isAuthenticated ? (
+                    <>
+                      <Link
+                        to="/account?tab=profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 font-medium"
+                      >
+                        <User className="w-4 h-4" style={{ color: palette.accent || palette.accentGold || '#C5A46D' }} />
+                        <span>My Profile ({customer?.name || 'Account'})</span>
+                      </Link>
+                      <Link
+                        to="/account?tab=orders"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 font-medium"
+                      >
+                        <ShoppingBag className="w-4 h-4" style={{ color: palette.accent || palette.accentGold || '#C5A46D' }} />
+                        <span>My Orders</span>
+                      </Link>
+                      <Link
+                        to="/track"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 font-medium"
+                      >
+                        <Truck className="w-4 h-4" style={{ color: palette.accent || palette.accentGold || '#C5A46D' }} />
+                        <span>Track Order</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 text-left font-medium cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        to="/account/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 font-medium"
+                      >
+                        <User className="w-4 h-4" style={{ color: palette.accent || palette.accentGold || '#C5A46D' }} />
+                        <span>Sign In</span>
+                      </Link>
+                      <Link
+                        to="/account/login?mode=register"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 font-medium opacity-80"
+                      >
+                        <Sparkles className="w-4 h-4" style={{ color: palette.accent || palette.accentGold || '#C5A46D' }} />
+                        <span>Create Account</span>
+                      </Link>
+                      <Link
+                        to="/track"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 font-medium"
+                      >
+                        <Truck className="w-4 h-4" style={{ color: palette.accent || palette.accentGold || '#C5A46D' }} />
+                        <span>Track Order</span>
+                      </Link>
+                    </>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t" style={{ borderColor: palette.border || '#E5E0D5' }}>
                   <Link
                     to="/"
                     onClick={() => setMobileMenuOpen(false)}
@@ -614,117 +683,6 @@ export function CollectionNavbar({ collectionId = 'food' }) {
           )}
         </AnimatePresence>
       </header>
-
-      {/* Account / Concierge Modal */}
-      {accountModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs overscroll-contain select-none"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setAccountModalOpen(false);
-          }}
-          onWheel={(e) => {
-            if (e.target === e.currentTarget) e.preventDefault();
-          }}
-          onTouchMove={(e) => {
-            if (e.target === e.currentTarget) e.preventDefault();
-          }}
-        >
-          <div
-            data-modal-dialog
-            onClick={(e) => e.stopPropagation()}
-            className="rounded-2xl max-w-sm w-full p-6 space-y-4 border shadow-2xl transition-all overscroll-contain select-text"
-            style={{
-              backgroundColor: palette.cardBg || '#FFFFFF',
-              borderColor: palette.border || '#E5E0D5',
-              color: palette.text || '#292820',
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User
-                  className="w-5 h-5"
-                  style={{ color: palette.accent || palette.accentGold || '#3F7B43' }}
-                />
-                <h3
-                  className="font-serif font-medium text-base"
-                  style={{ color: palette.heading || '#173B2A' }}
-                >
-                  {theme.name} Concierge
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAccountModalOpen(false)}
-                className="p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
-                aria-label="Close dialog"
-                style={{ color: palette.text || '#F7F3EB' }}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <p
-              className="text-xs leading-relaxed font-sans opacity-90"
-              style={{ color: palette.text || '#F7F3EB' }}
-            >
-              For direct telephone order placement, bespoke assistance, and dispatch tracking:
-            </p>
-            <div
-              className="p-3.5 rounded-xl border space-y-1.5 text-xs font-mono"
-              style={{
-                backgroundColor: palette.bg || '#F8F6F0',
-                borderColor: palette.border || '#E5E0D5',
-                color: palette.text || '#F7F3EB',
-              }}
-            >
-              <div>Phone: {theme.contact?.phone1}</div>
-              <div>Direct: {theme.contact?.phone2}</div>
-              <div>Email: {theme.contact?.email1}</div>
-              <div>Hours: {theme.contact?.hours}</div>
-            </div>
-
-            <div className="pt-1 flex items-center justify-between text-xs">
-              <Link
-                to="/account"
-                onClick={() => setAccountModalOpen(false)}
-                className="hover:underline font-medium"
-                style={{ color: palette.accent || palette.accentGold || '#C5A46D' }}
-              >
-                My Patron Account →
-              </Link>
-              <Link
-                to="/track"
-                onClick={() => setAccountModalOpen(false)}
-                className="hover:underline font-medium"
-                style={{ color: palette.accent || palette.accentGold || '#C5A46D' }}
-              >
-                Track Order →
-              </Link>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setAccountModalOpen(false)}
-              className="w-full py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all hover:opacity-90 active:scale-[0.99] cursor-pointer shadow-sm"
-              style={{
-                backgroundColor:
-                  palette.buttonBg ||
-                  (palette.bg === '#2C0E1A' || collectionId === 'sarees'
-                    ? (palette.accentGold || palette.accent || '#C5A46D')
-                    : (palette.heading || palette.accent || '#173B2A')),
-                color:
-                  palette.buttonText ||
-                  (palette.bg === '#2C0E1A' || collectionId === 'sarees'
-                    ? '#2C0E1A'
-                    : '#FFFFFF'),
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

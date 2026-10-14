@@ -5,6 +5,7 @@ import { ArrowRight, Compass, Sparkles, Check } from 'lucide-react';
 import foodHeroImg from '../../../assets/images/gatekeeper-food.jpg';
 import { Container } from '../../../components/ui/Container';
 import { useCollection } from '../../../hooks/useCollection';
+import { CallToOrderAssistance } from '../../../components/common/CallToOrderAssistance';
 
 export function FoodHero() {
   const { collection } = useCollection('food');
@@ -85,8 +86,8 @@ export function FoodHero() {
               ))}
             </div>
 
-            {/* Rounded Outlined CTA */}
-            <div className="flex flex-wrap items-center gap-4 pt-4">
+            {/* Rounded Outlined CTA & Secondary Call to Order */}
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-4">
               <Link
                 to="/food/products"
                 className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full border-2 border-[#173B2A] text-[#173B2A] hover:bg-[#173B2A] hover:text-[#F8F6F0] text-xs font-mono font-semibold tracking-wider uppercase transition-all duration-200 active:scale-95 shadow-sm"
@@ -95,9 +96,14 @@ export function FoodHero() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
+              <CallToOrderAssistance
+                variant="hero"
+                className="border-[#173B2A]/30 text-[#173B2A] bg-white/80 hover:bg-[#173B2A]/5"
+              />
+
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FFFFFF] border border-[#E5E0D5] text-[#292820] hover:bg-[#F8F6F0] hover:border-[#173B2A]/30 text-xs font-mono font-medium tracking-wider uppercase transition-all"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#FFFFFF] border border-[#E5E0D5] text-[#292820] hover:bg-[#F8F6F0] hover:border-[#173B2A]/30 text-xs font-mono font-medium tracking-wider uppercase transition-all"
               >
                 <Compass className="w-3.5 h-3.5 text-[#3F7B43]" />
                 <span>All Collections</span>

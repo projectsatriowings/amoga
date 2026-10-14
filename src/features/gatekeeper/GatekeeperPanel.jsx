@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { LiquidGlassCta } from './LiquidGlassCta';
 import { COLLECTIONS } from '../../data/collections';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 /**
  * GatekeeperPanel Component
@@ -189,7 +190,7 @@ export function GatekeeperPanel({
           </motion.div>
         </div>
 
-        {/* Liquid-Glass CTA Button — Anchored on identical baseline across all panels */}
+        {/* Liquid-Glass CTA Button & Secondary Call to Order */}
         <motion.div
           animate={{
             opacity: isCollapsed ? 0 : isExpanded ? 1 : 0.85,
@@ -197,7 +198,7 @@ export function GatekeeperPanel({
             scale: isCollapsed ? 0.95 : 1,
           }}
           transition={transitionConfig}
-          className="mt-auto pt-6 sm:pt-8"
+          className="mt-auto pt-6 sm:pt-8 flex flex-wrap items-center gap-2.5"
         >
           <LiquidGlassCta
             collectionId={collection.id}
@@ -207,6 +208,12 @@ export function GatekeeperPanel({
               onSelect(collection);
             }}
           />
+          <div onClick={(e) => e.stopPropagation()}>
+            <CallToOrderAssistance
+              variant="hero"
+              className="bg-black/35 backdrop-blur-md border-white/20 text-[#F4F4F2] hover:bg-white/15 hover:border-white/40"
+            />
+          </div>
         </motion.div>
       </div>
 

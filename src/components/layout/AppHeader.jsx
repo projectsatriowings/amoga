@@ -8,29 +8,14 @@ import { Container } from '../ui/Container';
 
 import { useStore } from '../../store/useStore';
 import { useCustomerStore } from '../../features/account/store/useCustomerStore';
+import { GlobalProfileMenu } from './GlobalProfileMenu';
 
 export function AppHeader({ activeCollection }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { cart, wishlist, openCart, openWishlist } = useStore();
 
-  const { customer, isAuthenticated, initAuth, logout } = useCustomerStore();
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
-
-  useEffect(() => {
-    initAuth();
-  }, []);
-
-  useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, []);
+  const { customer, isAuthenticated, logout } = useCustomerStore();
 
   const cartCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   const wishlistCount = wishlist.items.length;
@@ -101,83 +86,8 @@ export function AppHeader({ activeCollection }) {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Customer Account Button & Dropdown */}
-          <div className="relative" ref={userMenuRef}>
-            {isAuthenticated ? (
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-xs font-medium"
-                title="My Account"
-              >
-                <div className="w-7 h-7 rounded-full bg-[#722F37] text-[#F6EBD8] flex items-center justify-center font-bold text-xs shadow-inner">
-                  {customer?.name ? customer.name.charAt(0).toUpperCase() : 'A'}
-                </div>
-                <span className="hidden lg:inline max-w-[100px] truncate">
-                  {customer?.name?.split(' ')[0] || 'Account'}
-                </span>
-              </button>
-            ) : (
-              <Link
-                to="/account/login"
-                className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors inline-flex items-center justify-center"
-                title="Sign In / Register"
-              >
-                <User className="w-4 h-4 opacity-80 hover:opacity-100" />
-              </Link>
-            )}
-
-            {/* Dropdown Menu */}
-            {userMenuOpen && isAuthenticated && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white text-[#2C0E1A] shadow-xl border border-[#E5E0D5] py-2 z-50 text-xs">
-                <div className="px-4 py-2 border-b border-[#EFECE6]">
-                  <p className="font-bold text-[#1F0811] truncate">{customer?.name}</p>
-                  <p className="text-[11px] text-[#7A7167] font-mono truncate">{customer?.email}</p>
-                </div>
-
-                <div className="py-1">
-                  <Link
-                    to="/account?tab=orders"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 hover:bg-[#FAF8F5] text-[#4A423B] hover:text-[#1F0811] transition-colors"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-[#8C6320]" />
-                    <span>My Orders</span>
-                  </Link>
-
-                  <Link
-                    to="/track"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 hover:bg-[#FAF8F5] text-[#4A423B] hover:text-[#1F0811] transition-colors"
-                  >
-                    <Truck className="w-4 h-4 text-[#8C6320]" />
-                    <span>Track Order</span>
-                  </Link>
-
-                  <Link
-                    to="/account?tab=addresses"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 hover:bg-[#FAF8F5] text-[#4A423B] hover:text-[#1F0811] transition-colors"
-                  >
-                    <User className="w-4 h-4 text-[#8C6320]" />
-                    <span>Saved Addresses</span>
-                  </Link>
-                </div>
-
-                <div className="pt-1 border-t border-[#EFECE6]">
-                  <button
-                    onClick={() => {
-                      setUserMenuOpen(false);
-                      logout();
-                    }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 text-rose-700 hover:bg-rose-50 transition-colors text-left"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Customer Account Global Profile Menu */}
+          <GlobalProfileMenu />
 
           <div className="relative">
             <IconButton

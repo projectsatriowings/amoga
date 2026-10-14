@@ -8,6 +8,7 @@ import { BotanicalSideAnimations } from './components/BotanicalAnimations';
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function TeaProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -130,6 +131,9 @@ export function TeaProductList() {
             Explore our selection of botanical teas and herbal infusions, bringing distinctive ingredients and comforting tea rituals to your everyday routine.
           </p>
         </div>
+
+        {/* Call to Order Assistance Banner */}
+        <CallToOrderAssistance variant="banner" className="mb-6 bg-[#FFFDF5] border-[#B88E38]/30 text-[#2C1E11]" />
 
         {/* Search & Sort Controls */}
         <div className="p-4 rounded-2xl bg-[#FFFDF5] border border-[#B88E38]/30 shadow-sm mb-8">

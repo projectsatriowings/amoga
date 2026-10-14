@@ -16,6 +16,7 @@ import { JewelleryProductCard } from './components/JewelleryProductCard';
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function JewelleryProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -185,6 +186,9 @@ export function JewelleryProductList() {
               'Explore our curated collection of verified sterling silver rings, necklaces, and modern heirlooms.'}
           </p>
         </div>
+
+        {/* Call to Order Assistance Banner */}
+        <CallToOrderAssistance variant="banner" className="mb-6 bg-[#343238]/80 border-[#B9B8B5]/20 text-[#F7F3EB]" />
 
         {/* Filter and Search Bar Controls */}
         <div className="mb-8 p-4 rounded-xl bg-[#343238]/80 border border-[#B9B8B5]/20 shadow-lg space-y-4">

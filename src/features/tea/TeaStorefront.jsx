@@ -9,6 +9,7 @@ import { TEA_PRODUCTS } from './data/products';
 
 import { useProducts } from '../../hooks/useProducts';
 import { useCollection } from '../../hooks/useCollection';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function TeaStorefront() {
   const { collection } = useCollection('tea');
@@ -113,6 +114,8 @@ export function TeaStorefront() {
                   <span>EXPLORE COLLECTION</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
+
+                <CallToOrderAssistance variant="hero" />
 
                 <Link
                   to="/"

@@ -5,6 +5,7 @@ import amogaLogo from '../../assets/images/amoga-logo.png';
 import { COLLECTIONS } from '../../data/collections';
 import { GatekeeperPanel } from './GatekeeperPanel';
 import { GatekeeperMobile } from './GatekeeperMobile';
+import { GlobalProfileMenu } from '../../components/layout/GlobalProfileMenu';
 
 /**
  * Cinematic Tri-Fold Gatekeeper (Phase 2)
@@ -192,11 +193,15 @@ export function GatekeeperHub() {
           </Link>
         </div>
 
-        {/* Ambient Tagline / Visual Context */}
-        <div className="hidden sm:flex items-center gap-3 pointer-events-auto">
-          <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#F4F4F2]/80 bg-black/35 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+        {/* Ambient Tagline / Visual Context & Profile Menu */}
+        <div className="flex items-center gap-2.5 sm:gap-3 pointer-events-auto">
+          <span className="hidden sm:inline-block text-[11px] font-mono uppercase tracking-[0.2em] text-[#F4F4F2]/80 bg-black/35 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
             {liveCollections.length} Curated Universes
           </span>
+          <GlobalProfileMenu
+            buttonStyle={{ color: '#F4F4F2' }}
+            triggerClassName="bg-black/35 backdrop-blur-md border border-white/10 hover:bg-white/15 text-white"
+          />
         </div>
       </header>
 

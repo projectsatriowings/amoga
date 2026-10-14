@@ -24,6 +24,7 @@ import { useProductDetail } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
 import { resolveAvailability } from '../../utils/inventory';
 import { RestockModal } from '../../components/ui/RestockModal';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function TeaProductDetail() {
   const { slug } = useParams();
@@ -370,59 +371,69 @@ export function TeaProductDetail() {
                   <span>Notify Me When Available</span>
                 </button>
               ) : hasPrice ? (
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                  {/* Quantity selector */}
-                  <div className="flex items-center justify-between border border-[#B88E38]/30 rounded-full px-3 py-1.5 bg-white w-32 shrink-0">
+                <>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                    {/* Quantity selector */}
+                    <div className="flex items-center justify-between border border-[#B88E38]/30 rounded-full px-3 py-1.5 bg-white w-32 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="p-1 hover:text-[#8C6320] text-[#2C1E11]"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="font-sans text-sm font-semibold tabular-nums font-numeric">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setQuantity((q) =>
+                            availability.availableQuantity > 0
+                              ? Math.min(availability.availableQuantity, q + 1)
+                              : q + 1
+                          )
+                        }
+                        className="p-1 hover:text-[#8C6320] text-[#2C1E11]"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Add to Bag CTA */}
                     <button
                       type="button"
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="p-1 hover:text-[#8C6320] text-[#2C1E11]"
-                      aria-label="Decrease quantity"
+                      onClick={handleAddToCart}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
                     >
-                      <Minus className="w-3.5 h-3.5" />
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>{addedSuccess ? 'Added to Bag!' : 'Add to Shopping Bag'}</span>
                     </button>
-                    <span className="font-sans text-sm font-semibold tabular-nums font-numeric">{quantity}</span>
+
+                    {/* Buy Now CTA */}
                     <button
                       type="button"
-                      onClick={() =>
-                        setQuantity((q) =>
-                          availability.availableQuantity > 0
-                            ? Math.min(availability.availableQuantity, q + 1)
-                            : q + 1
-                        )
-                      }
-                      className="p-1 hover:text-[#8C6320] text-[#2C1E11]"
-                      aria-label="Increase quantity"
+                      onClick={handleBuyNow}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-[#B88E38] text-[#2C1E11] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Zap className="w-4 h-4" />
+                      <span>Buy Now</span>
                     </button>
                   </div>
 
-                  {/* Add to Bag CTA */}
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>{addedSuccess ? 'Added to Bag!' : 'Add to Shopping Bag'}</span>
-                  </button>
-
-                  {/* Buy Now CTA */}
-                  <button
-                    type="button"
-                    onClick={handleBuyNow}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-[#B88E38] text-[#2C1E11] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
-                  >
-                    <Zap className="w-4 h-4" />
-                    <span>Buy Now</span>
-                  </button>
-                </div>
+                  {/* Call to Order Option */}
+                  <CallToOrderAssistance variant="pdp" className="mt-2 bg-white border-[#B88E38]/25 text-[#2C1E11]" />
+                </>
               ) : (
                 <div className="p-4 rounded-xl bg-[#FFFDF5] border border-[#B88E38]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 text-[#2C1E11] font-medium">
                     <PhoneCall className="w-4 h-4 text-[#8C6320]" />
-                    <span>Inquire / Direct Orders: +91 9940018593 / +91 8056700646</span>
+                    <span>
+                      Inquire / Direct Orders:{' '}
+                      <a href="tel:+919940018593" className="underline font-mono">+91 9940018593</a>
+                      {' '}&bull;{' '}
+                      <a href="tel:+918056700646" className="underline font-mono">+91 8056700646</a>
+                    </span>
                   </div>
                   <Link
                     to="/tea/products"

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { LiquidGlassCta } from './LiquidGlassCta';
 import { COLLECTIONS } from '../../data/collections';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 /**
  * GatekeeperMobile Component
@@ -179,14 +180,18 @@ export function GatekeeperMobile({
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
             </div>
 
-            {/* Explore Button */}
-            <div className="pt-2 flex items-center justify-between">
+            {/* Explore Button & Secondary Call to Order */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
               <LiquidGlassCta
                 collectionId={current.id}
                 label={current.ctaText}
                 disabled={isExiting}
                 onClick={() => onSelect(current)}
                 className="w-full justify-center py-3.5 text-sm"
+              />
+              <CallToOrderAssistance
+                variant="hero"
+                className="w-full justify-center py-2.5 bg-black/35 backdrop-blur-md border-white/20 text-[#F4F4F2] text-xs hover:bg-white/15"
               />
             </div>
           </motion.div>

@@ -24,6 +24,7 @@ import { Button } from '../../components/ui/Button';
 import { useProductDetail } from '../../hooks/useProducts';
 import { isValidPrice } from '../../utils/pricing';
 import { BackButton } from '../../components/ui/BackButton';
+import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function FoodProductDetail() {
   const { slug } = useParams();
@@ -351,6 +352,9 @@ export function FoodProductDetail() {
                   <Heart className={`w-5 h-5 ${inWishlist ? 'fill-red-500' : ''}`} />
                 </button>
               </div>
+
+              {/* Call to Order Option */}
+              <CallToOrderAssistance variant="pdp" className="mt-2 bg-white/80 border-[#172B1C]/10 text-[#172B1C]" />
 
               {addError && (
                 <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
