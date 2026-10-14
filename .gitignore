@@ -31,7 +31,6 @@ server/backups/
 # Generated assets
 generated/
 server/generated/
-public/images/
 
 # Editor directories and files
 .vscode/*
