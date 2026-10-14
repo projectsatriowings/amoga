@@ -32,7 +32,7 @@ export function RouteErrorBoundary() {
 
   return (
     <AppShell>
-      <div className="min-h-[70vh] bg-amoga-paper pt-28 pb-20 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+      <div className="min-h-[70vh] bg-amoga-paper pt-3 sm:pt-4 pb-16 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
         <div className="max-w-lg w-full bg-white rounded-3xl p-8 sm:p-10 border border-amoga-brass/25 shadow-sm text-center">
           <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto mb-5 shadow-sm">
             <AlertCircle className="w-8 h-8" />

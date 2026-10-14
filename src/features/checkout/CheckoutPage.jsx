@@ -22,7 +22,7 @@ export const CheckoutPage = () => {
   if (checkoutItems.length === 0) {
     return (
       <div
-        className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-normal"
+        className="min-h-screen pt-2 sm:pt-3 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-normal"
         style={{
           ...resolved.cssVariables,
           backgroundColor: 'var(--collection-page-bg)',
@@ -76,7 +76,7 @@ export const CheckoutPage = () => {
 
   return (
     <div
-      className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-normal"
+      className="min-h-screen pt-2 sm:pt-3 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-normal"
       style={{
         ...resolved.cssVariables,
         backgroundColor: 'var(--collection-page-bg)',

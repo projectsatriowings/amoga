@@ -36,9 +36,9 @@ export const IconButton = React.forwardRef(function IconButton(
   };
 
   const variantStyles = {
-    ghost: 'text-theme-text hover:bg-white/10 hover:text-white',
-    outline: 'border border-theme-border text-theme-text hover:border-theme-border-strong hover:bg-white/5',
-    filled: 'bg-theme-surface text-theme-text hover:bg-theme-elevated border border-theme-border',
+    ghost: 'text-current hover:bg-current/10 hover:opacity-90',
+    outline: 'border border-current/25 text-current hover:border-current/50 hover:bg-current/10',
+    filled: 'bg-current/10 text-current hover:bg-current/20 border border-current/20',
   };
 
   return (

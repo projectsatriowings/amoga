@@ -147,7 +147,7 @@ export function JewelleryProductDetail() {
   ).slice(0, 4);
 
   return (
-    <div className="bg-[#242326] text-[#F7F3EB] min-h-screen py-8 sm:py-12">
+    <div className="bg-[#242326] text-[#F7F3EB] min-h-screen pt-2 sm:pt-3 pb-12">
       <Container>
         {/* Breadcrumb Navigation & Theme-Colored Back Button */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">

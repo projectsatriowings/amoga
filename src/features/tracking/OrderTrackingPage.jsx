@@ -192,7 +192,7 @@ export function OrderTrackingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#1F0811] pt-28 pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#1F0811] pt-2 sm:pt-3 pb-20 px-4 sm:px-6 lg:px-8">
       <Container className="max-w-4xl mx-auto space-y-8">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center gap-2 text-xs font-mono text-[#7A7167]">

@@ -100,7 +100,7 @@ export function TeaProductList() {
 
 
   return (
-    <div className="relative bg-[#FAF1BB] text-[#2C1E11] min-h-screen py-8 sm:py-12 overflow-hidden">
+    <div className="relative bg-[#FAF1BB] text-[#2C1E11] min-h-screen pt-2 sm:pt-3 pb-12 overflow-hidden">
       {/* Decorative Botanical Side Animations */}
       <BotanicalSideAnimations />
 

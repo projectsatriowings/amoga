@@ -24,7 +24,7 @@ export function FoodHero() {
 
   return (
     <section
-      className="relative overflow-hidden py-12 sm:py-16 lg:py-24 border-b border-[#E5E0D5] transition-colors"
+      className="relative overflow-hidden pt-3 sm:pt-4 pb-12 sm:pb-16 lg:pb-20 border-b border-[#E5E0D5] transition-colors"
       style={{ backgroundColor: bgColor }}
     >
       <Container>

@@ -470,11 +470,11 @@ export const CheckoutForm = () => {
         )}
 
         {!isAuthenticated && (
-          <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-[#E6DCCD] bg-[#FAF7F2]/60 text-xs text-[#6A635B]">
+          <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-[var(--collection-border)] bg-[var(--collection-section-bg)] text-xs text-[var(--collection-text-muted)]">
             <span>Checking out as guest?</span>
             <a
               href="/account/login?redirect=/checkout"
-              className="text-[#722F37] font-semibold hover:underline"
+              className="text-[var(--collection-accent)] font-semibold hover:underline"
             >
               Sign In to use Saved Residences →
             </a>

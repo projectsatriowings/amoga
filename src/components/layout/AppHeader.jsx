@@ -91,7 +91,7 @@ export function AppHeader({ activeCollection }) {
 
           <div className="relative">
             <IconButton
-              icon={<Heart className="w-4 h-4" />}
+              icon={<Heart className="w-5 h-5" />}
               label={`Wishlist (${wishlistCount} items)`}
               variant="ghost"
               size="md"
@@ -107,7 +107,7 @@ export function AppHeader({ activeCollection }) {
 
           <div className="relative">
             <IconButton
-              icon={<ShoppingBag className="w-4 h-4" />}
+              icon={<ShoppingBag className="w-5 h-5" />}
               label={`Cart (${cartCount} items)`}
               variant="ghost"
               size="md"

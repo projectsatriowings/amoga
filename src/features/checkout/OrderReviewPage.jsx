@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { formatINR, validateCartForCheckout } from '../../utils/pricing';
@@ -59,15 +59,31 @@ function buildSimulatedOrder(demoOrderId, customerDetails, items, totals) {
 
 export const OrderReviewPage = () => {
   const navigate = useNavigate();
-  const getCheckoutItems = useStore((state) => state.getCheckoutItems);
   const getCheckoutTotals = useStore((state) => state.getCheckoutTotals);
   const reconcileCartAfterPurchase = useStore((state) => state.reconcileCartAfterPurchase);
   const checkoutContext = useStore((state) => state.checkoutContext);
+  const cartItems = useStore((state) => state.cart.items);
+  const selectedLineIds = useStore((state) => state.selectedLineIds);
   const customerDetails = useStore((state) => state.customerDetails || state.checkout?.customerDetails) || {};
   const setLastCompletedOrder = useStore((state) => state.setLastCompletedOrder);
   const resolved = useResolvedTheme();
 
-  const checkoutItems = getCheckoutItems();
+  // Memoize checkout items stably against actual store state to prevent reference mutations on re-renders
+  const checkoutItems = useMemo(() => {
+    if (checkoutContext?.type === 'buy_now' && checkoutContext?.buyNowItem) {
+      return [checkoutContext.buyNowItem];
+    }
+    const ids = Array.isArray(selectedLineIds) ? selectedLineIds : [];
+    return (cartItems || []).filter((item) => ids.includes(item.id || item.lineId));
+  }, [cartItems, selectedLineIds, checkoutContext]);
+
+  // Serialized items key ensuring cart validation only fires when cart contents or quantities change
+  const itemsKey = useMemo(() => {
+    return (checkoutItems || [])
+      .map((i) => `${i.id || i.productId}:${i.selectedVariant?.id || ''}:${i.quantity}`)
+      .join(',');
+  }, [checkoutItems]);
+
   const totals = getCheckoutTotals();
 
   const [simulationError, setSimulationError] = useState(null);
@@ -88,7 +104,7 @@ export const OrderReviewPage = () => {
 
   useEffect(() => {
     let isMounted = true;
-    if (checkoutItems.length > 0) {
+    if (checkoutItems.length > 0 && itemsKey) {
       validateCartApi(checkoutItems)
         .then((res) => {
           if (isMounted && res?.totals) {
@@ -104,7 +120,7 @@ export const OrderReviewPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [checkoutItems]);
+  }, [itemsKey]);
 
   const discountAmount = appliedCoupon?.discountAmount || 0;
   const shippingFee = serverShipping.isComplimentary ? 0 : serverShipping.amount;
@@ -401,7 +417,7 @@ export const OrderReviewPage = () => {
   if (checkoutItems.length === 0) {
     return (
       <div
-        className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors"
+        className="min-h-screen pt-2 sm:pt-3 pb-20 px-4 sm:px-6 lg:px-8 transition-colors"
         style={{
           ...resolved.cssVariables,
           backgroundColor: 'var(--collection-page-bg)',
@@ -454,7 +470,7 @@ export const OrderReviewPage = () => {
 
   return (
     <div
-      className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 transition-colors"
+      className="min-h-screen pt-2 sm:pt-3 pb-20 px-4 sm:px-6 lg:px-8 transition-colors"
       style={{
         ...resolved.cssVariables,
         backgroundColor: 'var(--collection-page-bg)',
@@ -860,9 +876,9 @@ export const OrderReviewPage = () => {
             className="bg-[var(--collection-card-bg)] rounded-3xl max-w-lg w-full border border-[var(--collection-border)] shadow-2xl overflow-hidden flex flex-col transition-colors overscroll-contain select-text"
           >
             {/* Modal Header */}
-            <div className="bg-[var(--collection-text)] text-[var(--collection-page-bg)] px-6 py-5 flex items-center justify-between border-b border-[var(--collection-border)]">
+            <div className="bg-[#1A060E] text-white px-6 py-5 flex items-center justify-between border-b border-[#3D141E]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[var(--collection-page-bg)]">
+                <div className="w-10 h-10 rounded-xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-xs">
                   <Lock className="w-5 h-5" />
                 </div>
                 <div>
@@ -870,10 +886,10 @@ export const OrderReviewPage = () => {
                     Amoga Secure Checkout
                   </h3>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md text-amber-300 border border-amber-400/40 shadow-2xs">
+                    <span className="text-[10px] uppercase tracking-widest font-semibold px-2.5 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md text-amber-300 border border-amber-400/40 shadow-2xs">
                       Test Mode Simulation
                     </span>
-                    <span className="text-xs text-white/70">• No Real Money Charged</span>
+                    <span className="text-xs text-white/80">• No Real Money Charged</span>
                   </div>
                 </div>
               </div>
@@ -883,7 +899,8 @@ export const OrderReviewPage = () => {
                   if (!isProcessingPayment) setPaymentModalOpen(false);
                 }}
                 disabled={isProcessingPayment}
-                className="p-1 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
+                aria-label="Close payment modal"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -921,23 +938,23 @@ export const OrderReviewPage = () => {
 
               {/* Error message banner */}
               {paymentError && (
-                <div className="p-3.5 bg-red-50 rounded-xl border border-red-300 text-xs text-[#991B1B] flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-[#991B1B] shrink-0 mt-0.5" />
+                <div className="p-3.5 bg-red-950/40 rounded-xl border border-red-500/40 text-xs text-rose-200 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-semibold">Payment Failed</p>
-                    <p className="mt-0.5 text-red-700">{paymentError}</p>
-                    <p className="mt-1 text-[11px] text-red-600">Your shopping bag remains preserved. You can retry with a different outcome.</p>
+                    <p className="font-semibold text-rose-300">Payment Failed</p>
+                    <p className="mt-0.5 text-rose-200/90">{paymentError}</p>
+                    <p className="mt-1 text-[11px] text-rose-300/80">Your shopping bag remains preserved. You can retry with a different outcome.</p>
                   </div>
                 </div>
               )}
 
               {/* Test Mode Simulation Disclaimer */}
-              <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed">
-                <p className="font-semibold text-amber-950 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+              <div className="p-3.5 bg-amber-950/30 rounded-xl border border-amber-500/30 text-[11px] text-amber-200/90 leading-relaxed">
+                <p className="font-semibold text-amber-300 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
                   Engineering Test Architecture
                 </p>
-                <p className="mt-1">
+                <p className="mt-1 text-amber-100/80">
                   Payment provider has not yet been selected. This interactive modal validates the backend signature verification, database transaction isolation, and idempotency pipeline.
                 </p>
               </div>
@@ -971,9 +988,9 @@ export const OrderReviewPage = () => {
                   type="button"
                   onClick={() => handleExecutePaymentSimulation('failure')}
                   disabled={isProcessingPayment}
-                  className="w-full py-2.5 px-4 rounded-xl text-xs font-medium text-[#991B1B] hover:bg-red-50 border border-red-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="w-full py-2.5 px-4 rounded-xl text-xs font-medium text-rose-300 hover:text-rose-100 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-500/30 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
                 >
-                  <ShieldAlert className="w-3.5 h-3.5 text-[#991B1B]" />
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
                   <span>Simulate Payment Failure (Declined / Invalid Signature)</span>
                 </button>
               </div>

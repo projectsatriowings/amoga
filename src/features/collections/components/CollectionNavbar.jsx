@@ -336,9 +336,8 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={openWishlist}
-                className="relative p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                className="relative p-2 rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer"
                 aria-label="View Wishlist"
-                style={{ color: palette.headerText || palette.text || '#FFFFFF' }}
               >
                 <Heart className="w-5 h-5" />
                 {wishlistCount > 0 && (
@@ -358,9 +357,8 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={openCart}
-                className="relative p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                className="relative p-2 rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer"
                 aria-label="View Shopping Cart"
-                style={{ color: palette.headerText || palette.text || '#FFFFFF' }}
               >
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
@@ -379,15 +377,14 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               {/* Customer Account Global Profile Menu */}
               <GlobalProfileMenu
                 collectionId={collectionId}
-                buttonStyle={{ color: palette.headerText || palette.text || '#FFFFFF' }}
-                triggerClassName="hover:bg-white/10"
+                triggerClassName="hover:bg-current/10 text-current"
               />
 
               {/* Mobile Menu Hamburger */}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
-                className="lg:hidden p-2 rounded-lg hover:bg-black/5"
+                className="lg:hidden p-2 rounded-lg hover:bg-current/10 text-current cursor-pointer"
                 aria-label="Toggle mobile menu"
                 aria-expanded={mobileMenuOpen}
               >

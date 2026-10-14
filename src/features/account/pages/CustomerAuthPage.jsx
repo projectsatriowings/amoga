@@ -70,7 +70,7 @@ export function CustomerAuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#2C0E1A] pt-24 pb-20 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#2C0E1A] pt-3 sm:pt-4 pb-16 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
       <Container className="max-w-md mx-auto">
         {/* Brand Crest & Header */}
         <div className="text-center mb-8">

@@ -16,7 +16,7 @@ export class ApiError extends Error {
 
 export async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-  const timeoutMs = options.timeout || 10000;
+  const timeoutMs = options.timeout || 30000;
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);

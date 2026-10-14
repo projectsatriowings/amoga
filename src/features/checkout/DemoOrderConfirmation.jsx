@@ -16,6 +16,7 @@ import {
   Truck,
   FileText,
   Database,
+  User,
 } from 'lucide-react';
 
 export const DemoOrderConfirmation = () => {
@@ -82,7 +83,7 @@ export const DemoOrderConfirmation = () => {
   const isDemoFormat = typeof orderId === 'string' && (orderId.startsWith('AMOGA-DEMO-') || orderId.startsWith('AMOGA-ORD-'));
 
   return (
-    <div className="min-h-screen bg-[var(--collection-page-bg)] text-[var(--collection-text)] pt-28 pb-24 px-4 sm:px-6 lg:px-8 transition-colors">
+    <div className="min-h-screen bg-[var(--collection-page-bg)] text-[var(--collection-text)] pt-2 sm:pt-3 pb-20 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-4xl mx-auto">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="mb-6">
@@ -241,13 +242,13 @@ export const DemoOrderConfirmation = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[var(--collection-text-muted)]">Order Status:</span>
-                    <span className="font-semibold text-[#166534]">
+                    <span className="font-semibold text-emerald-500 font-sans">
                       {activeOrder.status || 'CONFIRMED'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[var(--collection-text-muted)]">Payment Status:</span>
-                    <span className={`font-semibold ${isPaid ? 'text-[#166534]' : 'text-amber-700'}`}>
+                    <span className={`font-semibold font-sans ${isPaid ? 'text-emerald-500' : 'text-amber-500'}`}>
                       {activeOrder.paymentStatus || (isPaid ? 'SUCCEEDED' : 'PENDING')}
                     </span>
                   </div>
@@ -358,11 +359,11 @@ export const DemoOrderConfirmation = () => {
         )}
 
         {/* Collection Discovery Hub: All 4 Houses (Food, Tea, Sarees, Jewellery) */}
-        <div className="mt-14 pt-10 border-t border-[#E5E0D5]">
-          <h2 className="font-serif text-xl sm:text-2xl text-[#292820] text-center mb-2">
+        <div className="mt-14 pt-10 border-t border-[var(--collection-border)]">
+          <h2 className="font-serif text-xl sm:text-2xl text-[var(--collection-heading)] text-center mb-2">
             Continue Exploring Amoga Collections
           </h2>
-          <p className="text-center text-xs sm:text-sm text-[#746F63] mb-8">
+          <p className="text-center text-xs sm:text-sm text-[var(--collection-text-muted)] mb-8">
             Experience our hand-crafted offerings across all four artisanal houses.
           </p>
 
@@ -370,16 +371,16 @@ export const DemoOrderConfirmation = () => {
             {/* 1. Wholesome Pantry */}
             <Link
               to="/food"
-              className="group p-5 rounded-2xl bg-white border border-[#3F7B43]/20 hover:border-[#3F7B43] hover:shadow-md transition-all flex flex-col justify-between"
+              className="group p-5 rounded-2xl bg-[var(--collection-card-bg)] border border-[var(--collection-border)] hover:border-[#3F7B43] hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div>
-                <div className="w-10 h-10 rounded-xl bg-[#3F7B43]/10 text-[#173B2A] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#3F7B43]/15 text-[#3F7B43] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                   <UtensilsCrossed className="w-5 h-5" />
                 </div>
-                <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#173B2A] transition-colors">
+                <h3 className="font-serif text-base font-semibold text-[var(--collection-heading)] group-hover:text-[#3F7B43] transition-colors">
                   Wholesome Pantry
                 </h3>
-                <p className="text-xs text-[#746F63] mt-1">
+                <p className="text-xs text-[var(--collection-text-muted)] mt-1">
                   Comforting soup mixes, nourishing millet blends and flavourful rice podis
                 </p>
               </div>
@@ -392,20 +393,20 @@ export const DemoOrderConfirmation = () => {
             {/* 2. Wellness Tea */}
             <Link
               to="/tea"
-              className="group p-5 rounded-2xl bg-white border border-[#65815A]/25 hover:border-[#65815A] hover:shadow-md transition-all flex flex-col justify-between"
+              className="group p-5 rounded-2xl bg-[var(--collection-card-bg)] border border-[var(--collection-border)] hover:border-[#8C6320] hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div>
-                <div className="w-10 h-10 rounded-xl bg-[#65815A]/10 text-[#173B2A] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#8C6320]/15 text-[#8C6320] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                   <Leaf className="w-5 h-5" />
                 </div>
-                <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#173B2A] transition-colors">
+                <h3 className="font-serif text-base font-semibold text-[var(--collection-heading)] group-hover:text-[#8C6320] transition-colors">
                   Wellness Tea
                 </h3>
-                <p className="text-xs text-[#746F63] mt-1">
+                <p className="text-xs text-[var(--collection-text-muted)] mt-1">
                   Thoughtfully selected botanical teas and herbal infusions for your everyday ritual
                 </p>
               </div>
-              <div className="mt-4 flex items-center text-xs font-semibold text-[#65815A] uppercase tracking-wider gap-1">
+              <div className="mt-4 flex items-center text-xs font-semibold text-[#8C6320] uppercase tracking-wider gap-1">
                 <span>Explore Tea</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -414,20 +415,20 @@ export const DemoOrderConfirmation = () => {
             {/* 3. Heritage Sarees */}
             <Link
               to="/sarees"
-              className="group p-5 rounded-2xl bg-white border border-[#7A1C2E]/20 hover:border-[#7A1C2E] hover:shadow-md transition-all flex flex-col justify-between"
+              className="group p-5 rounded-2xl bg-[var(--collection-card-bg)] border border-[var(--collection-border)] hover:border-[#C5A46D] hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div>
-                <div className="w-10 h-10 rounded-xl bg-[#7A1C2E]/10 text-[#7A1C2E] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#C5A46D]/20 text-[#C5A46D] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                   <Sparkles className="w-5 h-5" />
                 </div>
-                <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#7A1C2E] transition-colors">
+                <h3 className="font-serif text-base font-semibold text-[var(--collection-heading)] group-hover:text-[#C5A46D] transition-colors">
                   Heritage Sarees
                 </h3>
-                <p className="text-xs text-[#746F63] mt-1">
+                <p className="text-xs text-[var(--collection-text-muted)] mt-1">
                   Kanchipuram, Banarasi zari & pure mulberry silks
                 </p>
               </div>
-              <div className="mt-4 flex items-center text-xs font-semibold text-[#7A1C2E] uppercase tracking-wider gap-1">
+              <div className="mt-4 flex items-center text-xs font-semibold text-[#C5A46D] uppercase tracking-wider gap-1">
                 <span>Explore Sarees</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -436,20 +437,20 @@ export const DemoOrderConfirmation = () => {
             {/* 4. Silver Jewellery */}
             <Link
               to="/jewellery"
-              className="group p-5 rounded-2xl bg-white border border-[#3A4556]/20 hover:border-[#3A4556] hover:shadow-md transition-all flex flex-col justify-between"
+              className="group p-5 rounded-2xl bg-[var(--collection-card-bg)] border border-[var(--collection-border)] hover:border-[#94A3B8] hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div>
-                <div className="w-10 h-10 rounded-xl bg-[#3A4556]/10 text-[#3A4556] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#94A3B8]/20 text-[#CBD5E1] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                   <Gem className="w-5 h-5" />
                 </div>
-                <h3 className="font-serif text-base font-semibold text-[#292820] group-hover:text-[#3A4556] transition-colors">
+                <h3 className="font-serif text-base font-semibold text-[var(--collection-heading)] group-hover:text-[#CBD5E1] transition-colors">
                   Silver Jewellery
                 </h3>
-                <p className="text-xs text-[#746F63] mt-1">
+                <p className="text-xs text-[var(--collection-text-muted)] mt-1">
                   92.5 Sterling silver neckpieces, earrings & bangles
                 </p>
               </div>
-              <div className="mt-4 flex items-center text-xs font-semibold text-[#3A4556] uppercase tracking-wider gap-1">
+              <div className="mt-4 flex items-center text-xs font-semibold text-[#94A3B8] uppercase tracking-wider gap-1">
                 <span>Explore Silver</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>

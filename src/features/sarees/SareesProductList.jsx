@@ -138,7 +138,7 @@ export function SareesProductList() {
     SAREE_CATEGORIES.find((c) => c.id === currentCategory) || SAREE_CATEGORIES[0];
 
   return (
-    <div className="bg-[#2C0E1A] text-[#F6EBD8] min-h-screen py-8 sm:py-12">
+    <div className="bg-[#2C0E1A] text-[#F6EBD8] min-h-screen pt-2 sm:pt-3 pb-12">
       <Container>
         {/* Breadcrumb Navigation & Theme-Colored Back Button */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">

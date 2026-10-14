@@ -1,7 +1,7 @@
 import React from 'react';
 import { Phone, PhoneCall, Mail, Clock } from 'lucide-react';
 
-export const AMOGA_CONTACT_DETAILS = {
+const AMOGA_CONTACT_DETAILS = {
   phone1: '+91 9940018593',
   phone1Raw: '+919940018593',
   phone2: '+91 8056700646',
@@ -88,38 +88,38 @@ export function CallToOrderAssistance({
         className={`p-3.5 sm:p-4 rounded-2xl border text-xs space-y-2 bg-[#FAF8F5]/80 border-[#E5E0D5] text-[#2C0E1A] ${className}`}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold text-[#1F0811]">
-            <PhoneCall className="w-4 h-4 text-[#8C6320]" />
+          <div className="flex items-center gap-2 font-semibold text-inherit">
+            <PhoneCall className="w-4 h-4 text-[#C5A46D] shrink-0" />
             <span>Prefer to order by phone?</span>
           </div>
-          <span className="text-[10px] font-mono text-[#8C6320] uppercase font-semibold">
+          <span className="text-[10px] font-mono text-[#C5A46D] uppercase font-semibold">
             Concierge Desk
           </span>
         </div>
 
-        <p className="text-[11px] text-[#5A524A] leading-relaxed">
+        <p className="text-[11px] opacity-85 leading-relaxed text-inherit">
           Our specialists can assist you with live stock verification, customized sizing, and immediate telephone checkout.
         </p>
 
         <div className="pt-1 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-mono">
           <a
             href={`tel:${phoneRaw}`}
-            className="inline-flex items-center gap-1 font-bold text-[#722F37] hover:underline"
+            className="inline-flex items-center gap-1 font-bold text-inherit hover:underline"
           >
-            <Phone className="w-3 h-3 text-[#8C6320]" />
+            <Phone className="w-3 h-3 text-[#C5A46D]" />
             <span>{phone}</span>
           </a>
-          <span className="text-black/20">&bull;</span>
+          <span className="opacity-40">&bull;</span>
           <a
             href={`mailto:${email}?subject=Order%20Assistance`}
-            className="inline-flex items-center gap-1 text-[#5A524A] hover:text-[#1F0811] hover:underline"
+            className="inline-flex items-center gap-1 opacity-85 hover:opacity-100 hover:underline text-inherit"
           >
-            <Mail className="w-3 h-3 text-[#8C6320]" />
+            <Mail className="w-3 h-3 text-[#C5A46D]" />
             <span>{email}</span>
           </a>
-          <span className="text-black/20">&bull;</span>
-          <span className="inline-flex items-center gap-1 text-[10px] text-[#7A7167]">
-            <Clock className="w-3 h-3 text-[#8C6320]" />
+          <span className="opacity-40">&bull;</span>
+          <span className="inline-flex items-center gap-1 text-[10px] opacity-75 text-inherit">
+            <Clock className="w-3 h-3 text-[#C5A46D]" />
             <span>{hours}</span>
           </span>
         </div>

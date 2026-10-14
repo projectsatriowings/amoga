@@ -47,7 +47,7 @@ export function TeaStorefront() {
 
       {/* 1. Hero Section */}
       <section
-        className="relative z-10 pt-12 sm:pt-16 pb-16 sm:pb-24 border-b border-[#B88E38]/25 transition-colors"
+        className="relative z-10 pt-3 sm:pt-4 pb-14 sm:pb-20 border-b border-[#B88E38]/25 transition-colors"
         style={{
           background: `linear-gradient(to bottom, ${bgColor}, #F8EEA6, ${bgColor})`,
         }}

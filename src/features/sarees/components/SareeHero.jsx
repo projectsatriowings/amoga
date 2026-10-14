@@ -39,7 +39,7 @@ export function SareeHero() {
       <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#451523]/40 rounded-full blur-2xl pointer-events-none" />
 
       <Container>
-        <div className="py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        <div className="pt-3 sm:pt-4 pb-12 lg:pb-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Decorative & Model Showcase */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}

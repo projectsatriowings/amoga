@@ -7,14 +7,38 @@ import {
 } from '../utils/security.js';
 import { reserveStock, releaseExpiredReservations } from './inventoryService.js';
 
+let cachedStoreSettings = null;
+let lastSettingsFetch = 0;
+const SETTINGS_CACHE_TTL_MS = 60000;
+
+export async function getCachedStoreSettings() {
+  const now = Date.now();
+  if (cachedStoreSettings && now - lastSettingsFetch < SETTINGS_CACHE_TTL_MS) {
+    return cachedStoreSettings;
+  }
+  try {
+    const settings = await prisma.storeSetting.findUnique({
+      where: { id: 'default' },
+    });
+    if (settings) {
+      cachedStoreSettings = settings;
+      lastSettingsFetch = now;
+    }
+    return settings || cachedStoreSettings;
+  } catch (err) {
+    console.warn('[CHECKOUT] Store settings read error:', err.message);
+    return cachedStoreSettings || null;
+  }
+}
+
 /**
  * Authoritatively resolves and validates cart items against the PostgreSQL database
  * Computes monetary calculations using integer paise (1 INR = 100 paise)
  * to completely eliminate floating-point arithmetic errors.
  */
 export async function resolveAndValidateCart(cartItems = []) {
-  // Proactively sweep expired reservations so available inventory is fresh
-  await releaseExpiredReservations().catch(() => {});
+  // Proactively sweep expired reservations asynchronously in the background so it never blocks customer checkout
+  releaseExpiredReservations().catch(() => {});
 
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
     return {
@@ -34,6 +58,32 @@ export async function resolveAndValidateCart(cartItems = []) {
   let totalCount = 0;
   let payableCount = 0;
 
+  // Extract all product IDs and batch query them in a single database round trip
+  const productIds = cartItems
+    .map((item) => item.productId)
+    .filter(Boolean)
+    .map(String);
+
+  const matchedProducts = await prisma.product.findMany({
+    where: {
+      OR: [
+        { id: { in: productIds } },
+        { sourceId: { in: productIds } },
+      ],
+      isActive: true,
+    },
+    include: {
+      collection: true,
+      variants: true,
+    },
+  });
+
+  const productMap = new Map();
+  for (const prod of matchedProducts) {
+    productMap.set(prod.id, prod);
+    if (prod.sourceId) productMap.set(prod.sourceId, prod);
+  }
+
   for (const item of cartItems) {
     const qty = parseInt(item.quantity, 10);
     if (!Number.isInteger(qty) || qty < 1) {
@@ -42,17 +92,20 @@ export async function resolveAndValidateCart(cartItems = []) {
     }
     totalCount += qty;
 
-    // Resolve product by internal DB id or sourceId
-    const product = await prisma.product.findFirst({
-      where: {
-        OR: [{ id: item.productId }, { sourceId: item.productId }],
-        isActive: true,
-      },
-      include: {
-        collection: true,
-        variants: true,
-      },
-    });
+    // Resolve product from preloaded map or fallback to DB
+    let product = productMap.get(item.productId);
+    if (!product) {
+      product = await prisma.product.findFirst({
+        where: {
+          OR: [{ id: item.productId }, { sourceId: item.productId }],
+          isActive: true,
+        },
+        include: {
+          collection: true,
+          variants: true,
+        },
+      });
+    }
 
     if (!product) {
       errors.push(`Product identifier "${item.productId}" was not found in the catalogue.`);
@@ -274,8 +327,21 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
     }
   }
 
-  // 2. Authoritative server-side cart resolution with integer paise
-  const validation = await resolveAndValidateCart(items);
+  // 2. Concurrently fetch cart validation, coupon, store settings, and customer record
+  const customerEmailClean = (customer?.email || '').trim().toLowerCase();
+  const cleanCode = (couponCode && typeof couponCode === 'string' && couponCode.trim())
+    ? couponCode.trim().toUpperCase()
+    : null;
+
+  const [validation, coupon, storeSettings, existingCust] = await Promise.all([
+    resolveAndValidateCart(items),
+    cleanCode ? prisma.coupon.findUnique({ where: { code: cleanCode } }) : Promise.resolve(null),
+    getCachedStoreSettings(),
+    (!customerId && customerEmailClean)
+      ? prisma.customer.findUnique({ where: { email: customerEmailClean } }).catch(() => null)
+      : Promise.resolve(null),
+  ]);
+
   if (!validation.isValid) {
     const error = new Error('Checkout validation failed');
     error.status = 422;
@@ -287,12 +353,7 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
   let appliedCoupon = null;
   let discountPaise = 0;
 
-  if (couponCode && typeof couponCode === 'string' && couponCode.trim()) {
-    const cleanCode = couponCode.trim().toUpperCase();
-    const coupon = await prisma.coupon.findUnique({
-      where: { code: cleanCode },
-    });
-
+  if (cleanCode) {
     if (!coupon || !coupon.isActive) {
       const err = new Error(`Promotional coupon "${cleanCode}" is invalid or inactive`);
       err.status = 422;
@@ -386,23 +447,16 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
   let shippingPaise = 0;
   let taxPercentage = 5.0;
 
-  try {
-    const storeSettings = await prisma.storeSetting.findUnique({
-      where: { id: 'default' },
-    });
-    if (storeSettings) {
-      taxPercentage = Number(storeSettings.taxPercentage || 5);
-      const freeThresholdPaise = Math.round(Number(storeSettings.freeShippingThreshold || 2000) * 100);
-      const standardRatePaise = Math.round(Number(storeSettings.shippingStandardRate || 0) * 100);
+  if (storeSettings) {
+    taxPercentage = Number(storeSettings.taxPercentage || 5);
+    const freeThresholdPaise = Math.round(Number(storeSettings.freeShippingThreshold || 2000) * 100);
+    const standardRatePaise = Math.round(Number(storeSettings.shippingStandardRate || 0) * 100);
 
-      // If discounted subtotal is below free shipping threshold, charge standard shipping
-      const netSubtotalPaise = Math.max(0, validation.subtotalPaise - discountPaise);
-      if (netSubtotalPaise < freeThresholdPaise) {
-        shippingPaise = standardRatePaise;
-      }
+    // If discounted subtotal is below free shipping threshold, charge standard shipping
+    const netSubtotalPaise = Math.max(0, validation.subtotalPaise - discountPaise);
+    if (netSubtotalPaise < freeThresholdPaise) {
+      shippingPaise = standardRatePaise;
     }
-  } catch (err) {
-    console.warn('[CHECKOUT] Store settings read error, defaulting to complimentary shipping:', err.message);
   }
 
   const subtotalRupees = validation.subtotal;
@@ -416,18 +470,7 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
   const taxAmountRupees = Number((taxPaise / 100).toFixed(2));
 
   // Resolve customer ID if registered
-  const customerEmailClean = customer.email.trim().toLowerCase();
-  let resolvedCustomerId = customerId || null;
-  if (!resolvedCustomerId) {
-    try {
-      const existingCust = await prisma.customer.findUnique({
-        where: { email: customerEmailClean },
-      });
-      if (existingCust) resolvedCustomerId = existingCust.id;
-    } catch {
-      // non-blocking
-    }
-  }
+  const resolvedCustomerId = customerId || existingCust?.id || null;
 
   // 5. Atomic database transaction
   const createdOrder = await prisma.$transaction(async (tx) => {

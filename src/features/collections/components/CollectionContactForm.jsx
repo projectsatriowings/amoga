@@ -143,31 +143,38 @@ export function CollectionContactForm({ theme, collectionId }) {
     setSubmissionSuccess(null);
   };
 
+  const isDark = palette.bg === '#2C0E1A' || palette.cardBg === '#35121F' || palette.heading === '#F6EBD8' || collectionId === 'sarees';
+  const labelColor = palette.heading || (isDark ? '#F6EBD8' : '#173B2A');
+  const inputTextColor = palette.inputText || (isDark ? '#1F0811' : '#292820');
+  const inputBgColor = palette.inputBg || '#FFFFFF';
+  const inputBorderColor = palette.inputBorder || (isDark ? '#C5A46D' : '#E5E0D5');
+  const accentColor = palette.accentGold || palette.accent || (isDark ? '#C5A46D' : '#3F7B43');
+
   return (
     <div
       className="p-6 sm:p-8 rounded-2xl border shadow-sm transition-colors relative"
       style={{
-        backgroundColor: palette.cardBg || '#FFFFFF',
-        borderColor: palette.border || '#E5E0D5',
-        color: palette.text || '#292820',
+        backgroundColor: palette.cardBg || (isDark ? '#35121F' : '#FFFFFF'),
+        borderColor: palette.border || (isDark ? 'rgba(197, 164, 109, 0.35)' : '#E5E0D5'),
+        color: palette.text || (isDark ? '#F6EBD8' : '#292820'),
       }}
     >
       {/* Decorative Collection Accent Bar (Antique gold for Sarees, forest/botanical green for pantry/tea) */}
       <div
         className="w-10 h-1 rounded-full mb-4"
         style={{
-          backgroundColor: palette.accentGold || palette.accent || '#3F7B43',
+          backgroundColor: accentColor,
         }}
       />
 
       <div className="mb-6">
         <h3
           className="font-serif text-lg sm:text-xl font-semibold tracking-tight"
-          style={{ color: palette.heading || '#173B2A' }}
+          style={{ color: labelColor }}
         >
           Send an Inquiry
         </h3>
-        <p className="text-xs sm:text-sm mt-1" style={{ color: palette.mutedText || '#666' }}>
+        <p className="text-xs sm:text-sm mt-1" style={{ color: palette.mutedText || (isDark ? '#D8C6AD' : '#666') }}>
           Fill in your details below and our team will get back to you promptly.
         </p>
       </div>
@@ -178,14 +185,14 @@ export function CollectionContactForm({ theme, collectionId }) {
           aria-live="polite"
           className="p-5 rounded-xl border mb-6 flex items-start gap-3 transition-all"
           style={{
-            backgroundColor: palette.accentLight || 'rgba(63, 123, 67, 0.1)',
-            borderColor: palette.accent || '#3F7B43',
-            color: palette.heading || '#173B2A',
+            backgroundColor: palette.accentLight || (isDark ? 'rgba(197, 164, 109, 0.15)' : 'rgba(63, 123, 67, 0.1)'),
+            borderColor: accentColor,
+            color: labelColor,
           }}
         >
           <CheckCircle2
             className="w-5 h-5 shrink-0 mt-0.5"
-            style={{ color: palette.accent || '#3F7B43' }}
+            style={{ color: accentColor }}
           />
           <div className="flex-1 text-xs space-y-1">
             <div className="font-semibold text-sm">Inquiry Submitted Successfully</div>
@@ -196,7 +203,7 @@ export function CollectionContactForm({ theme, collectionId }) {
             <button
               type="button"
               onClick={handleResetSuccess}
-              className="mt-2 text-xs underline font-medium hover:opacity-80 block"
+              className="mt-2 text-xs underline font-medium hover:opacity-80 block cursor-pointer"
             >
               Send another message
             </button>
@@ -220,8 +227,8 @@ export function CollectionContactForm({ theme, collectionId }) {
         <div>
           <label
             htmlFor="contact-fullName"
-            className="block text-xs font-medium uppercase tracking-wider mb-1.5"
-            style={{ color: palette.heading || '#173B2A' }}
+            className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+            style={{ color: labelColor }}
           >
             Full Name <span className="text-red-500">*</span>
           </label>
@@ -233,18 +240,18 @@ export function CollectionContactForm({ theme, collectionId }) {
             value={formData.fullName}
             onChange={handleChange}
             onFocus={(e) => {
-              if (!errors.fullName) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+              if (!errors.fullName) e.currentTarget.style.borderColor = accentColor;
             }}
             onBlur={(e) => {
-              if (!errors.fullName) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+              if (!errors.fullName) e.currentTarget.style.borderColor = inputBorderColor;
             }}
             placeholder="e.g. Radhika Menon"
-            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2"
+            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium"
             style={{
-              backgroundColor: palette.inputBg || '#FFFFFF',
-              borderColor: errors.fullName ? '#EF4444' : palette.inputBorder || '#E5E0D5',
-              color: palette.text || '#292820',
-              '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
+              backgroundColor: inputBgColor,
+              borderColor: errors.fullName ? '#EF4444' : inputBorderColor,
+              color: inputTextColor,
+              '--tw-ring-color': palette.focusRing || accentColor,
             }}
             aria-invalid={!!errors.fullName}
             aria-describedby={errors.fullName ? 'contact-fullName-error' : undefined}
@@ -262,8 +269,8 @@ export function CollectionContactForm({ theme, collectionId }) {
           <div>
             <label
               htmlFor="contact-email"
-              className="block text-xs font-medium uppercase tracking-wider mb-1.5"
-              style={{ color: palette.heading || '#173B2A' }}
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: labelColor }}
             >
               Email Address <span className="text-red-500">*</span>
             </label>
@@ -275,18 +282,18 @@ export function CollectionContactForm({ theme, collectionId }) {
               value={formData.email}
               onChange={handleChange}
               onFocus={(e) => {
-                if (!errors.email) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+                if (!errors.email) e.currentTarget.style.borderColor = accentColor;
               }}
               onBlur={(e) => {
-                if (!errors.email) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+                if (!errors.email) e.currentTarget.style.borderColor = inputBorderColor;
               }}
               placeholder="e.g. radhika@example.com"
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium"
               style={{
-                backgroundColor: palette.inputBg || '#FFFFFF',
-                borderColor: errors.email ? '#EF4444' : palette.inputBorder || '#E5E0D5',
-                color: palette.text || '#292820',
-                '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
+                backgroundColor: inputBgColor,
+                borderColor: errors.email ? '#EF4444' : inputBorderColor,
+                color: inputTextColor,
+                '--tw-ring-color': palette.focusRing || accentColor,
               }}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'contact-email-error' : undefined}
@@ -302,10 +309,10 @@ export function CollectionContactForm({ theme, collectionId }) {
           <div>
             <label
               htmlFor="contact-phone"
-              className="block text-xs font-medium uppercase tracking-wider mb-1.5"
-              style={{ color: palette.heading || '#173B2A' }}
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: labelColor }}
             >
-              Phone Number <span className="text-xs opacity-60 font-normal lowercase">(optional)</span>
+              Phone Number <span className="text-xs opacity-75 font-normal lowercase">(optional)</span>
             </label>
             <input
               id="contact-phone"
@@ -314,18 +321,18 @@ export function CollectionContactForm({ theme, collectionId }) {
               value={formData.phone}
               onChange={handleChange}
               onFocus={(e) => {
-                if (!errors.phone) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+                if (!errors.phone) e.currentTarget.style.borderColor = accentColor;
               }}
               onBlur={(e) => {
-                if (!errors.phone) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+                if (!errors.phone) e.currentTarget.style.borderColor = inputBorderColor;
               }}
               placeholder="e.g. +91 9940018593"
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium"
               style={{
-                backgroundColor: palette.inputBg || '#FFFFFF',
-                borderColor: errors.phone ? '#EF4444' : palette.inputBorder || '#E5E0D5',
-                color: palette.text || '#292820',
-                '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
+                backgroundColor: inputBgColor,
+                borderColor: errors.phone ? '#EF4444' : inputBorderColor,
+                color: inputTextColor,
+                '--tw-ring-color': palette.focusRing || accentColor,
               }}
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? 'contact-phone-error' : undefined}
@@ -342,8 +349,8 @@ export function CollectionContactForm({ theme, collectionId }) {
         <div>
           <label
             htmlFor="contact-subject"
-            className="block text-xs font-medium uppercase tracking-wider mb-1.5"
-            style={{ color: palette.heading || '#173B2A' }}
+            className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+            style={{ color: labelColor }}
           >
             Subject <span className="text-red-500">*</span>
           </label>
@@ -355,18 +362,18 @@ export function CollectionContactForm({ theme, collectionId }) {
             value={formData.subject}
             onChange={handleChange}
             onFocus={(e) => {
-              if (!errors.subject) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+              if (!errors.subject) e.currentTarget.style.borderColor = accentColor;
             }}
             onBlur={(e) => {
-              if (!errors.subject) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+              if (!errors.subject) e.currentTarget.style.borderColor = inputBorderColor;
             }}
             placeholder="e.g. Order Inquiry / Private Appointment"
-            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2"
+            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium"
             style={{
-              backgroundColor: palette.inputBg || '#FFFFFF',
-              borderColor: errors.subject ? '#EF4444' : palette.inputBorder || '#E5E0D5',
-              color: palette.text || '#292820',
-              '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
+              backgroundColor: inputBgColor,
+              borderColor: errors.subject ? '#EF4444' : inputBorderColor,
+              color: inputTextColor,
+              '--tw-ring-color': palette.focusRing || accentColor,
             }}
             aria-invalid={!!errors.subject}
             aria-describedby={errors.subject ? 'contact-subject-error' : undefined}
@@ -382,8 +389,8 @@ export function CollectionContactForm({ theme, collectionId }) {
         <div>
           <label
             htmlFor="contact-message"
-            className="block text-xs font-medium uppercase tracking-wider mb-1.5"
-            style={{ color: palette.heading || '#173B2A' }}
+            className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+            style={{ color: labelColor }}
           >
             Message <span className="text-red-500">*</span>
           </label>
@@ -395,18 +402,18 @@ export function CollectionContactForm({ theme, collectionId }) {
             value={formData.message}
             onChange={handleChange}
             onFocus={(e) => {
-              if (!errors.message) e.currentTarget.style.borderColor = palette.accent || '#3F7B43';
+              if (!errors.message) e.currentTarget.style.borderColor = accentColor;
             }}
             onBlur={(e) => {
-              if (!errors.message) e.currentTarget.style.borderColor = palette.inputBorder || '#E5E0D5';
+              if (!errors.message) e.currentTarget.style.borderColor = inputBorderColor;
             }}
             placeholder="Please detail your request or question..."
-            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 resize-none"
+            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 resize-none font-medium"
             style={{
-              backgroundColor: palette.inputBg || '#FFFFFF',
-              borderColor: errors.message ? '#EF4444' : palette.inputBorder || '#E5E0D5',
-              color: palette.text || '#292820',
-              '--tw-ring-color': palette.focusRing || palette.accent || '#3F7B43',
+              backgroundColor: inputBgColor,
+              borderColor: errors.message ? '#EF4444' : inputBorderColor,
+              color: inputTextColor,
+              '--tw-ring-color': palette.focusRing || accentColor,
             }}
             aria-invalid={!!errors.message}
             aria-describedby={errors.message ? 'contact-message-error' : undefined}
@@ -425,14 +432,14 @@ export function CollectionContactForm({ theme, collectionId }) {
             disabled={isSubmitting}
             className="w-full py-3.5 px-5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-[0.99]"
             style={{
-              backgroundColor: palette.accent || '#3F7B43',
-              color: palette.buttonText || '#FFFFFF',
+              backgroundColor: accentColor,
+              color: palette.buttonText || (isDark ? '#2C0E1A' : '#FFFFFF'),
             }}
             onMouseEnter={(e) => {
               if (palette.accentHover) e.currentTarget.style.backgroundColor = palette.accentHover;
             }}
             onMouseLeave={(e) => {
-              if (palette.accent) e.currentTarget.style.backgroundColor = palette.accent;
+              e.currentTarget.style.backgroundColor = accentColor;
             }}
           >
             {isSubmitting ? (

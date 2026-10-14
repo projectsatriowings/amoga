@@ -132,7 +132,7 @@ export function DynamicStorefront() {
     <CollectionLayout collectionId={collection.id}>
       {/* 1. Hero Showcase Section */}
       <section
-        className="relative overflow-hidden border-b transition-colors py-14 sm:py-20"
+        className="relative overflow-hidden border-b transition-colors pt-3 sm:pt-4 pb-14 sm:pb-16"
         style={{
           backgroundColor: bgColor,
           borderColor: borderColor,

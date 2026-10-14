@@ -141,7 +141,7 @@ export function CustomerAccountPage() {
 
   if (!customer) {
     return (
-      <div className="min-h-screen bg-[#FAF7F2] text-[#2C0E1A] pt-32 pb-24 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAF7F2] text-[#2C0E1A] pt-2 sm:pt-3 pb-20 flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-[#722F37] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs text-[#7A7167] font-mono uppercase tracking-widest">
@@ -153,7 +153,7 @@ export function CustomerAccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#2C0E1A] pt-28 pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#2C0E1A] pt-2 sm:pt-3 pb-20 px-4 sm:px-6 lg:px-8">
       <Container className="max-w-6xl mx-auto space-y-8">
         {/* Top Header Card */}
         <div className="bg-gradient-to-r from-[#2C0E1A] via-[#35121F] to-[#2C0E1A] text-[#F6EBD8] rounded-3xl p-6 sm:p-8 border border-[#C5A46D]/40 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">

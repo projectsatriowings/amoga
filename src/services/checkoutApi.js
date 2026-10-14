@@ -17,6 +17,7 @@ export async function validateCartApi(cartItems) {
 
   const result = await request('/checkout/validate', {
     method: 'POST',
+    timeout: 30000,
     body: JSON.stringify({ items: formattedItems }),
   });
 
@@ -33,6 +34,7 @@ export async function applyCouponApi({ code, subtotal, items = [] }) {
 
   const result = await request('/checkout/apply-coupon', {
     method: 'POST',
+    timeout: 30000,
     body: JSON.stringify({
       code,
       subtotal,
@@ -68,6 +70,7 @@ export async function createOrderApi({ items: rawItems, customer, idempotencyKey
 
   const result = await request('/orders', {
     method: 'POST',
+    timeout: 60000,
     body: JSON.stringify({
       items: formattedItems,
       customer: sanitizedCustomer,
@@ -88,6 +91,7 @@ export async function fetchOrderApi(orderReference, guestAccessToken) {
     headers: {
       'x-guest-access-token': guestAccessToken,
     },
+    timeout: 30000,
   });
 
   return result.data;
@@ -102,6 +106,7 @@ export async function createPaymentOrderApi({ orderReference, guestAccessToken, 
     headers: {
       'x-guest-access-token': guestAccessToken,
     },
+    timeout: 60000,
     body: JSON.stringify({
       orderReference,
       idempotencyKey,
@@ -127,6 +132,7 @@ export async function verifyPaymentApi({
     headers: {
       'x-guest-access-token': guestAccessToken,
     },
+    timeout: 60000,
     body: JSON.stringify({
       orderReference,
       paymentReference,
@@ -153,6 +159,7 @@ export async function testSimulatePaymentApi({
     headers: {
       'x-guest-access-token': guestAccessToken,
     },
+    timeout: 60000,
     body: JSON.stringify({
       orderReference,
       paymentReference,

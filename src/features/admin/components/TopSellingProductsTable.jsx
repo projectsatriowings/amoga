@@ -118,15 +118,8 @@ export function TopSellingProductsTable({ products = [] }) {
       <div className="border border-[#E5E0D5] rounded-xl overflow-hidden bg-[#FFFFFF] shadow-2xs w-full">
         <div className="w-full overflow-hidden">
           <table className="w-full text-left text-xs border-collapse table-fixed">
-            <colgroup>
-              <col className="w-[30%]" /> {/* Product: Image + Name + ID */}
-              <col className="w-[14%]" /> {/* Collection */}
-              <col className="w-[12%]" /> {/* Price */}
-              <col className="w-[9%]" />  {/* Units Sold */}
-              <col className="w-[14%]" /> {/* Revenue */}
-              <col className="w-[12%]" /> {/* Stock Status */}
-              <col className="w-[9%]" />  {/* Actions */}
-            </colgroup>
+            {/* Column sizing: Product (30%), Collection (14%), Price (12%), Units (9%), Revenue (14%), Stock (12%), Actions (9%) */}
+            <colgroup><col className="w-[30%]" /><col className="w-[14%]" /><col className="w-[12%]" /><col className="w-[9%]" /><col className="w-[14%]" /><col className="w-[12%]" /><col className="w-[9%]" /></colgroup>
             <thead>
               <tr className="bg-[#FAF8F5] border-b border-[#E5E0D5] text-[#746F63] font-mono text-[10px] uppercase tracking-wider select-none">
                 <th className="py-2.5 pl-3 pr-1.5 font-medium">Product</th>

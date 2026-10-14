@@ -123,7 +123,7 @@ export function FoodProductList() {
     'Traditional Blends & Mixes';
 
   return (
-    <div className="bg-[#F8F6F0] text-[#292820] min-h-screen py-8 sm:py-12">
+    <div className="bg-[#F8F6F0] text-[#292820] min-h-screen pt-2 sm:pt-3 pb-12">
       <Container>
         {/* Breadcrumb Navigation & Theme-Colored Back Button */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">

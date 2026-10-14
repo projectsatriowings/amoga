@@ -128,7 +128,7 @@ export function GlobalProfileMenu({
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={isAuthenticated ? `Customer Account: ${customer?.name || 'Patron'}` : 'Customer Account & Profile Menu'}
-        className={`relative p-2 rounded-full transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-offset-2 flex items-center justify-center ${triggerClassName}`}
+        className={`relative p-2 rounded-full transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-offset-2 flex items-center justify-center text-current hover:bg-current/10 ${triggerClassName}`}
         style={buttonStyle}
       >
         {isAuthenticated ? (

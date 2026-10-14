@@ -12,7 +12,7 @@
     "postinstall": "npm --prefix server install && npm --prefix server run prisma:generate",
     "lint": "oxlint",
     "preview": "vite preview",
-    "server": "node server/src/server.js",
+    "server": "node --watch server/src/server.js",
     "server:dev": "node --watch server/src/server.js",
     "db:migrate": "npm --prefix server run prisma:migrate",
     "db:deploy": "npm --prefix server run prisma:deploy",

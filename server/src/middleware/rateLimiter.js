@@ -1,8 +1,12 @@
 import rateLimit from 'express-rate-limit';
 
+const isDev = process.env.NODE_ENV !== 'production';
+const isLocalhost = (ip) => !ip || ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+
 export const standardRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per window
+  max: isDev ? 5000 : 300,
+  skip: (req) => isDev || isLocalhost(req.ip),
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -11,9 +15,22 @@ export const standardRateLimiter = rateLimit({
   },
 });
 
+export const cartValidationRateLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: isDev ? 10000 : 500, // Generous limit for cart checks & browsing
+  skip: (req) => isDev || isLocalhost(req.ip),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many cart validation requests submitted from this IP. Please wait a few moments.',
+  },
+});
+
 export const checkoutRateLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 50, // Limit each IP to 50 checkout/order submissions per window
+  max: isDev ? 5000 : 100, // Order creation & payment rate limiter
+  skip: (req) => isDev || isLocalhost(req.ip),
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -24,7 +41,8 @@ export const checkoutRateLimiter = rateLimit({
 
 export const contactRateLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 15, // Limit each IP to 15 contact inquiries per 10 minutes
+  max: isDev ? 1000 : 15, // Limit contact inquiries
+  skip: (req) => isDev || isLocalhost(req.ip),
   standardHeaders: true,
   legacyHeaders: false,
   message: {
