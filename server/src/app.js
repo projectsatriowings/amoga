@@ -26,17 +26,31 @@ app.use(
 app.disable('x-powered-by');
 
 // Restricted CORS
+const configuredOrigins = (env.FRONTEND_ORIGIN || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
-  env.FRONTEND_ORIGIN,
+  ...configuredOrigins,
+  'https://amogastores.com',
+  'https://www.amogastores.com',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'http://localhost:5001',
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, server-to-server) or Render URLs
-      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.onrender.com')) {
+      // Allow requests with no origin (mobile apps, curl, server-to-server) or matching production domains
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.onrender.com') ||
+        origin === 'https://amogastores.com' ||
+        origin.endsWith('.amogastores.com')
+      ) {
         return callback(null, true);
       }
       return callback(new Error(`Origin ${origin} not allowed by CORS`));

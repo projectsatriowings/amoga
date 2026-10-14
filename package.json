@@ -15,7 +15,9 @@
     "server": "node server/src/server.js",
     "server:dev": "node --watch server/src/server.js",
     "db:migrate": "npm --prefix server run prisma:migrate",
+    "db:deploy": "npm --prefix server run prisma:deploy",
     "db:seed": "npm --prefix server run prisma:seed",
+    "db:seed:admin": "node server/prisma/seedAdmin.js",
     "test:server": "npm --prefix server test",
     "test:contrast": "node --loader ./image-loader.js test-checkout-contrast.js",
     "test:all": "node --loader ./image-loader.js test-checkout-contrast.js && node test-phase6.js && npm --prefix server test && node test-routes.js"

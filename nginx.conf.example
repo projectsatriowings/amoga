@@ -1,0 +1,60 @@
+# Nginx Configuration for amogastores.com
+# Copy to: /etc/nginx/sites-available/amogastores.com
+# Enable with: sudo ln -s /etc/nginx/sites-available/amogastores.com /etc/nginx/sites-enabled/
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name amogastores.com www.amogastores.com;
+
+    # Root directory pointing to the Vite production build
+    root /var/www/amogastores.com/dist;
+    index index.html;
+
+    # Gzip Compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
+
+    # Client upload size limit
+    client_max_body_size 15M;
+
+    # Backend API reverse proxy
+    location /api/ {
+        proxy_pass http://127.0.0.1:5001/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 60s;
+    }
+
+    # Uploaded media assets proxy
+    location /uploads/ {
+        proxy_pass http://127.0.0.1:5001/uploads/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # Static assets cache control (Vite immutable hashes)
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # Frontend Single Page Application fallback (React Router 7)
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
