@@ -58,6 +58,10 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/collections',
+    element: <Navigate to="/" replace />,
+  },
+  {
     path: '/pantry',
     element: <Navigate to="/food" replace />,
   },

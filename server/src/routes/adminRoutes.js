@@ -25,6 +25,9 @@ import {
   listInventory,
   adjustStock,
   getInventoryLogs,
+  updateThreshold,
+  listRestockSubscriptions,
+  getInventoryAlerts,
 } from '../controllers/adminInventoryController.js';
 import {
   listOrders,
@@ -103,7 +106,10 @@ router.delete('/collections/:id', requireAdminAuth(['CATALOGUE_MANAGER']), delet
 // 4. Inventory (Catalogue, Order Manager & Super Admin)
 router.get('/inventory', requireAdminAuth(), listInventory);
 router.post('/inventory/adjust', requireAdminAuth(['CATALOGUE_MANAGER', 'ORDER_MANAGER']), adjustStock);
+router.put('/inventory/threshold', requireAdminAuth(['CATALOGUE_MANAGER', 'ORDER_MANAGER']), updateThreshold);
 router.get('/inventory/logs', requireAdminAuth(), getInventoryLogs);
+router.get('/inventory/subscriptions', requireAdminAuth(), listRestockSubscriptions);
+router.get('/inventory/alerts', requireAdminAuth(), getInventoryAlerts);
 
 // 5. Orders & Fulfilment (Order Manager & Super Admin)
 router.get('/orders', requireAdminAuth(), listOrders);

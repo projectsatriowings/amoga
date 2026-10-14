@@ -667,7 +667,7 @@ export async function getCustomerOrder(req, res) {
       return res.status(403).json({
         success: false,
         error: 'FORBIDDEN',
-        message: 'You are not authorized to view this order dossier.',
+        message: 'You are not authorized to view this order.',
       });
     }
 

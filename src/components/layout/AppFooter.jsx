@@ -308,7 +308,7 @@ export function AppFooter({ activeCollection }) {
               </li>
               <li>
                 <Link to="/account?tab=orders" className="hover:opacity-100 hover:underline">
-                  Order History Dossier
+                  Order History
                 </Link>
               </li>
               <li>

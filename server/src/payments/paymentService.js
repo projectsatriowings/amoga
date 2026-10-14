@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { verifyGuestAccessToken } from '../utils/security.js';
 import { TestPaymentProvider } from './providers/testProvider.js';
 import { RazorpayPaymentProvider } from './providers/razorpayProvider.js';
+import { commitReservation, releaseReservation } from '../services/inventoryService.js';
 
 /**
  * AMOGA E-COMMERCE — PAYMENT SERVICE ORCHESTRATOR
@@ -368,7 +369,17 @@ export async function verifyPaymentCallback({
       },
     });
 
+    // Commit inventory deduction exactly once
+    await commitReservation({
+      tx,
+      orderId: order.id,
+      orderReference: order.orderReference,
+    });
+
     return { updatedPayment, updatedOrder };
+  }, {
+    maxWait: 20000,
+    timeout: 30000,
   });
 
   return {
@@ -471,6 +482,13 @@ export async function processWebhook({ rawBody, headers }) {
               actor: 'System (Webhook)',
             },
           });
+
+          // Commit inventory deduction exactly once upon verified payment
+          await commitReservation({
+            tx,
+            orderId: payment.orderId,
+            orderReference: payment.order.orderReference,
+          });
         }
       }
 
@@ -493,8 +511,21 @@ export async function processWebhook({ rawBody, headers }) {
               failureMessage: 'Payment marked as failed by provider webhook event.',
             },
           });
+
+          // Release active inventory reservations upon confirmed payment failure
+          if (payment.orderId && payment.order?.orderReference) {
+            await releaseReservation({
+              tx,
+              orderId: payment.orderId,
+              orderReference: payment.order.orderReference,
+              reason: 'Payment failed via webhook',
+            });
+          }
         }
       }
+    }, {
+      maxWait: 20000,
+      timeout: 30000,
     });
   } catch (txError) {
     // Handle concurrent duplicate webhook delivery race condition safely

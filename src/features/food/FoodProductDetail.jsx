@@ -11,9 +11,12 @@ import {
   Leaf,
   HelpCircle,
   Zap,
+  Bell,
 } from 'lucide-react';
 import { getProductBySlug, getProductsByCategory } from './data/products';
 import { FoodProductCard } from './components/FoodProductCard';
+import { resolveAvailability } from '../../utils/inventory.js';
+import { RestockModal } from '../../components/ui/RestockModal.jsx';
 
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
@@ -37,6 +40,9 @@ export function FoodProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [addError, setAddError] = useState(null);
+  const [showRestockModal, setShowRestockModal] = useState(false);
+
+  const availability = resolveAvailability(product);
 
   // If unknown slug, display graceful not-found state
   if (!product) {
@@ -74,6 +80,10 @@ export function FoodProductDetail() {
 
   const handleAddToCart = () => {
     setAddError(null);
+    if (availability.isOutOfStock) {
+      setShowRestockModal(true);
+      return;
+    }
     if (!hasPrice) {
       setAddError('This item is currently unavailable for purchase.');
       return;
@@ -88,6 +98,10 @@ export function FoodProductDetail() {
 
   const handleBuyNow = () => {
     setAddError(null);
+    if (availability.isOutOfStock) {
+      setShowRestockModal(true);
+      return;
+    }
     if (!hasPrice || !isValidPrice(product.price)) {
       setAddError('This item is currently unavailable for immediate purchase.');
       return;
@@ -189,6 +203,26 @@ export function FoodProductDetail() {
               )}
             </div>
 
+            {/* Live Availability Badge */}
+            <div className="pt-1">
+              {availability.isOutOfStock ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 text-xs font-mono font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+                  <span>Out of Stock</span>
+                </span>
+              ) : availability.isLowStock ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-mono font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
+                  <span>Low Stock — Only {availability.availableQuantity} remaining</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-mono font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                  <span>In Stock — {availability.availableQuantity} available</span>
+                </span>
+              )}
+            </div>
+
             {/* Price Display */}
             <div className="p-4 rounded-2xl bg-white border border-[#172B1C]/10 shadow-sm flex items-center justify-between">
               {hasPrice ? (
@@ -238,53 +272,70 @@ export function FoodProductDetail() {
 
             {/* Quantity Selector & Action Buttons */}
             <div className="pt-4 border-t border-[#172B1C]/10 space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-medium text-black/70">Quantity:</span>
-                <div className="flex items-center gap-2 bg-white border border-[#172B1C]/15 rounded-xl px-2.5 py-1 shadow-sm">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-1 hover:text-[#287A25] transition-colors"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="text-sm font-mono font-semibold px-2 min-w-[20px] text-center">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="p-1 hover:text-[#287A25] transition-colors"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+              {!availability.isOutOfStock && (
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-medium text-black/70">Quantity:</span>
+                  <div className="flex items-center gap-2 bg-white border border-[#172B1C]/15 rounded-xl px-2.5 py-1 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="p-1 hover:text-[#287A25] transition-colors"
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="text-sm font-mono font-semibold px-2 min-w-[20px] text-center">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.min(availability.availableQuantity || 99, quantity + 1))}
+                      className="p-1 hover:text-[#287A25] transition-colors"
+                      aria-label="Increase quantity"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  collection="food"
-                  onClick={handleAddToCart}
-                  leftIcon={<ShoppingBag className="w-5 h-5" />}
-                  className="flex-1 text-sm"
-                >
-                  {addedSuccess ? 'Added to Basket!' : 'Add to Cart'}
-                </Button>
+                {availability.isOutOfStock ? (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    collection="food"
+                    onClick={() => setShowRestockModal(true)}
+                    leftIcon={<Bell className="w-5 h-5 text-amber-300" />}
+                    className="flex-1 text-sm bg-[#2C1E11] hover:bg-[#402C1B]"
+                  >
+                    Notify Me When Available
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      collection="food"
+                      onClick={handleAddToCart}
+                      leftIcon={<ShoppingBag className="w-5 h-5" />}
+                      className="flex-1 text-sm"
+                    >
+                      {addedSuccess ? 'Added to Basket!' : 'Add to Cart'}
+                    </Button>
 
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  collection="food"
-                  onClick={handleBuyNow}
-                  leftIcon={<Zap className="w-5 h-5 text-[#287A25]" />}
-                  className="flex-1 text-sm bg-white hover:bg-[#E5DFD3]/50 border border-[#287A25]/30 text-[#172B1C] shadow-sm"
-                >
-                  Buy Now
-                </Button>
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      collection="food"
+                      onClick={handleBuyNow}
+                      leftIcon={<Zap className="w-5 h-5 text-[#287A25]" />}
+                      className="flex-1 text-sm bg-white hover:bg-[#E5DFD3]/50 border border-[#287A25]/30 text-[#172B1C] shadow-sm"
+                    >
+                      Buy Now
+                    </Button>
+                  </>
+                )}
 
                 <button
                   type="button"
@@ -350,6 +401,12 @@ export function FoodProductDetail() {
           </div>
         )}
       </Container>
+
+      <RestockModal
+        isOpen={showRestockModal}
+        onClose={() => setShowRestockModal(false)}
+        product={product}
+      />
     </div>
   );
 }

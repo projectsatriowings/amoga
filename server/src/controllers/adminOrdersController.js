@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.js';
 import { logAdminAction } from '../utils/adminAuth.js';
+import { handleOrderCancellation } from '../services/inventoryService.js';
 
 // Enforce valid finite-state machine transitions for orders
 const VALID_TRANSITIONS = {
@@ -225,6 +226,15 @@ export async function updateOrderStatus(req, res) {
       where: { id },
       data: { status: targetStatus },
     });
+
+    if (targetStatus === 'CANCELLED') {
+      await handleOrderCancellation({
+        orderId: order.id,
+        admin: req.admin,
+        reason: reason?.trim() || 'Admin cancelled order',
+        restockPhysical: req.body.restockPhysical === true,
+      }).catch((err) => console.warn('[INVENTORY ORDER CANCELLATION ERROR]:', err.message));
+    }
 
     const statusTitles = {
       CONFIRMED: 'Order Confirmed',

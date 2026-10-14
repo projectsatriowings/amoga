@@ -2,9 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Plus, Minus, ShoppingBag, AlertCircle } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { Button } from '../../../components/ui/Button';
+import { resolveAvailability } from '../../../utils/inventory';
 
 export function CartDrawer() {
   const { cart, closeCart, updateQuantity, removeFromCart, clearCart } = useStore();
@@ -186,6 +187,9 @@ export function CartDrawer() {
                     const lineKey = item.id || item.lineId || product?.id;
                     const itemPrice = item.price ?? product?.price;
                     const hasPrice = itemPrice !== null && itemPrice !== undefined;
+                    const availability = resolveAvailability(product, selectedVariant);
+                    const exceedsStock =
+                      availability.availableQuantity > 0 && quantity > availability.availableQuantity;
                     const productUrl =
                       product?.collection === 'jewellery'
                         ? `/jewellery/products/${product.slug}`
@@ -215,7 +219,7 @@ export function CartDrawer() {
                             {product?.name || item.name}
                           </Link>
 
-                          <div className="flex items-center gap-2 text-[11px] text-[#557C36] font-mono">
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#557C36] font-mono">
                             <span>{product?.categoryName || 'Botanical Blend'}</span>
                             {selectedVariant && (
                               <span className="flex items-center gap-1 text-black/60">
@@ -227,7 +231,22 @@ export function CartDrawer() {
                                 {selectedVariant.name}
                               </span>
                             )}
+                            {availability.isOutOfStock ? (
+                              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200">
+                                Out of Stock
+                              </span>
+                            ) : availability.isLowStock ? (
+                              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                                {availability.availableQuantity} left
+                              </span>
+                            ) : null}
                           </div>
+
+                          {exceedsStock && (
+                            <div className="text-[11px] text-rose-700 font-medium">
+                              Only {availability.availableQuantity} in stock
+                            </div>
+                          )}
 
                           <div className="flex items-center justify-between pt-1">
                             {hasPrice ? (
@@ -261,7 +280,11 @@ export function CartDrawer() {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(lineKey, quantity + 1)}
-                                className="p-1 hover:text-[#287A25] transition-colors cursor-pointer"
+                                disabled={
+                                  availability.availableQuantity > 0 &&
+                                  quantity >= availability.availableQuantity
+                                }
+                                className="p-1 hover:text-[#287A25] transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                 aria-label="Increase quantity"
                               >
                                 <Plus className="w-3 h-3" />
@@ -296,52 +319,83 @@ export function CartDrawer() {
             </div>
 
             {/* Footer Summary */}
-            {items.length > 0 && (
-              <div className="p-5 border-t border-[#172B1C]/10 bg-white/70 backdrop-blur-md space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-black/70">Verified Subtotal</span>
-                  <span className="font-sans font-semibold text-base text-[#172B1C] tabular-nums">
-                    ₹{verifiedSubtotal.toLocaleString('en-IN')}
-                  </span>
-                </div>
+            {items.length > 0 && (() => {
+              const hasInventoryIssues = items.some((item) => {
+                const product = item.product || item;
+                const availability = resolveAvailability(product, item.selectedVariant);
+                return (
+                  availability.isOutOfStock ||
+                  (availability.availableQuantity > 0 && item.quantity > availability.availableQuantity)
+                );
+              });
 
-                <div className="text-[11px] text-[#557C36]">
-                  Taxes calculated at checkout. Free shipping available above ₹999.
-                </div>
-
-                <div className="flex flex-col gap-2 pt-1">
-                  <div className="flex gap-2">
-                    <Link to="/cart" onClick={closeCart} className="flex-1">
-                      <Button
-                        variant="outline"
-                        size="md"
-                        collection="food"
-                        className="w-full text-xs"
-                      >
-                        View Full Bag
-                      </Button>
-                    </Link>
-                    <Link to="/checkout" onClick={closeCart} className="flex-1">
-                      <Button
-                        variant="primary"
-                        size="md"
-                        collection="food"
-                        className="w-full text-xs"
-                      >
-                        Proceed to Checkout
-                      </Button>
-                    </Link>
+              return (
+                <div className="p-5 border-t border-[#172B1C]/10 bg-white/70 backdrop-blur-md space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-black/70">Verified Subtotal</span>
+                    <span className="font-sans font-semibold text-base text-[#172B1C] tabular-nums">
+                      ₹{verifiedSubtotal.toLocaleString('en-IN')}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={clearCart}
-                    className="text-[11px] text-black/50 hover:text-red-600 transition-colors py-1 text-center font-mono cursor-pointer"
-                  >
-                    Clear All Items
-                  </button>
+
+                  {hasInventoryIssues && (
+                    <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-start gap-2">
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                      <span>Some items exceed available stock. Please view your full bag to adjust quantities before checkout.</span>
+                    </div>
+                  )}
+
+                  <div className="text-[11px] text-[#557C36]">
+                    Taxes calculated at checkout. Free shipping available above ₹999.
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-1">
+                    <div className="flex gap-2">
+                      <Link to="/cart" onClick={closeCart} className="flex-1">
+                        <Button
+                          variant="outline"
+                          size="md"
+                          collection="food"
+                          className="w-full text-xs"
+                        >
+                          View Full Bag
+                        </Button>
+                      </Link>
+                      {hasInventoryIssues ? (
+                        <Link to="/cart" onClick={closeCart} className="flex-1">
+                          <Button
+                            variant="secondary"
+                            size="md"
+                            collection="food"
+                            className="w-full text-xs"
+                          >
+                            Review Bag
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link to="/checkout" onClick={closeCart} className="flex-1">
+                          <Button
+                            variant="primary"
+                            size="md"
+                            collection="food"
+                            className="w-full text-xs"
+                          >
+                            Proceed to Checkout
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearCart}
+                      className="text-[11px] text-black/50 hover:text-red-600 transition-colors py-1 text-center font-mono cursor-pointer"
+                    >
+                      Clear All Items
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </motion.aside>
         </div>
       )}

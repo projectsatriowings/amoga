@@ -88,7 +88,7 @@ export function AdminCustomers() {
     try {
       const res = await adminFetch(`/api/admin/customers/${encodeURIComponent(email)}`);
       const json = await res.json();
-      if (!res.ok) throw new Error(json.message || 'Failed to load customer dossier');
+      if (!res.ok) throw new Error(json.message || 'Failed to load customer details');
       setSelectedCustomer(json.customer);
     } catch (err) {
       alert(err.message);
@@ -181,7 +181,7 @@ export function AdminCustomers() {
                   <th className="px-5 py-3">Orders</th>
                   <th className="px-5 py-3">Total Spend</th>
                   <th className="px-5 py-3">Latest Order</th>
-                  <th className="px-5 py-3 text-right">Dossier</th>
+                  <th className="px-5 py-3 text-right">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE4D9]">

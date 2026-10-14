@@ -28,6 +28,17 @@ async function startServer() {
     console.log(`✓ API Health Endpoint: http://${host}:${env.PORT}/api/health`);
   });
 
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n❌ Port ${env.PORT} is already in use by another running process.`);
+      console.error(`To resolve this, terminate the conflicting process or run:`);
+      console.error(`  Get-Process -Id (Get-NetTCPConnection -LocalPort ${env.PORT}).OwningProcess | Stop-Process -Force\n`);
+    } else {
+      console.error('Server error:', err);
+    }
+    process.exit(1);
+  });
+
   // Graceful shutdown handling
   const shutdown = async (signal) => {
     console.log(`\nReceived ${signal}. Gracefully shutting down Amoga Server...`);

@@ -93,13 +93,13 @@ export function OrderTrackingPage() {
             <Truck className="w-6 h-6 text-[#C5A46D]" />
           </div>
           <span className="block text-[11px] font-mono uppercase tracking-widest text-[#8C6320]">
-            Amoga Logistics & Fulfilment
+            Order Tracking & Updates
           </span>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1F0811]">
-            Track Your Artisanal Order
+            Track Your Order
           </h1>
           <p className="text-xs text-[#7A7167] max-w-md mx-auto">
-            Live chronological milestones and courier tracking for your handloom silks, wellness teas, pantry staples, and silver heirlooms.
+            Live tracking and status updates for your sarees, teas, pantry items, and silver jewellery.
           </p>
         </div>
 
@@ -267,7 +267,7 @@ export function OrderTrackingPage() {
               {trackingData.events && trackingData.events.length > 0 && (
                 <div className="pt-6 border-t border-[#EFECE6] space-y-3">
                   <h4 className="font-mono text-xs uppercase tracking-wider text-[#7A7167]">
-                    Atelier Activity Log
+                    Order Activity Log
                   </h4>
                   <div className="space-y-2">
                     {trackingData.events.map((ev) => (
@@ -296,10 +296,10 @@ export function OrderTrackingPage() {
               <div className="bg-amber-50 rounded-2xl border border-amber-200 p-6 space-y-3">
                 <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
                   <ShieldCheck className="w-5 h-5 text-amber-700" />
-                  <span>Private Dossier Verification</span>
+                  <span>Verify Email to View Full Order Details</span>
                 </div>
-                <p className="text-xs text-amber-800">
-                  For your privacy and security, detailed recipient street addresses and purchased line items are locked. To unlock your full order dossier, enter the email address used during purchase.
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  To protect your privacy, your delivery address and items are hidden. Enter the email address used during purchase to view complete details.
                 </p>
 
                 <form onSubmit={handleVerificationSubmit} className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -308,7 +308,7 @@ export function OrderTrackingPage() {
                     required
                     value={verifyEmail}
                     onChange={(e) => setVerifyEmail(e.target.value)}
-                    placeholder="Enter purchaser email address"
+                    placeholder="Enter your order email address"
                     className="flex-1 px-4 py-2 bg-white border border-amber-300 rounded-xl text-xs text-[#2C0E1A] focus:outline-none focus:ring-2 focus:ring-[#722F37]"
                   />
                   <button
@@ -316,7 +316,7 @@ export function OrderTrackingPage() {
                     disabled={loading}
                     className="px-5 py-2 bg-[#722F37] text-[#F6EBD8] text-xs font-semibold rounded-xl hover:bg-[#5E2229] transition-all"
                   >
-                    Unlock Dossier
+                    View Full Details
                   </button>
                 </form>
               </div>

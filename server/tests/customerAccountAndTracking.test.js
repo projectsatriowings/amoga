@@ -279,7 +279,7 @@ test('Customer Account & Order Tracking Test Suite', async (t) => {
     assert.ok(unverifiedTrack.data.tracking.destinationCity.includes('Jaipur'));
     assert.equal(unverifiedTrack.data.tracking.deliveryDestination, undefined); // Private street masked
 
-    // Tracking with matching verification email returns full verified dossier
+    // Tracking with matching verification email returns full verified details
     const verifiedTrack = await apiRequest(
       `/api/orders/${createdOrderRef}/track?email=${encodeURIComponent(testEmail1)}`
     );
@@ -288,14 +288,14 @@ test('Customer Account & Order Tracking Test Suite', async (t) => {
     assert.equal(verifiedTrack.data.tracking.customerName, 'Maharani Gayatri Devi');
     assert.ok(verifiedTrack.data.tracking.milestones.length === 4);
 
-    // Tracking with guest access token returns full verified dossier
+    // Tracking with guest access token returns full verified details
     const guestTrack = await apiRequest(`/api/orders/${createdOrderRef}/track`, {
       headers: { 'x-guest-access-token': guestAccessToken },
     });
     assert.equal(guestTrack.status, 200);
     assert.equal(guestTrack.data.isMasked, false);
 
-    // Tracking while logged in as customer 1 returns full verified dossier
+    // Tracking while logged in as customer 1 returns full verified details
     const authTrack = await apiRequest(`/api/orders/${createdOrderRef}/track`, {
       headers: { Authorization: `Bearer ${customer1Token}` },
     });

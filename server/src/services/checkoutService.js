@@ -5,6 +5,7 @@ import {
   hashGuestAccessToken,
   verifyGuestAccessToken,
 } from '../utils/security.js';
+import { reserveStock, releaseExpiredReservations } from './inventoryService.js';
 
 /**
  * Authoritatively resolves and validates cart items against the PostgreSQL database
@@ -12,6 +13,9 @@ import {
  * to completely eliminate floating-point arithmetic errors.
  */
 export async function resolveAndValidateCart(cartItems = []) {
+  // Proactively sweep expired reservations so available inventory is fresh
+  await releaseExpiredReservations().catch(() => {});
+
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
     return {
       isValid: false,
@@ -55,9 +59,18 @@ export async function resolveAndValidateCart(cartItems = []) {
       continue;
     }
 
-    // Availability Safeguard: Product inStock flag
-    if (!product.inStock) {
+    // Availability & Live Stock Safeguard
+    const onHand = Math.max(0, product.stockQuantity || 0);
+    const reserved = Math.max(0, product.reservedQuantity || 0);
+    const availableStock = Math.max(0, onHand - reserved);
+
+    if (!product.inStock || availableStock <= 0) {
       errors.push(`"${product.name}" is currently unavailable or out of stock.`);
+      continue;
+    }
+
+    if (qty > availableStock && !item.variantId) {
+      errors.push(`Only ${availableStock} unit(s) available for "${product.name}". Requested: ${qty}.`);
       continue;
     }
 
@@ -91,8 +104,17 @@ export async function resolveAndValidateCart(cartItems = []) {
         continue;
       }
 
-      if (!selectedVariant.inStock) {
+      const variantOnHand = Math.max(0, selectedVariant.stockQuantity || 0);
+      const variantReserved = Math.max(0, selectedVariant.reservedQuantity || 0);
+      const variantAvailable = Math.max(0, variantOnHand - variantReserved);
+
+      if (!selectedVariant.inStock || variantAvailable <= 0) {
         errors.push(`Variant "${selectedVariant.name}" of "${product.name}" is currently out of stock.`);
+        continue;
+      }
+
+      if (qty > variantAvailable) {
+        errors.push(`Only ${variantAvailable} unit(s) available for "${product.name} (${selectedVariant.name})". Requested: ${qty}.`);
         continue;
       }
 
@@ -470,7 +492,18 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
       },
     });
 
+    // Concurrency-Safe Atomic Stock Reservation
+    await reserveStock({
+      tx,
+      orderId: order.id,
+      orderReference: order.orderReference,
+      items: validation.lines,
+    });
+
     return order;
+  }, {
+    maxWait: 20000,
+    timeout: 30000,
   });
 
   return {

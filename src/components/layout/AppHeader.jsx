@@ -65,7 +65,7 @@ export function AppHeader({ activeCollection }) {
           <Link
             to="/"
             className="flex items-center gap-3 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded"
-            title="Amoga Unified Home"
+            title="Amoga"
           >
             <img
               src={amogaLogo}
@@ -73,17 +73,6 @@ export function AppHeader({ activeCollection }) {
               className="h-10 md:h-12 w-auto object-contain shrink-0"
             />
           </Link>
-
-          {activeCollection && (
-            <div className="hidden md:flex items-center gap-2 pl-4 border-l border-current/20">
-              <span className="text-xs uppercase tracking-widest opacity-60 font-medium">
-                Collection
-              </span>
-              <span className="text-sm font-semibold tracking-wide">
-                {activeCollection.name}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Center: Collection Navigation */}
@@ -91,16 +80,6 @@ export function AppHeader({ activeCollection }) {
           aria-label="Collections Navigation"
           className="hidden md:flex items-center gap-1 sm:gap-2 lg:gap-3"
         >
-          <Link
-            to="/"
-            className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded transition-all ${
-              location.pathname === '/'
-                ? 'bg-white/10 font-semibold'
-                : 'opacity-70 hover:opacity-100 hover:bg-white/5'
-            }`}
-          >
-            Gatekeeper
-          </Link>
           {COLLECTIONS.map((col, idx) => {
             const isActive = location.pathname.startsWith(col.path);
             return (
@@ -128,7 +107,7 @@ export function AppHeader({ activeCollection }) {
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-xs font-medium"
-                title="Amoga Patron Account"
+                title="My Account"
               >
                 <div className="w-7 h-7 rounded-full bg-[#722F37] text-[#F6EBD8] flex items-center justify-center font-bold text-xs shadow-inner">
                   {customer?.name ? customer.name.charAt(0).toUpperCase() : 'A'}
@@ -180,7 +159,7 @@ export function AppHeader({ activeCollection }) {
                     className="flex items-center gap-2.5 px-4 py-2 hover:bg-[#FAF8F5] text-[#4A423B] hover:text-[#1F0811] transition-colors"
                   >
                     <User className="w-4 h-4 text-[#8C6320]" />
-                    <span>Saved Residences</span>
+                    <span>Saved Addresses</span>
                   </Link>
                 </div>
 
@@ -247,13 +226,7 @@ export function AppHeader({ activeCollection }) {
           <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono mb-2">
             Amoga Shopping Collections
           </div>
-          <Link
-            to="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-sm uppercase tracking-wider font-medium opacity-80 hover:opacity-100"
-          >
-            Tri-Fold Gatekeeper
-          </Link>
+
           {COLLECTIONS.map((col, idx) => (
             <Link
               key={col.id}
@@ -268,7 +241,7 @@ export function AppHeader({ activeCollection }) {
 
           <div className="pt-3 border-t border-current/10 space-y-2">
             <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">
-              Patron Services
+              Account Services
             </div>
             {isAuthenticated ? (
               <>

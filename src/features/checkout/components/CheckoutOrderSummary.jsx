@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../../store/useStore';
 import { formatINR } from '../../../utils/pricing';
-import { AlertCircle, ShieldCheck, Zap, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, ShieldCheck, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { resolveAvailability } from '../../../utils/inventory';
 
 export const CheckoutOrderSummary = ({ compact = false }) => {
   const getCheckoutItems = useStore((state) => state.getCheckoutItems);
@@ -13,6 +14,15 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
   const { subtotal, payableItemsCount, hasUnpricedItems, unpricedCount } = getCheckoutTotals();
 
   const isBuyNow = checkoutContext?.type === 'buy_now';
+
+  const stockIssues = checkoutItems.filter((item) => {
+    const product = item.product || item;
+    const availability = resolveAvailability(product, item.selectedVariant);
+    return (
+      availability.isOutOfStock ||
+      (availability.availableQuantity > 0 && item.quantity > availability.availableQuantity)
+    );
+  });
 
   const getCollectionBadge = (collectionId) => {
     switch (collectionId) {
@@ -141,6 +151,16 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <p className="leading-snug">
             {unpricedCount} unpriced item(s) detected in checkout. Must be removed before placing order.
+          </p>
+        </div>
+      )}
+
+      {/* Safeguard if stock issues */}
+      {stockIssues.length > 0 && (
+        <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 text-xs flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+          <p className="leading-snug">
+            {stockIssues.length} item(s) exceed available stock. Please return to your shopping bag to adjust quantities before placing order.
           </p>
         </div>
       )}

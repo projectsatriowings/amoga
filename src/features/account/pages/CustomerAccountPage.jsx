@@ -164,10 +164,10 @@ export function CustomerAccountPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono uppercase tracking-widest text-[#C5A46D]">
-                  Amoga Patron Atelier
+                  Customer Account
                 </span>
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#C5A46D]" />
-                <span className="text-[10px] font-mono text-[#D8C6AD]">Verified Client</span>
+                <span className="text-[10px] font-mono text-[#D8C6AD]">Verified Customer</span>
               </div>
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#F6EBD8] mt-0.5">
                 {customer.name}
@@ -182,7 +182,7 @@ export function CustomerAccountPage() {
               className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-[#F6EBD8] border border-white/20 transition-all flex items-center gap-2"
             >
               <Truck className="w-3.5 h-3.5 text-[#C5A46D]" />
-              <span>Track Any Shipment</span>
+              <span>Track Order</span>
             </Link>
             <button
               onClick={logout}
@@ -216,7 +216,7 @@ export function CustomerAccountPage() {
             }`}
           >
             <MapPin className="w-4 h-4" />
-            <span>Delivery Residences ({addresses.length})</span>
+            <span>Delivery Addresses ({addresses.length})</span>
           </button>
           <button
             onClick={() => handleTabChange('profile')}
@@ -243,7 +243,7 @@ export function CustomerAccountPage() {
                   No orders placed yet
                 </h3>
                 <p className="text-xs text-[#7A7167] max-w-sm mx-auto">
-                  Your artisanal order dossiers will appear here once you acquire creations from
+                  Your orders will appear here once you make a purchase from
                   Heritage Sarees, Wholesome Pantry, Wellness Tea, or Silver Jewellery.
                 </p>
                 <Link
@@ -362,7 +362,7 @@ export function CustomerAccountPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-serif text-lg font-bold text-[#1F0811]">
-                  Delivery Residences
+                  Saved Delivery Addresses
                 </h2>
                 <p className="text-xs text-[#7A7167]">
                   Manage delivery addresses for seamless, 1-click checkout.
@@ -374,7 +374,7 @@ export function CustomerAccountPage() {
                 className="px-4 py-2 bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 shadow"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Residence</span>
+                <span>Add Address</span>
               </button>
             </div>
 
@@ -439,7 +439,7 @@ export function CustomerAccountPage() {
                 <div className="bg-white rounded-2xl border border-[#DDD5C7] max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl">
                   <div className="flex items-center justify-between pb-3 border-b border-[#EAE3D5]">
                     <h3 className="font-serif text-lg font-bold text-[#1F0811]">
-                      Add Delivery Residence
+                      Add Delivery Address
                     </h3>
                     <button
                       onClick={() => setShowAddressModal(false)}

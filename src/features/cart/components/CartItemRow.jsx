@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2, Plus, Minus, AlertCircle, Check, Bookmark } from 'lucide-react';
+import { Trash2, Plus, Minus, AlertCircle, Check, Bookmark, AlertTriangle } from 'lucide-react';
 import { formatINR, isValidPrice } from '../../../utils/pricing';
 import { useStore } from '../../../store/useStore';
+import { resolveAvailability } from '../../../utils/inventory';
 
 export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
   const storeUpdateQuantity = useStore((state) => state.updateQuantity);
@@ -23,6 +24,8 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
 
   const unitPrice = item.price !== undefined ? item.price : product.price;
   const hasPrice = isValidPrice(unitPrice);
+  const availability = resolveAvailability(product, selectedVariant);
+  const exceedsStock = availability.availableQuantity > 0 && quantity > availability.availableQuantity;
 
   // Resolve collection-specific product URL
   const productUrl =
@@ -123,6 +126,15 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
                 Not Selected
               </span>
             )}
+            {availability.isOutOfStock ? (
+              <span className="text-[10px] font-mono uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-300">
+                Out of Stock
+              </span>
+            ) : availability.isLowStock ? (
+              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">
+                Only {availability.availableQuantity} left
+              </span>
+            ) : null}
           </div>
 
           <h3
@@ -192,6 +204,19 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
               <span>Save for later</span>
             </button>
           </div>
+
+          {exceedsStock && (
+            <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center gap-1.5 mt-1 font-sans">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+              <span>Only {availability.availableQuantity} available in stock. Please adjust quantity before checkout.</span>
+            </div>
+          )}
+          {availability.isOutOfStock && (
+            <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center gap-1.5 mt-1 font-sans">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+              <span>This item is currently out of stock. Please save for later or remove to proceed.</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -228,7 +253,8 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
           <button
             type="button"
             onClick={() => handleUpdate(lineKey, quantity + 1)}
-            className="p-1.5 rounded-lg transition-colors hover:opacity-80 cursor-pointer"
+            disabled={availability.availableQuantity > 0 && quantity >= availability.availableQuantity}
+            className="p-1.5 rounded-lg transition-colors hover:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             style={{ color: 'var(--collection-text-muted)' }}
             aria-label={`Increase quantity of ${product.name}`}
           >

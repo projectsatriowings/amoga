@@ -12,6 +12,7 @@ import {
   HelpCircle,
   PhoneCall,
   Zap,
+  Bell,
 } from 'lucide-react';
 import { getTeaProductBySlug, TEA_PRODUCTS } from './data/products';
 import { TeaProductCard } from './components/TeaProductCard';
@@ -21,6 +22,8 @@ import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { useProductDetail } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
+import { resolveAvailability } from '../../utils/inventory';
+import { RestockModal } from '../../components/ui/RestockModal';
 
 export function TeaProductDetail() {
   const { slug } = useParams();
@@ -61,6 +64,9 @@ export function TeaProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [addError, setAddError] = useState(null);
+  const [showRestockModal, setShowRestockModal] = useState(false);
+
+  const availability = resolveAvailability(product);
 
   // If unknown slug, display graceful not-found state
   if (!product) {
@@ -102,8 +108,16 @@ export function TeaProductDetail() {
       return;
     }
     setAddError(null);
+    if (availability.isOutOfStock) {
+      setShowRestockModal(true);
+      return;
+    }
     if (!hasPrice) {
       setAddError('This botanical brew is currently awaiting price confirmation.');
+      return;
+    }
+    if (availability.availableQuantity > 0 && quantity > availability.availableQuantity) {
+      setAddError(`Only ${availability.availableQuantity} pack(s) currently available.`);
       return;
     }
     const res = addToCart(product, quantity);
@@ -119,8 +133,16 @@ export function TeaProductDetail() {
 
   const handleBuyNow = () => {
     setAddError(null);
+    if (availability.isOutOfStock) {
+      setShowRestockModal(true);
+      return;
+    }
     if (!hasPrice) {
       setAddError('This botanical brew is currently awaiting price confirmation.');
+      return;
+    }
+    if (availability.availableQuantity > 0 && quantity > availability.availableQuantity) {
+      setAddError(`Only ${availability.availableQuantity} pack(s) currently available.`);
       return;
     }
     const res = initiateBuyNow(product, quantity);
@@ -235,7 +257,7 @@ export function TeaProductDetail() {
               )}
 
               {/* Pricing Display */}
-              <div className="pt-2 border-t border-[#B88E38]/20 flex items-baseline gap-3">
+              <div className="pt-2 border-t border-[#B88E38]/20 space-y-2">
                 {hasPrice ? (
                   <div className="flex flex-wrap items-baseline gap-3">
                     <span className="text-3xl font-sans font-bold text-[#2C1E11] tabular-nums font-numeric">
@@ -265,6 +287,30 @@ export function TeaProductDetail() {
                     </p>
                   </div>
                 )}
+
+                {/* Stock Status Badge */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                      availability.badgeVariant === 'success'
+                        ? 'bg-emerald-900/10 text-emerald-800 border border-emerald-500/30'
+                        : availability.badgeVariant === 'warning'
+                        ? 'bg-amber-900/10 text-amber-800 border border-amber-500/30'
+                        : 'bg-rose-900/10 text-rose-800 border border-rose-500/30'
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        availability.badgeVariant === 'success'
+                          ? 'bg-emerald-600'
+                          : availability.badgeVariant === 'warning'
+                          ? 'bg-amber-600 animate-pulse'
+                          : 'bg-rose-600'
+                      }`}
+                    />
+                    {availability.label}
+                  </span>
+                </div>
               </div>
 
               {/* Description */}
@@ -314,7 +360,16 @@ export function TeaProductDetail() {
 
             {/* Action Bar */}
             <div className="pt-6 border-t border-[#B88E38]/20 space-y-4">
-              {hasPrice ? (
+              {availability.isOutOfStock ? (
+                <button
+                  type="button"
+                  onClick={() => setShowRestockModal(true)}
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-amber-600 text-white text-xs font-semibold uppercase tracking-wider hover:bg-amber-700 transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  <Bell className="w-4 h-4 text-amber-100" />
+                  <span>Notify Me When Available</span>
+                </button>
+              ) : hasPrice ? (
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   {/* Quantity selector */}
                   <div className="flex items-center justify-between border border-[#B88E38]/30 rounded-full px-3 py-1.5 bg-white w-32 shrink-0">
@@ -329,7 +384,13 @@ export function TeaProductDetail() {
                     <span className="font-sans text-sm font-semibold tabular-nums font-numeric">{quantity}</span>
                     <button
                       type="button"
-                      onClick={() => setQuantity((q) => q + 1)}
+                      onClick={() =>
+                        setQuantity((q) =>
+                          availability.availableQuantity > 0
+                            ? Math.min(availability.availableQuantity, q + 1)
+                            : q + 1
+                        )
+                      }
                       className="p-1 hover:text-[#8C6320] text-[#2C1E11]"
                       aria-label="Increase quantity"
                     >
@@ -371,6 +432,12 @@ export function TeaProductDetail() {
                   </Link>
                 </div>
               )}
+
+              {addError && (
+                <div className="p-3 rounded-xl bg-rose-100 border border-rose-300 text-rose-800 text-xs">
+                  {addError}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -403,6 +470,12 @@ export function TeaProductDetail() {
           </div>
         )}
       </Container>
+
+      <RestockModal
+        isOpen={showRestockModal}
+        onClose={() => setShowRestockModal(false)}
+        product={product}
+      />
     </div>
   );
 }

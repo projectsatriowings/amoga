@@ -116,7 +116,7 @@ export function AdminOrderDetail() {
     return (
       <div className="p-12 text-center text-xs text-[#7A7167]">
         <div className="w-6 h-6 border-2 border-[#722F37] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-        <span>Loading order dossier...</span>
+        <span>Loading order details...</span>
       </div>
     );
   }

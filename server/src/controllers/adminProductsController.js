@@ -145,6 +145,7 @@ export async function createProduct(req, res) {
       image,
       gallery = [],
       stockQuantity = 50,
+      lowStockThreshold = 5,
       inStock = true,
       isFeatured = false,
       badge,
@@ -220,6 +221,7 @@ export async function createProduct(req, res) {
           gallery: Array.isArray(gallery) ? gallery : [],
           packSize: packSize || null,
           stockQuantity: Math.max(0, parseInt(stockQuantity, 10) || 0),
+          lowStockThreshold: Math.max(0, parseInt(lowStockThreshold, 10) || 5),
           inStock: Boolean(inStock),
           isFeatured: Boolean(isFeatured),
           badge: badge || null,
@@ -239,6 +241,7 @@ export async function createProduct(req, res) {
                 sku: v.sku || null,
                 price: v.price ? Number(v.price) : null,
                 stockQuantity: Math.max(0, parseInt(v.stockQuantity, 10) || 25),
+                lowStockThreshold: Math.max(0, parseInt(v.lowStockThreshold, 10) || 5),
                 inStock: v.inStock !== undefined ? Boolean(v.inStock) : true,
                 attributes: v.attributes || {},
               },
@@ -287,6 +290,7 @@ export async function updateProduct(req, res) {
       image,
       gallery,
       stockQuantity,
+      lowStockThreshold,
       inStock,
       isFeatured,
       badge,
@@ -318,6 +322,7 @@ export async function updateProduct(req, res) {
       if (image !== undefined) updateData.image = image;
       if (gallery !== undefined) updateData.gallery = gallery;
       if (stockQuantity !== undefined) updateData.stockQuantity = Math.max(0, parseInt(stockQuantity, 10) || 0);
+      if (lowStockThreshold !== undefined) updateData.lowStockThreshold = Math.max(0, parseInt(lowStockThreshold, 10) || 5);
       if (inStock !== undefined) updateData.inStock = Boolean(inStock);
       if (isFeatured !== undefined) updateData.isFeatured = Boolean(isFeatured);
       if (badge !== undefined) updateData.badge = badge;
@@ -348,6 +353,7 @@ export async function updateProduct(req, res) {
                 sku: v.sku,
                 price: v.price ? Number(v.price) : null,
                 stockQuantity: v.stockQuantity !== undefined ? Number(v.stockQuantity) : undefined,
+                lowStockThreshold: v.lowStockThreshold !== undefined ? Number(v.lowStockThreshold) : undefined,
                 inStock: v.inStock !== undefined ? Boolean(v.inStock) : undefined,
                 attributes: v.attributes,
               },

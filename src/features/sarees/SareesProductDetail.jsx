@@ -14,9 +14,12 @@ import {
   Scissors,
   Sparkles,
   Zap,
+  Bell,
 } from 'lucide-react';
 import { getSareeBySlug, SAREE_PRODUCTS } from './data/products';
 import { SareeProductCard } from './components/SareeProductCard';
+import { resolveAvailability } from '../../utils/inventory.js';
+import { RestockModal } from '../../components/ui/RestockModal.jsx';
 
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
@@ -42,12 +45,15 @@ export function SareesProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [addedNotice, setAddedNotice] = useState(false);
   const [addError, setAddError] = useState(null);
+  const [showRestockModal, setShowRestockModal] = useState(false);
 
   // Derive active variant directly during render
   const selectedVariant =
     product?.variants?.find((v) => v.id === selectedVariantId) ||
     product?.variants?.[0] ||
     null;
+
+  const availability = resolveAvailability(product, selectedVariant);
 
   // Graceful 404 / Not Found state for unknown slug
   if (!product) {
@@ -84,6 +90,10 @@ export function SareesProductDetail() {
 
   const handleAddToCart = () => {
     setAddError(null);
+    if (availability.isOutOfStock) {
+      setShowRestockModal(true);
+      return;
+    }
     if (!hasPrice) {
       setAddError('This saree design is currently awaiting confirmed retail pricing.');
       return;
@@ -98,6 +108,10 @@ export function SareesProductDetail() {
 
   const handleBuyNow = () => {
     setAddError(null);
+    if (availability.isOutOfStock) {
+      setShowRestockModal(true);
+      return;
+    }
     if (!hasPrice) {
       setAddError('This saree design is currently awaiting confirmed retail pricing.');
       return;
@@ -232,6 +246,26 @@ export function SareesProductDetail() {
                 {product.tagline}
               </p>
 
+              {/* Live Availability Badge */}
+              <div className="pt-2">
+                {availability.isOutOfStock ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-950/80 text-rose-200 border border-rose-400/40 text-xs font-mono font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+                    <span>Out of Stock</span>
+                  </span>
+                ) : availability.isLowStock ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/80 text-amber-200 border border-amber-400/40 text-xs font-mono font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span>Low Stock — Only {availability.availableQuantity} left</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#381222] text-[#F6EBD8] border border-[#C5A46D]/40 text-xs font-mono font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-[#C5A46D]" />
+                    <span>In Stock — {availability.availableQuantity} available</span>
+                  </span>
+                )}
+              </div>
+
               {/* Price Display */}
               <div className="pt-3">
                 {hasPrice ? (
@@ -304,55 +338,67 @@ export function SareesProductDetail() {
             {/* Quantity and Actions */}
             <div className="space-y-4 pt-2">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                {/* Quantity Controls */}
-                <div className="flex items-center justify-between sm:justify-start gap-3 bg-[#381222] border border-[#C5A46D]/30 rounded-xl p-2 shrink-0">
-                  <span className="text-xs font-mono text-[#D4C2A7] px-2 sm:hidden">
-                    Quantity:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="p-2 rounded-lg hover:bg-white/10 text-[#F6EBD8] transition-colors"
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="text-sm font-mono font-bold text-[#F6EBD8] px-3 min-w-[28px] text-center">
-                      {quantity}
+                {!availability.isOutOfStock && (
+                  <div className="flex items-center justify-between sm:justify-start gap-3 bg-[#381222] border border-[#C5A46D]/30 rounded-xl p-2 shrink-0">
+                    <span className="text-xs font-mono text-[#D4C2A7] px-2 sm:hidden">
+                      Quantity:
                     </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="p-2 rounded-lg hover:bg-white/10 text-[#F6EBD8] transition-colors"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="text-sm font-mono font-bold text-[#F6EBD8] px-3 min-w-[28px] text-center">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.min(availability.availableQuantity || 99, q + 1))}
+                        className="p-2 rounded-lg hover:bg-white/10 text-[#F6EBD8] transition-colors"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {availability.isOutOfStock ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowRestockModal(true)}
+                    className="flex-1 py-3.5 px-5 rounded-xl bg-[#451523] border border-[#C5A46D]/60 text-[#F6EBD8] font-medium text-xs uppercase tracking-wider hover:bg-[#5a1b2d] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
+                  >
+                    <Bell className="w-4 h-4 text-[#C5A46D]" />
+                    <span>Notify Me When Available</span>
+                  </button>
+                ) : (
+                  <>
                     <button
                       type="button"
-                      onClick={() => setQuantity((q) => q + 1)}
-                      className="p-2 rounded-lg hover:bg-white/10 text-[#F6EBD8] transition-colors"
-                      aria-label="Increase quantity"
+                      onClick={handleAddToCart}
+                      className="flex-1 py-3.5 px-5 rounded-xl bg-[#C5A46D] text-[#2C0E1A] font-medium text-xs uppercase tracking-wider hover:bg-[#d9bb85] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
                     >
-                      <Plus className="w-4 h-4" />
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>
+                        {addedNotice ? 'Added to Cart!' : 'Add Saree to Bag'}
+                      </span>
                     </button>
-                  </div>
-                </div>
 
-                {/* Add to Cart Button */}
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="flex-1 py-3.5 px-5 rounded-xl bg-[#C5A46D] text-[#2C0E1A] font-medium text-xs uppercase tracking-wider hover:bg-[#d9bb85] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>
-                    {addedNotice ? 'Added to Cart!' : 'Add Saree to Bag'}
-                  </span>
-                </button>
-
-                {/* Buy Now Button */}
-                <button
-                  type="button"
-                  onClick={handleBuyNow}
-                  className="flex-1 py-3.5 px-5 rounded-xl bg-[#451523] border border-[#C5A46D]/60 text-[#F6EBD8] font-medium text-xs uppercase tracking-wider hover:bg-[#5a1b2d] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
-                >
-                  <Zap className="w-4 h-4 text-[#C5A46D]" />
-                  <span>Buy Now</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={handleBuyNow}
+                      className="flex-1 py-3.5 px-5 rounded-xl bg-[#451523] border border-[#C5A46D]/60 text-[#F6EBD8] font-medium text-xs uppercase tracking-wider hover:bg-[#5a1b2d] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
+                    >
+                      <Zap className="w-4 h-4 text-[#C5A46D]" />
+                      <span>Buy Now</span>
+                    </button>
+                  </>
+                )}
 
                 {/* Wishlist Button */}
                 <button
@@ -495,6 +541,13 @@ export function SareesProductDetail() {
           </div>
         )}
       </Container>
+
+      <RestockModal
+        isOpen={showRestockModal}
+        onClose={() => setShowRestockModal(false)}
+        product={product}
+        selectedVariant={selectedVariant}
+      />
     </div>
   );
 }

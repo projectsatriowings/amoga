@@ -428,7 +428,7 @@ export const CheckoutForm = () => {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase font-serif tracking-widest text-[#722F37] font-semibold">
-                Saved Residences & Ateliers
+                Saved Delivery Addresses
               </span>
               <span className="text-[11px] text-[#8C7A6B]">
                 Click an address to autofill

@@ -14,6 +14,7 @@ import {
   Sparkles,
   Layers,
   Zap,
+  Bell,
 } from 'lucide-react';
 import { getJewelleryBySlug, JEWELLERY_PRODUCTS } from './data/products';
 import { JewelleryProductCard } from './components/JewelleryProductCard';
@@ -22,6 +23,8 @@ import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { useProductDetail } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
+import { resolveAvailability } from '../../utils/inventory';
+import { RestockModal } from '../../components/ui/RestockModal';
 
 export function JewelleryProductDetail() {
   const { slug } = useParams();
@@ -42,11 +45,18 @@ export function JewelleryProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [addedNotice, setAddedNotice] = useState(false);
   const [addError, setAddError] = useState(null);
+  const [showRestockModal, setShowRestockModal] = useState(false);
 
   // Derive active size directly during render
   const activeSize =
     selectedSize ||
     (product?.sizes && product.sizes.length > 0 ? product.sizes[0] : null);
+
+  const matchedVariant = product?.variants?.find(
+    (v) => v.id === selectedSize || v.name === activeSize || v.sku === selectedSize
+  ) || null;
+
+  const availability = resolveAvailability(product, matchedVariant);
 
   // Graceful 404 / Not Found state for unknown slug
   if (!product) {
@@ -83,8 +93,16 @@ export function JewelleryProductDetail() {
 
   const handleAddToCart = () => {
     setAddError(null);
+    if (availability.isOutOfStock) {
+      setShowRestockModal(true);
+      return;
+    }
     if (!hasPrice) {
       setAddError('This jewellery piece is currently awaiting confirmed retail pricing.');
+      return;
+    }
+    if (availability.availableQuantity > 0 && quantity > availability.availableQuantity) {
+      setAddError(`Only ${availability.availableQuantity} unit(s) currently available.`);
       return;
     }
 
@@ -100,8 +118,16 @@ export function JewelleryProductDetail() {
 
   const handleBuyNow = () => {
     setAddError(null);
+    if (availability.isOutOfStock) {
+      setShowRestockModal(true);
+      return;
+    }
     if (!hasPrice) {
       setAddError('This jewellery piece is currently awaiting confirmed retail pricing.');
+      return;
+    }
+    if (availability.availableQuantity > 0 && quantity > availability.availableQuantity) {
+      setAddError(`Only ${availability.availableQuantity} unit(s) currently available.`);
       return;
     }
 
@@ -237,7 +263,7 @@ export function JewelleryProductDetail() {
               </p>
 
               {/* Price Display */}
-              <div className="pt-3">
+              <div className="pt-3 space-y-2">
                 {hasPrice ? (
                   <div className="flex items-baseline gap-3">
                     <span className="font-sans text-3xl font-bold text-[#F7F3EB] tabular-nums">
@@ -253,6 +279,30 @@ export function JewelleryProductDetail() {
                     <span>Price pending client catalogue approval</span>
                   </div>
                 )}
+
+                {/* Stock Status Badge */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                      availability.badgeVariant === 'success'
+                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
+                        : availability.badgeVariant === 'warning'
+                        ? 'bg-amber-950/80 text-amber-300 border border-amber-500/30'
+                        : 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        availability.badgeVariant === 'success'
+                          ? 'bg-emerald-400'
+                          : availability.badgeVariant === 'warning'
+                          ? 'bg-amber-400 animate-pulse'
+                          : 'bg-rose-400'
+                      }`}
+                    />
+                    {availability.label}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -304,35 +354,52 @@ export function JewelleryProductDetail() {
             <div className="space-y-4 pt-2">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                 {/* Quantity Controls */}
-                <div className="flex items-center justify-between sm:justify-start gap-3 bg-[#343238] border border-[#B9B8B5]/25 rounded-xl p-2 shrink-0">
-                  <span className="text-xs font-mono text-[#B9B8B5] px-2 sm:hidden">
-                    Quantity:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="p-2 rounded-lg hover:bg-white/10 text-[#F7F3EB] transition-colors"
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="text-sm font-mono font-bold text-[#F7F3EB] px-3 min-w-[28px] text-center">
-                      {quantity}
+                {!availability.isOutOfStock && (
+                  <div className="flex items-center justify-between sm:justify-start gap-3 bg-[#343238] border border-[#B9B8B5]/25 rounded-xl p-2 shrink-0">
+                    <span className="text-xs font-mono text-[#B9B8B5] px-2 sm:hidden">
+                      Quantity:
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => q + 1)}
-                      className="p-2 rounded-lg hover:bg-white/10 text-[#F7F3EB] transition-colors"
-                      aria-label="Increase quantity"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="p-2 rounded-lg hover:bg-white/10 text-[#F7F3EB] transition-colors"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="text-sm font-mono font-bold text-[#F7F3EB] px-3 min-w-[28px] text-center">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setQuantity((q) =>
+                            availability.availableQuantity > 0
+                              ? Math.min(availability.availableQuantity, q + 1)
+                              : q + 1
+                          )
+                        }
+                        className="p-2 rounded-lg hover:bg-white/10 text-[#F7F3EB] transition-colors"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Add to Cart Button */}
-                {hasPrice ? (
+                {/* Add to Cart / Out of Stock / Buy Now Button */}
+                {availability.isOutOfStock ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowRestockModal(true)}
+                    className="flex-1 py-3.5 px-5 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-200 font-medium text-xs uppercase tracking-wider hover:bg-amber-500/30 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
+                  >
+                    <Bell className="w-4 h-4 text-amber-300" />
+                    <span>Notify Me When Available</span>
+                  </button>
+                ) : hasPrice ? (
                   <>
                     <button
                       type="button"
@@ -505,6 +572,16 @@ export function JewelleryProductDetail() {
           </div>
         )}
       </Container>
+
+      <RestockModal
+        isOpen={showRestockModal}
+        onClose={() => setShowRestockModal(false)}
+        product={product}
+        variant={
+          matchedVariant ||
+          (activeSize ? { id: `size-${activeSize}`, name: `Size ${activeSize}` } : null)
+        }
+      />
     </div>
   );
 }

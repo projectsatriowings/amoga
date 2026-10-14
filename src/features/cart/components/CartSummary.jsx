@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, AlertCircle, Sparkles, CheckSquare, Square } from 'lucide-react';
+import { ArrowRight, ShieldCheck, AlertCircle, Sparkles, CheckSquare, Square, AlertTriangle } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { formatINR } from '../../../utils/pricing';
+import { resolveAvailability } from '../../../utils/inventory';
 
 export const CartSummary = () => {
   const navigate = useNavigate();
@@ -21,9 +22,20 @@ export const CartSummary = () => {
     unpricedCount,
   } = getSelectedTotals();
 
+  const stockIssues = selectedItems.filter((item) => {
+    const product = item.product || item;
+    const availability = resolveAvailability(product, item.selectedVariant);
+    return (
+      availability.isOutOfStock ||
+      (availability.availableQuantity > 0 && item.quantity > availability.availableQuantity)
+    );
+  });
+  const hasStockIssues = stockIssues.length > 0;
+
   const selectedCount = selectedItems.length;
   const isSelectionEmpty = selectedCount === 0;
-  const isCheckoutDisabled = isSelectionEmpty || hasUnpricedItems || payableItemsCount === 0;
+  const isCheckoutDisabled =
+    isSelectionEmpty || hasUnpricedItems || payableItemsCount === 0 || hasStockIssues;
 
   const handleCheckoutSelected = () => {
     if (isCheckoutDisabled) return;
@@ -120,6 +132,19 @@ export const CartSummary = () => {
         </div>
       )}
 
+      {/* Stock Availability Safeguard Warning */}
+      {!isSelectionEmpty && hasStockIssues && (
+        <div className="my-5 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 text-xs flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">Inventory Safeguard Active</p>
+            <p className="mt-0.5 text-rose-800 leading-relaxed">
+              {stockIssues.length} selected item(s) are out of stock or exceed current warehouse inventory. Please adjust quantities before checkout.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Payable Total for Selected Items */}
       <div className="py-6 flex justify-between items-baseline">
         <div>
@@ -168,6 +193,8 @@ export const CartSummary = () => {
         <span>
           {isSelectionEmpty
             ? 'Select Items to Checkout'
+            : hasStockIssues
+            ? 'Adjust Stock Quantities to Proceed'
             : `Checkout Selected Items (${selectedCount})`}
         </span>
         <ArrowRight className="w-4 h-4" />

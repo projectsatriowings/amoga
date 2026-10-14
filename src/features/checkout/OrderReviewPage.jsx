@@ -304,13 +304,25 @@ export const OrderReviewPage = () => {
       }
     } catch (err) {
       console.warn('Backend order or payment initialization returned error:', err);
+      if (err.status === 409 || err.code === 'INSUFFICIENT_STOCK') {
+        setSimulationError(err.message || 'One or more items in your bag are out of stock or exceed current warehouse inventory. Please adjust quantities.');
+        setIsSubmitting(false);
+        return;
+      }
       if (err.status === 422 && err.details) {
         setSimulationError(Array.isArray(err.details) ? err.details.join(' ') : String(err.details));
         setIsSubmitting(false);
         return;
       }
 
-      // If backend is offline, provide graceful development fallback
+      // If backend error has a specific message, display it instead of silently placing an order
+      if (err.message && err.status) {
+        setSimulationError(`Order processing failed: ${err.message}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // If backend is completely offline (network down), provide development fallback
       const demoOrderId = generateDemoOrderId();
       const simulatedOrder = buildSimulatedOrder(demoOrderId, customerDetails, checkoutItems, totals);
       setLastCompletedOrder(simulatedOrder);
