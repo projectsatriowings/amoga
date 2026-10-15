@@ -206,6 +206,22 @@ export function GatekeeperMobile({
               >
                 {current.description}
               </p>
+
+              {/* Mobile CTA Buttons: Explore Collection directly followed by Call to Order */}
+              <div className="pt-3 flex flex-col items-start gap-2.5 w-full">
+                <LiquidGlassCta
+                  collectionId={current.id}
+                  label={current.ctaText || 'EXPLORE COLLECTION'}
+                  disabled={isExiting}
+                  onClick={() => onSelect(current)}
+                  className="w-full sm:w-auto justify-center"
+                />
+                <CallToOrderAssistance
+                  variant="hero"
+                  collectionId={current.id}
+                  className="w-full sm:w-auto justify-center"
+                />
+              </div>
             </div>
 
             {/* Photography Card with Layered Smooth Gradient */}
@@ -249,21 +265,6 @@ export function GatekeeperMobile({
                 className="absolute inset-0 pointer-events-none"
                 style={mobileCardGradient}
                 aria-hidden="true"
-              />
-            </div>
-
-            {/* Explore Button & Secondary Call to Order */}
-            <div className="pt-1 flex flex-col sm:flex-row items-center gap-2">
-              <LiquidGlassCta
-                collectionId={current.id}
-                label={current.ctaText}
-                disabled={isExiting}
-                onClick={() => onSelect(current)}
-                className="w-full justify-center py-3 text-sm"
-              />
-              <CallToOrderAssistance
-                variant="hero"
-                className="w-full justify-center py-2.5 bg-black/35 backdrop-blur-md border-white/20 text-[#F4F4F2] text-xs hover:bg-white/15"
               />
             </div>
           </motion.div>

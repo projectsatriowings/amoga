@@ -134,13 +134,13 @@ export function GatekeeperPanel({
   const gradientOverlayStyle = {
     background: `linear-gradient(180deg, 
       ${hexToRgba(themeConfig.bgColor, 1.0)} 0%, 
-      ${hexToRgba(themeConfig.bgColor, 1.0)} 22%, 
-      ${hexToRgba(themeConfig.bgColor, 0.98)} 30%, 
-      ${hexToRgba(themeConfig.bgColor, 0.88)} 40%, 
-      ${hexToRgba(themeConfig.bgColor, 0.68)} 52%, 
-      ${hexToRgba(themeConfig.bgColor, 0.40)} 64%, 
-      ${hexToRgba(themeConfig.bgColor, 0.15)} 76%, 
-      ${hexToRgba(themeConfig.bgColor, 0.0)} 88%,
+      ${hexToRgba(themeConfig.bgColor, 1.0)} 32%, 
+      ${hexToRgba(themeConfig.bgColor, 0.98)} 40%, 
+      ${hexToRgba(themeConfig.bgColor, 0.88)} 50%, 
+      ${hexToRgba(themeConfig.bgColor, 0.65)} 62%, 
+      ${hexToRgba(themeConfig.bgColor, 0.35)} 74%, 
+      ${hexToRgba(themeConfig.bgColor, 0.12)} 85%, 
+      ${hexToRgba(themeConfig.bgColor, 0.0)} 92%,
       rgba(0, 0, 0, ${themeConfig.bottomVignette || '0.2'}) 100%)`,
   };
 
@@ -174,9 +174,9 @@ export function GatekeeperPanel({
       onClick={() => onSelect(collection)}
     >
       {/* =========================================================================
-          LAYER 2: COLLECTION PHOTOGRAPHY (Positioned in lower 75% of panel)
+          LAYER 2: COLLECTION PHOTOGRAPHY (Positioned below upper text and buttons)
           ========================================================================= */}
-      <div className="absolute inset-x-0 bottom-0 top-[24%] sm:top-[22%] md:top-[20%] overflow-hidden pointer-events-none z-0">
+      <div className="absolute inset-x-0 bottom-0 top-[34%] sm:top-[32%] md:top-[30%] overflow-hidden pointer-events-none z-0">
         <picture className="w-full h-full block">
           {!useFallback && responsive?.webpSrcSet && (
             <source
@@ -230,7 +230,7 @@ export function GatekeeperPanel({
       {/* =========================================================================
           LAYER 4: NARRATIVE HEADINGS & INTERACTIVE CTA CONTENT (z-20)
           ========================================================================= */}
-      <div className="relative z-20 pointer-events-auto pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 md:px-7 lg:px-8 xl:px-10 flex-1 flex flex-col justify-between items-start w-full pb-6 sm:pb-8">
+      <div className="relative z-20 pointer-events-auto pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 md:px-7 lg:px-8 xl:px-10 flex-1 flex flex-col justify-start items-start w-full pb-6 sm:pb-8">
         {/* Narrative Group */}
         <div className="w-full flex flex-col items-start">
           {/* Collection Number & Decorative Accent Rule */}
@@ -269,7 +269,7 @@ export function GatekeeperPanel({
             animate={{
               opacity: isCollapsed ? 0 : 1,
               height: isCollapsed ? 0 : 'auto',
-              marginTop: isCollapsed ? 0 : 16,
+              marginTop: isCollapsed ? 0 : 14,
             }}
             transition={transitionConfig}
             className="overflow-hidden max-w-sm"
@@ -281,33 +281,33 @@ export function GatekeeperPanel({
               {collection.description}
             </p>
           </motion.div>
-        </div>
 
-        {/* Liquid-Glass CTA Button & Secondary Call to Order */}
-        <motion.div
-          animate={{
-            opacity: isCollapsed ? 0 : isExpanded ? 1 : 0.9,
-            y: isCollapsed ? 12 : 0,
-            scale: isCollapsed ? 0.95 : 1,
-          }}
-          transition={transitionConfig}
-          className="mt-auto pt-6 sm:pt-8 flex flex-wrap items-center gap-2.5 z-20"
-        >
-          <LiquidGlassCta
-            collectionId={collection.id}
-            label={collection.ctaText}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(collection);
+          {/* CTA Buttons: Explore Collection directly followed by Call to Order in a left-aligned vertical stack */}
+          <motion.div
+            animate={{
+              opacity: isCollapsed ? 0 : 1,
+              height: isCollapsed ? 0 : 'auto',
+              marginTop: isCollapsed ? 0 : 18,
             }}
-          />
-          <div onClick={(e) => e.stopPropagation()}>
-            <CallToOrderAssistance
-              variant="hero"
-              className="bg-black/35 backdrop-blur-md border-white/20 text-[#F4F4F2] hover:bg-white/15 hover:border-white/40 shadow-sm"
+            transition={transitionConfig}
+            className="overflow-hidden flex flex-col items-start gap-2.5 z-20 w-full"
+          >
+            <LiquidGlassCta
+              collectionId={collection.id}
+              label={collection.ctaText || 'EXPLORE COLLECTION'}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(collection);
+              }}
             />
-          </div>
-        </motion.div>
+            <div onClick={(e) => e.stopPropagation()}>
+              <CallToOrderAssistance
+                variant="hero"
+                collectionId={collection.id}
+              />
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       {/* =========================================================================

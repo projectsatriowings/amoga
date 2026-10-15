@@ -74,7 +74,7 @@ export function GatekeeperHub() {
               title: (dbCol.heroHeading || dbCol.name || (staticMatch ? staticMatch.title : 'COLLECTION')).toUpperCase(),
               tagline: dbCol.tagline || (staticMatch ? staticMatch.tagline : 'Curated Universe'),
               eyebrow: (dbCol.tagline || (staticMatch ? staticMatch.eyebrow : 'THE GOODNESS OF TRADITION')).toUpperCase(),
-              subtitle: dbCol.heroSubheading || (staticMatch ? staticMatch.subtitle : ''),
+              subtitle: dbCol.tagline || (staticMatch ? staticMatch.subtitle : ''),
               description: dbCol.description || (staticMatch ? staticMatch.description : 'Explore handcrafted artisanal curation.'),
               accentColor: dbCol.accentColor || (staticMatch ? staticMatch.accentColor : '#722F37'),
               path: `/${dbCol.slug}`,

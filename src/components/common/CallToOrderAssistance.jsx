@@ -22,7 +22,7 @@ const AMOGA_CONTACT_DETAILS = {
  */
 export function CallToOrderAssistance({
   variant = 'hero',
-  _collectionId = 'food',
+  collectionId = 'food',
   className = '',
   customPhone,
   customEmail,
@@ -33,15 +33,31 @@ export function CallToOrderAssistance({
   const email = customEmail || AMOGA_CONTACT_DETAILS.email;
   const hours = customHours || AMOGA_CONTACT_DETAILS.hours;
 
-  // 1. Hero Secondary CTA (Beside primary shopping CTA, keeps primary shopping CTA visually dominant)
+  const collectionHeroStyles = {
+    food: 'bg-white/90 hover:bg-white text-[#173B2A] border-[#173B2A]/25 hover:border-[#173B2A]/50 focus-visible:ring-[#287A25]',
+    tea: 'bg-white/90 hover:bg-white text-[#2C1E11] border-[#8C6320]/30 hover:border-[#8C6320]/60 focus-visible:ring-[#B88E38]',
+    sarees: 'bg-white/10 hover:bg-white/15 text-[#F6EBD8] border-[#C5A46D]/40 hover:border-[#C5A46D]/70 focus-visible:ring-[#C5A46D]',
+    jewellery: 'bg-white/10 hover:bg-white/15 text-[#F4F4F2] border-white/25 hover:border-white/50 focus-visible:ring-[#C6C8CD]',
+  };
+
+  const collectionPhoneIconColors = {
+    food: 'text-[#173B2A]',
+    tea: 'text-[#8C6320]',
+    sarees: 'text-[#C5A46D]',
+    jewellery: 'text-[#C6C8CD]',
+  };
+
+  // 1. Hero Secondary CTA (Beside/below primary shopping CTA, maintains harmonious pairing)
   if (variant === 'hero') {
+    const styleClass = collectionHeroStyles[collectionId] || collectionHeroStyles.food;
+    const iconColor = collectionPhoneIconColors[collectionId] || collectionPhoneIconColors.food;
     return (
       <a
         href={`tel:${phoneRaw}`}
-        className={`inline-flex items-center gap-2 px-5 sm:px-6 py-3 rounded-full border text-xs font-mono font-medium tracking-wider uppercase transition-all duration-200 active:scale-95 shadow-xs hover:shadow-sm ${className}`}
+        className={`inline-flex items-center justify-center gap-2.5 px-5 py-2.5 h-10 rounded-full border text-xs font-semibold tracking-wider uppercase whitespace-nowrap transition-all duration-200 active:scale-95 shadow-xs hover:shadow-sm backdrop-blur-md ${styleClass} ${className}`}
         title={`Call to Order: ${phone} (${hours})`}
       >
-        <Phone className="w-3.5 h-3.5 text-[#C5A46D] shrink-0" />
+        <Phone className={`w-3.5 h-3.5 ${iconColor} shrink-0`} />
         <span>Call to Order</span>
       </a>
     );
