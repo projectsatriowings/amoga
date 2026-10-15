@@ -4,6 +4,7 @@ import { Heart, Leaf, ShoppingBag, Bell } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { resolveAvailability } from '../../../utils/inventory.js';
 import { RestockModal } from '../../../components/ui/RestockModal.jsx';
+import defaultTeaHero from '../../../assets/images/food-teas-hero.jpg';
 
 export function TeaProductCard({ product }) {
   const navigate = useNavigate();
@@ -63,10 +64,14 @@ export function TeaProductCard({ product }) {
             onClick={handleLinkClick}
           >
             <img
-              src={product.image}
+              src={product.image || defaultTeaHero}
               alt={product.name}
               className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = defaultTeaHero;
+              }}
             />
           </Link>
 

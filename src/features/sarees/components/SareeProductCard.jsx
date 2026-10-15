@@ -4,6 +4,7 @@ import { Heart, ShoppingBag, Eye, Check, Bell } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { resolveAvailability } from '../../../utils/inventory.js';
 import { RestockModal } from '../../../components/ui/RestockModal.jsx';
+import defaultSareeHero from '../../../assets/images/saree-banarasi.jpg';
 
 export function SareeProductCard({ product }) {
   const navigate = useNavigate();
@@ -69,10 +70,14 @@ export function SareeProductCard({ product }) {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={product.image}
+              src={product.image || defaultSareeHero}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-slow group-hover:scale-105"
               loading="lazy"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = defaultSareeHero;
+              }}
             />
           </Link>
 

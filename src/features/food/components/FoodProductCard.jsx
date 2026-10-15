@@ -4,6 +4,7 @@ import { Heart, ShoppingBag, Star, Bell } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { resolveAvailability } from '../../../utils/inventory.js';
 import { RestockModal } from '../../../components/ui/RestockModal.jsx';
+import defaultSoupHero from '../../../assets/images/food-soups-hero.jpg';
 
 export function FoodProductCard({ product }) {
   const navigate = useNavigate();
@@ -52,10 +53,14 @@ export function FoodProductCard({ product }) {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={product.image}
+              src={product.image || defaultSoupHero}
               alt={product.name}
               className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = defaultSoupHero;
+              }}
             />
           </Link>
 

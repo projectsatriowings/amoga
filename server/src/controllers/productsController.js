@@ -74,6 +74,17 @@ export function getProductsVersion(req, res) {
   });
 }
 
+function sanitizeImagePath(img) {
+  if (!img || typeof img !== 'string') return img;
+  if (img.startsWith('/src/assets/images/')) {
+    return img.replace('/src/assets/images/', '/images/');
+  }
+  if (img.startsWith('src/assets/images/')) {
+    return img.replace('src/assets/images/', '/images/');
+  }
+  return img;
+}
+
 export async function getProducts(req, res, next) {
   try {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -182,7 +193,7 @@ export async function getProducts(req, res, next) {
         originalPrice: p.originalPrice ? parseFloat(p.originalPrice.toString()) : null,
         discount: p.discount,
         currency: p.currency,
-        image: p.image,
+        image: sanitizeImagePath(p.image),
         gallery: p.gallery,
         packSize: p.packSize,
         inStock: pInStock,
@@ -298,7 +309,7 @@ export async function getProductBySlug(req, res, next) {
       originalPrice: product.originalPrice ? parseFloat(product.originalPrice.toString()) : null,
       discount: product.discount,
       currency: product.currency,
-      image: product.image,
+      image: sanitizeImagePath(product.image),
       gallery: product.gallery,
       packSize: product.packSize,
       inStock: pInStock,

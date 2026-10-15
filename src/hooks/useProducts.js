@@ -1,6 +1,57 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchProducts, fetchProductBySlug } from '../services/productsApi';
 
+import foodSoupsHero from '../assets/images/food-soups-hero.jpg';
+import gatekeeperFood from '../assets/images/gatekeeper-food.jpg';
+import foodTeasHero from '../assets/images/food-teas-hero.jpg';
+import sareeBanarasi from '../assets/images/saree-banarasi.jpg';
+import sareeKanchipuram from '../assets/images/saree-kanchipuram.jpg';
+import sareeSoftSilk from '../assets/images/saree-soft-silk.jpg';
+import sareeTissue from '../assets/images/saree-tissue.jpg';
+import jewelleryAuroraRing from '../assets/images/jewellery-aurora-ring.jpg';
+import jewelleryLeafRing from '../assets/images/jewellery-leaf-ring.jpg';
+import jewelleryLumiereNecklace from '../assets/images/jewellery-lumiere-necklace.jpg';
+import jewellerySolsticeRing from '../assets/images/jewellery-solstice-ring.jpg';
+import jewelleryVeriteNecklace from '../assets/images/jewellery-verite-necklace.jpg';
+
+const ASSET_PATH_MAP = {
+  '/src/assets/images/food-soups-hero.jpg': foodSoupsHero,
+  'src/assets/images/food-soups-hero.jpg': foodSoupsHero,
+  '/src/assets/images/gatekeeper-food.jpg': gatekeeperFood,
+  'src/assets/images/gatekeeper-food.jpg': gatekeeperFood,
+  '/src/assets/images/food-teas-hero.jpg': foodTeasHero,
+  'src/assets/images/food-teas-hero.jpg': foodTeasHero,
+  '/src/assets/images/saree-banarasi.jpg': sareeBanarasi,
+  'src/assets/images/saree-banarasi.jpg': sareeBanarasi,
+  '/src/assets/images/saree-kanchipuram.jpg': sareeKanchipuram,
+  'src/assets/images/saree-kanchipuram.jpg': sareeKanchipuram,
+  '/src/assets/images/saree-soft-silk.jpg': sareeSoftSilk,
+  'src/assets/images/saree-soft-silk.jpg': sareeSoftSilk,
+  '/src/assets/images/saree-tissue.jpg': sareeTissue,
+  'src/assets/images/saree-tissue.jpg': sareeTissue,
+  '/src/assets/images/jewellery-aurora-ring.jpg': jewelleryAuroraRing,
+  'src/assets/images/jewellery-aurora-ring.jpg': jewelleryAuroraRing,
+  '/src/assets/images/jewellery-leaf-ring.jpg': jewelleryLeafRing,
+  'src/assets/images/jewellery-leaf-ring.jpg': jewelleryLeafRing,
+  '/src/assets/images/jewellery-lumiere-necklace.jpg': jewelleryLumiereNecklace,
+  'src/assets/images/jewellery-lumiere-necklace.jpg': jewelleryLumiereNecklace,
+  '/src/assets/images/jewellery-solstice-ring.jpg': jewellerySolsticeRing,
+  'src/assets/images/jewellery-solstice-ring.jpg': jewellerySolsticeRing,
+  '/src/assets/images/jewellery-verite-necklace.jpg': jewelleryVeriteNecklace,
+  'src/assets/images/jewellery-verite-necklace.jpg': jewelleryVeriteNecklace,
+};
+
+function resolveProductImage(apiImage, fallbackImage) {
+  if (!apiImage) return fallbackImage;
+  if (typeof apiImage === 'string' && ASSET_PATH_MAP[apiImage]) {
+    return ASSET_PATH_MAP[apiImage];
+  }
+  if (typeof apiImage === 'string' && (apiImage.startsWith('/src/') || apiImage.startsWith('src/'))) {
+    return fallbackImage || apiImage;
+  }
+  return apiImage;
+}
+
 const PRODUCTS_SYNC_CHANNEL = 'amoga_products_sync';
 const PRODUCTS_SYNC_STORAGE_KEY = 'amoga_products_sync_timestamp';
 
@@ -185,8 +236,8 @@ function mergeProductWithFallback(apiItem, fallbackItem) {
   return {
     ...fallbackItem,
     ...apiItem,
-    // API data takes precedence, fallback supplies rich botanical highlights
-    image: apiItem.image || fallbackItem.image,
+    // API data takes precedence, but dev asset paths are safely resolved to bundled assets
+    image: resolveProductImage(apiItem.image, fallbackItem.image),
     botanicalName: apiItem.botanicalName || fallbackItem.botanicalName,
     standeeNotes: apiItem.standeeNotes || fallbackItem.standeeNotes,
     categoryName: apiItem.categoryName || fallbackItem.categoryName,
