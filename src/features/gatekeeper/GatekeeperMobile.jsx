@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { LiquidGlassCta } from './LiquidGlassCta';
 import { COLLECTIONS } from '../../data/collections';
-import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 function hexToRgba(hex, alpha = 1) {
   if (!hex || typeof hex !== 'string') return `rgba(248, 246, 240, ${alpha})`;
@@ -207,18 +206,13 @@ export function GatekeeperMobile({
                 {current.description}
               </p>
 
-              {/* Mobile CTA Buttons: Explore Collection directly followed by Call to Order */}
-              <div className="pt-3 flex flex-col items-start gap-2.5 w-full">
+              {/* Mobile CTA Button: Explore Collection */}
+              <div className="pt-3 flex flex-col items-start w-full">
                 <LiquidGlassCta
                   collectionId={current.id}
                   label={current.ctaText || 'EXPLORE COLLECTION'}
                   disabled={isExiting}
                   onClick={() => onSelect(current)}
-                  className="w-full sm:w-auto justify-center"
-                />
-                <CallToOrderAssistance
-                  variant="hero"
-                  collectionId={current.id}
                   className="w-full sm:w-auto justify-center"
                 />
               </div>

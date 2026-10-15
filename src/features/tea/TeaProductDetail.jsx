@@ -24,7 +24,6 @@ import { useProductDetail } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
 import { resolveAvailability } from '../../utils/inventory';
 import { RestockModal } from '../../components/ui/RestockModal';
-import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function TeaProductDetail() {
   const { slug } = useParams();
@@ -420,16 +419,13 @@ export function TeaProductDetail() {
                       <span>Buy Now</span>
                     </button>
                   </div>
-
-                  {/* Call to Order Option */}
-                  <CallToOrderAssistance variant="pdp" className="mt-2 bg-white border-[#B88E38]/25 text-[#2C1E11]" />
                 </>
               ) : (
                 <div className="p-4 rounded-xl bg-[#FFFDF5] border border-[#B88E38]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 text-[#2C1E11] font-medium">
                     <PhoneCall className="w-4 h-4 text-[#8C6320]" />
                     <span>
-                      Inquire / Direct Orders:{' '}
+                      Customer Inquiries:{' '}
                       <a href="tel:+919940018593" className="underline font-mono">+91 9940018593</a>
                       {' '}&bull;{' '}
                       <a href="tel:+918056700646" className="underline font-mono">+91 8056700646</a>

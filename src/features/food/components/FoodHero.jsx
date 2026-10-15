@@ -5,7 +5,6 @@ import { ArrowRight, Compass, Sparkles, Check } from 'lucide-react';
 import foodHeroImg from '../../../assets/images/gatekeeper-food.jpg';
 import { Container } from '../../../components/ui/Container';
 import { useCollection } from '../../../hooks/useCollection';
-import { CallToOrderAssistance } from '../../../components/common/CallToOrderAssistance';
 
 export function FoodHero() {
   const { collection } = useCollection('food');
@@ -86,7 +85,7 @@ export function FoodHero() {
               ))}
             </div>
 
-            {/* Rounded Outlined CTA & Secondary Call to Order */}
+            {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-4">
               <Link
                 to="/food/products"
@@ -95,11 +94,6 @@ export function FoodHero() {
                 <span>EXPLORE COLLECTION</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
-
-              <CallToOrderAssistance
-                variant="hero"
-                className="border-[#173B2A]/30 text-[#173B2A] bg-white/80 hover:bg-[#173B2A]/5"
-              />
 
               <Link
                 to="/"

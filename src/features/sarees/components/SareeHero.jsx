@@ -5,7 +5,6 @@ import { ArrowRight, Sparkles, Compass } from 'lucide-react';
 import sareeModelHero from '../../../assets/images/saree-model-hero.jpg';
 import { Container } from '../../../components/ui/Container';
 import { useCollection } from '../../../hooks/useCollection';
-import { CallToOrderAssistance } from '../../../components/common/CallToOrderAssistance';
 
 export function SareeHero() {
   const { collection } = useCollection('sarees');
@@ -157,11 +156,6 @@ export function SareeHero() {
                 <span>Explore Sarees</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
-
-              <CallToOrderAssistance
-                variant="hero"
-                className="rounded-xl border-[#C5A46D]/40 text-[#F6EBD8] bg-[#451523]/80 hover:bg-[#581c2d]"
-              />
 
               <a
                 href="#collections"

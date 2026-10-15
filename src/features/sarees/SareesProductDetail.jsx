@@ -25,7 +25,6 @@ import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { useProductDetail } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
-import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 export function SareesProductDetail() {
   const { slug } = useParams();
@@ -415,9 +414,6 @@ export function SareesProductDetail() {
                   <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
                 </button>
               </div>
-
-              {/* Call to Order Assistance */}
-              <CallToOrderAssistance variant="pdp" className="mt-2 bg-[#381222] border-[#C5A46D]/30 text-[#F6EBD8]" />
 
               {addedNotice && (
                 <div className="p-3 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs flex items-center gap-2">

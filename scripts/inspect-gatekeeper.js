@@ -48,7 +48,21 @@ async function checkHomepageIcons() {
     });
   });
 
-  console.log(JSON.stringify(info, null, 2));
+  console.log('Desktop panels:', JSON.stringify(info, null, 2));
+
+  // Test mobile viewport
+  await page.setViewport({ width: 375, height: 667, isMobile: true });
+  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle2' });
+  await new Promise(r => setTimeout(r, 1500));
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'gatekeeper-mobile.png') });
+
+  const mobileButtons = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('button, a'))
+      .map(b => b.innerText.trim())
+      .filter(t => t.length > 0 && (t.includes('EXPLORE') || t.includes('CALL') || t.includes('ORDER')));
+  });
+  console.log('Mobile action buttons found:', mobileButtons);
+
   await browser.close();
 }
 

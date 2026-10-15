@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LiquidGlassCta } from './LiquidGlassCta';
 import { COLLECTIONS } from '../../data/collections';
-import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 /**
  * Converts hex color code to rgba() string with specific opacity.
@@ -282,7 +281,7 @@ export function GatekeeperPanel({
             </p>
           </motion.div>
 
-          {/* CTA Buttons: Explore Collection directly followed by Call to Order in a left-aligned vertical stack */}
+          {/* Explore Collection CTA Button */}
           <motion.div
             animate={{
               opacity: isCollapsed ? 0 : 1,
@@ -290,7 +289,7 @@ export function GatekeeperPanel({
               marginTop: isCollapsed ? 0 : 18,
             }}
             transition={transitionConfig}
-            className="overflow-hidden flex flex-col items-start gap-2.5 z-20 w-full"
+            className="overflow-hidden flex flex-col items-start z-20"
           >
             <LiquidGlassCta
               collectionId={collection.id}
@@ -300,12 +299,6 @@ export function GatekeeperPanel({
                 onSelect(collection);
               }}
             />
-            <div onClick={(e) => e.stopPropagation()}>
-              <CallToOrderAssistance
-                variant="hero"
-                collectionId={collection.id}
-              />
-            </div>
           </motion.div>
         </div>
       </div>

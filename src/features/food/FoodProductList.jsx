@@ -7,7 +7,6 @@ import { FoodProductCard } from './components/FoodProductCard';
 import { Container } from '../../components/ui/Container';
 import { useProducts } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
-import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 const APPROVED_PANTRY_CATEGORIES = [
   { id: 'all', label: 'All Mixes' },
@@ -164,9 +163,6 @@ export function FoodProductList() {
             Explore a thoughtful selection of soup mixes, millet mixes and traditional rice podis, bringing convenience and familiar flavours to everyday meals.
           </p>
         </div>
-
-        {/* Call to Order Assistance Banner */}
-        <CallToOrderAssistance variant="banner" className="mb-6 bg-white border-[#E5E0D5]" />
 
         {/* Filter & Search Bar */}
         <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#E5E0D5] shadow-2xs mb-8 space-y-4">

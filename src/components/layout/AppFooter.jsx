@@ -5,7 +5,6 @@ import amogaLogo from '../../assets/images/amoga-logo.png';
 import { COLLECTIONS } from '../../data/collections';
 import { Container } from '../ui/Container';
 import { CollectionContactSection } from '../../features/collections/components/CollectionContactSection';
-import { CallToOrderAssistance } from '../common/CallToOrderAssistance';
 
 const CURRENT_YEAR = 2026;
 
@@ -141,12 +140,6 @@ export function AppFooter({ activeCollection }) {
                   <span>&bull;</span>
                   <a href="mailto:orders@amoga.com" className="hover:underline text-[#B9B8B5]">orders@amoga.com</a>
                 </div>
-              </div>
-            )}
-
-            {!isFood && !isTea && !isSarees && !isJewellery && (
-              <div className="p-3.5 rounded-xl bg-white/[0.05] border border-current/10 max-w-sm">
-                <CallToOrderAssistance variant="footer" />
               </div>
             )}
           </div>
