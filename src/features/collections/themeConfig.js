@@ -685,6 +685,12 @@ export function getCollectionTheme(collectionIdOrPath, directOverride = null) {
       }
 
       if (darkBg) {
+        if (!tc.sectionBg || !isDarkColor(tc.sectionBg)) {
+          p.sectionBg = tc.surfaceColor && isDarkColor(tc.surfaceColor) ? tc.surfaceColor : (p.cardBg && isDarkColor(p.cardBg) ? p.cardBg : '#242326');
+        }
+        if (p.mutedText && isDarkColor(p.mutedText)) {
+          p.mutedText = '#D8D4CC';
+        }
         p.headerBg = tc.bgColor || p.bg || baseTheme.palette.headerBg || '#242326';
         p.headerText = tc.textColor || p.text || baseTheme.palette.headerText || '#F7F3EB';
         if (tc.announcementBg) {
@@ -728,24 +734,42 @@ export function getThemeCssVariables(themeOrId, directOverride = null) {
   const p = theme.palette || {};
   const isDark = isDarkColor(p.bg);
 
-  // Compute robust defaults based on background luminance
-  const defaultHeading = isDark ? (p.text || '#F6EBD8') : (p.heading || p.text || '#173B2A');
-  const defaultText = isDark ? '#F6EBD8' : '#292820';
-  const defaultMutedText = isDark ? '#D8C6AD' : '#65675A';
-  const defaultInputBg = isDark ? '#F6EBD8' : (p.inputBg || p.cardBg || '#F8F7F0');
-  const defaultInputText = '#292820';
-  const defaultInputPlaceholder = '#746F63';
+  // Compute robust defaults based on background luminance to guarantee crisp letter readability
+  const defaultHeading = isDark
+    ? (p.heading && !isDarkColor(p.heading) ? p.heading : (p.text && !isDarkColor(p.text) ? p.text : '#F6EBD8'))
+    : (p.heading && isDarkColor(p.heading) ? p.heading : (p.text && isDarkColor(p.text) ? p.text : '#173B2A'));
+  const defaultText = isDark
+    ? (p.text && !isDarkColor(p.text) ? p.text : '#F6EBD8')
+    : (p.text && isDarkColor(p.text) ? p.text : '#292820');
+
+  // Muted text MUST contrast with background - if background is dark, muted text cannot be dark
+  const resolvedMuted = isDark
+    ? (p.mutedText && !isDarkColor(p.mutedText) ? p.mutedText : '#D8D4CC')
+    : (p.mutedText && isDarkColor(p.mutedText) ? p.mutedText : '#65675A');
+
+  // Section and card surfaces MUST be in the same luminance realm as page background
+  const resolvedSectionBg = isDark
+    ? (p.sectionBg && isDarkColor(p.sectionBg) ? p.sectionBg : (p.cardBg && isDarkColor(p.cardBg) ? p.cardBg : '#25272A'))
+    : (p.sectionBg && !isDarkColor(p.sectionBg) ? p.sectionBg : '#EAE8DC');
+
+  const resolvedCardBg = isDark
+    ? (p.cardBg && isDarkColor(p.cardBg) ? p.cardBg : '#202124')
+    : (p.cardBg && !isDarkColor(p.cardBg) ? p.cardBg : '#FAF9F4');
+
+  const defaultInputBg = isDark ? '#2C2B30' : (p.inputBg || p.cardBg || '#F8F7F0');
+  const defaultInputText = isDark ? '#F6EBD8' : '#292820';
+  const defaultInputPlaceholder = isDark ? '#A9A49B' : '#746F63';
   const defaultButtonBg = p.buttonBg || p.accent || (isDark ? '#C5A46D' : '#3F7B43');
   const defaultButtonText = p.buttonText || (isDark ? '#2C0E1A' : '#FFFFFF');
 
   return {
     '--collection-page-bg': p.bg || (isDark ? '#2C0E1A' : '#F3F0E7'),
-    '--collection-section-bg': p.sectionBg || p.bg || (isDark ? '#35121F' : '#EAE8DC'),
-    '--collection-card-bg': p.cardBg || (isDark ? '#35121F' : '#FAF9F4'),
+    '--collection-section-bg': resolvedSectionBg,
+    '--collection-card-bg': resolvedCardBg,
     '--collection-card-border': p.cardBorder || p.border || (isDark ? '#C5A46D' : '#D9DCCD'),
-    '--collection-text': p.text || defaultText,
-    '--collection-text-muted': p.mutedText || defaultMutedText,
-    '--collection-heading': p.heading || defaultHeading,
+    '--collection-text': defaultText,
+    '--collection-text-muted': resolvedMuted,
+    '--collection-heading': defaultHeading,
     '--collection-accent': p.accent || (isDark ? '#C5A46D' : '#3F7B43'),
     '--collection-accent-hover': p.accentHover || p.accent || (isDark ? '#B18A50' : '#2F6334'),
     '--collection-accent-light': p.accentLight || 'rgba(63, 123, 67, 0.12)',
@@ -758,17 +782,17 @@ export function getThemeCssVariables(themeOrId, directOverride = null) {
     '--collection-button-bg': defaultButtonBg,
     '--collection-button-text': defaultButtonText,
     '--collection-btn-text': defaultButtonText,
-    '--collection-notice-bg': p.noticeBg || (isDark ? '#35121F' : (p.sectionBg || '#EAE8DC')),
+    '--collection-notice-bg': p.noticeBg || (isDark ? '#2C2B30' : (p.sectionBg || '#EAE8DC')),
     '--collection-notice-border': p.noticeBorder || (isDark ? 'rgba(197, 164, 109, 0.45)' : (p.border || '#D9DCCD')),
     '--collection-notice-text': p.noticeText || (isDark ? '#F6EBD8' : (p.text || '#292820')),
     '--collection-notice-title': p.noticeTitle || (isDark ? '#C5A46D' : (p.heading || '#173B2A')),
     '--collection-notice-icon': p.noticeIcon || (isDark ? '#C5A46D' : (p.accent || '#3F7B43')),
     // Fallbacks for standard variables
     '--bg-primary': p.bg || (isDark ? '#2C0E1A' : '#F3F0E7'),
-    '--bg-surface': p.cardBg || (isDark ? '#35121F' : '#FAF9F4'),
-    '--bg-elevated': p.sectionBg || (isDark ? '#35121F' : '#EAE8DC'),
-    '--text-primary': p.text || defaultText,
-    '--text-secondary': p.mutedText || defaultMutedText,
+    '--bg-surface': resolvedCardBg,
+    '--bg-elevated': resolvedSectionBg,
+    '--text-primary': defaultText,
+    '--text-secondary': resolvedMuted,
     '--accent-primary': p.accent || (isDark ? '#C5A46D' : '#3F7B43'),
     '--border-subtle': p.border || (isDark ? 'rgba(197, 164, 109, 0.35)' : '#D9DCCD'),
   };

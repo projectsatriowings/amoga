@@ -53,12 +53,18 @@ export function AdminOrders() {
         status,
         paymentStatus,
         q: searchQuery,
+        sortBy: 'createdAt',
+        order: 'desc',
       });
 
       const res = await adminFetch(`/api/admin/orders?${params.toString()}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Failed to load orders');
-      setOrders(json.orders);
+      // Always sort by most recent record first
+      const recentOrders = [...(json.orders || [])].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setOrders(recentOrders);
       setPagination(json.pagination);
     } catch (err) {
       setError(err.message);

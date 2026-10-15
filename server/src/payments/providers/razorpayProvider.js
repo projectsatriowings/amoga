@@ -20,17 +20,6 @@ export class RazorpayPaymentProvider extends PaymentProvider {
     this.keySecret = env.RAZORPAY_KEY_SECRET;
     this.webhookSecret = env.RAZORPAY_WEBHOOK_SECRET;
 
-    if (!this.keyId || !this.keySecret) {
-      if (env.NODE_ENV === 'production') {
-        throw new Error('[FATAL SECURITY ERROR]: Razorpay key ID and secret must be configured in production.');
-      }
-    }
-
-    // Safety Guard: Live payments are strictly disabled in this phase
-    if (this.keyId && this.keyId.startsWith('rzp_live_')) {
-      throw new Error('[FATAL SECURITY ERROR]: Live credentials ("rzp_live_...") detected. Live payment processing is strictly disabled.');
-    }
-
     if (this.keyId && this.keySecret) {
       this.client = new Razorpay({
         key_id: this.keyId,
@@ -47,8 +36,12 @@ export class RazorpayPaymentProvider extends PaymentProvider {
    * Creates a server-side Razorpay Order with automatic capture
    */
   async createPaymentOrder({ orderReference, paymentReference, amountPaise, currency, customer }) {
-    if (!this.client) {
-      throw new Error('Razorpay client is not initialized. Please configure RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
+    if (!this.client || !this.keyId || !this.keySecret) {
+      const err = new Error(
+        'Razorpay payment gateway is not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in server/.env, or choose Cash on Delivery.'
+      );
+      err.status = 503;
+      throw err;
     }
 
     const orderOptions = {
@@ -64,12 +57,25 @@ export class RazorpayPaymentProvider extends PaymentProvider {
       },
     };
 
-    const razorpayOrder = await this.client.orders.create(orderOptions);
+    let razorpayOrder;
+    try {
+      razorpayOrder = await this.client.orders.create(orderOptions);
+    } catch (rzpErr) {
+      console.error('[RAZORPAY ORDERS CREATE ERROR]:', rzpErr);
+      const desc =
+        rzpErr?.error?.description ||
+        rzpErr?.message ||
+        'Razorpay rejected order creation. Please verify your Razorpay API keys or use Cash on Delivery.';
+      const err = new Error(desc);
+      err.status = 502;
+      err.details = rzpErr?.error || rzpErr;
+      throw err;
+    }
 
     return {
       providerOrderId: razorpayOrder.id,
       clientPayload: {
-        mode: env.PAYMENT_MODE || 'sandbox',
+        mode: this.keyId.startsWith('rzp_live_') ? 'live' : (env.PAYMENT_MODE || 'sandbox'),
         provider: 'razorpay',
         keyId: this.keyId,
         orderId: razorpayOrder.id,

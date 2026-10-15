@@ -83,6 +83,7 @@ export function AdminCustomerInquiries() {
         limit: '12',
         status: statusFilter,
         collectionId: collectionFilter,
+        sort: 'desc',
       });
 
       if (query && query.trim()) params.append('search', query.trim());
@@ -93,7 +94,12 @@ export function AdminCustomerInquiries() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Failed to load inquiries');
 
-      setInquiries(json.inquiries || []);
+      // Always sort by most recent inquiry date first
+      const recentInquiries = [...(json.inquiries || [])].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      setInquiries(recentInquiries);
       setStats(json.stats || { totalAllTime: 0, newCount: 0, inProgressCount: 0, resolvedCount: 0 });
       setPagination(json.pagination || { page: 1, totalPages: 1, total: 0 });
     } catch (err) {

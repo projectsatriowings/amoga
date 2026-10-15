@@ -342,7 +342,7 @@ export const CartPage = () => {
                             />
                             <div className="min-w-0 flex-1 space-y-1">
                               <h3
-                                className="text-sm font-medium font-serif truncate"
+                                className="text-sm font-medium font-serif break-words"
                                 style={{ color: 'var(--collection-heading)' }}
                               >
                                 {saved.name}

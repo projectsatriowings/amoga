@@ -117,8 +117,11 @@ export async function listInventory(req, res) {
           sku: v.sku || v.sourceId || v.id,
           stockQuantity: vOnHand, // on-hand
           onHandQuantity: vOnHand,
+          onHand: vOnHand,
           reservedQuantity: vReserved,
+          reserved: vReserved,
           availableQuantity: vAvailable,
+          available: vAvailable,
           lowStockThreshold: vThreshold,
           inStock: v.inStock && vAvailable > 0,
           status: vAvailable <= 0 ? 'OUT_OF_STOCK' : (vAvailable <= vThreshold ? 'LOW_STOCK' : 'IN_STOCK'),
@@ -135,8 +138,11 @@ export async function listInventory(req, res) {
         collectionName: p.collection.name,
         stockQuantity: pOnHand, // backwards compatibility
         onHandQuantity: pOnHand,
+        onHand: pOnHand,
         reservedQuantity: pReserved,
+        reserved: pReserved,
         availableQuantity: pAvailable,
+        available: pAvailable,
         lowStockThreshold: pThreshold,
         inStock: p.inStock && pAvailable > 0,
         status: pAvailable <= 0 ? 'OUT_OF_STOCK' : (pAvailable <= pThreshold ? 'LOW_STOCK' : 'IN_STOCK'),

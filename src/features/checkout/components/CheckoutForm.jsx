@@ -458,7 +458,7 @@ export const CheckoutForm = () => {
                         </span>
                       )}
                     </div>
-                    <p className="text-[#5C554E] truncate">{addr.addressLine1}</p>
+                    <p className="text-[#5C554E] break-words">{addr.addressLine1}</p>
                     <p className="text-[#8C7A6B] text-[11px]">
                       {addr.city}, {addr.state} — {addr.pincode}
                     </p>

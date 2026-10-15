@@ -148,9 +148,25 @@ export async function resolveAndValidateCart(cartItems = []) {
     let selectedVariant = null;
 
     if (item.variantId) {
-      selectedVariant = product.variants.find(
-        (v) => v.id === item.variantId || v.sourceId === item.variantId
-      );
+      const cleanVarId = String(item.variantId).trim();
+      const strippedSize = cleanVarId.replace(/^size[-_ ]*/i, '').trim().toLowerCase();
+      const variantSlug = strippedSize.replace(/\s+/g, '-');
+      const itemVarName = item.selectedVariant?.name
+        ? String(item.selectedVariant.name).replace(/^size[-_ ]*/i, '').trim().toLowerCase()
+        : null;
+
+      selectedVariant = product.variants.find((v) => {
+        if (!v) return false;
+        if (v.id === cleanVarId || v.sourceId === cleanVarId) return true;
+        if (v.sourceId && (v.sourceId.toLowerCase() === variantSlug || v.sourceId.toLowerCase() === cleanVarId.toLowerCase())) return true;
+        if (v.name && (v.name.toLowerCase() === strippedSize || v.name.toLowerCase() === cleanVarId.toLowerCase())) return true;
+        if (itemVarName && v.name && v.name.toLowerCase() === itemVarName) return true;
+        if (v.attributes && typeof v.attributes === 'object') {
+          const attrSize = String(v.attributes.size || '').trim().toLowerCase();
+          if (attrSize && (attrSize === strippedSize || attrSize === cleanVarId.toLowerCase())) return true;
+        }
+        return false;
+      });
 
       if (!selectedVariant) {
         errors.push(`Selected variant "${item.variantId}" is invalid for product "${product.name}".`);

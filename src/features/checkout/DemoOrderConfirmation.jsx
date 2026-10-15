@@ -300,7 +300,7 @@ export const DemoOrderConfirmation = () => {
                         <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--collection-accent)]">
                           {item.collectionId || item.collectionName || 'Collection'}
                         </span>
-                        <h3 className="font-medium text-[var(--collection-text)] truncate">
+                        <h3 className="font-medium text-[var(--collection-text)] break-words">
                           {item.name || item.productName}
                         </h3>
                         {(item.selectedVariant?.name || item.variantName) && (

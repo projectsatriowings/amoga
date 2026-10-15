@@ -48,17 +48,64 @@ export async function listCustomers(req, res) {
       }
     }
 
+    // Also include registered customer accounts that may not have placed orders yet
+    const registeredCustomers = await prisma.customer.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        createdAt: true,
+        addresses: {
+          take: 1,
+          orderBy: { isDefault: 'desc' },
+          select: { city: true, state: true, pincode: true },
+        },
+      },
+    });
+
+    const existingEmails = new Set(customers.map((c) => c.email.toLowerCase()));
+
+    for (const reg of registeredCustomers) {
+      if (!existingEmails.has(reg.email.toLowerCase())) {
+        existingEmails.add(reg.email.toLowerCase());
+        const addr = reg.addresses?.[0] || {};
+        customers.push({
+          email: reg.email,
+          name: reg.name,
+          phone: reg.phone || '—',
+          city: addr.city || '—',
+          state: addr.state || '—',
+          pincode: addr.pincode || '—',
+          totalOrders: 0,
+          totalSpent: 0,
+          firstOrderAt: null,
+          lastOrderAt: reg.createdAt,
+          createdAt: reg.createdAt,
+          isRegisteredOnly: true,
+        });
+      }
+    }
+
     // Filter by search query if present
     if (q && q.trim()) {
       const searchTerm = q.trim().toLowerCase();
       customers = customers.filter(
         (c) =>
-          c.name.toLowerCase().includes(searchTerm) ||
-          c.email.toLowerCase().includes(searchTerm) ||
-          c.phone.toLowerCase().includes(searchTerm) ||
-          c.city.toLowerCase().includes(searchTerm)
+          c.name?.toLowerCase().includes(searchTerm) ||
+          c.email?.toLowerCase().includes(searchTerm) ||
+          c.phone?.toLowerCase().includes(searchTerm) ||
+          c.city?.toLowerCase().includes(searchTerm)
       );
     }
+
+    // Always sort by most recent activity / order / registration date first (never alphabetical)
+    customers.sort((a, b) => {
+      const timeA = new Date(b.lastOrderAt || b.createdAt || 0).getTime();
+      const timeB = new Date(a.lastOrderAt || a.createdAt || 0).getTime();
+      return timeA - timeB;
+    });
 
     const total = customers.length;
     const paginated = customers.slice((pageNum - 1) * limitNum, pageNum * limitNum);

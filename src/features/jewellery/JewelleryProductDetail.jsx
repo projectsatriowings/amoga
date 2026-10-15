@@ -108,7 +108,28 @@ export function JewelleryProductDetail() {
     }
 
     // Use variant convention if size is selected
-    const variantObj = activeSize ? { id: `size-${activeSize}`, name: `Size ${activeSize}` } : null;
+    const matchedVariant = Array.isArray(product.variants)
+      ? product.variants.find((v) => {
+          if (!activeSize) return false;
+          const cleanSize = activeSize.trim().toLowerCase();
+          const slug = cleanSize.replace(/\s+/g, '-');
+          return (
+            v.name?.toLowerCase() === cleanSize ||
+            v.sourceId?.toLowerCase() === slug ||
+            v.sourceId?.toLowerCase() === `size-${slug}` ||
+            v.attributes?.size?.toLowerCase() === cleanSize
+          );
+        })
+      : null;
+
+    const variantObj = activeSize
+      ? {
+          id: matchedVariant?.id || matchedVariant?.sourceId || `size-${activeSize}`,
+          sourceId: matchedVariant?.sourceId || activeSize.toLowerCase().replace(/\s+/g, '-'),
+          name: matchedVariant?.name || `Size ${activeSize}`,
+        }
+      : null;
+
     const res = addToCart(product, quantity, variantObj);
     if (res?.success) {
       setAddedNotice(true);
@@ -132,7 +153,28 @@ export function JewelleryProductDetail() {
       return;
     }
 
-    const variantObj = activeSize ? { id: `size-${activeSize}`, name: `Size ${activeSize}` } : null;
+    const matchedVariant = Array.isArray(product.variants)
+      ? product.variants.find((v) => {
+          if (!activeSize) return false;
+          const cleanSize = activeSize.trim().toLowerCase();
+          const slug = cleanSize.replace(/\s+/g, '-');
+          return (
+            v.name?.toLowerCase() === cleanSize ||
+            v.sourceId?.toLowerCase() === slug ||
+            v.sourceId?.toLowerCase() === `size-${slug}` ||
+            v.attributes?.size?.toLowerCase() === cleanSize
+          );
+        })
+      : null;
+
+    const variantObj = activeSize
+      ? {
+          id: matchedVariant?.id || matchedVariant?.sourceId || `size-${activeSize}`,
+          sourceId: matchedVariant?.sourceId || activeSize.toLowerCase().replace(/\s+/g, '-'),
+          name: matchedVariant?.name || `Size ${activeSize}`,
+        }
+      : null;
+
     const res = initiateBuyNow(product, quantity, variantObj);
     if (res?.success) {
       navigate('/checkout');

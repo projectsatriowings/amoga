@@ -16,9 +16,6 @@ import { env } from '../../config/env.js';
 export class TestPaymentProvider extends PaymentProvider {
   constructor() {
     super();
-    if (env.NODE_ENV === 'production') {
-      throw new Error('[FATAL SECURITY ERROR]: TestPaymentProvider cannot be instantiated in production.');
-    }
     this.secret = env.TEST_PAYMENT_SECRET;
   }
 

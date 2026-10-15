@@ -9,7 +9,7 @@ export function errorHandler(err, req, res, _next) {
   console.error('[SERVER ERROR]:', err);
 
   const status = err.status || 500;
-  const message = status === 500 ? 'Internal server error occurred' : err.message;
+  const message = err.message || 'Internal server error occurred';
 
   res.status(status).json({
     success: false,

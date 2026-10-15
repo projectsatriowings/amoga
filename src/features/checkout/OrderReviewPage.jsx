@@ -344,21 +344,20 @@ export const OrderReviewPage = () => {
       }
     } catch (err) {
       console.warn('Backend order or payment initialization returned error:', err);
+      setIsSubmitting(false);
+
       if (err.status === 409 || err.code === 'INSUFFICIENT_STOCK') {
         setSimulationError(err.message || 'One or more items in your bag are out of stock or exceed current warehouse inventory. Please adjust quantities.');
-        setIsSubmitting(false);
         return;
       }
       if (err.status === 422 && err.details) {
         setSimulationError(Array.isArray(err.details) ? err.details.join(' ') : String(err.details));
-        setIsSubmitting(false);
         return;
       }
 
-      // If backend error has a specific message, display it instead of silently placing an order
-      if (err.message && err.status) {
-        setSimulationError(`Order processing failed: ${err.message}`);
-        setIsSubmitting(false);
+      // If backend error has a specific message, display it clearly
+      if (err.message) {
+        setSimulationError(err.message);
         return;
       }
 
@@ -656,7 +655,7 @@ export const OrderReviewPage = () => {
                       <strong className="text-[var(--collection-text)]">{customerDetails.pincode}</strong>
                     </p>
                     {customerDetails.instructions && (
-                      <p className="mt-2 text-[11px] italic text-[var(--collection-text-muted)] bg-[var(--collection-section-bg)] p-2 rounded-lg border border-[var(--collection-border)] break-words">
+                      <p className="mt-2 text-[11px] italic text-[var(--collection-text)] bg-black/5 dark:bg-white/10 p-2.5 rounded-lg border border-[var(--collection-border)] break-words">
                         Instructions: &ldquo;{customerDetails.instructions}&rdquo;
                       </p>
                     )}
@@ -688,7 +687,7 @@ export const OrderReviewPage = () => {
                 <label
                   className={`relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all ${
                     paymentMethod === 'online'
-                      ? 'border-[var(--collection-accent)] bg-[var(--collection-section-bg)] shadow-xs ring-1 ring-[var(--collection-accent)]'
+                      ? 'border-[var(--collection-accent)] bg-black/5 dark:bg-white/10 shadow-xs ring-1 ring-[var(--collection-accent)]'
                       : 'border-[var(--collection-border)] hover:border-[var(--collection-accent)]/50 bg-[var(--collection-card-bg)]'
                   }`}
                 >
@@ -706,7 +705,7 @@ export const OrderReviewPage = () => {
                       className="accent-[var(--collection-accent)]"
                     />
                   </div>
-                  <p className="text-[11px] text-[var(--collection-text-muted)] leading-relaxed">
+                  <p className="text-[11px] text-[var(--collection-text)] opacity-85 leading-relaxed">
                     UPI (Google Pay, PhonePe, Paytm), Credit & Debit Cards, Netbanking via Razorpay.
                   </p>
                 </label>
@@ -715,7 +714,7 @@ export const OrderReviewPage = () => {
                 <label
                   className={`relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all ${
                     paymentMethod === 'cod'
-                      ? 'border-[var(--collection-accent)] bg-[var(--collection-section-bg)] shadow-xs ring-1 ring-[var(--collection-accent)]'
+                      ? 'border-[var(--collection-accent)] bg-black/5 dark:bg-white/10 shadow-xs ring-1 ring-[var(--collection-accent)]'
                       : 'border-[var(--collection-border)] hover:border-[var(--collection-accent)]/50 bg-[var(--collection-card-bg)]'
                   }`}
                 >
@@ -733,7 +732,7 @@ export const OrderReviewPage = () => {
                       className="accent-[var(--collection-accent)]"
                     />
                   </div>
-                  <p className="text-[11px] text-[var(--collection-text-muted)] leading-relaxed">
+                  <p className="text-[11px] text-[var(--collection-text)] opacity-85 leading-relaxed">
                     Pay in cash or UPI upon courier arrival at your delivery doorstep.
                   </p>
                 </label>
@@ -790,17 +789,17 @@ export const OrderReviewPage = () => {
                             {collectionLabel}
                           </span>
                           {categoryName && (
-                            <span className="text-[11px] text-[var(--collection-text-muted)] truncate">
+                            <span className="text-[11px] text-[var(--collection-text-muted)] break-words">
                               • {categoryName}
                             </span>
                           )}
                           {variantName && (
-                            <span className="text-[11px] text-[var(--collection-text)] font-medium truncate">
+                            <span className="text-[11px] text-[var(--collection-text)] font-medium break-words">
                               • {variantName}
                             </span>
                           )}
                         </div>
-                        <h3 className="font-medium text-sm text-[var(--collection-text)] truncate">
+                        <h3 className="font-medium text-sm text-[var(--collection-text)] break-words">
                           {name}
                         </h3>
                         <div className="text-[var(--collection-text-muted)] mt-1">
@@ -949,7 +948,7 @@ export const OrderReviewPage = () => {
                   )}
                 </button>
 
-                <p className="mt-2.5 text-[11px] text-center text-[var(--collection-text-muted)] leading-tight">
+                <p className="mt-2.5 text-[11px] text-center text-[var(--collection-text)] opacity-85 leading-tight">
                   {paymentMethod === 'cod'
                     ? 'Payment collected upon courier arrival • Cash or UPI accepted'
                     : 'Encrypted Payment Gateway • Authoritative Server Pricing in INR'}
@@ -960,14 +959,14 @@ export const OrderReviewPage = () => {
               <div className="pt-4 border-t border-[var(--collection-border)] flex flex-col gap-2 text-center text-xs">
                 <Link
                   to="/checkout"
-                  className="text-[var(--collection-text-muted)] hover:text-[var(--collection-accent)] font-medium flex items-center justify-center gap-1"
+                  className="text-[var(--collection-text)] opacity-85 hover:opacity-100 hover:text-[var(--collection-accent)] font-medium flex items-center justify-center gap-1 transition-colors"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Return to Checkout Form</span>
                 </Link>
                 <Link
                   to="/cart"
-                  className="text-[var(--collection-text-muted)]/80 hover:text-[var(--collection-text)] font-medium"
+                  className="text-[var(--collection-text)] opacity-75 hover:opacity-100 hover:text-[var(--collection-accent)] font-medium transition-colors"
                 >
                   Return to Shopping Bag
                 </Link>
@@ -999,20 +998,49 @@ export const OrderReviewPage = () => {
             className="bg-[var(--collection-card-bg)] rounded-3xl max-w-lg w-full border border-[var(--collection-border)] shadow-2xl overflow-hidden flex flex-col transition-colors overscroll-contain select-text"
           >
             {/* Modal Header */}
-            <div className="bg-[#1A060E] text-white px-6 py-5 flex items-center justify-between border-b border-[#3D141E]">
+            <div
+              className="px-6 py-5 flex items-center justify-between border-b transition-colors"
+              style={{
+                backgroundColor: 'var(--collection-page-bg)',
+                borderColor: 'var(--collection-border)',
+                color: 'var(--collection-heading)',
+              }}
+            >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-xs">
+                <div
+                  className="w-10 h-10 rounded-xl border flex items-center justify-center shadow-xs shrink-0"
+                  style={{
+                    backgroundColor: 'var(--collection-accent-light, rgba(255,255,255,0.08))',
+                    borderColor: 'var(--collection-border)',
+                    color: 'var(--collection-accent)',
+                  }}
+                >
                   <Lock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-lg font-semibold tracking-wide text-white">
+                  <h3
+                    className="font-serif text-lg font-semibold tracking-wide"
+                    style={{ color: 'var(--collection-heading)' }}
+                  >
                     Amoga Secure Checkout
                   </h3>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] uppercase tracking-widest font-semibold px-2.5 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md text-amber-300 border border-amber-400/40 shadow-2xs">
+                    <span
+                      className="text-[10px] uppercase tracking-widest font-semibold px-2.5 py-0.5 rounded-full border shadow-2xs"
+                      style={{
+                        backgroundColor: 'var(--collection-accent-light, rgba(255,255,255,0.12))',
+                        color: 'var(--collection-accent)',
+                        borderColor: 'var(--collection-border)',
+                      }}
+                    >
                       Test Mode Simulation
                     </span>
-                    <span className="text-xs text-white/80">• No Real Money Charged</span>
+                    <span
+                      className="text-xs opacity-80"
+                      style={{ color: 'var(--collection-text-muted)' }}
+                    >
+                      • No Real Money Charged
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1022,7 +1050,8 @@ export const OrderReviewPage = () => {
                   if (!isProcessingPayment) setPaymentModalOpen(false);
                 }}
                 disabled={isProcessingPayment}
-                className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                style={{ color: 'var(--collection-heading)' }}
                 aria-label="Close payment modal"
               >
                 <X className="w-5 h-5" />
@@ -1030,30 +1059,79 @@ export const OrderReviewPage = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-5 bg-[var(--collection-card-bg)]">
+            <div
+              className="p-6 space-y-5 transition-colors"
+              style={{ backgroundColor: 'var(--collection-card-bg)' }}
+            >
               {/* Order & Payment References */}
-              <div className="bg-[var(--collection-section-bg)] rounded-2xl p-4 border border-[var(--collection-border)] space-y-2 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="text-[var(--collection-text-muted)]">Order Reference:</span>
-                  <span className="font-mono font-bold text-[var(--collection-accent)]">
+              <div
+                className="rounded-2xl p-5 border space-y-3 text-xs transition-colors"
+                style={{
+                  backgroundColor: 'var(--collection-section-bg)',
+                  borderColor: 'var(--collection-border)',
+                  color: 'var(--collection-text)',
+                }}
+              >
+                <div className="flex justify-between items-center gap-2">
+                  <span
+                    className="font-medium"
+                    style={{ color: 'var(--collection-text-muted)' }}
+                  >
+                    Order Reference:
+                  </span>
+                  <span
+                    className="font-mono font-bold text-xs sm:text-sm tracking-wider"
+                    style={{ color: 'var(--collection-heading)' }}
+                  >
                     {paymentAttempt.orderReference}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[var(--collection-text-muted)]">Payment Attempt:</span>
-                  <span className="font-mono font-medium text-[var(--collection-text)]">
+                <div className="flex justify-between items-center gap-2">
+                  <span
+                    className="font-medium"
+                    style={{ color: 'var(--collection-text-muted)' }}
+                  >
+                    Payment Attempt:
+                  </span>
+                  <span
+                    className="font-mono font-medium text-xs break-all"
+                    style={{ color: 'var(--collection-text)' }}
+                  >
                     {paymentAttempt.paymentReference}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[var(--collection-text-muted)]">Provider Adapter:</span>
-                  <span className="font-semibold text-[var(--collection-accent)] uppercase tracking-wider text-[11px]">
+                <div className="flex justify-between items-center gap-2">
+                  <span
+                    className="font-medium"
+                    style={{ color: 'var(--collection-text-muted)' }}
+                  >
+                    Provider Adapter:
+                  </span>
+                  <span
+                    className="font-mono font-semibold uppercase tracking-wider text-[11px] px-2 py-0.5 rounded border"
+                    style={{
+                      color: 'var(--collection-accent)',
+                      borderColor: 'var(--collection-border)',
+                      backgroundColor: 'var(--collection-card-bg)',
+                    }}
+                  >
                     {paymentAttempt.provider} (Isolated Test Adapter)
                   </span>
                 </div>
-                <div className="pt-2 border-t border-[var(--collection-border)] flex justify-between items-baseline">
-                  <span className="font-semibold text-[var(--collection-heading)] text-sm">Authoritative Total:</span>
-                  <span className="font-sans text-xl font-bold text-[var(--collection-accent)] tabular-nums">
+                <div
+                  className="pt-3 border-t flex justify-between items-baseline"
+                  style={{ borderColor: 'var(--collection-border)' }}
+                >
+                  <span
+                    className="font-semibold text-sm"
+                    style={{ color: 'var(--collection-heading)' }}
+                  >
+                    Authoritative Total:
+                  </span>
+                  <span
+                    className="font-sans text-2xl font-bold tabular-nums"
+                    style={{ color: 'var(--collection-accent)' }}
+                  >
                     {formatINR(paymentAttempt.amount || totals.subtotal)}
                   </span>
                 </div>
@@ -1072,12 +1150,24 @@ export const OrderReviewPage = () => {
               )}
 
               {/* Test Mode Simulation Disclaimer */}
-              <div className="p-3.5 bg-amber-950/30 rounded-xl border border-amber-500/30 text-[11px] text-amber-200/90 leading-relaxed">
-                <p className="font-semibold text-amber-300 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                  Engineering Test Architecture
+              <div
+                className="p-3.5 rounded-xl border text-[11px] leading-relaxed transition-colors"
+                style={{
+                  backgroundColor: 'var(--collection-accent-light, rgba(255,255,255,0.06))',
+                  borderColor: 'var(--collection-border)',
+                }}
+              >
+                <p
+                  className="font-semibold flex items-center gap-1.5"
+                  style={{ color: 'var(--collection-heading)' }}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" style={{ color: 'var(--collection-accent)' }} />
+                  <span>Engineering Test Architecture</span>
                 </p>
-                <p className="mt-1 text-amber-100/80">
+                <p
+                  className="mt-1 leading-relaxed opacity-90 text-[11px]"
+                  style={{ color: 'var(--collection-text)' }}
+                >
                   Payment provider has not yet been selected. This interactive modal validates the backend signature verification, database transaction isolation, and idempotency pipeline.
                 </p>
               </div>

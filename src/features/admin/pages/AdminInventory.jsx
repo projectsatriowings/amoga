@@ -137,18 +137,26 @@ export function AdminInventory() {
   }, [page, collectionId, statusFilter, debouncedSearch]);
 
   const handleOpenAdjust = (item, variant = null) => {
+    const onHand = variant
+      ? (variant.onHandQuantity ?? variant.onHand ?? variant.stockQuantity ?? 0)
+      : (item.onHandQuantity ?? item.onHand ?? item.stockQuantity ?? 0);
+    const reserved = variant
+      ? (variant.reservedQuantity ?? variant.reserved ?? 0)
+      : (item.reservedQuantity ?? item.reserved ?? 0);
+    const available = variant
+      ? (variant.availableQuantity ?? variant.available ?? Math.max(0, onHand - reserved))
+      : (item.availableQuantity ?? item.available ?? Math.max(0, onHand - reserved));
+
     setAdjustTarget({
       productId: item.id,
       productName: item.name,
       variantId: variant ? variant.id : null,
       variantName: variant ? variant.name : null,
-      currentStock: variant ? variant.onHand ?? variant.stockQuantity : item.onHand ?? item.stockQuantity,
-      reserved: variant ? variant.reserved ?? variant.reservedQuantity ?? 0 : item.reserved ?? item.reservedQuantity ?? 0,
-      available: variant ? variant.available ?? variant.stockQuantity : item.available ?? item.stockQuantity,
+      currentStock: onHand,
+      reserved,
+      available,
     });
-    setNewStock(
-      String(variant ? variant.onHand ?? variant.stockQuantity : item.onHand ?? item.stockQuantity)
-    );
+    setNewStock(String(onHand));
     setReason('');
     setAdjustError(null);
   };
@@ -467,9 +475,9 @@ export function AdminInventory() {
               </thead>
               <tbody className="divide-y divide-[#EAE4D9]">
                 {inventory.map((item) => {
-                  const onHand = item.onHand ?? item.stockQuantity ?? 0;
-                  const reserved = item.reserved ?? item.reservedQuantity ?? 0;
-                  const available = item.available ?? onHand - reserved;
+                  const onHand = item.onHandQuantity ?? item.onHand ?? item.stockQuantity ?? 0;
+                  const reserved = item.reservedQuantity ?? item.reserved ?? 0;
+                  const available = item.availableQuantity ?? item.available ?? Math.max(0, onHand - reserved);
                   const threshold = item.lowStockThreshold ?? 5;
                   const isOutOfStock = available <= 0;
                   const isLowStock = available > 0 && available <= threshold;
@@ -536,9 +544,9 @@ export function AdminInventory() {
                         {item.variants && item.variants.length > 0 ? (
                           <div className="space-y-1 max-w-xs">
                             {item.variants.map((v) => {
-                              const vOnHand = v.onHand ?? v.stockQuantity ?? 0;
-                              const vReserved = v.reserved ?? v.reservedQuantity ?? 0;
-                              const vAvail = v.available ?? vOnHand - vReserved;
+                              const vOnHand = v.onHandQuantity ?? v.onHand ?? v.stockQuantity ?? 0;
+                              const vReserved = v.reservedQuantity ?? v.reserved ?? 0;
+                              const vAvail = v.availableQuantity ?? v.available ?? Math.max(0, vOnHand - vReserved);
                               const vThreshold = v.lowStockThreshold ?? threshold;
 
                               return (
@@ -647,26 +655,42 @@ export function AdminInventory() {
             )}
 
             <form onSubmit={handleAdjustSubmit} className="space-y-4">
-              <div className="grid grid-cols-3 gap-2 p-3 bg-[#F5F2EB] rounded border border-[#E0D9CD] text-xs text-center">
-                <div>
-                  <span className="text-[#7A7167] block text-[10px]">On-Hand</span>
-                  <span className="font-mono font-bold text-sm text-[#1A1817]">
-                    {adjustTarget.currentStock}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[#7A7167] block text-[10px]">Reserved</span>
-                  <span className="font-mono font-bold text-sm text-amber-700">
-                    {adjustTarget.reserved}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[#7A7167] block text-[10px]">Available</span>
-                  <span className="font-mono font-bold text-sm text-emerald-800">
-                    {adjustTarget.available}
-                  </span>
-                </div>
-              </div>
+              {/* Current Stock Metrics Pill */}
+              {(() => {
+                const parsedNewStock = parseInt(newStock, 10);
+                const isNewStockSpecified = !isNaN(parsedNewStock) && parsedNewStock >= 0;
+                const dynamicAvailable = isNewStockSpecified
+                  ? Math.max(0, parsedNewStock - (adjustTarget.reserved || 0))
+                  : adjustTarget.available;
+
+                return (
+                  <div className="grid grid-cols-3 gap-2 p-3 bg-[#F5F2EB] rounded border border-[#E0D9CD] text-xs text-center">
+                    <div>
+                      <span className="text-[#7A7167] block text-[10px]">On-Hand</span>
+                      <span className="font-mono font-bold text-sm text-[#1A1817]">
+                        {adjustTarget.currentStock}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#7A7167] block text-[10px]">Reserved</span>
+                      <span className="font-mono font-bold text-sm text-amber-700">
+                        {adjustTarget.reserved}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#7A7167] block text-[10px]">Available</span>
+                      <span className="font-mono font-bold text-sm text-emerald-800">
+                        {dynamicAvailable}
+                        {isNewStockSpecified && parsedNewStock !== adjustTarget.currentStock && (
+                          <span className="text-[10px] text-[#7A7167] font-normal ml-1">
+                            (was {adjustTarget.available})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div>
                 <label className="block text-xs font-semibold text-[#4A423B] uppercase mb-1">

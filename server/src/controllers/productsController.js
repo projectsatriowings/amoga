@@ -276,10 +276,19 @@ export async function getProductAvailability(req, res) {
 
     let resolvedVariantId = null;
     if (variantId) {
+      const cleanVarId = String(variantId).trim();
+      const strippedSize = cleanVarId.replace(/^size[-_ ]*/i, '').trim().toLowerCase();
+      const variantSlug = strippedSize.replace(/\s+/g, '-');
       const v = await prisma.productVariant.findFirst({
         where: {
           productId: resolvedProduct.id,
-          OR: [{ id: variantId }, { sourceId: variantId }],
+          OR: [
+            { id: cleanVarId },
+            { sourceId: cleanVarId },
+            { sourceId: variantSlug },
+            { name: { equals: cleanVarId, mode: 'insensitive' } },
+            { name: { equals: strippedSize, mode: 'insensitive' } },
+          ],
         },
       });
       if (v) resolvedVariantId = v.id;
@@ -388,7 +397,16 @@ export async function subscribeRestock(req, res) {
 
     let resolvedVariantId = null;
     if (variantId) {
-      const v = product.variants.find((v) => v.id === variantId || v.sourceId === variantId);
+      const cleanVarId = String(variantId).trim();
+      const strippedSize = cleanVarId.replace(/^size[-_ ]*/i, '').trim().toLowerCase();
+      const variantSlug = strippedSize.replace(/\s+/g, '-');
+      const v = product.variants.find((v) => {
+        if (!v) return false;
+        if (v.id === cleanVarId || v.sourceId === cleanVarId) return true;
+        if (v.sourceId && (v.sourceId.toLowerCase() === variantSlug || v.sourceId.toLowerCase() === cleanVarId.toLowerCase())) return true;
+        if (v.name && (v.name.toLowerCase() === strippedSize || v.name.toLowerCase() === cleanVarId.toLowerCase())) return true;
+        return false;
+      });
       if (v) resolvedVariantId = v.id;
     }
 

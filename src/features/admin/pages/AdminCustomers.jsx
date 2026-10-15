@@ -62,7 +62,13 @@ export function AdminCustomers() {
       const res = await adminFetch(`/api/admin/customers?${params.toString()}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Failed to load customers');
-      setCustomers(json.customers);
+      // Always sort by most recent activity / order / registration date first
+      const recentCustomers = [...(json.customers || [])].sort((a, b) => {
+        const timeA = new Date(b.lastOrderAt || b.createdAt || 0).getTime();
+        const timeB = new Date(a.lastOrderAt || a.createdAt || 0).getTime();
+        return timeA - timeB;
+      });
+      setCustomers(recentCustomers);
       setPagination(json.pagination);
     } catch (err) {
       setError(err.message);

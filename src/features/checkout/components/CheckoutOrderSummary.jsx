@@ -112,7 +112,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
                   </span>
                   {item.selectedVariant?.name && (
                     <span
-                      className="text-[10px] truncate"
+                      className="text-[10px] break-words"
                       style={{ color: 'var(--collection-text-muted)' }}
                     >
                       • {item.selectedVariant.name}
@@ -120,7 +120,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
                   )}
                 </div>
                 <h3
-                  className="font-medium truncate text-xs"
+                  className="font-medium break-words text-xs"
                   style={{ color: 'var(--collection-text)' }}
                 >
                   {name}

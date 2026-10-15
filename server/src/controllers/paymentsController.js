@@ -55,13 +55,13 @@ export async function postCreatePaymentOrder(req, res, next) {
       data: result,
     });
   } catch (error) {
-    if (error.status) {
-      return res.status(error.status).json({
-        success: false,
-        error: error.message,
-      });
-    }
-    next(error);
+    console.error('[POST CREATE PAYMENT ORDER ERROR]:', error);
+    const statusCode = error.status || 500;
+    return res.status(statusCode).json({
+      success: false,
+      error: error.message || 'Payment initialization failed. Please try Cash on Delivery or contact concierge.',
+      details: error.details || undefined,
+    });
   }
 }
 

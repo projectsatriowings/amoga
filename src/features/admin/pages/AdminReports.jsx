@@ -117,8 +117,6 @@ export function AdminReports() {
           {[
             { type: 'orders', label: 'Orders CSV', icon: ShoppingBag, color: 'text-[#722F37]' },
             { type: 'inventory', label: 'Inventory CSV', icon: Package, color: 'text-[#8C6320]' },
-            { type: 'collections', label: 'Collections CSV', icon: Layers, color: 'text-[#287A25]' },
-            { type: 'promotions', label: 'Coupons CSV', icon: Tag, color: 'text-indigo-700' },
           ].map((btn) => {
             const Icon = btn.icon;
             const isBusy = downloadingType === btn.type;

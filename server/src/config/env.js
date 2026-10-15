@@ -52,8 +52,7 @@ const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 if (paymentProvider === 'razorpay') {
   if (!razorpayKeyId || !razorpayKeySecret) {
     if (nodeEnv === 'production') {
-      console.error('[FATAL CONFIG ERROR]: RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are mandatory when PAYMENT_PROVIDER is "razorpay".');
-      process.exit(1);
+      console.warn('[CONFIG WARNING]: RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are not set in production. Online payments will require keys or customers can use Cash on Delivery.');
     } else {
       console.warn('[CONFIG NOTICE]: PAYMENT_PROVIDER is razorpay, but RAZORPAY_KEY_ID/SECRET are not set. Ensure sandbox keys are defined in server/.env for live sandbox calls.');
     }
