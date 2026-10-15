@@ -9,16 +9,26 @@ import { SoupCollectionSection } from './components/SoupCollectionSection';
 import { FoodPromoBanner } from './components/FoodPromoBanner';
 import { Container } from '../../components/ui/Container';
 import { SectionHeading } from '../../components/ui/SectionHeading';
-import { getFeaturedProducts } from './data/products';
+import { FOOD_PRODUCTS, getFeaturedProducts } from './data/products';
+import { useProducts } from '../../hooks/useProducts';
 
 export function FoodStorefront() {
-  const featuredProducts = getFeaturedProducts();
+  const { products: apiProducts } = useProducts({
+    collection: 'food',
+    fallbackData: FOOD_PRODUCTS,
+  });
   const [activeTab, setActiveTab] = useState('all');
+
+  const featuredProducts = React.useMemo(() => {
+    const list = apiProducts && apiProducts.length > 0 ? apiProducts : FOOD_PRODUCTS;
+    const featured = list.filter((p) => p.isFeatured || p.featured);
+    return featured.length > 0 ? featured : list.slice(0, 8);
+  }, [apiProducts]);
 
   const filteredFeatured =
     activeTab === 'all'
       ? featuredProducts
-      : featuredProducts.filter((p) => p.category === activeTab);
+      : featuredProducts.filter((p) => (p.category || '').toLowerCase() === activeTab.toLowerCase());
 
   return (
     <div className="bg-[#F8F6F0] text-[#292820] min-h-screen">

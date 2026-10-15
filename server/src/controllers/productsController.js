@@ -1,6 +1,79 @@
 import { prisma } from '../config/prisma.js';
 import { getAvailability } from '../services/inventoryService.js';
 
+let catalogueVersion = Date.now();
+const sseClients = new Set();
+
+/**
+ * Broadcast catalogue changes (creation, edit, archive, restore, stock change)
+ * to all connected storefront clients in real-time.
+ */
+export function broadcastProductUpdate(collectionId = null) {
+  catalogueVersion = Date.now();
+  const payload = JSON.stringify({
+    type: 'PRODUCTS_UPDATED',
+    collectionId: collectionId || 'all',
+    version: catalogueVersion,
+    timestamp: catalogueVersion,
+  });
+
+  for (const client of sseClients) {
+    try {
+      client.write(`data: ${payload}\n\n`);
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}
+
+/**
+ * Server-Sent Events stream for public storefront clients.
+ * Allows open customer tabs to discover new/edited products instantly.
+ */
+export function streamProductEvents(req, res) {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+    'Access-Control-Allow-Origin': '*',
+  });
+
+  res.write(`data: ${JSON.stringify({ type: 'CONNECTED', version: catalogueVersion })}\n\n`);
+  sseClients.add(res);
+
+  // Keep-alive heartbeat to prevent intermediate proxy timeout
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': heartbeat\n\n');
+    } catch {
+      clearInterval(heartbeat);
+      sseClients.delete(res);
+    }
+  }, 25000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    sseClients.delete(res);
+  });
+}
+
+/**
+ * Lightweight endpoint to query current catalogue version.
+ * Used by bounded storefront revalidation when SSE is not active.
+ */
+export function getProductsVersion(req, res) {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+
+  return res.status(200).json({
+    success: true,
+    version: catalogueVersion,
+    timestamp: Date.now(),
+  });
+}
+
 export async function getProducts(req, res, next) {
   try {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -10,7 +83,7 @@ export async function getProducts(req, res, next) {
     const { collection, category, q, sort = 'default', page = '1', limit = '100' } = req.query;
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+    const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10) || 100));
     const skip = (pageNum - 1) * limitNum;
 
     const where = {
@@ -22,7 +95,7 @@ export async function getProducts(req, res, next) {
     }
 
     if (category && category !== 'all') {
-      where.category = category.toLowerCase();
+      where.category = { equals: category.trim(), mode: 'insensitive' };
     }
 
     if (q && q.trim()) {
@@ -95,7 +168,7 @@ export async function getProducts(req, res, next) {
       });
 
       return {
-        id: p.sourceId, // Keep stable source ID as primary identity for existing frontend
+        id: p.sourceId || p.id, // Keep stable source ID as primary identity, falling back to db id
         dbId: p.id,
         collection: p.collectionId,
         collectionName: p.collection.name,
@@ -211,7 +284,7 @@ export async function getProductBySlug(req, res, next) {
     });
 
     const formattedProduct = {
-      id: product.sourceId,
+      id: product.sourceId || product.id,
       dbId: product.id,
       collection: product.collectionId,
       collectionName: product.collection.name,

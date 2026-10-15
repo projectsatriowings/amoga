@@ -81,7 +81,10 @@ export function TeaProductList() {
       // Category Filter
       if (selectedCategory && selectedCategory !== 'all') {
         const cat = selectedCategory.toLowerCase();
+        const pCat = (p.category || '').toLowerCase();
+        const isDirectCatMatch = pCat === cat;
         const isCatMatch =
+          isDirectCatMatch ||
           (cat === 'flower' && (p.slug.includes('pea') || p.slug.includes('hibiscus') || p.categoryName?.toLowerCase().includes('flower'))) ||
           (cat === 'leaf' && (p.slug.includes('moringa') || p.categoryName?.toLowerCase().includes('leaf'))) ||
           (cat === 'herbal' && (p.slug.includes('cinnamon') || p.slug.includes('sarsaparilla') || p.categoryName?.toLowerCase().includes('root') || p.categoryName?.toLowerCase().includes('spice')));

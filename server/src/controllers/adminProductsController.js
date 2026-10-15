@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.js';
 import { logAdminAction } from '../utils/adminAuth.js';
+import { broadcastProductUpdate } from './productsController.js';
 
 export async function listProducts(req, res) {
   try {
@@ -257,6 +258,14 @@ export async function createProduct(req, res) {
       return product;
     });
 
+    const fullProduct = await prisma.product.findUnique({
+      where: { id: createdProduct.id },
+      include: {
+        collection: { select: { id: true, name: true, slug: true } },
+        variants: true,
+      },
+    });
+
     await logAdminAction({
       adminId: req.admin.id,
       adminEmail: req.admin.email,
@@ -266,9 +275,16 @@ export async function createProduct(req, res) {
       details: { name: createdProduct.name, collectionId, slug: cleanSlug },
     });
 
+    // Notify all open storefront sessions across browsers immediately
+    broadcastProductUpdate(collectionId);
+
     return res.status(201).json({
       success: true,
-      product: createdProduct,
+      product: {
+        ...(fullProduct || createdProduct),
+        price: (fullProduct || createdProduct).price ? Number((fullProduct || createdProduct).price) : null,
+        originalPrice: (fullProduct || createdProduct).originalPrice ? Number((fullProduct || createdProduct).originalPrice) : null,
+      },
     });
   } catch (err) {
     console.error('[ADMIN CREATE PRODUCT ERROR]:', err);
@@ -332,6 +348,7 @@ export async function updateProduct(req, res) {
       if (badge !== undefined) updateData.badge = badge;
       if (packSize !== undefined) updateData.packSize = packSize;
       if (specs !== undefined) updateData.specs = specs;
+      if (req.body.isActive !== undefined) updateData.isActive = Boolean(req.body.isActive);
 
       const p = await tx.product.update({
         where: { id },
@@ -390,6 +407,8 @@ export async function updateProduct(req, res) {
       details: { name: updated.name },
     });
 
+    broadcastProductUpdate(existingProduct.collectionId);
+
     return res.status(200).json({
       success: true,
       product: updated,
@@ -420,6 +439,8 @@ export async function archiveProduct(req, res) {
       details: { name: product.name },
     });
 
+    broadcastProductUpdate(product.collectionId);
+
     return res.status(200).json({
       success: true,
       message: `Product "${product.name}" archived successfully`,
@@ -449,6 +470,8 @@ export async function restoreProduct(req, res) {
       entityId: id,
       details: { name: product.name },
     });
+
+    broadcastProductUpdate(product.collectionId);
 
     return res.status(200).json({
       success: true,

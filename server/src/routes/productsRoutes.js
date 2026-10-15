@@ -5,9 +5,15 @@ import {
   getProductAvailability,
   subscribeRestock,
   unsubscribeRestock,
+  streamProductEvents,
+  getProductsVersion,
 } from '../controllers/productsController.js';
 
 const router = Router();
+
+// Real-time catalog events & lightweight version tracking
+router.get('/events', streamProductEvents);
+router.get('/version', getProductsVersion);
 
 // Public stock availability query
 router.get('/availability', getProductAvailability);

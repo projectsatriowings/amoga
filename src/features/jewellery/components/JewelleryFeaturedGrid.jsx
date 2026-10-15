@@ -2,11 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { JewelleryProductCard } from './JewelleryProductCard';
-import { getFeaturedJewellery } from '../data/products';
+import { JEWELLERY_PRODUCTS, getFeaturedJewellery } from '../data/products';
 import { Container } from '../../../components/ui/Container';
+import { useProducts } from '../../../hooks/useProducts';
 
 export function JewelleryFeaturedGrid() {
-  const featured = getFeaturedJewellery();
+  const { products: apiProducts } = useProducts({
+    collection: 'jewellery',
+    fallbackData: JEWELLERY_PRODUCTS,
+  });
+
+  const featured = React.useMemo(() => {
+    const list = apiProducts && apiProducts.length > 0 ? apiProducts : JEWELLERY_PRODUCTS;
+    const items = list.filter((p) => p.isFeatured || p.verified);
+    return items.length > 0 ? items.slice(0, 5) : list.slice(0, 5);
+  }, [apiProducts]);
 
   return (
     <section id="featured" className="py-16 sm:py-24 bg-[#242326] text-[#F7F3EB] border-b border-[#B9B8B5]/15">

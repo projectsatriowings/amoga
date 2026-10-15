@@ -101,7 +101,7 @@ export function SareesProductList() {
 
     // Category filter
     if (currentCategory && currentCategory !== 'all') {
-      result = result.filter((p) => p.category === currentCategory);
+      result = result.filter((p) => (p.category || '').toLowerCase() === currentCategory.toLowerCase());
     }
 
     // Search query filter (search by name, tagline, description, and specs)

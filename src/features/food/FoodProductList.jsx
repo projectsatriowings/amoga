@@ -98,7 +98,7 @@ export function FoodProductList() {
       .filter((product) => {
         // Category Match
         const matchesCategory =
-          selectedCategory === 'all' || product.category === selectedCategory;
+          selectedCategory === 'all' || (product.category || '').toLowerCase() === selectedCategory.toLowerCase();
 
         // Search Query Match (case insensitive across name, description, tags)
         const query = searchQuery.trim().toLowerCase();

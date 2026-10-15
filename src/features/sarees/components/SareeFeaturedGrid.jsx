@@ -2,11 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { SareeProductCard } from './SareeProductCard';
-import { getFeaturedSarees } from '../data/products';
+import { SAREE_PRODUCTS, getFeaturedSarees } from '../data/products';
 import { Container } from '../../../components/ui/Container';
+import { useProducts } from '../../../hooks/useProducts';
 
 export function SareeFeaturedGrid() {
-  const featured = getFeaturedSarees();
+  const { products: apiProducts } = useProducts({
+    collection: 'sarees',
+    fallbackData: SAREE_PRODUCTS,
+  });
+
+  const featured = React.useMemo(() => {
+    const list = apiProducts && apiProducts.length > 0 ? apiProducts : SAREE_PRODUCTS;
+    const items = list.filter((p) => p.isFeatured || p.verified);
+    return items.length > 0 ? items.slice(0, 4) : list.slice(0, 4);
+  }, [apiProducts]);
 
   return (
     <section className="py-16 sm:py-24 bg-[#2C0E1A] text-[#F6EBD8] border-b border-[#C5A46D]/15">

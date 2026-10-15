@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { logAdminAction } from '../utils/adminAuth.js';
 import { adjustStock as serviceAdjustStock } from '../services/inventoryService.js';
+import { broadcastProductUpdate } from './productsController.js';
 
 /**
  * List inventory with on-hand, reserved, and available quantities,
@@ -200,6 +201,8 @@ export async function adjustStock(req, res) {
       reason,
     });
 
+    broadcastProductUpdate();
+
     return res.status(200).json({
       success: true,
       message: `Stock updated for ${result.targetName}`,
@@ -245,6 +248,8 @@ export async function updateThreshold(req, res) {
       where: { id: productId },
       data: { lowStockThreshold: thresholdNum },
     });
+
+    broadcastProductUpdate();
 
     return res.status(200).json({ success: true, product });
   } catch (err) {
