@@ -650,8 +650,8 @@ export const OrderReviewPage = () => {
                     </span>
                     <p className="break-words text-[var(--collection-text)]">{customerDetails.addressLine1}</p>
                     {customerDetails.addressLine2 && <p className="break-words text-[var(--collection-text)]">{customerDetails.addressLine2}</p>}
-                    <p>
-                      {customerDetails.city}, {customerDetails.state} -{' '}
+                    <p className="break-words">
+                      {`${customerDetails.city}, ${customerDetails.state} - `}
                       <strong className="text-[var(--collection-text)]">{customerDetails.pincode}</strong>
                     </p>
                     {customerDetails.instructions && (
@@ -764,7 +764,7 @@ export const OrderReviewPage = () => {
 
                   const collectionLabel =
                     collectionId === 'jewellery'
-                      ? 'Silver Jewellery'
+                      ? 'Sterling Silver'
                       : collectionId === 'sarees'
                       ? 'Heritage Sarees'
                       : collectionId === 'tea'

@@ -33,7 +33,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
       case 'sarees':
         return { label: 'Heritage Sarees', class: 'bg-[#C5A46D]/20 text-[#C5A46D] border-[#C5A46D]/40' };
       case 'jewellery':
-        return { label: 'Silver Jewellery', class: 'bg-[#737C86]/20 text-[#D4D7D9] border-[#737C86]/40' };
+        return { label: 'Sterling Silver', class: 'bg-[#737C86]/20 text-[#D4D7D9] border-[#737C86]/40' };
       default:
         return { label: 'Amoga', class: 'bg-[var(--collection-section-bg)] text-[var(--collection-text)] border-[var(--collection-border)]' };
     }

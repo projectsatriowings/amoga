@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { BackButton } from '../../../components/ui/BackButton';
+import { invalidateProductsCache } from '../../../hooks/useProducts';
 
 // Stock imagery imported directly from src/assets/images
 import imgFoodSoups from '../../../assets/images/food-soups-hero.jpg';
@@ -455,6 +456,9 @@ export function AdminProductForm() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Failed to save product');
 
+      // Instantly invalidate products cache across all storefronts and open tabs
+      invalidateProductsCache(payload.collectionId);
+
       setSuccessMsg(isEditing ? 'Product updated successfully!' : 'Product created successfully!');
       setTimeout(() => {
         navigate('/admin/products');
@@ -501,7 +505,7 @@ export function AdminProductForm() {
           {isEditing ? `Edit: ${formData.name || 'Product'}` : 'Create Unified Product'}
         </h1>
         <p className="text-xs text-[#7A7167]">
-          Manage pricing, collection attributes, variants, and stock across Wholesome Pantry, Wellness Tea, Heritage Sarees, or Silver Jewellery.
+          Manage pricing, collection attributes, variants, and stock across Wholesome Pantry, Wellness Tea, Heritage Sarees, or Sterling Silver.
         </p>
       </div>
 

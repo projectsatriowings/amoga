@@ -60,7 +60,7 @@ export function ShippingPolicyPage() {
             </div>
             <h2 className="font-serif text-lg font-semibold text-[#1A1817]">Tamper-Evident Packaging</h2>
             <p className="text-xs text-[#656056] leading-relaxed">
-              Fragile silver jewellery and delicate handloom silks are packaged in multi-layer archival protective cases to prevent in-transit moisture or physical damage.
+              Fragile sterling silver and delicate handloom silks are packaged in multi-layer archival protective cases to prevent in-transit moisture or physical damage.
             </p>
           </div>
         </div>

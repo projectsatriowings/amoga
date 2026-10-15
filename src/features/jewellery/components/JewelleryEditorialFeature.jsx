@@ -61,7 +61,7 @@ export function JewelleryEditorialFeature() {
             </h2>
 
             <p className="text-xs sm:text-sm text-[#B9B8B5] leading-relaxed">
-              Every piece in the Amoga Silver Jewellery collection is shaped for structural balance, tactile comfort, and subtle reflectivity. From the clean lines of linear bar pendants to the ergonomic curvature of our signature bands, silver is treated as a modern medium for quiet self-expression.
+              Every piece in the Amoga Sterling Silver collection is shaped for structural balance, tactile comfort, and subtle reflectivity. From the clean lines of linear bar pendants to the ergonomic curvature of our signature bands, silver is treated as a modern medium for quiet self-expression.
             </p>
 
             {/* Feature List */}

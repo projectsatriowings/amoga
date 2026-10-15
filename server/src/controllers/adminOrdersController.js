@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma.js';
 import { logAdminAction } from '../utils/adminAuth.js';
-import { handleOrderCancellation, commitReservation } from '../services/inventoryService.js';
+import { handleOrderCancellation, commitReservation, confirmOrderReservation } from '../services/inventoryService.js';
 
 // Enforce valid finite-state machine transitions for orders
 const VALID_TRANSITIONS = {
@@ -226,6 +226,14 @@ export async function updateOrderStatus(req, res) {
       where: { id },
       data: { status: targetStatus },
     });
+
+    if (targetStatus === 'CONFIRMED') {
+      await confirmOrderReservation({
+        orderId: order.id,
+        orderReference: order.orderReference,
+        actor: req.admin ? `ADMIN: ${req.admin.email}` : 'SYSTEM',
+      }).catch((err) => console.warn('[INVENTORY ORDER CONFIRMATION ERROR]:', err.message));
+    }
 
     if (targetStatus === 'DISPATCHED') {
       await commitReservation({

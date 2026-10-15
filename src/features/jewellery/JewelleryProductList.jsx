@@ -172,7 +172,7 @@ export function JewelleryProductList() {
             </Link>
             <span>/</span>
             <Link to="/jewellery" className="hover:underline text-[#B9B8B5]/80">
-              Silver Jewellery
+              Sterling Silver
             </Link>
             <span>/</span>
             <span className="font-semibold text-[#F7F3EB]">Catalogue</span>
@@ -191,7 +191,7 @@ export function JewelleryProductList() {
               {activeCategoryObj.name}
             </h1>
             <span className="text-xs font-mono text-[#B9B8B5] px-3 py-1 rounded bg-[#343238] border border-[#B9B8B5]/20 self-start sm:self-auto">
-              Showing {filteredProducts.length} of {JEWELLERY_PRODUCTS.length} Pieces
+              Showing {filteredProducts.length} of {apiProducts.length} Pieces
             </span>
           </div>
 

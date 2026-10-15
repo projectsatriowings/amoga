@@ -28,13 +28,13 @@ export function ReturnsCarePage() {
             Returns, Exchanges & Product Care
           </h1>
           <p className="text-sm sm:text-base text-[#656056] leading-relaxed">
-            We hold ourselves to the highest standards of authentic craftsmanship. Read our return policies, transit defect resolution protocols, and maintenance guides for handloom silks, silver jewellery, and perishable pantry goods.
+            We hold ourselves to the highest standards of authentic craftsmanship. Read our return policies, transit defect resolution protocols, and maintenance guides for handloom silks, sterling silver jewellery, and perishable pantry goods.
           </p>
         </div>
 
         {/* Return & Exchange Policy by Category */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          {/* Heritage Sarees & Silver Jewellery */}
+          {/* Heritage Sarees & Sterling Silver */}
           <div className="p-8 rounded-3xl bg-white border border-[#E5E0D5] shadow-sm space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#722F37]/10 text-[#722F37] text-xs font-mono font-semibold uppercase">
               <Sparkles className="w-3.5 h-3.5" />
@@ -101,7 +101,7 @@ export function ReturnsCarePage() {
             </div>
 
             <div className="space-y-2 p-5 rounded-2xl bg-[#F8F6F0] border border-[#E5E0D5]">
-              <h3 className="font-serif text-base font-semibold text-[#1A1817]">925 Sterling Silver Jewellery</h3>
+              <h3 className="font-serif text-base font-semibold text-[#1A1817]">925 Sterling Silver</h3>
               <ul className="text-xs text-[#656056] space-y-1.5 list-disc pl-4 leading-relaxed">
                 <li>Store in individual zip-lock bags or lined velvet pouches away from moisture.</li>
                 <li>Wipe gently with the microfiber polishing cloth provided after wear.</li>

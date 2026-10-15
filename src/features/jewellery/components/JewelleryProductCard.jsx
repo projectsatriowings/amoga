@@ -151,7 +151,7 @@ export function JewelleryProductCard({ product }) {
             {/* Available Sizes count preview if present */}
             {product.sizes && product.sizes.length > 0 && (
               <div className="text-[10px] font-mono text-[#B9B8B5]/60 mt-1.5">
-                Available in {product.sizes.length} sizes
+                {`Available in ${product.sizes.length} sizes`}
               </div>
             )}
           </div>

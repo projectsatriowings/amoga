@@ -30,7 +30,7 @@ export function CollectionContributionCard({ collectionPerformance = [] }) {
       text: 'text-[#762F39]',
     },
     jewellery: {
-      name: 'Silver Jewellery',
+      name: 'Sterling Silver',
       icon: Gem,
       color: '#292820',
       bg: 'bg-[#292820]/10',

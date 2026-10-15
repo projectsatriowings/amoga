@@ -244,7 +244,7 @@ export function CustomerAccountPage() {
                 </h3>
                 <p className="text-xs text-[#7A7167] max-w-sm mx-auto">
                   Your orders will appear here once you make a purchase from
-                  Heritage Sarees, Wholesome Pantry, Wellness Tea, or Silver Jewellery.
+                  Heritage Sarees, Wholesome Pantry, Wellness Tea, or Sterling Silver.
                 </p>
                 <Link
                   to="/"

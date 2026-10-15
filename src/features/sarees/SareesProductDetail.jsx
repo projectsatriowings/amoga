@@ -235,7 +235,7 @@ export function SareesProductDetail() {
                 </span>
                 <span className="text-[#C5A46D]/40">&bull;</span>
                 <span className="text-xs font-mono text-[#D4C2A7]">
-                  SKU: {product.id}
+                  {`SKU: ${product.id}`}
                 </span>
               </div>
 
@@ -257,12 +257,12 @@ export function SareesProductDetail() {
                 ) : availability.isLowStock ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/80 text-amber-200 border border-amber-400/40 text-xs font-mono font-semibold">
                     <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    <span>Low Stock — Only {availability.availableQuantity} left</span>
+                    <span>{`Low Stock — Only ${availability.availableQuantity} left`}</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#381222] text-[#F6EBD8] border border-[#C5A46D]/40 text-xs font-mono font-semibold">
                     <span className="w-2 h-2 rounded-full bg-[#C5A46D]" />
-                    <span>In Stock — {availability.availableQuantity} available</span>
+                    <span>{`In Stock — ${availability.availableQuantity} available`}</span>
                   </span>
                 )}
               </div>

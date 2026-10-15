@@ -19,7 +19,7 @@ const COLLECTION_CONFIG = {
     icon: Sparkles,
   },
   jewellery: {
-    label: 'Silver Jewellery',
+    label: 'Sterling Silver',
     color: '#292820',
     icon: Gem,
   },

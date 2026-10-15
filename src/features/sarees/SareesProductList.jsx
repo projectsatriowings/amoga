@@ -191,7 +191,7 @@ export function SareesProductList() {
               {activeCategoryObj.name}
             </h1>
             <span className="text-xs font-mono text-[#C5A46D] px-3 py-1 rounded bg-[#381222] border border-[#C5A46D]/20 self-start sm:self-auto">
-              Showing {filteredProducts.length} of {SAREE_PRODUCTS.length} Sarees
+              Showing {filteredProducts.length} of {apiProducts.length} Sarees
             </span>
           </div>
 

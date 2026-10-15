@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
  * 
  * Unified frosted-glass pill CTA button for the Amoga Gatekeeper homepage.
  * Shared color, glassmorphism effect, dimensions, typography, and hover behavior
- * across all four collection panels (Wholesome Pantry, Wellness Tea, Heritage Sarees, Silver Jewellery).
+ * across all four collection panels (Wholesome Pantry, Wellness Tea, Heritage Sarees, Sterling Silver).
  */
 export const LiquidGlassCta = React.forwardRef(function LiquidGlassCta(
   {

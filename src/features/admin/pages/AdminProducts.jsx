@@ -15,6 +15,7 @@ import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
 import { BackButton } from '../../../components/ui/BackButton';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
+import { invalidateProductsCache } from '../../../hooks/useProducts';
 
 export function AdminProducts() {
   const { adminFetch } = useAdminStore();
@@ -115,8 +116,10 @@ export function AdminProducts() {
         const json = await res.json();
         throw new Error(json.message || 'Action failed');
       }
+      const savedCollection = targetProduct.collectionId || 'all';
       setTargetProduct(null);
       setModalAction(null);
+      invalidateProductsCache(savedCollection);
       fetchProducts();
     } catch (err) {
       alert(`Error: ${err.message}`);
@@ -130,7 +133,7 @@ export function AdminProducts() {
     { id: 'food', name: 'Wholesome Pantry' },
     { id: 'tea', name: 'Wellness Tea' },
     { id: 'sarees', name: 'Heritage Sarees' },
-    { id: 'jewellery', name: 'Silver Jewellery' },
+    { id: 'jewellery', name: 'Sterling Silver' },
   ];
 
   return (
@@ -144,7 +147,7 @@ export function AdminProducts() {
         <div>
           <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Product Catalogue</h1>
           <p className="text-xs text-[#7A7167]">
-            Unified inventory across all 4 Amoga collections: Wholesome Pantry, Wellness Tea, Heritage Sarees, Silver Jewellery
+            Unified inventory across all 4 Amoga collections: Wholesome Pantry, Wellness Tea, Heritage Sarees, Sterling Silver
           </p>
         </div>
         <Link

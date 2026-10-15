@@ -350,7 +350,7 @@ export function AdminCustomerInquiries() {
             <option value="food">Wholesome Pantry</option>
             <option value="tea">Wellness Tea</option>
             <option value="sarees">Heritage Sarees</option>
-            <option value="jewellery">Silver Jewellery</option>
+            <option value="jewellery">Sterling Silver</option>
             <option value="general">General Inquiry</option>
           </select>
         </div>

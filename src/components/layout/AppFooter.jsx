@@ -63,8 +63,8 @@ export function AppFooter({ activeCollection }) {
                 : isSarees
                 ? 'Amoga Heritage Sarees celebrates master handloom weavers, authentic temple Kanchipuram silks, Banarasi brocades, and ceremonial textiles passed down through generations.'
                 : isJewellery
-                ? 'Amoga Silver Jewellery curates modern heirlooms, solid 925 sterling silver bands, fluid pendants, and architectural cuffs designed for quiet, lasting elegance.'
-                : 'One unified luxury identity across four distinctive artisanal universes: Wholesome Pantry, Wellness Tea, Heritage Sarees, and Silver Jewellery.'}
+                ? 'Amoga Sterling Silver curates modern heirlooms, solid 925 sterling silver bands, fluid pendants, and architectural cuffs designed for quiet, lasting elegance.'
+                : 'One unified luxury identity across four distinctive artisanal universes: Wholesome Pantry, Wellness Tea, Heritage Sarees, and Sterling Silver.'}
             </p>
 
             {isFood && (
@@ -378,7 +378,7 @@ export function AppFooter({ activeCollection }) {
 
         {/* Bottom Bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs opacity-60 gap-4">
-          <div>&copy; {CURRENT_YEAR} Amoga E-Commerce. All rights reserved.</div>
+          <div>{`© ${CURRENT_YEAR} Amoga E-Commerce. All rights reserved.`}</div>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <Link to="/food" className="hover:underline">Wholesome Pantry</Link>
             <span>&bull;</span>
@@ -386,7 +386,7 @@ export function AppFooter({ activeCollection }) {
             <span>&bull;</span>
             <Link to="/sarees" className="hover:underline">Heritage Sarees</Link>
             <span>&bull;</span>
-            <Link to="/jewellery" className="hover:underline">Silver Jewellery</Link>
+            <Link to="/jewellery" className="hover:underline">Sterling Silver</Link>
           </div>
         </div>
       </Container>

@@ -114,7 +114,7 @@ export function CollectionFooter({ collectionId = 'food' }) {
               </li>
               <li>
                 <Link to="/jewellery" className="hover:underline hover:opacity-100">
-                  Silver Jewellery
+                  Sterling Silver
                 </Link>
               </li>
               <li>
@@ -157,7 +157,7 @@ export function CollectionFooter({ collectionId = 'food' }) {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs opacity-70">
           <div>
-            &copy; {CURRENT_YEAR} AMOGA Luxury & Heritage Commerce. All rights reserved.
+            {`© ${CURRENT_YEAR} AMOGA Luxury & Heritage Commerce. All rights reserved.`}
           </div>
           <div className="flex items-center gap-6 text-[11px] font-mono">
             <span>Razorpay Sandbox Active</span>

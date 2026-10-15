@@ -3,6 +3,10 @@ import { getAvailability } from '../services/inventoryService.js';
 
 export async function getProducts(req, res, next) {
   try {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
     const { collection, category, q, sort = 'default', page = '1', limit = '100' } = req.query;
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
@@ -144,6 +148,10 @@ export async function getProducts(req, res, next) {
 
 export async function getProductBySlug(req, res, next) {
   try {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
     const { collection, slug } = req.params;
 
     const product = await prisma.product.findFirst({

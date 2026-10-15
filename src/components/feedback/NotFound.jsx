@@ -80,7 +80,7 @@ export function NotFound() {
               className="p-4 rounded-lg bg-[#18191D] border border-white/15 hover:border-white/40 transition-all group"
             >
               <div className="text-xs uppercase tracking-wider text-[#C6C8CD] font-semibold">04</div>
-              <div className="text-sm font-medium text-white group-hover:text-[#C6C8CD]">Silver Jewellery</div>
+              <div className="text-sm font-medium text-white group-hover:text-[#C6C8CD]">Sterling Silver</div>
               <div className="text-xs text-[#9FA1A8] mt-0.5">Modern Heirlooms</div>
             </Link>
           </div>

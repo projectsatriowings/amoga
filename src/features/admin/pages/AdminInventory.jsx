@@ -15,6 +15,7 @@ import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
 import { BackButton } from '../../../components/ui/BackButton';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
+import { invalidateProductsCache } from '../../../hooks/useProducts';
 
 export function AdminInventory() {
   const { adminFetch } = useAdminStore();
@@ -182,6 +183,7 @@ export function AdminInventory() {
       if (!res.ok) throw new Error(json.message || 'Failed to adjust stock');
 
       setAdjustTarget(null);
+      invalidateProductsCache(collectionId || 'all');
       fetchInventory();
     } catch (err) {
       setAdjustError(err.message);
@@ -226,6 +228,7 @@ export function AdminInventory() {
       if (!res.ok) throw new Error(json.message || 'Failed to update threshold');
 
       setThresholdTarget(null);
+      invalidateProductsCache(collectionId || 'all');
       fetchInventory();
     } catch (err) {
       setThresholdError(err.message);
@@ -428,7 +431,7 @@ export function AdminInventory() {
             <option value="food">Wholesome Pantry</option>
             <option value="tea">Wellness Tea</option>
             <option value="sarees">Heritage Sarees</option>
-            <option value="jewellery">Silver Jewellery</option>
+            <option value="jewellery">Sterling Silver</option>
           </select>
 
           <select

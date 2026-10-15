@@ -202,7 +202,7 @@ export function CartDrawer() {
                     const collectionId = product?.collection || item.collectionId;
                     const collectionLabel =
                       collectionId === 'jewellery'
-                        ? 'Silver Jewellery'
+                        ? 'Sterling Silver'
                         : collectionId === 'sarees'
                         ? 'Heritage Sarees'
                         : collectionId === 'tea'

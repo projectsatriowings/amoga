@@ -158,7 +158,7 @@ export function SareeProductCard({ product }) {
                   />
                 ))}
                 <span className="text-[10px] font-mono text-[#D4C2A7]/60 ml-1">
-                  {product.variants.length} shade{product.variants.length > 1 ? 's' : ''}
+                  {`${product.variants.length} shade${product.variants.length > 1 ? 's' : ''}`}
                 </span>
               </div>
             )}

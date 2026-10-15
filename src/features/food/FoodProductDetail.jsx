@@ -206,12 +206,12 @@ export function FoodProductDetail() {
               ) : availability.isLowStock ? (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-mono font-semibold">
                   <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
-                  <span>Low Stock — Only {availability.availableQuantity} remaining</span>
+                  <span>{`Low Stock — Only ${availability.availableQuantity} remaining`}</span>
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-mono font-semibold">
                   <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                  <span>In Stock — {availability.availableQuantity} available</span>
+                  <span>{`In Stock — ${availability.availableQuantity} available`}</span>
                 </span>
               )}
             </div>

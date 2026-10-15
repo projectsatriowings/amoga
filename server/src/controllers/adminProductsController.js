@@ -3,6 +3,10 @@ import { logAdminAction } from '../utils/adminAuth.js';
 
 export async function listProducts(req, res) {
   try {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
     const {
       q,
       collectionId,

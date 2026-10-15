@@ -16,7 +16,7 @@ const COLLECTION_LABELS = {
   food: 'Wholesome Pantry',
   tea: 'Wellness Tea',
   sarees: 'Heritage Sarees',
-  jewellery: 'Silver Jewellery',
+  jewellery: 'Sterling Silver',
 };
 
 export function TopSellingProductsTable({ products = [] }) {

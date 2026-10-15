@@ -4,7 +4,7 @@ import { env } from '../config/env.js';
 import { verifyGuestAccessToken } from '../utils/security.js';
 import { TestPaymentProvider } from './providers/testProvider.js';
 import { RazorpayPaymentProvider } from './providers/razorpayProvider.js';
-import { commitReservation, releaseReservation } from '../services/inventoryService.js';
+import { confirmOrderReservation, releaseReservation } from '../services/inventoryService.js';
 
 /**
  * AMOGA E-COMMERCE — PAYMENT SERVICE ORCHESTRATOR
@@ -369,11 +369,12 @@ export async function verifyPaymentCallback({
       },
     });
 
-    // Commit inventory deduction exactly once
-    await commitReservation({
+    // Confirm reservation upon verified payment (physical stock is deducted upon order dispatch)
+    await confirmOrderReservation({
       tx,
       orderId: order.id,
       orderReference: order.orderReference,
+      actor: 'SYSTEM: PAYMENT_CONFIRMED',
     });
 
     return { updatedPayment, updatedOrder };
@@ -483,11 +484,12 @@ export async function processWebhook({ rawBody, headers }) {
             },
           });
 
-          // Commit inventory deduction exactly once upon verified payment
-          await commitReservation({
+          // Confirm reservation upon verified webhook payment (physical stock is deducted upon order dispatch)
+          await confirmOrderReservation({
             tx,
             orderId: payment.orderId,
             orderReference: payment.order.orderReference,
+            actor: 'SYSTEM: WEBHOOK_CONFIRMED',
           });
         }
       }

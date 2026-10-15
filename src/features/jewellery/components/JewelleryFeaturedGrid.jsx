@@ -34,7 +34,7 @@ export function JewelleryFeaturedGrid() {
               to="/jewellery/products"
               className="text-xs font-medium text-[#B9B8B5] hover:text-white hover:underline flex items-center gap-1.5"
             >
-              <span>View All Pieces ({10})</span>
+              <span>View All Pieces</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

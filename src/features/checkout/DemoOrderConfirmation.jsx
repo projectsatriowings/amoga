@@ -208,8 +208,8 @@ export const DemoOrderConfirmation = () => {
                     {activeOrder.customer?.addressLine2 && (
                       <p className="break-words text-[var(--collection-text)]">{activeOrder.customer?.addressLine2}</p>
                     )}
-                    <p>
-                      {activeOrder.customer?.city}, {activeOrder.customer?.state} -{' '}
+                    <p className="break-words">
+                      {`${activeOrder.customer?.city || ''}, ${activeOrder.customer?.state || ''} - `}
                       <strong className="text-[var(--collection-text)]">{activeOrder.customer?.pincode}</strong>
                     </p>
                   </div>
@@ -444,14 +444,14 @@ export const DemoOrderConfirmation = () => {
                   <Gem className="w-5 h-5" />
                 </div>
                 <h3 className="font-serif text-base font-semibold text-[var(--collection-heading)] group-hover:text-[#CBD5E1] transition-colors">
-                  Silver Jewellery
+                  Sterling Silver
                 </h3>
                 <p className="text-xs text-[var(--collection-text-muted)] mt-1">
-                  92.5 Sterling silver neckpieces, earrings & bangles
+                  925 Sterling silver neckpieces, earrings & bangles
                 </p>
               </div>
               <div className="mt-4 flex items-center text-xs font-semibold text-[#94A3B8] uppercase tracking-wider gap-1">
-                <span>Explore Silver</span>
+                <span>Explore Sterling Silver</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>

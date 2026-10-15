@@ -38,14 +38,18 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
       : `/food/products/${product.slug}`;
 
   // Collection metadata label & styling
+  // Collection metadata label & styling
   const collectionBadge =
     product.collection === 'jewellery'
-      ? { label: 'Silver Jewellery', color: 'bg-[#3A4556]/10 text-[#3A4556] border-[#3A4556]/20' }
+      ? { label: 'Sterling Silver', color: 'bg-[#3A4556]/10 text-[#3A4556] border-[#3A4556]/20' }
       : product.collection === 'sarees'
       ? { label: 'Heritage Sarees', color: 'bg-[#7A1C2E]/10 text-[#7A1C2E] border-[#7A1C2E]/20' }
       : product.collection === 'tea'
       ? { label: 'Wellness Tea', color: 'bg-[#FAF1BB]/60 text-[#173B2A] border-[#65815A]/30' }
       : { label: 'Wholesome Pantry', color: 'bg-[#3F7B43]/10 text-[#173B2A] border-[#3F7B43]/20' };
+
+  const categoryLabel = product.categoryName || product.category || null;
+  const variantLabel = selectedVariant?.name || item.variantName || null;
 
   return (
     <div
@@ -105,20 +109,58 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
           </div>
         </Link>
 
-        {/* Product Details */}
-        <div className="space-y-1 min-w-0 flex-1">
+        {/* Product Details: Standardized Order (Name -> Variant -> Collection/Category -> Price) */}
+        <div className="space-y-1.5 min-w-0 flex-1">
+          {/* 1. Product Name */}
+          <h3
+            className="text-base font-serif font-medium transition-colors line-clamp-1"
+            style={{ color: 'var(--collection-heading)' }}
+          >
+            <Link
+              to={productUrl}
+              className="hover:opacity-80 transition-opacity"
+            >
+              {product.name}
+            </Link>
+          </h3>
+
+          {/* 2. Selected Variant / Size / Option */}
+          {variantLabel && (
+            <div
+              className="flex items-center gap-1.5 text-xs font-mono"
+              style={{ color: 'var(--collection-text-muted)' }}
+            >
+              <span className="opacity-70">Option:</span>
+              {selectedVariant?.hex && (
+                <span
+                  className="w-2.5 h-2.5 rounded-full border border-black/20 inline-block shrink-0"
+                  style={{
+                    backgroundColor: selectedVariant.hex,
+                  }}
+                />
+              )}
+              <span
+                className="font-medium"
+                style={{ color: 'var(--collection-text)' }}
+              >
+                {variantLabel}
+              </span>
+            </div>
+          )}
+
+          {/* 3. Collection / Category as Secondary Label */}
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full border backdrop-blur-md shadow-2xs ${collectionBadge.color}`}
             >
               {collectionBadge.label}
             </span>
-            {product.categoryName && (
+            {categoryLabel && (
               <span
                 className="text-[11px] font-mono opacity-80"
                 style={{ color: 'var(--collection-text-muted)' }}
               >
-                &bull; {product.categoryName}
+                / {categoryLabel}
               </span>
             )}
             {!isSelected && (
@@ -137,44 +179,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
             ) : null}
           </div>
 
-          <h3
-            className="text-base font-serif font-medium transition-colors line-clamp-1"
-            style={{ color: 'var(--collection-heading)' }}
-          >
-            <Link
-              to={productUrl}
-              className="hover:opacity-80 transition-opacity"
-            >
-              {product.name}
-            </Link>
-          </h3>
-
-          {/* Selected Variant / Size display */}
-          {selectedVariant && (
-            <div
-              className="flex items-center gap-1.5 text-xs"
-              style={{ color: 'var(--collection-text-muted)' }}
-            >
-              <span>Option:</span>
-              {selectedVariant.hex && (
-                <span
-                  className="w-3 h-3 rounded-full border inline-block"
-                  style={{
-                    backgroundColor: selectedVariant.hex,
-                    borderColor: 'var(--collection-border)',
-                  }}
-                />
-              )}
-              <span
-                className="font-medium"
-                style={{ color: 'var(--collection-text)' }}
-              >
-                {selectedVariant.name}
-              </span>
-            </div>
-          )}
-
-          {/* Unit Price & Quick Save for Later */}
+          {/* 4. Unit Price & Quick Save for Later */}
           <div className="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
             {hasPrice ? (
               <span style={{ color: 'var(--collection-text-muted)' }}>

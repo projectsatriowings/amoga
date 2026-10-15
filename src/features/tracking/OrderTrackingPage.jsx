@@ -613,8 +613,7 @@ export function OrderTrackingPage() {
                       <p>{trackingData.deliveryDestination.addressLine2}</p>
                     )}
                     <p>
-                      {trackingData.deliveryDestination.city},{' '}
-                      {trackingData.deliveryDestination.state} —{' '}
+                      {`${trackingData.deliveryDestination.city}, ${trackingData.deliveryDestination.state} — `}
                       <span className="font-mono">{trackingData.deliveryDestination.pincode}</span>
                     </p>
                     <p className="font-mono text-[#7A7167] pt-1">

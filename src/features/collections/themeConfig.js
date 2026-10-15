@@ -310,8 +310,8 @@ export const COLLECTION_THEMES = {
 
   jewellery: {
     id: 'jewellery',
-    name: 'Silver Jewellery',
-    title: 'SILVER JEWELLERY',
+    name: 'Sterling Silver',
+    title: 'STERLING SILVER',
     eyebrow: 'MODERN HEIRLOOMS',
     tagline: 'Modern Heirlooms',
     subtitle: 'Modern Heirlooms',

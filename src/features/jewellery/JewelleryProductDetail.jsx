@@ -209,7 +209,7 @@ export function JewelleryProductDetail() {
             </Link>
             <span>/</span>
             <Link to="/jewellery" className="hover:underline text-[#B9B8B5]/80">
-              Silver Jewellery
+              Sterling Silver
             </Link>
             <span>/</span>
             <Link
@@ -293,7 +293,7 @@ export function JewelleryProductDetail() {
                 </span>
                 <span className="text-[#B9B8B5]/40">&bull;</span>
                 <span className="text-xs font-mono text-[#B9B8B5]/80">
-                  SKU: {product.id}
+                  {`SKU: ${product.id}`}
                 </span>
               </div>
 

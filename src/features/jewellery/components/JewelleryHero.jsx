@@ -62,7 +62,7 @@ export function JewelleryHero() {
             >
               <img
                 src={heroImage}
-                alt="Amoga Pure Silver Jewellery Editorial Showcase"
+                alt="Amoga Sterling Silver Editorial Showcase"
                 className="w-full h-auto aspect-[3/4] object-cover object-top"
               />
 

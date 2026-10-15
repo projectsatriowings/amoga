@@ -208,6 +208,21 @@ export async function reserveStock({
         },
       });
 
+      await client.inventoryLog.create({
+        data: {
+          productId: variant.productId,
+          variantId: variant.id,
+          previousStock: variant.stockQuantity,
+          adjustedStock: variant.stockQuantity,
+          delta: 0,
+          reason: `Stock reservation for order ${orderReference}`,
+          adminEmail: 'system',
+          orderId,
+          actor: 'SYSTEM: CHECKOUT_RESERVATION',
+          type: 'RESERVATION',
+        },
+      });
+
       reservationsCreated.push(reservation);
     } else {
       // Product-level stock reservation
@@ -255,6 +270,21 @@ export async function reserveStock({
         },
       });
 
+      await client.inventoryLog.create({
+        data: {
+          productId: product.id,
+          variantId: null,
+          previousStock: product.stockQuantity,
+          adjustedStock: product.stockQuantity,
+          delta: 0,
+          reason: `Stock reservation for order ${orderReference}`,
+          adminEmail: 'system',
+          orderId,
+          actor: 'SYSTEM: CHECKOUT_RESERVATION',
+          type: 'RESERVATION',
+        },
+      });
+
       reservationsCreated.push(reservation);
     }
   }
@@ -271,9 +301,106 @@ export async function reserveStock({
 }
 
 /**
- * Commits stock deduction exactly once after confirmed payment / order confirmation.
+ * Confirms order reservation upon payment capture or admin order confirmation.
+ * Extends reservation expiration to prevent expiration during atelier processing.
+ * If reservation does not exist (e.g. created via COD or expired), validates and reserves atomically.
+ */
+export async function confirmOrderReservation({ tx, orderId, orderReference, actor = 'SYSTEM: ORDER_CONFIRMED' }) {
+  const client = tx || prisma;
+  const whereClause = orderId ? { orderId } : { orderReference };
+
+  // 1. Check if active reservations already exist
+  const activeReservations = await client.inventoryReservation.findMany({
+    where: {
+      ...whereClause,
+      status: 'ACTIVE',
+    },
+    include: { product: true, variant: true },
+  });
+
+  if (activeReservations.length > 0) {
+    // Extend expiry far into future (30 days) to prevent auto-release while confirmed/processing
+    const farFuture = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await client.inventoryReservation.updateMany({
+      where: {
+        ...whereClause,
+        status: 'ACTIVE',
+      },
+      data: { expiresAt: farFuture },
+    });
+
+    for (const res of activeReservations) {
+      const existingLog = await client.inventoryLog.findFirst({
+        where: {
+          orderId: res.orderId,
+          productId: res.productId,
+          type: 'RESERVATION',
+        },
+      });
+      if (!existingLog) {
+        await client.inventoryLog.create({
+          data: {
+            productId: res.productId,
+            variantId: res.variantId,
+            previousStock: res.variant ? res.variant.stockQuantity : res.product.stockQuantity,
+            adjustedStock: res.variant ? res.variant.stockQuantity : res.product.stockQuantity,
+            delta: 0,
+            reason: `Stock reservation confirmed for Order ${orderReference || res.orderReference}`,
+            adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
+            orderId: res.orderId,
+            actor: typeof actor === 'string' ? actor : 'SYSTEM',
+            type: 'RESERVATION',
+          },
+        });
+      }
+    }
+    return { success: true, count: activeReservations.length };
+  }
+
+  // 2. Check if already committed/fulfilled
+  const committedReservations = await client.inventoryReservation.findMany({
+    where: {
+      ...whereClause,
+      status: 'COMMITTED',
+    },
+  });
+  if (committedReservations.length > 0) {
+    return { success: true, alreadyCommitted: true, count: committedReservations.length };
+  }
+
+  // 3. If no active reservation exists, fetch order items and reserve them atomically
+  const order = await client.order.findUnique({
+    where: orderId ? { id: orderId } : { orderReference },
+    include: { items: true },
+  });
+
+  if (order && order.items && order.items.length > 0) {
+    const itemsToReserve = order.items.map((item) => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.quantity,
+      productName: item.productName,
+      variantName: item.variantName,
+    }));
+
+    await reserveStock({
+      tx: client,
+      orderId: order.id,
+      orderReference: order.orderReference,
+      items: itemsToReserve,
+      expiryMinutes: 60 * 24 * 30, // 30-day hold for confirmed orders
+    });
+    return { success: true, newlyReserved: true, count: itemsToReserve.length };
+  }
+
+  return { success: false, note: 'No items found for order' };
+}
+
+/**
+ * Commits stock deduction exactly once upon dispatch/fulfilment.
  * Transitions ACTIVE reservations to COMMITTED, decrements on-hand and reserved quantity,
  * creates audit InventoryLog, and evaluates low-stock threshold alerts.
+ * Concurrency-safe and strictly idempotent.
  */
 export async function commitReservation(firstArg, ...rest) {
   let params;
@@ -294,6 +421,20 @@ export async function commitReservation(firstArg, ...rest) {
 
   const orderWhere = orderId ? { orderId } : { orderReference };
 
+  // Idempotency check: verify if FULFILMENT log already exists for this order
+  if (orderId) {
+    const existingFulfilment = await client.inventoryLog.findFirst({
+      where: {
+        orderId,
+        type: 'FULFILMENT',
+      },
+    });
+
+    if (existingFulfilment) {
+      return { success: true, isDuplicate: true, processedCount: 0, note: 'Order items have already been fulfilled and deducted.' };
+    }
+  }
+
   // 1. Fetch active reservations for this order
   const activeReservations = await client.inventoryReservation.findMany({
     where: {
@@ -306,125 +447,181 @@ export async function commitReservation(firstArg, ...rest) {
     },
   });
 
-  if (activeReservations.length === 0) {
-    // Idempotent check: check if already committed
-    const committedReservations = await client.inventoryReservation.findMany({
-      where: {
-        ...orderWhere,
-        status: 'COMMITTED',
-      },
-    });
+  if (activeReservations.length > 0) {
+    for (const res of activeReservations) {
+      const qty = res.quantity;
 
-    if (committedReservations.length > 0) {
-      return { success: true, isDuplicate: true, committedCount: committedReservations.length, processedCount: 0 };
-    }
-
-    return { success: true, committedCount: 0, processedCount: 0, note: 'No active reservations to commit' };
-  }
-
-  for (const res of activeReservations) {
-    const qty = res.quantity;
-
-    if (res.variantId) {
-      const currentVariant = await client.productVariant.findUnique({
-        where: { id: res.variantId },
-      });
-
-      if (currentVariant) {
-        const prevStock = currentVariant.stockQuantity;
-        const newStock = Math.max(0, currentVariant.stockQuantity - qty);
-        const newReserved = Math.max(0, currentVariant.reservedQuantity - qty);
-
-        await client.productVariant.update({
+      if (res.variantId) {
+        const currentVariant = await client.productVariant.findUnique({
           where: { id: res.variantId },
-          data: {
-            stockQuantity: newStock,
-            reservedQuantity: newReserved,
-            inStock: newStock > 0,
-          },
         });
 
-        await client.inventoryLog.create({
-          data: {
+        if (currentVariant) {
+          const prevStock = currentVariant.stockQuantity;
+          const newStock = Math.max(0, currentVariant.stockQuantity - qty);
+          const newReserved = Math.max(0, currentVariant.reservedQuantity - qty);
+
+          await client.productVariant.update({
+            where: { id: res.variantId },
+            data: {
+              stockQuantity: newStock,
+              reservedQuantity: newReserved,
+              inStock: newStock > 0,
+            },
+          });
+
+          await client.inventoryLog.create({
+            data: {
+              productId: res.productId,
+              variantId: res.variantId,
+              previousStock: prevStock,
+              adjustedStock: newStock,
+              delta: -qty,
+              reason: reason || `Order ${orderReference || res.orderReference} stock deduction upon fulfillment / dispatch`,
+              adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
+              orderId: orderId || res.orderId,
+              actor: typeof actor === 'string' ? actor : 'SYSTEM',
+              type,
+            },
+          });
+
+          // Threshold check
+          await checkAndTriggerThresholdAlert({
             productId: res.productId,
             variantId: res.variantId,
-            previousStock: prevStock,
-            adjustedStock: newStock,
-            delta: -qty,
-            reason: reason || `Order ${orderReference} stock deduction upon fulfillment / dispatch`,
-            adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
-            orderId,
-            actor: typeof actor === 'string' ? actor : 'SYSTEM',
-            type,
-          },
-        });
-
-        // Threshold check
-        await checkAndTriggerThresholdAlert({
-          productId: res.productId,
-          variantId: res.variantId,
-          stockQuantity: newStock,
-          threshold: currentVariant.lowStockThreshold || 5,
-          productName: res.product.name,
-          variantName: res.variant?.name,
-          sku: res.variant?.sku,
-        });
-      }
-    } else {
-      const currentProduct = await client.product.findUnique({
-        where: { id: res.productId },
-      });
-
-      if (currentProduct) {
-        const prevStock = currentProduct.stockQuantity;
-        const newStock = Math.max(0, currentProduct.stockQuantity - qty);
-        const newReserved = Math.max(0, currentProduct.reservedQuantity - qty);
-
-        await client.product.update({
-          where: { id: res.productId },
-          data: {
             stockQuantity: newStock,
-            reservedQuantity: newReserved,
-            inStock: newStock > 0,
-          },
+            threshold: currentVariant.lowStockThreshold || 5,
+            productName: res.product.name,
+            variantName: res.variant?.name,
+            sku: res.variant?.sku,
+          });
+        }
+      } else {
+        const currentProduct = await client.product.findUnique({
+          where: { id: res.productId },
         });
 
-        await client.inventoryLog.create({
-          data: {
+        if (currentProduct) {
+          const prevStock = currentProduct.stockQuantity;
+          const newStock = Math.max(0, currentProduct.stockQuantity - qty);
+          const newReserved = Math.max(0, currentProduct.reservedQuantity - qty);
+
+          await client.product.update({
+            where: { id: res.productId },
+            data: {
+              stockQuantity: newStock,
+              reservedQuantity: newReserved,
+              inStock: newStock > 0,
+            },
+          });
+
+          await client.inventoryLog.create({
+            data: {
+              productId: res.productId,
+              variantId: null,
+              previousStock: prevStock,
+              adjustedStock: newStock,
+              delta: -qty,
+              reason: reason || `Order ${orderReference || res.orderReference} stock deduction upon fulfillment / dispatch`,
+              adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
+              orderId: orderId || res.orderId,
+              actor: typeof actor === 'string' ? actor : 'SYSTEM',
+              type,
+            },
+          });
+
+          // Threshold check
+          await checkAndTriggerThresholdAlert({
             productId: res.productId,
             variantId: null,
-            previousStock: prevStock,
-            adjustedStock: newStock,
-            delta: -qty,
-            reason: reason || `Order ${orderReference} stock deduction upon fulfillment / dispatch`,
-            adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
-            orderId,
-            actor: typeof actor === 'string' ? actor : 'SYSTEM',
-            type,
-          },
-        });
-
-        // Threshold check
-        await checkAndTriggerThresholdAlert({
-          productId: res.productId,
-          variantId: null,
-          stockQuantity: newStock,
-          threshold: currentProduct.lowStockThreshold || 5,
-          productName: res.product.name,
-          variantName: null,
-          sku: currentProduct.sourceId,
-        });
+            stockQuantity: newStock,
+            threshold: currentProduct.lowStockThreshold || 5,
+            productName: res.product.name,
+            variantName: null,
+            sku: currentProduct.sourceId,
+          });
+        }
       }
+
+      // Mark reservation as COMMITTED
+      await client.inventoryReservation.update({
+        where: { id: res.id },
+        data: { status: 'COMMITTED' },
+      });
     }
 
-    // Mark reservation as COMMITTED
-    await client.inventoryReservation.update({
-      where: { id: res.id },
-      data: { status: 'COMMITTED' },
-    });
+    return { success: true, committedCount: activeReservations.length, processedCount: activeReservations.length };
   }
 
-  return { success: true, committedCount: activeReservations.length, processedCount: activeReservations.length };
+  // Fallback: If no active reservation exists (e.g., reservation expired or order was created directly),
+  // deduct physical stock directly from order items to ensure physical deduction occurs upon dispatch.
+  const order = await client.order.findUnique({
+    where: orderId ? { id: orderId } : { orderReference },
+    include: { items: true },
+  });
+
+  if (order && order.items && order.items.length > 0) {
+    let processed = 0;
+    for (const item of order.items) {
+      const qty = item.quantity;
+      if (item.variantId) {
+        const currentVariant = await client.productVariant.findUnique({ where: { id: item.variantId } });
+        if (currentVariant) {
+          const prevStock = currentVariant.stockQuantity;
+          const newStock = Math.max(0, currentVariant.stockQuantity - qty);
+          const newReserved = Math.max(0, currentVariant.reservedQuantity - qty);
+          await client.productVariant.update({
+            where: { id: item.variantId },
+            data: { stockQuantity: newStock, reservedQuantity: newReserved, inStock: newStock > 0 },
+          });
+          await client.inventoryLog.create({
+            data: {
+              productId: item.productId,
+              variantId: item.variantId,
+              previousStock: prevStock,
+              adjustedStock: newStock,
+              delta: -qty,
+              reason: reason || `Order ${order.orderReference} stock deduction upon fulfillment / dispatch`,
+              adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
+              orderId: order.id,
+              actor: typeof actor === 'string' ? actor : 'SYSTEM',
+              type,
+            },
+          });
+          processed++;
+        }
+      } else if (item.productId) {
+        const currentProduct = await client.product.findUnique({ where: { id: item.productId } });
+        if (currentProduct) {
+          const prevStock = currentProduct.stockQuantity;
+          const newStock = Math.max(0, currentProduct.stockQuantity - qty);
+          const newReserved = Math.max(0, currentProduct.reservedQuantity - qty);
+          await client.product.update({
+            where: { id: item.productId },
+            data: { stockQuantity: newStock, reservedQuantity: newReserved, inStock: newStock > 0 },
+          });
+          await client.inventoryLog.create({
+            data: {
+              productId: item.productId,
+              variantId: null,
+              previousStock: prevStock,
+              adjustedStock: newStock,
+              delta: -qty,
+              reason: reason || `Order ${order.orderReference} stock deduction upon fulfillment / dispatch`,
+              adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
+              orderId: order.id,
+              actor: typeof actor === 'string' ? actor : 'SYSTEM',
+              type,
+            },
+          });
+          processed++;
+        }
+      }
+    }
+    return { success: true, fallbackFulfilmentCount: processed, processedCount: processed };
+  }
+
+  return { success: true, committedCount: 0, processedCount: 0, note: 'No active reservations or order items found to fulfill' };
 }
 
 /**
@@ -463,10 +660,12 @@ export async function releaseReservation(firstArg, ...rest) {
 
   for (const res of activeReservations) {
     const qty = res.quantity;
+    let currentStock = 0;
 
     if (res.variantId) {
       const variant = await client.productVariant.findUnique({ where: { id: res.variantId } });
       if (variant) {
+        currentStock = variant.stockQuantity;
         const newReserved = Math.max(0, variant.reservedQuantity - qty);
         await client.productVariant.update({
           where: { id: res.variantId },
@@ -478,6 +677,7 @@ export async function releaseReservation(firstArg, ...rest) {
     } else {
       const product = await client.product.findUnique({ where: { id: res.productId } });
       if (product) {
+        currentStock = product.stockQuantity;
         const newReserved = Math.max(0, product.reservedQuantity - qty);
         await client.product.update({
           where: { id: res.productId },
@@ -491,6 +691,21 @@ export async function releaseReservation(firstArg, ...rest) {
     await client.inventoryReservation.update({
       where: { id: res.id },
       data: { status: 'RELEASED' },
+    });
+
+    await client.inventoryLog.create({
+      data: {
+        productId: res.productId,
+        variantId: res.variantId || null,
+        previousStock: currentStock,
+        adjustedStock: currentStock,
+        delta: 0,
+        reason: `Stock reservation released: ${reason}`,
+        adminEmail: 'system',
+        orderId: res.orderId,
+        actor: 'SYSTEM',
+        type: 'RESERVATION_RELEASE',
+      },
     });
   }
 

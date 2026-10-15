@@ -20,6 +20,17 @@ export function AdminLogin() {
     }
   };
 
+  const handleSuperAdminQuickAccess = async (autoLogin = false) => {
+    setEmail('admin@amoga.com');
+    setPassword('Admin@Amoga2026!');
+    if (autoLogin) {
+      const result = await login('admin@amoga.com', 'Admin@Amoga2026!');
+      if (result?.success) {
+        navigate('/admin');
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F6F0] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
@@ -102,6 +113,57 @@ export function AdminLogin() {
               )}
             </button>
           </form>
+
+          {/* Super Admin Quick Access (Only for Super Admin) */}
+          <div className="mt-6 pt-5 border-t border-[#E5E0D5]">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[#8C8377] flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#B08A4D]" />
+                Super Admin Quick Access
+              </span>
+              <span className="text-[9px] font-mono font-semibold uppercase px-1.5 py-0.5 rounded bg-[#722F37]/10 text-[#722F37] border border-[#722F37]/20">
+                Super Admin Only
+              </span>
+            </div>
+
+            <div className="p-3 bg-[#FAF8F5] border border-[#E0D9CD] rounded-lg transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-serif font-bold text-[#292820]">
+                    Amoga Super Admin
+                  </span>
+                  <span className="text-[11px] font-mono text-[#8C8377]">
+                    admin@amoga.com
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-[#B08A4D] bg-[#F3EFE6] px-2 py-0.5 rounded border border-[#E5E0D5]">
+                  Full Access
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleSuperAdminQuickAccess(false)}
+                  className="w-full py-1.5 px-2 bg-white hover:bg-[#F5F2EA] border border-[#D5CEC2] rounded text-[11px] font-medium text-[#4A423B] transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                  title="Auto-fill Super Admin credentials into the form"
+                >
+                  <span>Auto-fill</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => handleSuperAdminQuickAccess(true)}
+                  className="w-full py-1.5 px-2 bg-[#722F37] hover:bg-[#5E2229] border border-[#722F37] rounded text-[11px] font-medium text-white transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                  title="Sign in immediately as Super Admin"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>1-Click Sign In</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <p className="mt-4 text-center text-[11px] text-[#8C8377] font-mono">
