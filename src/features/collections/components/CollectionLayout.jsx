@@ -16,7 +16,7 @@ export function CollectionLayout({
   return (
     <div
       data-collection={collectionId}
-      className={`min-h-screen flex flex-col w-full overflow-x-hidden transition-colors ${className}`}
+      className={`min-h-screen flex flex-col w-full overflow-x-clip transition-colors ${className}`}
       style={{
         backgroundColor: palette.bg || '#F8F6F0',
         color: palette.text || '#292820',

@@ -12,7 +12,7 @@ export async function postOrder(req, res, next) {
       });
     }
 
-    const { items, customer, idempotencyKey, couponCode } = parseResult.data;
+    const { items, customer, idempotencyKey, couponCode, paymentMethod } = parseResult.data;
     const isDemo = Boolean(req.body.isDemo);
 
     const result = await createOrder({
@@ -20,6 +20,7 @@ export async function postOrder(req, res, next) {
       customer,
       idempotencyKey,
       couponCode,
+      paymentMethod: paymentMethod || req.body.paymentMethod || 'online',
       isDemo,
       customerId: req.customerId || null,
     });

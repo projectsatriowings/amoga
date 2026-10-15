@@ -135,13 +135,6 @@ export function TeaProductCard({ product }) {
             >
               {product.name}
             </Link>
-
-            {/* Standee Narrative Note */}
-            {product.standeeNotes && (
-              <p className="text-xs text-[#543B25] line-clamp-2 leading-relaxed bg-[#FAF1BB] p-2.5 rounded-lg border border-[#B88E38]/25 font-sans">
-                <span className="font-semibold text-[#8C6320]">Wellness:</span> {product.standeeNotes}
-              </p>
-            )}
           </div>
 
           {/* Bottom Pricing & Action Row */}

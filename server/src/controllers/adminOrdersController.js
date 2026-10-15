@@ -1,12 +1,12 @@
 import { prisma } from '../config/prisma.js';
 import { logAdminAction } from '../utils/adminAuth.js';
-import { handleOrderCancellation } from '../services/inventoryService.js';
+import { handleOrderCancellation, commitReservation } from '../services/inventoryService.js';
 
 // Enforce valid finite-state machine transitions for orders
 const VALID_TRANSITIONS = {
   PENDING_PAYMENT: ['CANCELLED'],
   PENDING_CONFIRMATION: ['CONFIRMED', 'CANCELLED'],
-  CONFIRMED: ['PROCESSING', 'CANCELLED'],
+  CONFIRMED: ['PROCESSING', 'DISPATCHED', 'CANCELLED'],
   PROCESSING: ['DISPATCHED', 'CANCELLED'],
   DISPATCHED: ['DELIVERED', 'CANCELLED'],
   DELIVERED: [], // Terminal state
@@ -227,12 +227,21 @@ export async function updateOrderStatus(req, res) {
       data: { status: targetStatus },
     });
 
+    if (targetStatus === 'DISPATCHED') {
+      await commitReservation({
+        orderId: order.id,
+        orderReference: order.orderReference,
+        actor: req.admin ? `ADMIN: ${req.admin.email}` : 'SYSTEM',
+        type: 'FULFILMENT',
+      }).catch((err) => console.warn('[INVENTORY ORDER DISPATCH FULFILLMENT ERROR]:', err.message));
+    }
+
     if (targetStatus === 'CANCELLED') {
       await handleOrderCancellation({
         orderId: order.id,
         admin: req.admin,
         reason: reason?.trim() || 'Admin cancelled order',
-        restockPhysical: req.body.restockPhysical === true,
+        restockPhysical: req.body.restockPhysical === true || currentStatus === 'DISPATCHED' || currentStatus === 'DELIVERED',
       }).catch((err) => console.warn('[INVENTORY ORDER CANCELLATION ERROR]:', err.message));
     }
 

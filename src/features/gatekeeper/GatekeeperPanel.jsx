@@ -244,7 +244,9 @@ export function GatekeeperPanel({
           {/* Prominent Collection Title */}
           <motion.h2
             layout="position"
-            className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl uppercase leading-[1.05] w-full max-w-full drop-shadow-sm ${themeConfig.titleFont}`}
+            className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl uppercase leading-[1.05] w-full max-w-full drop-shadow-sm ${
+              isCollapsed ? '' : 'md:min-h-[3.6rem] lg:min-h-[4.4rem] xl:min-h-[5.2rem] 2xl:min-h-[6rem]'
+            } ${themeConfig.titleFont}`}
             style={{ color: themeConfig.textColor }}
           >
             {collection.title.split(' ').map((word, wIdx) => (
@@ -257,7 +259,9 @@ export function GatekeeperPanel({
           {/* Eyebrow Subheading */}
           <motion.div
             layout="position"
-            className="mt-2 text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase min-h-[1.25rem]"
+            className={`mt-2 text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase ${
+              isCollapsed ? 'min-h-0' : 'min-h-[1.25rem] md:min-h-[1.5rem]'
+            }`}
             style={{ color: themeConfig.eyebrowColor }}
           >
             {collection.eyebrow}
@@ -271,7 +275,9 @@ export function GatekeeperPanel({
               marginTop: isCollapsed ? 0 : 14,
             }}
             transition={transitionConfig}
-            className="overflow-hidden max-w-sm"
+            className={`overflow-hidden max-w-sm ${
+              isCollapsed ? '' : 'md:min-h-[5.75rem] lg:min-h-[5rem] xl:min-h-[4.5rem]'
+            }`}
           >
             <p
               className="text-xs sm:text-sm leading-relaxed"

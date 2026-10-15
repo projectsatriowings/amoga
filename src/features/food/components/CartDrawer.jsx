@@ -199,6 +199,18 @@ export function CartDrawer() {
                         ? `/tea/products/${product.slug}`
                         : `/food/products/${product?.slug || ''}`;
 
+                    const collectionId = product?.collection || item.collectionId;
+                    const collectionLabel =
+                      collectionId === 'jewellery'
+                        ? 'Silver Jewellery'
+                        : collectionId === 'sarees'
+                        ? 'Heritage Sarees'
+                        : collectionId === 'tea'
+                        ? 'Wellness Tea'
+                        : 'Wholesome Pantry';
+                    const categoryLabel = product?.categoryName || product?.category || null;
+                    const variantLabel = selectedVariant?.name || item.variantName || null;
+
                     return (
                       <div
                         key={lineKey}
@@ -219,24 +231,30 @@ export function CartDrawer() {
                             {product?.name || item.name}
                           </Link>
 
-                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#557C36] font-mono">
-                            <span>{product?.categoryName || 'Botanical Blend'}</span>
-                            {selectedVariant && (
-                              <span className="flex items-center gap-1 text-black/60">
-                                &bull;
-                                <span
-                                  className="w-2 h-2 rounded-full inline-block border border-black/20"
-                                  style={{ backgroundColor: selectedVariant.hex }}
-                                />
-                                {selectedVariant.name}
+                          {/* Standardized Subtitle: Variant/Size -> Collection / Category */}
+                          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[#405244] font-mono">
+                            {variantLabel && (
+                              <span className="font-medium text-[#172B1C] flex items-center gap-1">
+                                {selectedVariant?.hex && (
+                                  <span
+                                    className="w-2 h-2 rounded-full inline-block border border-black/20"
+                                    style={{ backgroundColor: selectedVariant.hex }}
+                                  />
+                                )}
+                                <span>{variantLabel}</span>
+                                <span className="opacity-40">&bull;</span>
                               </span>
                             )}
+                            <span className="text-[#267D2A] font-semibold">{collectionLabel}</span>
+                            {categoryLabel && (
+                              <span className="opacity-75">/ {categoryLabel}</span>
+                            )}
                             {availability.isOutOfStock ? (
-                              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200">
+                              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200 ml-1">
                                 Out of Stock
                               </span>
                             ) : availability.isLowStock ? (
-                              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200 ml-1">
                                 {availability.availableQuantity} left
                               </span>
                             ) : null}

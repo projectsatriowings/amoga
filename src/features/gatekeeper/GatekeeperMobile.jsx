@@ -38,19 +38,35 @@ export function GatekeeperMobile({
   const [useFallback, setUseFallback] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
+  const canPrev = activeIndex > 0 && !isExiting;
+  const canNext = activeIndex < collections.length - 1 && !isExiting;
+
   const handlePrev = () => {
-    if (isExiting) return;
+    if (!canPrev) return;
     setUseFallback(false);
     setImageLoaded(false);
-    onChangeIndex((activeIndex - 1 + collections.length) % collections.length);
+    onChangeIndex(activeIndex - 1);
   };
 
   const handleNext = () => {
-    if (isExiting) return;
+    if (!canNext) return;
     setUseFallback(false);
     setImageLoaded(false);
-    onChangeIndex((activeIndex + 1) % collections.length);
+    onChangeIndex(activeIndex + 1);
   };
+
+  // Accessible keyboard navigation for mobile/tablet
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrev();
+      } else if (e.key === 'ArrowRight') {
+        handleNext();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeIndex, canPrev, canNext]);
 
   const themeConfig = {
     food: {
@@ -166,8 +182,8 @@ export function GatekeeperMobile({
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
             onDragEnd={(_, info) => {
-              if (info.offset.x < -40) handleNext();
-              if (info.offset.x > 40) handlePrev();
+              if (info.offset.x < -40 && canNext) handleNext();
+              if (info.offset.x > 40 && canPrev) handlePrev();
             }}
             className="flex-1 flex flex-col justify-between"
           >
@@ -269,23 +285,33 @@ export function GatekeeperMobile({
       <div className="flex items-center justify-between pt-3 border-t border-current/10 z-20">
         <button
           type="button"
-          disabled={isExiting}
+          disabled={!canPrev}
+          aria-disabled={!canPrev}
           onClick={handlePrev}
-          className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:opacity-100 opacity-70 transition-opacity focus-visible:ring-2 focus-visible:ring-[#C5A46D] disabled:opacity-30"
+          className={`p-2 rounded-full transition-all focus-visible:ring-2 focus-visible:ring-[#C5A46D] ${
+            !canPrev
+              ? 'opacity-25 cursor-not-allowed pointer-events-none'
+              : 'bg-black/5 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 active:scale-95 cursor-pointer opacity-100'
+          }`}
           aria-label="Previous collection"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
 
-        <span className="text-xs font-mono opacity-60 tracking-wider">
-          Swipe or tap arrows
+        <span className="text-xs font-mono opacity-70 tracking-wider">
+          {activeIndex + 1} of {collections.length} &bull; Swipe or tap
         </span>
 
         <button
           type="button"
-          disabled={isExiting}
+          disabled={!canNext}
+          aria-disabled={!canNext}
           onClick={handleNext}
-          className="p-2 rounded-full bg-black/5 dark:bg-white/10 hover:opacity-100 opacity-70 transition-opacity focus-visible:ring-2 focus-visible:ring-[#C5A46D] disabled:opacity-30"
+          className={`p-2 rounded-full transition-all focus-visible:ring-2 focus-visible:ring-[#C5A46D] ${
+            !canNext
+              ? 'opacity-25 cursor-not-allowed pointer-events-none'
+              : 'bg-black/5 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 active:scale-95 cursor-pointer opacity-100'
+          }`}
           aria-label="Next collection"
         >
           <ChevronRight className="w-5 h-5" />

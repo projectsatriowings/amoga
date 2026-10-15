@@ -33,4 +33,5 @@ export const createOrderBodySchema = z.object({
   customer: customerDetailsSchema,
   idempotencyKey: z.string().max(100).optional().nullable(),
   couponCode: z.string().trim().max(50).optional().nullable(),
+  paymentMethod: z.enum(['online', 'cod']).optional().default('online'),
 });

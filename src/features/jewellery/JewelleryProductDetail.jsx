@@ -25,6 +25,7 @@ import { useProductDetail } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
 import { resolveAvailability } from '../../utils/inventory';
 import { RestockModal } from '../../components/ui/RestockModal';
+import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSection.jsx';
 
 export function JewelleryProductDetail() {
   const { slug } = useParams();
@@ -571,6 +572,14 @@ export function JewelleryProductDetail() {
             </div>
           </div>
         )}
+
+        {/* Patron Reviews & Ratings */}
+        <ProductReviewsSection
+          productId={product.id || product.slug}
+          productName={product.name}
+          collectionId="jewellery"
+          palette={{ accent: '#C6AD82', heading: '#F7F3EB' }}
+        />
       </Container>
 
       <RestockModal

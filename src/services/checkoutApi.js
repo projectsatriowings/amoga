@@ -48,7 +48,7 @@ export async function applyCouponApi({ code, subtotal, items = [] }) {
 /**
  * Creates a persistent database order
  */
-export async function createOrderApi({ items: rawItems, customer, idempotencyKey = null, isDemo = false, couponCode = null }) {
+export async function createOrderApi({ items: rawItems, customer, idempotencyKey = null, isDemo = false, couponCode = null, paymentMethod = 'online' }) {
   const items = Array.isArray(rawItems) ? rawItems : (rawItems?.items || []);
   const formattedItems = items.map((item) => ({
     productId: item.productId || item.product?.id || item.id,
@@ -77,6 +77,7 @@ export async function createOrderApi({ items: rawItems, customer, idempotencyKey
       idempotencyKey,
       isDemo,
       couponCode: couponCode ? couponCode.trim().toUpperCase() : undefined,
+      paymentMethod,
     }),
   });
 

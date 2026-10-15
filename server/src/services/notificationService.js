@@ -286,10 +286,40 @@ export async function checkAndTriggerThresholdAlert(firstArg, ...rest) {
   } = params;
 
   try {
+    // Resolve available stock = onHand - reserved for accurate threshold evaluation
+    let effectiveAvailable = params.availableStock ?? params.availableQuantity;
+    let resolvedThreshold = threshold || 5;
+
+    if (effectiveAvailable === undefined && productId) {
+      if (variantId) {
+        const v = await prisma.productVariant.findUnique({
+          where: { id: variantId },
+          select: { stockQuantity: true, reservedQuantity: true, lowStockThreshold: true },
+        });
+        if (v) {
+          effectiveAvailable = Math.max(0, (v.stockQuantity || 0) - (v.reservedQuantity || 0));
+          resolvedThreshold = v.lowStockThreshold || resolvedThreshold;
+        }
+      } else {
+        const p = await prisma.product.findUnique({
+          where: { id: productId },
+          select: { stockQuantity: true, reservedQuantity: true, lowStockThreshold: true },
+        });
+        if (p) {
+          effectiveAvailable = Math.max(0, (p.stockQuantity || 0) - (p.reservedQuantity || 0));
+          resolvedThreshold = p.lowStockThreshold || resolvedThreshold;
+        }
+      }
+    }
+
+    if (effectiveAvailable === undefined) {
+      effectiveAvailable = stockQuantity !== undefined ? stockQuantity : 0;
+    }
+
     let alertType = null;
-    if (stockQuantity <= 0) {
+    if (effectiveAvailable <= 0) {
       alertType = 'OUT_OF_STOCK';
-    } else if (stockQuantity <= threshold) {
+    } else if (effectiveAvailable <= resolvedThreshold) {
       alertType = 'LOW_STOCK';
     }
 
@@ -343,8 +373,8 @@ export async function checkAndTriggerThresholdAlert(firstArg, ...rest) {
         productId,
         variantId: variantId || null,
         alertType,
-        stockQuantity,
-        threshold,
+        stockQuantity: effectiveAvailable,
+        threshold: resolvedThreshold,
         status: 'ACTIVE',
       },
     });

@@ -259,6 +259,14 @@ export async function reserveStock({
     }
   }
 
+  // Trigger low-stock threshold evaluation on newly reserved items against available stock
+  for (const res of reservationsCreated) {
+    checkAndTriggerThresholdAlert({
+      productId: res.productId,
+      variantId: res.variantId,
+    }).catch((err) => console.error('[LOW STOCK ALERT ON RESERVATION ERROR]:', err));
+  }
+
   return reservationsCreated;
 }
 
@@ -277,13 +285,19 @@ export async function commitReservation(firstArg, ...rest) {
   } else {
     params = firstArg || {};
   }
-  const { tx, orderId, orderReference } = params;
+  const { tx, orderId, orderReference, actor = 'SYSTEM: FULFILMENT', type = 'FULFILMENT', reason } = params;
   const client = tx || prisma;
+
+  if (!orderId && !orderReference) {
+    return { success: false, note: 'orderId or orderReference is required' };
+  }
+
+  const orderWhere = orderId ? { orderId } : { orderReference };
 
   // 1. Fetch active reservations for this order
   const activeReservations = await client.inventoryReservation.findMany({
     where: {
-      orderId,
+      ...orderWhere,
       status: 'ACTIVE',
     },
     include: {
@@ -296,16 +310,16 @@ export async function commitReservation(firstArg, ...rest) {
     // Idempotent check: check if already committed
     const committedReservations = await client.inventoryReservation.findMany({
       where: {
-        orderId,
+        ...orderWhere,
         status: 'COMMITTED',
       },
     });
 
     if (committedReservations.length > 0) {
-      return { success: true, isDuplicate: true, committedCount: committedReservations.length };
+      return { success: true, isDuplicate: true, committedCount: committedReservations.length, processedCount: 0 };
     }
 
-    return { success: true, committedCount: 0, note: 'No active reservations to commit' };
+    return { success: true, committedCount: 0, processedCount: 0, note: 'No active reservations to commit' };
   }
 
   for (const res of activeReservations) {
@@ -337,11 +351,11 @@ export async function commitReservation(firstArg, ...rest) {
             previousStock: prevStock,
             adjustedStock: newStock,
             delta: -qty,
-            reason: `Order ${orderReference} confirmed payment deduction`,
-            adminEmail: 'system',
+            reason: reason || `Order ${orderReference} stock deduction upon fulfillment / dispatch`,
+            adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
             orderId,
-            actor: 'SYSTEM: ORDER_CONFIRMED',
-            type: 'ORDER_DEDUCTION',
+            actor: typeof actor === 'string' ? actor : 'SYSTEM',
+            type,
           },
         });
 
@@ -382,11 +396,11 @@ export async function commitReservation(firstArg, ...rest) {
             previousStock: prevStock,
             adjustedStock: newStock,
             delta: -qty,
-            reason: `Order ${orderReference} confirmed payment deduction`,
-            adminEmail: 'system',
+            reason: reason || `Order ${orderReference} stock deduction upon fulfillment / dispatch`,
+            adminEmail: typeof actor === 'string' && actor.startsWith('ADMIN:') ? actor.replace('ADMIN: ', '') : 'system',
             orderId,
-            actor: 'SYSTEM: ORDER_CONFIRMED',
-            type: 'ORDER_DEDUCTION',
+            actor: typeof actor === 'string' ? actor : 'SYSTEM',
+            type,
           },
         });
 
@@ -410,7 +424,7 @@ export async function commitReservation(firstArg, ...rest) {
     });
   }
 
-  return { success: true, committedCount: activeReservations.length };
+  return { success: true, committedCount: activeReservations.length, processedCount: activeReservations.length };
 }
 
 /**
@@ -430,10 +444,16 @@ export async function releaseReservation(firstArg, ...rest) {
   const client = tx || prisma;
 
   const targetId = identifier || orderId;
+  if (!targetId && !orderReference) {
+    return { success: true, releasedCount: 0 };
+  }
+
   const activeReservations = await client.inventoryReservation.findMany({
     where: {
       status: 'ACTIVE',
-      ...(targetId ? { OR: [{ id: targetId }, { orderId: targetId }] } : {}),
+      ...(targetId
+        ? { OR: [{ id: targetId }, { orderId: targetId }] }
+        : { orderReference }),
     },
   });
 
@@ -494,6 +514,25 @@ export async function releaseExpiredReservations() {
   let count = 0;
   for (const res of expired) {
     try {
+      // Check if order has been confirmed, processing, dispatched, delivered, or paid
+      if (res.orderId) {
+        const order = await prisma.order.findUnique({
+          where: { id: res.orderId },
+          select: { status: true, paymentStatus: true },
+        });
+
+        if (
+          order &&
+          (
+            ['CONFIRMED', 'PROCESSING', 'DISPATCHED', 'DELIVERED'].includes(order.status) ||
+            order.paymentStatus === 'SUCCEEDED'
+          )
+        ) {
+          // Keep reservation active for confirmed patron orders
+          continue;
+        }
+      }
+
       await prisma.$transaction(async (tx) => {
         if (res.variantId) {
           const variant = await tx.productVariant.findUnique({ where: { id: res.variantId } });
@@ -722,11 +761,18 @@ export async function adjustStock(firstArg, ...rest) {
  * Unpaid orders release reservations.
  * Confirmed paid orders only physically restock if restockPhysical is explicitly requested.
  */
-export async function handleOrderCancellation({ tx, orderId, admin, reason, restockPhysical = false }) {
+export async function handleOrderCancellation({ tx, orderId, orderReference, admin, reason, restockPhysical = false }) {
   const client = tx || prisma;
 
+  const whereClause = orderId ? { id: orderId } : (orderReference ? { orderReference } : null);
+  if (!whereClause) {
+    const err = new Error('Order identifier (orderId or orderReference) required for cancellation');
+    err.status = 400;
+    throw err;
+  }
+
   const order = await client.order.findUnique({
-    where: { id: orderId },
+    where: whereClause,
     include: { items: true },
   });
 
@@ -744,9 +790,9 @@ export async function handleOrderCancellation({ tx, orderId, admin, reason, rest
     reason: reason || 'Order cancelled before payment confirmation',
   });
 
-  // 2. If order was already confirmed/delivered and restockPhysical is true, restock inventory
+  // 2. If order was already fulfilled / dispatched and restockPhysical is true, restock physical inventory
   let restockedItemsCount = 0;
-  if (restockPhysical && order.paymentStatus === 'SUCCEEDED') {
+  if (restockPhysical) {
     for (const item of order.items) {
       if (item.variantId) {
         const variant = await client.productVariant.findUnique({ where: { id: item.variantId } });

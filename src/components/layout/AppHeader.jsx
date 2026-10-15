@@ -52,7 +52,7 @@ export function AppHeader({ activeCollection }) {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full backdrop-blur-md border-b transition-colors duration-normal ease-smooth ${activeThemeClass}`}
+      className={`sticky top-0 z-50 w-full backdrop-blur-md border-b transition-colors duration-normal ease-smooth shadow-xs ${activeThemeClass}`}
     >
       {/* Top Announcement Bar */}
       <div

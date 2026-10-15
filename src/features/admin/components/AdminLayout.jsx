@@ -11,6 +11,7 @@ import {
   Users,
   MessageSquare,
   Sparkles,
+  Star,
   BarChart3,
   Settings,
   History,
@@ -149,6 +150,7 @@ export function AdminLayout() {
         { label: 'Payments', path: '/admin/payments', icon: CreditCard },
         { label: 'Customers', path: '/admin/customers', icon: Users },
         { label: 'Customer Inquiries', path: '/admin/customer-inquiries', icon: MessageSquare },
+        { label: 'Customer Reviews', path: '/admin/reviews', icon: Star },
       ],
     },
     {

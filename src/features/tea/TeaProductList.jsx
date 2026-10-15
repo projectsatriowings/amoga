@@ -19,16 +19,19 @@ export function TeaProductList() {
   });
 
   const initialQuery = searchParams.get('q') || '';
+  const initialSort = searchParams.get('sort') || 'featured';
   const selectedCategory = searchParams.get('category') || 'all';
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [sortBy, setSortBy] = useState('featured');
+  const [sortBy, setSortBy] = useState(initialSort);
 
-  // Sync searchQuery when searchParams query changes externally
+  // Sync searchQuery and sortBy when searchParams change externally
   React.useEffect(() => {
     const urlQ = searchParams.get('q') || '';
     if (urlQ !== searchQuery.trim() && !searchQuery.startsWith(urlQ)) {
       setSearchQuery(urlQ);
     }
+    const urlSort = searchParams.get('sort') || 'featured';
+    setSortBy(urlSort);
   }, [searchParams]);
 
   // Debounced URL sync so typing is completely smooth and does not overwrite spaces
@@ -47,6 +50,17 @@ export function TeaProductList() {
 
   const handleSearchChange = (val) => {
     setSearchQuery(val);
+  };
+
+  const handleSortChange = (newSort) => {
+    setSortBy(newSort);
+    const newParams = new URLSearchParams(searchParams);
+    if (newSort === 'featured') {
+      newParams.delete('sort');
+    } else {
+      newParams.set('sort', newSort);
+    }
+    setSearchParams(newParams);
   };
 
   const clearAllFilters = () => {
@@ -84,14 +98,22 @@ export function TeaProductList() {
       );
     });
 
-    if (sortBy === 'name_asc') {
+    if (sortBy === 'name-asc' || sortBy === 'name_asc') {
       result.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortBy === 'name_desc') {
+    } else if (sortBy === 'name-desc' || sortBy === 'name_desc') {
       result.sort((a, b) => b.name.localeCompare(a.name));
-    } else if (sortBy === 'price_asc') {
-      result.sort((a, b) => (a.price || 0) - (b.price || 0));
-    } else if (sortBy === 'price_desc') {
-      result.sort((a, b) => (b.price || 0) - (a.price || 0));
+    } else if (sortBy === 'price-asc' || sortBy === 'price_asc') {
+      result.sort((a, b) => {
+        if (a.price === null || a.price === undefined) return 1;
+        if (b.price === null || b.price === undefined) return -1;
+        return a.price - b.price;
+      });
+    } else if (sortBy === 'price-desc' || sortBy === 'price_desc') {
+      result.sort((a, b) => {
+        if (a.price === null || a.price === undefined) return 1;
+        if (b.price === null || b.price === undefined) return -1;
+        return b.price - a.price;
+      });
     }
 
     return result;
@@ -163,14 +185,15 @@ export function TeaProductList() {
               </div>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="py-1.5 px-3 rounded-lg text-xs font-mono font-medium bg-[#FFFDF5] border border-[#B88E38]/30 focus:border-[#8C6320] text-[#2C1E11] focus:outline-none shadow-sm cursor-pointer"
+                aria-label="Sort botanical teas"
               >
                 <option value="featured">Featured Rituals</option>
-                <option value="name_asc">Name: A to Z</option>
-                <option value="name_desc">Name: Z to A</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
+                <option value="name-asc">Name: A to Z</option>
+                <option value="name-desc">Name: Z to A</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
               </select>
             </div>
           </div>

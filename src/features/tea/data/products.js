@@ -1,10 +1,6 @@
 /**
  * AMOGA TEA COLLECTION — BOTANICAL CATALOGUE DATA
- * Source: Amoga Herbal Tea Standee Reference (5 Signature Botanical Varieties)
- * 
- * Note on Pricing: The prices configured here are clearly labelled development / test
- * prices matching pack sizes to enable complete end-to-end checkout validation.
- * Authoritative financial calculations are validated on the server in integer paise.
+ * Curated Single-Origin Botanical Teas & Herbal Tisanes
  */
 
 import teaHero from '../../../assets/images/food-teas-hero.jpg';
@@ -17,22 +13,19 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Botanical Flower Brews',
-    price: 199, // Temporary development / test pricing
+    price: 199,
     originalPrice: 249,
     discount: '20% OFF',
     packSize: '50 g',
-    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
-    standeeNotes: 'Rich in Antioxidants, Promotes Digestion',
     description: 'Vibrant sapphire blue botanical tea brewed from whole Clitoria ternatea petals with a gentle earthy sweetness.',
     botanicalName: 'Clitoria ternatea',
     origin: 'Single Estate Floral Gardens, Tamil Nadu',
     brewingTime: '4–5 mins at 90°C',
-    sourceCatalogue: 'Amoga Herbal Tea Standee Reference',
     inStock: true,
     isFeatured: true,
-    badge: 'Antioxidant Rich',
+    badge: 'Botanical Infusion',
     rating: 4.9,
     reviewCount: 142,
     details: [
@@ -49,22 +42,19 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Medicinal Leaf Brews',
-    price: 199, // Temporary development / test pricing
+    price: 199,
     originalPrice: 249,
     discount: '20% OFF',
     packSize: '50 g',
-    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
-    standeeNotes: 'Nutrient Superhouse, Controls Blood Sugar',
     description: 'Shade-dried drumstick tree leaves and blossoms offering a soothing herbal green infusion packed with natural minerals.',
     botanicalName: 'Moringa oleifera',
     origin: 'Organic Agro-Forest Farms',
     brewingTime: '3–4 mins at 85°C',
-    sourceCatalogue: 'Amoga Herbal Tea Standee Reference',
     inStock: true,
     isFeatured: true,
-    badge: 'Nutrient Superhouse',
+    badge: 'Herbal Harvest',
     rating: 4.8,
     reviewCount: 98,
     details: [
@@ -81,22 +71,19 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Heritage Spice Infusions',
-    price: 219, // Temporary development / test pricing
+    price: 219,
     originalPrice: 269,
     discount: '18% OFF',
     packSize: '100 g',
-    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
-    standeeNotes: 'Fights Inflammation, Boosts Immunity',
     description: 'Warm aromatic Ceylon cinnamon bark chips providing a naturally comforting spice brew without added sugar.',
     botanicalName: 'Cinnamomum verum',
     origin: 'Hill Country Canopy Groves',
     brewingTime: '5–6 mins at 95°C',
-    sourceCatalogue: 'Amoga Herbal Tea Standee Reference',
     inStock: true,
     isFeatured: true,
-    badge: 'Immunity Brew',
+    badge: 'Pure Ceylon',
     rating: 4.9,
     reviewCount: 175,
     details: [
@@ -113,22 +100,19 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Herbal Root Infusions',
-    price: 229, // Temporary development / test pricing
+    price: 229,
     originalPrice: 279,
     discount: '18% OFF',
     packSize: '100 g',
-    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
-    standeeNotes: 'Regulates Blood Sugar, Natural Body Coolant',
     description: 'Traditional Nannari roots providing a sweet fragrant earthy aroma cherished as a natural rejuvenating infusion.',
     botanicalName: 'Hemidesmus indicus',
     origin: 'Southern Ghats Woodland Forage',
     brewingTime: '5–7 mins at 95°C',
-    sourceCatalogue: 'Amoga Herbal Tea Standee Reference',
     inStock: true,
     isFeatured: false,
-    badge: 'Natural Coolant',
+    badge: 'Heritage Root',
     rating: 4.7,
     reviewCount: 84,
     details: [
@@ -145,22 +129,19 @@ export const TEA_PRODUCTS = [
     collection: 'tea',
     category: 'teas',
     categoryName: 'Botanical Flower Brews',
-    price: 249, // Temporary development / test pricing
+    price: 249,
     originalPrice: 299,
     discount: '16% OFF',
     packSize: '100 g',
-    isDevelopmentPrice: true,
     currency: 'INR',
     image: teaHero,
-    standeeNotes: 'Lowers Blood Pressure, Improves Cholesterol',
     description: 'Deep crimson infusion crafted from pure sun-dried whole hibiscus calyces with a tart, berry-like refreshing flavour.',
     botanicalName: 'Hibiscus sabdariffa',
     origin: 'Sun-Drenched Tropical Highlands',
     brewingTime: '4–5 mins at 90°C',
-    sourceCatalogue: 'Amoga Herbal Tea Standee Reference',
     inStock: true,
     isFeatured: true,
-    badge: 'Heart Tonic',
+    badge: 'Signature Infusion',
     rating: 5.0,
     reviewCount: 210,
     details: [

@@ -12,6 +12,7 @@ import {
   Sparkles,
   ShoppingBag,
 } from 'lucide-react';
+import amogaLogo from '../../../assets/images/amoga-logo.png';
 
 export function CustomerAuthPage() {
   const [searchParams] = useSearchParams();
@@ -74,8 +75,12 @@ export function CustomerAuthPage() {
       <Container className="max-w-md mx-auto">
         {/* Brand Crest & Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#722F37]/10 text-[#722F37] border border-[#722F37]/20 mb-3 shadow-inner">
-            <Sparkles className="w-5 h-5 text-[#C5A46D]" />
+          <div className="flex items-center justify-center mb-3">
+            <img
+              src={amogaLogo}
+              alt="Amoga"
+              className="h-10 sm:h-11 w-auto object-contain"
+            />
           </div>
           <span className="block text-[11px] font-mono uppercase tracking-widest text-[#8C6320] mb-1">
             Amoga Client Concierge

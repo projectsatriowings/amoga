@@ -28,13 +28,16 @@ export function FoodProductList() {
   const initialCategory = searchParams.get('category') || 'all';
   const initialQuery = searchParams.get('q') || '';
 
+  const initialSort = searchParams.get('sort') || 'featured';
+
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [sortBy, setSortBy] = useState('featured');
+  const [sortBy, setSortBy] = useState(initialSort);
 
   // Synchronize internal state with URL search params when navigated externally
   React.useEffect(() => {
     setSelectedCategory(searchParams.get('category') || 'all');
+    setSortBy(searchParams.get('sort') || 'featured');
     const urlQ = searchParams.get('q') || '';
     if (urlQ !== searchQuery.trim() && !searchQuery.startsWith(urlQ)) {
       setSearchQuery(urlQ);
@@ -63,6 +66,17 @@ export function FoodProductList() {
       newParams.delete('category');
     } else {
       newParams.set('category', catId);
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleSortChange = (newSort) => {
+    setSortBy(newSort);
+    const newParams = new URLSearchParams(searchParams);
+    if (newSort === 'featured') {
+      newParams.delete('sort');
+    } else {
+      newParams.set('sort', newSort);
     }
     setSearchParams(newParams);
   };
@@ -198,7 +212,7 @@ export function FoodProductList() {
               </div>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="py-1.5 px-3 rounded-lg text-xs font-mono font-medium bg-[#F8F6F0] border border-[#E5E0D5] focus:border-[#173B2A] text-[#292820] focus:outline-none shadow-2xs cursor-pointer"
                 aria-label="Sort product catalogue"
               >

@@ -88,6 +88,7 @@ export const OrderReviewPage = () => {
 
   const [simulationError, setSimulationError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('online');
 
   // Coupon state
   const [couponInput, setCouponInput] = useState('');
@@ -205,6 +206,7 @@ export const OrderReviewPage = () => {
         customer: customerDetails,
         idempotencyKey,
         couponCode: appliedCoupon?.code,
+        paymentMethod,
       });
 
       if (orderResult && orderResult.orderReference) {
@@ -222,7 +224,29 @@ export const OrderReviewPage = () => {
           }
         }
 
-        // 4. Create authoritative payment order attempt
+        // Handle Cash on Delivery (COD) directly without opening online payment gateway
+        if (paymentMethod === 'cod') {
+          const completedOrderSnapshot = {
+            orderId: orderResult.orderReference,
+            orderReference: orderResult.orderReference,
+            guestAccessToken: orderResult.guestAccessToken,
+            status: 'PENDING_CONFIRMATION',
+            paymentStatus: 'PENDING',
+            paymentMethod: 'cod',
+            createdAt: getNowIso(),
+            customer: orderResult.customer || { ...customerDetails },
+            items: orderResult.items || checkoutItems.map((item) => ({ ...item })),
+            totals: orderResult.totals || { ...totals },
+            isPersistent: true,
+            isDemo: false,
+          };
+          setLastCompletedOrder(completedOrderSnapshot);
+          reconcileCartAfterPurchase(checkoutItems);
+          navigate(`/order-confirmation/${orderResult.orderReference}`);
+          return;
+        }
+
+        // 4. Create authoritative payment order attempt for online payment
         const paymentResult = await createPaymentOrderApi({
           orderReference: orderResult.orderReference,
           guestAccessToken: orderResult.guestAccessToken,
@@ -519,40 +543,40 @@ export const OrderReviewPage = () => {
         <div className="pb-6 border-b border-[var(--collection-border)] mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl sm:text-4xl text-[var(--collection-heading)]">
-              Order Review & Demonstration
+              Order Review & Confirmation
             </h1>
             <p className="mt-1 text-sm text-[var(--collection-text-muted)]">
-              Please inspect your selections and delivery destination before completing the simulation.
+              Please inspect your selections, delivery address, and payment method before confirming your order.
             </p>
           </div>
           <span className="text-xs uppercase tracking-widest text-[var(--collection-accent)] bg-[var(--collection-section-bg)] px-3.5 py-1.5 rounded-full border border-[var(--collection-border)] font-semibold self-start sm:self-auto flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-[var(--collection-accent)]" />
-            Frontend Demo Preview
+            Verified Atelier Checkout
           </span>
         </div>
 
-        {/* Demo Disclaimer Banner */}
+        {/* Order Review Banner */}
         <div
           className="p-5 rounded-2xl border text-xs sm:text-sm mb-8 flex items-start gap-3.5 shadow-xs transition-colors"
           style={{
-            backgroundColor: 'var(--collection-notice-bg)',
-            borderColor: 'var(--collection-notice-border)',
-            color: 'var(--collection-notice-text)',
+            backgroundColor: 'var(--collection-card-bg)',
+            borderColor: 'var(--collection-border)',
+            color: 'var(--collection-text)',
           }}
         >
-          <ShieldAlert
+          <ShieldCheck
             className="w-5 h-5 shrink-0 mt-0.5"
-            style={{ color: 'var(--collection-notice-icon)' }}
+            style={{ color: 'var(--collection-accent)' }}
           />
           <div className="leading-relaxed">
             <h2
               className="font-semibold text-sm"
-              style={{ color: 'var(--collection-notice-title)' }}
+              style={{ color: 'var(--collection-heading)' }}
             >
-              Simulated Demonstration Notice
+              Artisanal Order Review
             </h2>
-            <p className="mt-1 opacity-90">
-              This application is in frontend presentation mode. <strong>No actual payment gateway is connected</strong>, no credit cards are charged, and no real fulfilment order is dispatched. Clicking the completion button simulates the order confirmation experience with non-production reference records.
+            <p className="mt-1 text-xs opacity-90 text-[var(--collection-text-muted)]">
+              Stock allocations are atomically reserved for your order. Select your preferred payment method below to finalize your booking with the Amoga Atelier.
             </p>
           </div>
         </div>
@@ -645,6 +669,77 @@ export const OrderReviewPage = () => {
               )}
             </div>
 
+            {/* Payment Method Selection Card */}
+            <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 border border-[var(--collection-border)] shadow-sm transition-colors">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--collection-border)] mb-4">
+                <div className="flex items-center gap-2 text-[var(--collection-accent)]">
+                  <CreditCard className="w-4 h-4" />
+                  <h2 className="font-serif text-lg font-semibold text-[var(--collection-heading)]">
+                    Payment Method
+                  </h2>
+                </div>
+                <span className="text-xs font-mono uppercase tracking-wider text-[var(--collection-accent)] font-semibold">
+                  Secure Checkout
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Online Payment Option */}
+                <label
+                  className={`relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all ${
+                    paymentMethod === 'online'
+                      ? 'border-[var(--collection-accent)] bg-[var(--collection-section-bg)] shadow-xs ring-1 ring-[var(--collection-accent)]'
+                      : 'border-[var(--collection-border)] hover:border-[var(--collection-accent)]/50 bg-[var(--collection-card-bg)]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-xs sm:text-sm text-[var(--collection-text)] flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-[var(--collection-accent)]" />
+                      <span>Online Payment</span>
+                    </span>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="online"
+                      checked={paymentMethod === 'online'}
+                      onChange={() => setPaymentMethod('online')}
+                      className="accent-[var(--collection-accent)]"
+                    />
+                  </div>
+                  <p className="text-[11px] text-[var(--collection-text-muted)] leading-relaxed">
+                    UPI (Google Pay, PhonePe, Paytm), Credit & Debit Cards, Netbanking via Razorpay.
+                  </p>
+                </label>
+
+                {/* Cash on Delivery Option */}
+                <label
+                  className={`relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all ${
+                    paymentMethod === 'cod'
+                      ? 'border-[var(--collection-accent)] bg-[var(--collection-section-bg)] shadow-xs ring-1 ring-[var(--collection-accent)]'
+                      : 'border-[var(--collection-border)] hover:border-[var(--collection-accent)]/50 bg-[var(--collection-card-bg)]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-xs sm:text-sm text-[var(--collection-text)] flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-[var(--collection-accent)]" />
+                      <span>Cash on Delivery</span>
+                    </span>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                      className="accent-[var(--collection-accent)]"
+                    />
+                  </div>
+                  <p className="text-[11px] text-[var(--collection-text-muted)] leading-relaxed">
+                    Pay in cash or UPI upon courier arrival at your delivery doorstep.
+                  </p>
+                </label>
+              </div>
+            </div>
+
             {/* Cart Items Detailed Review */}
             <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 border border-[var(--collection-border)] shadow-sm transition-colors">
               <div className="flex items-center justify-between pb-3 border-b border-[var(--collection-border)] mb-4">
@@ -668,6 +763,16 @@ export const OrderReviewPage = () => {
                   const collectionId = item.collectionId || item.product?.collection;
                   const variantName = item.selectedVariant?.name || item.variantName;
 
+                  const collectionLabel =
+                    collectionId === 'jewellery'
+                      ? 'Silver Jewellery'
+                      : collectionId === 'sarees'
+                      ? 'Heritage Sarees'
+                      : collectionId === 'tea'
+                      ? 'Wellness Tea'
+                      : 'Wholesome Pantry';
+                  const categoryName = item.categoryName || item.product?.categoryName;
+
                   return (
                     <div key={lineId} className="py-4 first:pt-0 last:pb-0 flex items-center gap-4 text-xs">
                       <img
@@ -680,12 +785,17 @@ export const OrderReviewPage = () => {
                         }}
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-[var(--collection-section-bg)] text-[var(--collection-accent)] border border-[var(--collection-border)]">
-                            {collectionId}
+                            {collectionLabel}
                           </span>
-                          {variantName && (
+                          {categoryName && (
                             <span className="text-[11px] text-[var(--collection-text-muted)] truncate">
+                              • {categoryName}
+                            </span>
+                          )}
+                          {variantName && (
+                            <span className="text-[11px] text-[var(--collection-text)] font-medium truncate">
                               • {variantName}
                             </span>
                           )}
@@ -822,14 +932,27 @@ export const OrderReviewPage = () => {
                     color: 'var(--collection-button-text, #FFFFFF)',
                   }}
                 >
-                  <CreditCard className="w-4 h-4 shrink-0" />
-                  <span>
-                    {isSubmitting ? 'Initiating Payment Order...' : `Proceed to Secure Payment — ${formatINR(finalPayableTotal)}`}
-                  </span>
+                  {paymentMethod === 'cod' ? (
+                    <>
+                      <Truck className="w-4 h-4 shrink-0" />
+                      <span>
+                        {isSubmitting ? 'Placing COD Order...' : `Place Order (Cash on Delivery) — ${formatINR(finalPayableTotal)}`}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4 shrink-0" />
+                      <span>
+                        {isSubmitting ? 'Initiating Payment Order...' : `Proceed to Secure Payment — ${formatINR(finalPayableTotal)}`}
+                      </span>
+                    </>
+                  )}
                 </button>
 
                 <p className="mt-2.5 text-[11px] text-center text-[var(--collection-text-muted)] leading-tight">
-                  Test Mode Payment Gateway • Authoritative Server Pricing in INR
+                  {paymentMethod === 'cod'
+                    ? 'Payment collected upon courier arrival • Cash or UPI accepted'
+                    : 'Encrypted Payment Gateway • Authoritative Server Pricing in INR'}
                 </p>
               </div>
 

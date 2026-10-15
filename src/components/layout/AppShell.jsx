@@ -42,7 +42,7 @@ export function AppShell({ children }) {
   return (
     <div
       data-collection={collectionTheme}
-      className={`min-h-screen flex flex-col w-full overflow-x-hidden transition-colors duration-normal ease-smooth ${resolved.themeClass}`}
+      className={`min-h-screen flex flex-col w-full overflow-x-clip transition-colors duration-normal ease-smooth ${resolved.themeClass}`}
       style={{
         ...resolved.cssVariables,
         backgroundColor: 'var(--collection-page-bg, var(--bg-primary))',

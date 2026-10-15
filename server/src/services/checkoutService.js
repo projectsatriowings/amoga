@@ -249,10 +249,15 @@ export async function resolveAndValidateCart(cartItems = []) {
   };
 }
 
-/**
- * Creates a persistent order with database transaction and strict idempotency guarantees
- */
-export async function createOrder({ items, customer, idempotencyKey = null, couponCode = null, isDemo = false, customerId = null }) {
+export async function createOrder({
+  items,
+  customer,
+  idempotencyKey = null,
+  couponCode = null,
+  isDemo = false,
+  customerId = null,
+  paymentMethod = 'online',
+}) {
   // 1. Strict Idempotency Validation
   if (idempotencyKey) {
     const existingOrder = await prisma.order.findUnique({
@@ -311,6 +316,8 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
 
       // If payload is identical -> return existing order result idempotently (HTTP 200)
       return {
+        id: existingOrder.id,
+        orderId: existingOrder.id,
         isDuplicate: true,
         orderReference: existingOrder.orderReference,
         status: existingOrder.status,
@@ -524,16 +531,40 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
       },
     });
 
+    const isCod = paymentMethod === 'cod';
+
     // Create initial order tracking event
     await tx.orderTrackingEvent.create({
       data: {
         orderId: order.id,
         status: 'PENDING_CONFIRMATION',
-        title: 'Order Placed',
-        description: 'Order created and awaiting payment authorization at Amoga Atelier.',
-        actor: 'System',
+        title: isCod ? 'Order Placed (Cash on Delivery)' : 'Order Placed',
+        description: isCod
+          ? 'Cash on Delivery order placed. Payment of ₹' + totalAmountRupees.toLocaleString('en-IN') + ' will be collected upon delivery by courier.'
+          : 'Order created and awaiting payment authorization at Amoga Atelier.',
+        actor: isCod ? 'Customer (COD)' : 'System',
       },
     });
+
+    if (isCod) {
+      // Create explicit COD payment record with status PENDING
+      await tx.payment.create({
+        data: {
+          orderId: order.id,
+          paymentReference: `AMOGA-COD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+          provider: 'cod',
+          amountPaise: totalAmountPaise,
+          amount: totalAmountRupees,
+          currency: 'INR',
+          status: 'PENDING',
+          metadata: {
+            method: 'CASH_ON_DELIVERY',
+            customerName: customer.fullName.trim(),
+            customerPhone: customer.phone.trim(),
+          },
+        },
+      });
+    }
 
     // Concurrency-Safe Atomic Stock Reservation
     await reserveStock({
@@ -550,10 +581,14 @@ export async function createOrder({ items, customer, idempotencyKey = null, coup
   });
 
   return {
+    id: createdOrder.id,
+    orderId: createdOrder.id,
     isDuplicate: false,
     orderReference: createdOrder.orderReference,
     guestAccessToken, // Returned to client once so guest can view their confirmation
     status: createdOrder.status,
+    paymentStatus: createdOrder.paymentStatus,
+    paymentMethod,
     currency: createdOrder.currency,
     appliedCoupon: appliedCoupon ? appliedCoupon.code : null,
     totals: {

@@ -24,6 +24,7 @@ import { useProductDetail } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
 import { resolveAvailability } from '../../utils/inventory';
 import { RestockModal } from '../../components/ui/RestockModal';
+import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSection.jsx';
 
 export function TeaProductDetail() {
   const { slug } = useParams();
@@ -203,14 +204,6 @@ export function TeaProductDetail() {
                 </div>
               )}
             </div>
-
-            {/* Standee Reference Callout */}
-            <div className="p-4 rounded-xl bg-white/70 border border-[#B88E38]/20 text-xs text-[#543B25] flex items-center justify-between">
-              <span className="font-medium text-[#2C1E11]">Source Document:</span>
-              <span className="font-mono text-[11px] text-[#8C6320] font-semibold">
-                Amoga Herbal Tea Standee Reference
-              </span>
-            </div>
           </div>
 
           {/* Right Column: Narrative, Details & Actions */}
@@ -246,16 +239,6 @@ export function TeaProductDetail() {
                 </div>
               )}
 
-              {/* Standee Wellness Feature */}
-              {product.standeeNotes && (
-                <div className="p-3.5 rounded-xl bg-[#FAF1BB] border border-[#B88E38]/30 text-xs text-[#2C1E11] space-y-1">
-                  <div className="font-semibold uppercase tracking-wider text-[11px] text-[#8C6320]">
-                    Verified Herbal Benefit
-                  </div>
-                  <p className="font-serif text-sm italic">{product.standeeNotes}</p>
-                </div>
-              )}
-
               {/* Pricing Display */}
               <div className="pt-2 border-t border-[#B88E38]/20 space-y-2">
                 {hasPrice ? (
@@ -273,9 +256,6 @@ export function TeaProductDetail() {
                         {product.packSize}
                       </span>
                     )}
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#8C6320] bg-[#FAF1BB] px-2 py-0.5 rounded border border-[#B88E38]/30">
-                      Development Test Price
-                    </span>
                   </div>
                 ) : (
                   <div className="space-y-1">
@@ -476,6 +456,14 @@ export function TeaProductDetail() {
             </div>
           </div>
         )}
+
+        {/* Patron Reviews & Ratings */}
+        <ProductReviewsSection
+          productId={product.id || product.slug}
+          productName={product.name}
+          collectionId="tea"
+          palette={{ accent: '#8C6320', heading: '#2C1E11' }}
+        />
       </Container>
 
       <RestockModal

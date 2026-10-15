@@ -21,6 +21,8 @@ import { DemoOrderConfirmation } from '../features/checkout/DemoOrderConfirmatio
 import { CustomerAccountPage } from '../features/account/pages/CustomerAccountPage';
 import { CustomerAuthPage } from '../features/account/pages/CustomerAuthPage';
 import { OrderTrackingPage } from '../features/tracking/OrderTrackingPage';
+import { ShippingPolicyPage } from '../features/policies/ShippingPolicyPage';
+import { ReturnsCarePage } from '../features/policies/ReturnsCarePage';
 import { NotFound } from '../components/feedback/NotFound';
 import { RouteErrorBoundary } from '../components/feedback/RouteErrorBoundary';
 import { DynamicStorefront } from '../features/collections/DynamicStorefront';
@@ -42,6 +44,7 @@ import { AdminReports } from '../features/admin/pages/AdminReports';
 import { AdminSettings } from '../features/admin/pages/AdminSettings';
 import { AdminAuditLogs } from '../features/admin/pages/AdminAuditLogs';
 import { AdminCustomerInquiries } from '../features/admin/pages/AdminCustomerInquiries';
+import { AdminReviews } from '../features/admin/pages/AdminReviews';
 import { DeveloperOnlyRoute } from '../features/admin/components/DeveloperOnlyRoute';
 
 /**
@@ -271,6 +274,38 @@ export const router = createBrowserRouter([
     element: <Navigate to="/track" replace />,
   },
 
+  // Store Policy Pages
+  {
+    path: '/shipping-policy',
+    element: (
+      <AppShell>
+        <ShippingPolicyPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/shipping',
+    element: <Navigate to="/shipping-policy" replace />,
+  },
+  {
+    path: '/returns-policy',
+    element: (
+      <AppShell>
+        <ReturnsCarePage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/returns-care',
+    element: <Navigate to="/returns-policy" replace />,
+  },
+  {
+    path: '/returns',
+    element: <Navigate to="/returns-policy" replace />,
+  },
+
   // Dedicated Admin Atelier Routes
   {
     path: '/admin/login',
@@ -303,6 +338,7 @@ export const router = createBrowserRouter([
       { path: 'payments', element: <AdminPayments /> },
       { path: 'customers', element: <AdminCustomers /> },
       { path: 'customer-inquiries', element: <AdminCustomerInquiries /> },
+      { path: 'reviews', element: <AdminReviews /> },
       { path: 'promotions', element: <AdminPromotions /> },
       { path: 'reports', element: <AdminReports /> },
       { path: 'settings', element: <AdminSettings /> },

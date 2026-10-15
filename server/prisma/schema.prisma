@@ -73,6 +73,7 @@ model Product {
   restockSubscriptions  RestockSubscription[]
   inventoryAlerts       InventoryAlert[]
   notificationJobs      RestockNotificationJob[]
+  reviews               Review[]
 
   @@unique([collectionId, slug])
   @@index([collectionId])
@@ -203,6 +204,7 @@ model Customer {
   addresses             CustomerAddress[]
   orders                Order[]
   restockSubscriptions  RestockSubscription[]
+  reviews               Review[]
 
   @@map("customers")
 }
@@ -571,5 +573,33 @@ model RestockNotificationJob {
   @@index([status, createdAt])
   @@index([productId, variantId])
   @@map("restock_notification_jobs")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Review {
+  id              String        @id @default(uuid())
+  productId       String
+  customerId      String?
+  authorName      String
+  rating          Int           // 1 to 5
+  title           String?
+  content         String        @db.Text
+  status          ReviewStatus  @default(PENDING)
+  isVerifiedBuyer Boolean       @default(false)
+  moderationNotes String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer        Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([productId, status])
+  @@index([customerId])
+  @@map("reviews")
 }
 

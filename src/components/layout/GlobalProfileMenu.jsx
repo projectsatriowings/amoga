@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useCustomerStore } from '../../features/account/store/useCustomerStore';
+import amogaLogo from '../../assets/images/amoga-logo.png';
 
 /**
  * GlobalProfileMenu Component
@@ -191,8 +192,12 @@ export function GlobalProfileMenu({
                 </div>
               ) : (
                 <div className="px-6 py-5 border-b border-[#EFECE6] bg-[#FAF8F5] text-center space-y-3">
-                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#722F37]/10 text-[#722F37] border border-[#722F37]/20 shadow-xs">
-                    <Sparkles className="w-5 h-5 text-[#8C6320]" />
+                  <div className="flex items-center justify-center">
+                    <img
+                      src={amogaLogo}
+                      alt="Amoga"
+                      className="h-8 w-auto object-contain"
+                    />
                   </div>
                   <div className="space-y-1">
                     <h3 className="font-serif font-bold text-lg text-[#1F0811]">

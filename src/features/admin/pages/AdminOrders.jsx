@@ -81,6 +81,8 @@ export function AdminOrders() {
 
   const getStatusBadge = (st) => {
     switch (st) {
+      case 'PENDING_CONFIRMATION':
+        return 'bg-amber-100 text-amber-900 border-amber-300 font-semibold';
       case 'CONFIRMED':
         return 'bg-blue-50 text-blue-800 border-blue-200';
       case 'PROCESSING':
@@ -91,6 +93,8 @@ export function AdminOrders() {
         return 'bg-emerald-50 text-emerald-800 border-emerald-200';
       case 'CANCELLED':
         return 'bg-rose-50 text-rose-800 border-rose-200';
+      case 'PENDING_PAYMENT':
+        return 'bg-yellow-50 text-yellow-800 border-yellow-200';
       default:
         return 'bg-stone-50 text-stone-800 border-stone-200';
     }
@@ -169,6 +173,7 @@ export function AdminOrders() {
             className="px-3 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs text-[#4A423B]"
           >
             <option value="ALL">All Order States</option>
+            <option value="PENDING_CONFIRMATION">Pending Confirmation</option>
             <option value="CONFIRMED">Confirmed</option>
             <option value="PROCESSING">Processing</option>
             <option value="DISPATCHED">Dispatched</option>

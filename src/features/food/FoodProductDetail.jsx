@@ -17,6 +17,7 @@ import { getProductBySlug, getProductsByCategory } from './data/products';
 import { FoodProductCard } from './components/FoodProductCard';
 import { resolveAvailability } from '../../utils/inventory.js';
 import { RestockModal } from '../../components/ui/RestockModal.jsx';
+import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSection.jsx';
 
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
@@ -172,14 +173,6 @@ export function FoodProductDetail() {
                   </span>
                 )}
               </div>
-            </div>
-
-            {/* Source Reference Metadata Pill */}
-            <div className="p-3.5 rounded-xl bg-[#E5DFD3]/70 border border-[#172B1C]/10 flex items-center justify-between text-xs font-mono text-[#557C36]">
-              <span>Verified Source:</span>
-              <span className="font-semibold text-[#172B1C]">
-                {product.sourceCatalogue || 'Amoga Organic Food Specification'}
-              </span>
             </div>
           </div>
 
@@ -400,6 +393,14 @@ export function FoodProductDetail() {
             </div>
           </div>
         )}
+
+        {/* Patron Reviews & Ratings */}
+        <ProductReviewsSection
+          productId={product.id || product.slug}
+          productName={product.name}
+          collectionId="food"
+          palette={{ accent: '#287A25', heading: '#172B1C' }}
+        />
       </Container>
 
       <RestockModal

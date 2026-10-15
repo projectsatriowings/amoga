@@ -20,6 +20,7 @@ import { getSareeBySlug, SAREE_PRODUCTS } from './data/products';
 import { SareeProductCard } from './components/SareeProductCard';
 import { resolveAvailability } from '../../utils/inventory.js';
 import { RestockModal } from '../../components/ui/RestockModal.jsx';
+import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSection.jsx';
 
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
@@ -540,6 +541,14 @@ export function SareesProductDetail() {
             </div>
           </div>
         )}
+
+        {/* Patron Reviews & Ratings */}
+        <ProductReviewsSection
+          productId={product.id || product.slug}
+          productName={product.name}
+          collectionId="sarees"
+          palette={{ accent: '#C5A46D', heading: '#F6EBD8' }}
+        />
       </Container>
 
       <RestockModal

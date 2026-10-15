@@ -10,33 +10,6 @@ export function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const demoAccounts = [
-    {
-      role: 'Super Admin',
-      email: 'admin@amoga.com',
-      pass: 'Admin@Amoga2026!',
-      badge: 'bg-[#722F37] text-white',
-    },
-    {
-      role: 'Catalogue Manager',
-      email: 'catalogue@amoga.com',
-      pass: 'Catalogue@Amoga2026!',
-      badge: 'bg-[#287A25]/15 text-[#1B5219]',
-    },
-    {
-      role: 'Fulfilment Lead',
-      email: 'orders@amoga.com',
-      pass: 'Orders@Amoga2026!',
-      badge: 'bg-[#8C6320]/15 text-[#5C4010]',
-    },
-    {
-      role: 'Content Lead',
-      email: 'content@amoga.com',
-      pass: 'Content@Amoga2026!',
-      badge: 'bg-[#5B3E6E]/15 text-[#3D284B]',
-    },
-  ];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -45,11 +18,6 @@ export function AdminLogin() {
     if (result.success) {
       navigate('/admin');
     }
-  };
-
-  const handleSelectDemo = (acc) => {
-    setEmail(acc.email);
-    setPassword(acc.pass);
   };
 
   return (
@@ -134,32 +102,10 @@ export function AdminLogin() {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Staff Logins */}
-          <div className="mt-8 pt-6 border-t border-[#E5E0D5]">
-            <p className="text-[11px] font-mono uppercase tracking-wider text-[#8C8377] mb-3 text-center">
-              Quick Staff Credentials
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {demoAccounts.map((acc) => (
-                <button
-                  key={acc.email}
-                  type="button"
-                  onClick={() => handleSelectDemo(acc)}
-                  className="p-2 text-left bg-[#F5F2EB] hover:bg-[#EFEAE1] border border-[#E0D9CD] rounded text-xs transition-colors flex flex-col justify-between"
-                >
-                  <span className={`inline-block text-[9px] font-mono px-1 rounded w-fit mb-1 ${acc.badge}`}>
-                    {acc.role}
-                  </span>
-                  <span className="text-[11px] font-mono text-[#332D28] truncate">{acc.email}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         <p className="mt-4 text-center text-[11px] text-[#8C8377] font-mono">
-          Strict Cryptographic Access Control • Neon PostgreSQL & Razorpay Test
+          Authorized Staff Only • Strict Cryptographic Access Control
         </p>
       </div>
     </div>

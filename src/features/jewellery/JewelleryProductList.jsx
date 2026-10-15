@@ -29,15 +29,19 @@ export function JewelleryProductList() {
   // Read URL query parameters
   const currentCategory = searchParams.get('category') || 'all';
   const currentQuery = searchParams.get('q') || '';
-  const [sortBy, setSortBy] = useState('featured');
+  const currentSort = searchParams.get('sort') || 'featured';
+  const [sortBy, setSortBy] = useState(currentSort);
   const [searchInput, setSearchInput] = useState(currentQuery);
   const [prevQuery, setPrevQuery] = useState(currentQuery);
 
-  // Sync search input with URL query when navigation changes externally
+  // Sync search input & sort with URL query when navigation changes externally
   if (prevQuery !== currentQuery) {
     setPrevQuery(currentQuery);
     setSearchInput(currentQuery);
   }
+  React.useEffect(() => {
+    setSortBy(searchParams.get('sort') || 'featured');
+  }, [searchParams]);
 
   // Debounced URL sync so typing never causes re-renders or delays
   React.useEffect(() => {
@@ -59,6 +63,17 @@ export function JewelleryProductList() {
       nextParams.delete('category');
     } else {
       nextParams.set('category', categoryId);
+    }
+    setSearchParams(nextParams);
+  };
+
+  const handleSortChange = (newSort) => {
+    setSortBy(newSort);
+    const nextParams = new URLSearchParams(searchParams);
+    if (newSort === 'featured') {
+      nextParams.delete('sort');
+    } else {
+      nextParams.set('sort', newSort);
     }
     setSearchParams(nextParams);
   };
@@ -223,7 +238,7 @@ export function JewelleryProductList() {
               </div>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="py-2 px-3 rounded-lg text-xs bg-[#242326] border border-[#B9B8B5]/25 text-[#F7F3EB] focus:outline-none focus:border-[#C6AD82]"
                 aria-label="Sort pieces"
               >
