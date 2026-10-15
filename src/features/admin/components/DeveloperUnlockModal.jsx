@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Shield, Lock, Unlock, Eye, EyeOff, X, CheckCircle2, AlertTriangle, KeyRound } from 'lucide-react';
+import { Terminal, Lock, Unlock, Eye, EyeOff, X, CheckCircle2, AlertTriangle, KeyRound } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 

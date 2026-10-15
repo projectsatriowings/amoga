@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../../store/useStore';
 import { formatINR } from '../../../utils/pricing';
-import { AlertCircle, ShieldCheck, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { resolveAvailability } from '../../../utils/inventory';
 
 export const CheckoutOrderSummary = ({ compact = false }) => {

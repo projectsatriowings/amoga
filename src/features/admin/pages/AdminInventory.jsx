@@ -9,7 +9,6 @@ import {
   Sliders,
   Mail,
   Users,
-  CheckCircle2,
   Package,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';

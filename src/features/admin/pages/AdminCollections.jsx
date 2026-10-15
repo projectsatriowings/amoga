@@ -7,12 +7,9 @@ import {
   ExternalLink,
   Upload,
   Image as ImageIcon,
-  CheckCircle2,
   AlertTriangle,
-  RotateCcw,
   Eye,
   EyeOff,
-  Sparkles,
   Palette,
   X,
   Search,
@@ -1039,7 +1036,6 @@ export function AdminCollections() {
           {filteredCollections.map((col) => {
             const tc = col.themeConfig || {};
             const colAccent = col.accentColor || tc.accentColor || '#722F37';
-            const colBg = tc.bgColor || '#FAF8F5';
 
             return (
               <div
