@@ -48,6 +48,25 @@ export function GatekeeperHub() {
             const staticMatch = COLLECTIONS.find(
               (c) => c.id === dbCol.id || c.path === `/${dbCol.slug}`
             );
+            const rawImg = dbCol.cardImage || dbCol.heroImage;
+            const isDefaultImage = (url) => {
+              if (!url || typeof url !== 'string') return true;
+              const defaults = [
+                'gatekeeper-food',
+                'food-teas-hero',
+                'gatekeeper-sarees',
+                'gatekeeper-jewellery',
+                '7af6ed63-ab88-4ad2-8614-bf46603800dd',
+                'saree-model-hero',
+                'jewellery-model-hero',
+              ];
+              return defaults.some((d) => url.includes(d));
+            };
+            const useStatic = !rawImg || isDefaultImage(rawImg);
+            const resolvedHero = useStatic ? (staticMatch?.heroImage || rawImg) : rawImg;
+            const resolvedCard = useStatic ? (staticMatch?.cardImage || rawImg) : rawImg;
+            const resolvedResponsive = useStatic ? staticMatch?.imageResponsive : null;
+
             return {
               ...(staticMatch || {}),
               id: dbCol.id,
@@ -61,8 +80,10 @@ export function GatekeeperHub() {
               path: `/${dbCol.slug}`,
               productsPath: `/${dbCol.slug}/products`,
               theme: dbCol.theme || dbCol.id,
-              heroImage: dbCol.cardImage || dbCol.heroImage || staticMatch?.heroImage || null,
-              cardImage: dbCol.cardImage || dbCol.heroImage || staticMatch?.cardImage || null,
+              heroImage: resolvedHero,
+              cardImage: resolvedCard,
+              fallbackImage: staticMatch?.fallbackImage || null,
+              imageResponsive: resolvedResponsive,
               themeConfig: dbCol.themeConfig || null,
               number: String(idx + 1).padStart(2, '0'),
               features: staticMatch?.features || ['Artisanal Heritage', 'Authentic Sourcing', 'Verified Catalogue'],

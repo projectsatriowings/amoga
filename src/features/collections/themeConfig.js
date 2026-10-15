@@ -9,10 +9,10 @@
  * 4. Silver Jewellery (Modern Heirlooms & 925 Sterling)
  */
 
-import foodHero from '../../assets/images/gatekeeper-food.jpg';
-import teaHero from '../../assets/images/food-teas-hero.jpg';
-import sareesHero from '../../assets/images/gatekeeper-sarees.jpg';
-import jewelleryHero from '../../assets/images/gatekeeper-jewellery.jpg';
+import foodHero from '../../assets/images/gatekeeper-food.webp';
+import teaHero from '../../assets/images/food-teas-hero.webp';
+import sareesHero from '../../assets/images/gatekeeper-sarees.webp';
+import jewelleryHero from '../../assets/images/gatekeeper-jewellery.webp';
 
 /**
  * Accurately determines if a hex color has dark relative luminance (< 0.42).
@@ -129,7 +129,8 @@ export const COLLECTION_THEMES = {
     name: 'Heritage Sarees',
     title: 'HERITAGE SAREES',
     eyebrow: 'TIMELESS WEAVES',
-    subtitle: 'Heritage Sarees • Timeless Weaves',
+    tagline: 'Timeless Weaves',
+    subtitle: 'Timeless Weaves',
     homePath: '/sarees',
     productsPath: '/sarees/products',
     heroImage: sareesHero,
@@ -312,7 +313,8 @@ export const COLLECTION_THEMES = {
     name: 'Silver Jewellery',
     title: 'SILVER JEWELLERY',
     eyebrow: 'MODERN HEIRLOOMS',
-    subtitle: 'Silver Jewellery • Modern Heirlooms',
+    tagline: 'Modern Heirlooms',
+    subtitle: 'Modern Heirlooms',
     homePath: '/jewellery',
     productsPath: '/jewellery/products',
     heroImage: jewelleryHero,
@@ -627,8 +629,14 @@ export function getCollectionTheme(collectionIdOrPath, directOverride = null) {
   if (dbRecord) {
     if (dbRecord.name) baseTheme.name = dbRecord.name;
     if (dbRecord.heroHeading) baseTheme.title = dbRecord.heroHeading.toUpperCase();
-    if (dbRecord.tagline) baseTheme.eyebrow = dbRecord.tagline.toUpperCase();
-    if (dbRecord.heroSubheading) baseTheme.subtitle = dbRecord.heroSubheading;
+    if (dbRecord.tagline) {
+      baseTheme.eyebrow = dbRecord.tagline.toUpperCase();
+      baseTheme.tagline = dbRecord.tagline;
+      baseTheme.subtitle = dbRecord.tagline;
+    }
+    if (dbRecord.heroSubheading) {
+      baseTheme.heroSubheading = dbRecord.heroSubheading;
+    }
     if (dbRecord.description) baseTheme.description = dbRecord.description;
     if (dbRecord.heroImage) baseTheme.heroImage = dbRecord.heroImage;
     if (dbRecord.cardImage) baseTheme.cardImage = dbRecord.cardImage;
@@ -677,11 +685,17 @@ export function getCollectionTheme(collectionIdOrPath, directOverride = null) {
       }
 
       if (darkBg) {
-        p.headerBg = tc.bgColor || p.bg || '#242326';
-        p.headerText = tc.textColor || p.text || '#F7F3EB';
-        if (!tc.announcementBg) {
-          p.announcementBg = '#18171A';
-          p.announcementText = '#E2E3E5';
+        p.headerBg = tc.bgColor || p.bg || baseTheme.palette.headerBg || '#242326';
+        p.headerText = tc.textColor || p.text || baseTheme.palette.headerText || '#F7F3EB';
+        if (tc.announcementBg) {
+          p.announcementBg = tc.announcementBg;
+        } else if (!p.announcementBg) {
+          p.announcementBg = baseTheme.palette.announcementBg || '#18171A';
+        }
+        if (tc.announcementText) {
+          p.announcementText = tc.announcementText;
+        } else if (!p.announcementText) {
+          p.announcementText = baseTheme.palette.announcementText || '#E2E3E5';
         }
       }
       if (tc.inputBg) p.inputBg = tc.inputBg;

@@ -173,7 +173,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
       >
         {/* Top Announcement Bar */}
         <div
-          className="text-[11px] font-medium py-1.5 px-4 text-center tracking-wider border-b transition-colors"
+          className="min-h-[34px] py-1.5 px-4 text-center text-[11px] font-medium tracking-wider border-b transition-colors flex items-center justify-center"
           style={{
             backgroundColor: palette.announcementBg || '#173B2A',
             color: palette.announcementText || '#FFFFFF',
@@ -189,33 +189,33 @@ export function CollectionNavbar({ collectionId = 'food' }) {
         <Container>
           <div className="h-20 flex items-center justify-between gap-4">
             {/* Left: Brand Logo & Collection Subtitle */}
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-3 shrink-0 select-none">
               <Link
                 to="/"
                 title="Return to AMOGA Main Portal"
-                className="flex items-center gap-3 group"
+                className="flex items-center gap-3 group shrink-0"
               >
                 <img
                   src={amogaLogo}
                   alt="AMOGA Main Portal"
-                  className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+                  className="h-10 sm:h-11 w-auto max-w-[145px] sm:max-w-[160px] object-contain transition-transform group-hover:scale-[1.02]"
                 />
               </Link>
               <span
-                className="hidden sm:inline text-xs font-serif italic pl-3 border-l"
+                className="hidden sm:inline-flex items-center text-xs font-serif italic pl-3 border-l whitespace-nowrap truncate max-w-[180px] lg:max-w-[240px]"
                 style={{
                   color: palette.accent || palette.accentGold || '#3F7B43',
                   borderColor: palette.border || '#E5E0D5',
                 }}
               >
-                {theme.subtitle}
+                {theme.subtitle || theme.tagline}
               </span>
             </div>
 
             {/* Center: Standardized Navigation: HOME | CATEGORIES ▾ | CONTACT */}
             <nav
               aria-label={`${theme.name} Primary Navigation`}
-              className="hidden lg:flex items-center gap-2 text-xs uppercase tracking-wider font-medium"
+              className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs uppercase tracking-wider font-semibold shrink-0"
             >
               {/* 1. HOME */}
               <Link
@@ -298,18 +298,18 @@ export function CollectionNavbar({ collectionId = 'food' }) {
             </nav>
 
             {/* Right: Search Bar, Actions & Modal Triggers */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {/* Product Search Form */}
               <form
                 onSubmit={handleSearchSubmit}
-                className="hidden md:flex relative items-center w-48 lg:w-56"
+                className="hidden md:flex relative items-center w-40 lg:w-48 xl:w-56"
               >
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search catalogue..."
-                  className="w-full pl-9 pr-7 py-1.5 rounded-full text-xs border transition-colors outline-none focus:ring-1"
+                  className="w-full pl-9 pr-7 py-1.5 h-9 rounded-full text-xs border transition-colors outline-none focus:ring-1"
                   style={{
                     backgroundColor: palette.cardBg || '#FFFFFF',
                     borderColor: palette.border || '#E5E0D5',
@@ -317,14 +317,14 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   }}
                 />
                 <Search
-                  className="w-3.5 h-3.5 absolute left-3 pointer-events-none"
+                  className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                   style={{ color: palette.accent || palette.accentGold || '#3F7B43' }}
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={handleClearNavbarSearch}
-                    className="absolute right-2.5 text-stone-400 hover:text-stone-800 p-0.5 cursor-pointer"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-800 p-0.5 cursor-pointer"
                     title="Clear search"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -336,13 +336,13 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={openWishlist}
-                className="relative p-2 rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer"
+                className="relative h-9 w-9 p-0 flex items-center justify-center rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer shrink-0"
                 aria-label="View Wishlist"
               >
                 <Heart className="w-5 h-5" />
                 {wishlistCount > 0 && (
                   <span
-                    className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-mono"
+                    className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-mono pointer-events-none"
                     style={{
                       backgroundColor:
                         palette.accent || palette.accentGold || '#3F7B43',
@@ -357,13 +357,13 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={openCart}
-                className="relative p-2 rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer"
+                className="relative h-9 w-9 p-0 flex items-center justify-center rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer shrink-0"
                 aria-label="View Shopping Cart"
               >
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
                   <span
-                    className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-mono"
+                    className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-mono pointer-events-none"
                     style={{
                       backgroundColor:
                         palette.accent || palette.accentGold || '#3F7B43',
@@ -384,14 +384,14 @@ export function CollectionNavbar({ collectionId = 'food' }) {
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
-                className="lg:hidden p-2 rounded-lg hover:bg-current/10 text-current cursor-pointer"
+                className="lg:hidden h-9 w-9 p-0 flex items-center justify-center rounded-lg hover:bg-current/10 text-current cursor-pointer shrink-0"
                 aria-label="Toggle mobile menu"
                 aria-expanded={mobileMenuOpen}
               >
                 {mobileMenuOpen ? (
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 ) : (
-                  <Menu className="w-6 h-6" />
+                  <Menu className="w-5 h-5" />
                 )}
               </button>
             </div>

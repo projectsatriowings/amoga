@@ -53,6 +53,13 @@ server {
         try_files $uri =404;
     }
 
+    # Optimized image assets (WebP, JPG, SVG)
+    location /images/ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform, stale-while-revalidate=86400";
+        try_files $uri =404;
+    }
+
     # Frontend Single Page Application fallback (React Router 7)
     location / {
         try_files $uri $uri/ /index.html;

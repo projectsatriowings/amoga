@@ -1,12 +1,50 @@
 /**
  * AMOGA E-COMMERCE — PRIMARY COLLECTIONS CONFIGURATION
  * Four Curated Universes: Gourmet Food, Tea, Heritage Sarees, Silver Jewellery
+ * 
+ * Optimized with modern WebP responsive assets, progressive JPEG fallbacks,
+ * and calibrated subject focal points for seamless gradient blending.
  */
 
-import foodPanelImg from '../assets/images/gatekeeper-food.jpg';
-import teaPanelImg from '../assets/images/food-teas-hero.jpg';
-import sareesPanelImg from '../assets/images/gatekeeper-sarees.jpg';
-import jewelleryPanelImg from '../assets/images/gatekeeper-jewellery.jpg';
+// Wholesome Pantry Assets
+import foodWebp from '../assets/images/gatekeeper-food.webp';
+import foodWebp480 from '../assets/images/gatekeeper-food-480.webp';
+import foodWebp800 from '../assets/images/gatekeeper-food-800.webp';
+import foodWebp1200 from '../assets/images/gatekeeper-food-1200.webp';
+import foodJpg from '../assets/images/gatekeeper-food-800.jpg';
+import foodJpg480 from '../assets/images/gatekeeper-food-480.jpg';
+import foodJpg800 from '../assets/images/gatekeeper-food-800.jpg';
+import foodJpg1200 from '../assets/images/gatekeeper-food-1200.jpg';
+
+// Wellness Tea Assets
+import teaWebp from '../assets/images/food-teas-hero.webp';
+import teaWebp480 from '../assets/images/food-teas-hero-480.webp';
+import teaWebp800 from '../assets/images/food-teas-hero-800.webp';
+import teaWebp1200 from '../assets/images/food-teas-hero-1200.webp';
+import teaJpg from '../assets/images/food-teas-hero-800.jpg';
+import teaJpg480 from '../assets/images/food-teas-hero-480.jpg';
+import teaJpg800 from '../assets/images/food-teas-hero-800.jpg';
+import teaJpg1200 from '../assets/images/food-teas-hero-1200.jpg';
+
+// Heritage Sarees Assets
+import sareesWebp from '../assets/images/gatekeeper-sarees.webp';
+import sareesWebp480 from '../assets/images/gatekeeper-sarees-480.webp';
+import sareesWebp800 from '../assets/images/gatekeeper-sarees-800.webp';
+import sareesWebp1200 from '../assets/images/gatekeeper-sarees-1200.webp';
+import sareesJpg from '../assets/images/gatekeeper-sarees-800.jpg';
+import sareesJpg480 from '../assets/images/gatekeeper-sarees-480.jpg';
+import sareesJpg800 from '../assets/images/gatekeeper-sarees-800.jpg';
+import sareesJpg1200 from '../assets/images/gatekeeper-sarees-1200.jpg';
+
+// Silver Jewellery Assets
+import jewelleryWebp from '../assets/images/gatekeeper-jewellery.webp';
+import jewelleryWebp480 from '../assets/images/gatekeeper-jewellery-480.webp';
+import jewelleryWebp800 from '../assets/images/gatekeeper-jewellery-800.webp';
+import jewelleryWebp1200 from '../assets/images/gatekeeper-jewellery-1200.webp';
+import jewelleryJpg from '../assets/images/gatekeeper-jewellery-800.jpg';
+import jewelleryJpg480 from '../assets/images/gatekeeper-jewellery-480.jpg';
+import jewelleryJpg800 from '../assets/images/gatekeeper-jewellery-800.jpg';
+import jewelleryJpg1200 from '../assets/images/gatekeeper-jewellery-1200.jpg';
 
 export const COLLECTIONS = [
   {
@@ -29,7 +67,18 @@ export const COLLECTIONS = [
     textColor: '#292820',
     fontHeading: 'font-serif',
     fontBody: 'font-sans',
-    heroImage: foodPanelImg,
+    heroImage: foodWebp,
+    cardImage: foodWebp,
+    fallbackImage: foodJpg,
+    imageResponsive: {
+      webpSrcSet: `${foodWebp480} 480w, ${foodWebp800} 800w, ${foodWebp1200} 1200w`,
+      jpgSrcSet: `${foodJpg480} 480w, ${foodJpg800} 800w, ${foodJpg1200} 1200w`,
+      src: foodWebp,
+      fallback: foodJpg,
+      sizes: '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw',
+      alt: 'Amoga Wholesome Pantry — Traditional Indian Blends, Soups & Mixes',
+      objectPosition: 'center 62%',
+    },
     badge: 'Traditional Blends',
     features: ['Soup Mixes', 'Millet Mixes', 'Rice Podis'],
   },
@@ -53,7 +102,18 @@ export const COLLECTIONS = [
     textColor: '#173B2A',
     fontHeading: 'font-serif',
     fontBody: 'font-sans',
-    heroImage: teaPanelImg,
+    heroImage: teaWebp,
+    cardImage: teaWebp,
+    fallbackImage: teaJpg,
+    imageResponsive: {
+      webpSrcSet: `${teaWebp480} 480w, ${teaWebp800} 800w, ${teaWebp1200} 1200w`,
+      jpgSrcSet: `${teaJpg480} 480w, ${teaJpg800} 800w, ${teaJpg1200} 1200w`,
+      src: teaWebp,
+      fallback: teaJpg,
+      sizes: '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw',
+      alt: 'Amoga Wellness Tea — Botanical Teas, Flower Blossoms & Herbal Infusions',
+      objectPosition: 'center 60%',
+    },
     badge: 'Botanical Rituals',
     features: ['Flower Blossoms', 'Herbal Tisanes', 'Aromatic Infusions'],
   },
@@ -77,7 +137,18 @@ export const COLLECTIONS = [
     textColor: '#F6EBD8',
     fontHeading: 'font-serif',
     fontBody: 'font-sans',
-    heroImage: sareesPanelImg,
+    heroImage: sareesWebp,
+    cardImage: sareesWebp,
+    fallbackImage: sareesJpg,
+    imageResponsive: {
+      webpSrcSet: `${sareesWebp480} 480w, ${sareesWebp800} 800w, ${sareesWebp1200} 1200w`,
+      jpgSrcSet: `${sareesJpg480} 480w, ${sareesJpg800} 800w, ${sareesJpg1200} 1200w`,
+      src: sareesWebp,
+      fallback: sareesJpg,
+      sizes: '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw',
+      alt: 'Amoga Heritage Sarees — Handcrafted Pure Silk Weaves & Master Handlooms',
+      objectPosition: 'center 35%',
+    },
     badge: 'Artisanal Handlooms',
     features: ['Kanchipuram Pure Silk', 'Banarasi Brocade', 'Handwoven Tussar', 'Antique Zari Weaves'],
   },
@@ -101,7 +172,18 @@ export const COLLECTIONS = [
     textColor: '#F4F4F2',
     fontHeading: 'font-serif',
     fontBody: 'font-sans',
-    heroImage: jewelleryPanelImg,
+    heroImage: jewelleryWebp,
+    cardImage: jewelleryWebp,
+    fallbackImage: jewelleryJpg,
+    imageResponsive: {
+      webpSrcSet: `${jewelleryWebp480} 480w, ${jewelleryWebp800} 800w, ${jewelleryWebp1200} 1200w`,
+      jpgSrcSet: `${jewelleryJpg480} 480w, ${jewelleryJpg800} 800w, ${jewelleryJpg1200} 1200w`,
+      src: jewelleryWebp,
+      fallback: jewelleryJpg,
+      sizes: '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw',
+      alt: 'Amoga Silver Jewellery — Sculptural 925 Sterling Silver Heirlooms',
+      objectPosition: 'center 45%',
+    },
     badge: '925 Sterling Craft',
     features: ['925 Sterling Silver', 'Minimalist Pendants', 'Sculptural Cuffs', 'Artisan Rings'],
   },

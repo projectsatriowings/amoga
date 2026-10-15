@@ -1,20 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LiquidGlassCta } from './LiquidGlassCta';
 import { COLLECTIONS } from '../../data/collections';
 import { CallToOrderAssistance } from '../../components/common/CallToOrderAssistance';
 
 /**
- * GatekeeperPanel Component
+ * Converts hex color code to rgba() string with specific opacity.
+ */
+function hexToRgba(hex, alpha = 1) {
+  if (!hex || typeof hex !== 'string') return `rgba(248, 246, 240, ${alpha})`;
+  const clean = hex.replace('#', '').trim();
+  if (clean.length === 3) {
+    const r = parseInt(clean[0] + clean[0], 16) || 0;
+    const g = parseInt(clean[1] + clean[1], 16) || 0;
+    const b = parseInt(clean[2] + clean[2], 16) || 0;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  const r = parseInt(clean.substring(0, 2), 16) || 0;
+  const g = parseInt(clean.substring(2, 4), 16) || 0;
+  const b = parseInt(clean.substring(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * GatekeeperPanel Component (Production Redesign)
  * 
- * Individual vertical panel representing one shopping collection.
- * Supports animated flex width redistribution, rich typography,
- * responsive photography with gradient blending, and keyboard navigation.
+ * Individual vertical panel representing one curated shopping collection.
+ * Features:
+ * - 5-layer stacking order: Base -> Image -> Long Soft Gradient -> Text/CTAs -> Dim/Hover.
+ * - Buttery-smooth multi-stop continuous gradient blending upward into the solid color.
+ * - Responsive WebP picture with fallback JPEG, high fetch priority, and zero layout shift.
+ * - Animated flex width redistribution with smooth cubic bezier hover transitions.
  */
 export function GatekeeperPanel({
   collection,
   index,
-  total = 3,
+  total = 4,
   isHovered,
   isAnyHovered,
   isExiting,
@@ -25,6 +46,10 @@ export function GatekeeperPanel({
 }) {
   const isCollapsed = isAnyHovered && !isHovered;
   const isExpanded = isHovered;
+
+  // Image load & fallback state
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
 
   // Target flex values:
   // When nothing is hovered: 1.0 (equal width)
@@ -41,7 +66,7 @@ export function GatekeeperPanel({
       eyebrowColor: '#3F7B43',
       descriptionColor: '#292820',
       titleFont: 'font-serif font-bold tracking-tight',
-      gradientStop: 'from-[#F8F6F0] via-[#F8F6F0]/80 to-transparent',
+      bottomVignette: '0.12',
       overlayDim: 'bg-[#173B2A]/25',
     },
     tea: {
@@ -51,7 +76,7 @@ export function GatekeeperPanel({
       eyebrowColor: '#65815A',
       descriptionColor: '#292820',
       titleFont: 'font-serif font-normal tracking-wide',
-      gradientStop: 'from-[#FAF1BB] via-[#FAF1BB]/85 to-transparent',
+      bottomVignette: '0.12',
       overlayDim: 'bg-[#173B2A]/15',
     },
     sarees: {
@@ -61,7 +86,7 @@ export function GatekeeperPanel({
       eyebrowColor: '#C5A46D',
       descriptionColor: '#D4C2A7',
       titleFont: 'font-serif font-normal tracking-wide',
-      gradientStop: 'from-[#2C0E1A] via-[#2C0E1A]/85 to-transparent',
+      bottomVignette: '0.35',
       overlayDim: 'bg-black/40',
     },
     jewellery: {
@@ -71,7 +96,7 @@ export function GatekeeperPanel({
       eyebrowColor: '#C6C8CD',
       descriptionColor: '#A7A8AD',
       titleFont: 'font-jakarta font-normal tracking-widest',
-      gradientStop: 'from-[#111215] via-[#111215]/85 to-transparent',
+      bottomVignette: '0.38',
       overlayDim: 'bg-black/50',
     },
   }[collection.id] || {
@@ -81,7 +106,7 @@ export function GatekeeperPanel({
     eyebrowColor: collection.accentColor || '#722F37',
     descriptionColor: '#4A423B',
     titleFont: 'font-serif font-normal tracking-wide',
-    gradientStop: 'from-[#FAF8F5] via-[#FAF8F5]/85 to-transparent',
+    bottomVignette: '0.25',
     overlayDim: 'bg-black/30',
   };
 
@@ -95,9 +120,28 @@ export function GatekeeperPanel({
     descriptionColor: customPalette.mutedTextColor || baseTheme.descriptionColor,
   };
 
+  const staticMatch = COLLECTIONS.find((c) => c.id === collection.id);
+  const responsive = collection.imageResponsive || staticMatch?.imageResponsive;
+  const primaryImgSrc = collection.heroImage || staticMatch?.heroImage;
+  const fallbackSrc = collection.fallbackImage || staticMatch?.fallbackImage || primaryImgSrc;
+
   const transitionConfig = {
     duration: prefersReducedMotion ? 0.01 : 0.65,
     ease: [0.16, 1, 0.3, 1], // cinematic smooth cubic bezier
+  };
+
+  // Multi-stop continuous gradient from 100% solid at the top to transparent over the image
+  const gradientOverlayStyle = {
+    background: `linear-gradient(180deg, 
+      ${hexToRgba(themeConfig.bgColor, 1.0)} 0%, 
+      ${hexToRgba(themeConfig.bgColor, 1.0)} 22%, 
+      ${hexToRgba(themeConfig.bgColor, 0.98)} 30%, 
+      ${hexToRgba(themeConfig.bgColor, 0.88)} 40%, 
+      ${hexToRgba(themeConfig.bgColor, 0.68)} 52%, 
+      ${hexToRgba(themeConfig.bgColor, 0.40)} 64%, 
+      ${hexToRgba(themeConfig.bgColor, 0.15)} 76%, 
+      ${hexToRgba(themeConfig.bgColor, 0.0)} 88%,
+      rgba(0, 0, 0, ${themeConfig.bottomVignette || '0.2'}) 100%)`,
   };
 
   return (
@@ -129,18 +173,67 @@ export function GatekeeperPanel({
       }}
       onClick={() => onSelect(collection)}
     >
-      {/* Dim overlay when another panel is active */}
-      <motion.div
-        animate={{ opacity: isCollapsed ? 1 : 0 }}
-        transition={transitionConfig}
-        className={`absolute inset-0 z-20 pointer-events-none transition-opacity ${themeConfig.overlayDim}`}
+      {/* =========================================================================
+          LAYER 2: COLLECTION PHOTOGRAPHY (Positioned in lower 75% of panel)
+          ========================================================================= */}
+      <div className="absolute inset-x-0 bottom-0 top-[24%] sm:top-[22%] md:top-[20%] overflow-hidden pointer-events-none z-0">
+        <picture className="w-full h-full block">
+          {!useFallback && responsive?.webpSrcSet && (
+            <source
+              type="image/webp"
+              srcSet={responsive.webpSrcSet}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            />
+          )}
+          {!useFallback && responsive?.jpgSrcSet && (
+            <source
+              type="image/jpeg"
+              srcSet={responsive.jpgSrcSet}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            />
+          )}
+          <motion.img
+            src={useFallback ? fallbackSrc : primaryImgSrc}
+            alt={responsive?.alt || `Amoga ${collection.name}`}
+            fetchPriority={index < 2 ? 'high' : 'auto'}
+            loading="eager"
+            decoding="async"
+            onLoad={() => setImageLoaded(true)}
+            onError={(e) => {
+              console.warn(`[Amoga] Image failed to load: ${e.currentTarget.src}, using fallback.`);
+              setUseFallback(true);
+            }}
+            animate={{
+              scale: isExpanded ? 1.04 : 1.0,
+            }}
+            transition={transitionConfig}
+            className={`w-full h-full object-cover transition-opacity duration-700 ease-out filter saturate-[1.04] ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              objectPosition: responsive?.objectPosition || 'center center',
+            }}
+          />
+        </picture>
+      </div>
+
+      {/* =========================================================================
+          LAYER 3: SMOOTH LAYERED GRADIENT OVERLAY
+          Transitions seamless solid tone downward into the photography.
+          ========================================================================= */}
+      <div
+        className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-500"
+        style={gradientOverlayStyle}
+        aria-hidden="true"
       />
 
-      {/* Top Content Area */}
-      <div className="relative z-10 pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 md:px-7 lg:px-8 xl:px-10 flex-1 flex flex-col justify-between items-start w-full pb-6 sm:pb-8">
+      {/* =========================================================================
+          LAYER 4: NARRATIVE HEADINGS & INTERACTIVE CTA CONTENT (z-20)
+          ========================================================================= */}
+      <div className="relative z-20 pointer-events-auto pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 md:px-7 lg:px-8 xl:px-10 flex-1 flex flex-col justify-between items-start w-full pb-6 sm:pb-8">
         {/* Narrative Group */}
         <div className="w-full flex flex-col items-start">
-          {/* Collection Number & Divider */}
+          {/* Collection Number & Decorative Accent Rule */}
           <div className="flex items-center gap-3 text-xs sm:text-sm font-mono tracking-widest opacity-80 mb-3 sm:mb-4">
             <span className="font-semibold">{collection.number}</span>
             <span
@@ -149,10 +242,10 @@ export function GatekeeperPanel({
             />
           </div>
 
-          {/* Collection Title */}
+          {/* Prominent Collection Title */}
           <motion.h2
             layout="position"
-            className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl uppercase leading-[1.05] w-full max-w-full ${themeConfig.titleFont}`}
+            className={`text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl uppercase leading-[1.05] w-full max-w-full drop-shadow-sm ${themeConfig.titleFont}`}
             style={{ color: themeConfig.textColor }}
           >
             {collection.title.split(' ').map((word, wIdx) => (
@@ -171,7 +264,7 @@ export function GatekeeperPanel({
             {collection.eyebrow}
           </motion.div>
 
-          {/* Description (Fades gracefully in/out on collapse) */}
+          {/* Description (Smoothly fades on panel collapse) */}
           <motion.div
             animate={{
               opacity: isCollapsed ? 0 : 1,
@@ -193,12 +286,12 @@ export function GatekeeperPanel({
         {/* Liquid-Glass CTA Button & Secondary Call to Order */}
         <motion.div
           animate={{
-            opacity: isCollapsed ? 0 : isExpanded ? 1 : 0.85,
+            opacity: isCollapsed ? 0 : isExpanded ? 1 : 0.9,
             y: isCollapsed ? 12 : 0,
             scale: isCollapsed ? 0.95 : 1,
           }}
           transition={transitionConfig}
-          className="mt-auto pt-6 sm:pt-8 flex flex-wrap items-center gap-2.5"
+          className="mt-auto pt-6 sm:pt-8 flex flex-wrap items-center gap-2.5 z-20"
         >
           <LiquidGlassCta
             collectionId={collection.id}
@@ -211,41 +304,24 @@ export function GatekeeperPanel({
           <div onClick={(e) => e.stopPropagation()}>
             <CallToOrderAssistance
               variant="hero"
-              className="bg-black/35 backdrop-blur-md border-white/20 text-[#F4F4F2] hover:bg-white/15 hover:border-white/40"
+              className="bg-black/35 backdrop-blur-md border-white/20 text-[#F4F4F2] hover:bg-white/15 hover:border-white/40 shadow-sm"
             />
           </div>
         </motion.div>
       </div>
 
-      {/* Bottom Photography Container */}
-      <div className="relative w-full h-[45%] sm:h-[50%] md:h-[52%] mt-auto overflow-hidden">
-        {/* Top Gradient Blend */}
-        <div
-          className={`absolute top-0 left-0 right-0 h-24 sm:h-32 z-10 bg-gradient-to-b ${themeConfig.gradientStop} pointer-events-none`}
-        />
-
-        {/* Collection Photography */}
-        <motion.img
-          src={collection.heroImage || COLLECTIONS.find((c) => c.id === collection.id)?.heroImage}
-          alt={`Amoga ${collection.name}`}
-          onError={(e) => {
-            const fallback = COLLECTIONS.find((c) => c.id === collection.id)?.heroImage;
-            if (fallback && e.currentTarget.src !== fallback) {
-              e.currentTarget.src = fallback;
-            }
-          }}
-          animate={{
-            scale: isExpanded ? 1.05 : 1.0,
-          }}
-          transition={transitionConfig}
-          className="w-full h-full object-cover object-center filter saturate-[1.05]"
-          loading="eager"
-        />
-      </div>
+      {/* =========================================================================
+          LAYER 5: DIM OVERLAY ON COLLAPSED PANELS & VERTICAL DIVIDER
+          ========================================================================= */}
+      <motion.div
+        animate={{ opacity: isCollapsed ? 1 : 0 }}
+        transition={transitionConfig}
+        className={`absolute inset-0 z-30 pointer-events-none transition-opacity ${themeConfig.overlayDim}`}
+      />
 
       {/* Subtle Vertical Border Separator */}
       {index < total - 1 && (
-        <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-black/10 dark:bg-white/10 z-30 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-black/10 dark:bg-white/10 z-40 pointer-events-none" />
       )}
     </motion.article>
   );

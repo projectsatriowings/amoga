@@ -38,6 +38,8 @@
     "concurrently": "^10.0.6",
     "oxlint": "^1.81.0",
     "postcss": "^8.5.29",
+    "puppeteer-core": "^25.14.0",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.19",
     "vite": "^8.3.0"
   }

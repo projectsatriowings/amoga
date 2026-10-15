@@ -40,22 +40,46 @@ export function AppHeader({ activeCollection }) {
     ? (headerThemeStyles[activeCollection.id] || headerThemeStyles[activeCollection.theme] || headerThemeStyles.neutral)
     : headerThemeStyles.default;
 
+  const announcementBgMap = {
+    food: '#173B2A',
+    tea: '#2C1E11',
+    sarees: '#35121F',
+    jewellery: '#1B1C1F',
+  };
+  const activeAnnounceBg = activeCollection?.id && announcementBgMap[activeCollection.id]
+    ? announcementBgMap[activeCollection.id]
+    : '#173B2A';
+
   return (
     <header
       className={`sticky top-0 z-50 w-full backdrop-blur-md border-b transition-colors duration-normal ease-smooth ${activeThemeClass}`}
     >
-      <Container className="h-20 flex items-center justify-between">
+      {/* Top Announcement Bar */}
+      <div
+        className="min-h-[34px] py-1.5 px-4 text-center text-[11px] font-medium tracking-wider border-b transition-colors flex items-center justify-center text-white"
+        style={{
+          backgroundColor: activeAnnounceBg,
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+        }}
+      >
+        <span>Complimentary Pan-India Shipping on Artisanal Orders</span>
+        <span className="hidden sm:inline ml-3 opacity-80">
+          • Concierge: +91 9940018593
+        </span>
+      </div>
+
+      <Container className="h-20 flex items-center justify-between gap-4">
         {/* Left: Brand Identity */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 shrink-0 select-none">
           <Link
             to="/"
-            className="flex items-center gap-3 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded"
-            title="Amoga"
+            className="flex items-center gap-3 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded shrink-0 group"
+            title="Amoga Main Portal"
           >
             <img
               src={amogaLogo}
               alt="Amoga"
-              className="h-10 md:h-12 w-auto object-contain shrink-0"
+              className="h-10 sm:h-11 w-auto max-w-[145px] sm:max-w-[160px] object-contain transition-transform group-hover:scale-[1.02]"
             />
           </Link>
         </div>
@@ -63,7 +87,7 @@ export function AppHeader({ activeCollection }) {
         {/* Center: Collection Navigation */}
         <nav
           aria-label="Collections Navigation"
-          className="hidden md:flex items-center gap-1 sm:gap-2 lg:gap-3"
+          className="hidden md:flex items-center gap-1 sm:gap-2 lg:gap-3 shrink-0"
         >
           {COLLECTIONS.map((col, idx) => {
             const isActive = location.pathname.startsWith(col.path);
@@ -85,48 +109,49 @@ export function AppHeader({ activeCollection }) {
         </nav>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Customer Account Global Profile Menu */}
-          <GlobalProfileMenu />
-
-          <div className="relative">
-            <IconButton
-              icon={<Heart className="w-5 h-5" />}
-              label={`Wishlist (${wishlistCount} items)`}
-              variant="ghost"
-              size="md"
-              onClick={openWishlist}
-              className="hidden sm:inline-flex"
-            />
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Wishlist Button */}
+          <button
+            type="button"
+            onClick={openWishlist}
+            className="relative h-9 w-9 p-0 flex items-center justify-center rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer shrink-0"
+            aria-label="View Wishlist"
+          >
+            <Heart className="w-5 h-5" />
             {wishlistCount > 0 && (
-              <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center pointer-events-none">
+              <span className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full bg-red-600 flex items-center justify-center font-mono pointer-events-none">
                 {wishlistCount}
               </span>
             )}
-          </div>
+          </button>
 
-          <div className="relative">
-            <IconButton
-              icon={<ShoppingBag className="w-5 h-5" />}
-              label={`Cart (${cartCount} items)`}
-              variant="ghost"
-              size="md"
-              onClick={openCart}
-            />
+          {/* Cart Button */}
+          <button
+            type="button"
+            onClick={openCart}
+            className="relative h-9 w-9 p-0 flex items-center justify-center rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer shrink-0"
+            aria-label="View Shopping Cart"
+          >
+            <ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[#287A25] text-white text-[10px] font-bold flex items-center justify-center pointer-events-none">
+              <span className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full bg-[#287A25] flex items-center justify-center font-mono pointer-events-none">
                 {cartCount}
               </span>
             )}
-          </div>
+          </button>
+
+          {/* Customer Account Global Profile Menu */}
+          <GlobalProfileMenu triggerClassName="hover:bg-current/10 text-current" />
 
           {/* Mobile hamburger */}
-          <IconButton
-            icon={mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
+          <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden"
-          />
+            className="md:hidden h-9 w-9 p-0 flex items-center justify-center rounded-lg hover:bg-current/10 text-current cursor-pointer shrink-0"
+            aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </Container>
 

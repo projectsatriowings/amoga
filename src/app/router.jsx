@@ -242,6 +242,10 @@ export const router = createBrowserRouter([
     path: '/register',
     element: <Navigate to="/account/login?mode=register" replace />,
   },
+  {
+    path: '/account/orders',
+    element: <Navigate to="/account?tab=orders" replace />,
+  },
 
   // Dedicated Order Tracking Routes
   {
