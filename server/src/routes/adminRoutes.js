@@ -81,6 +81,14 @@ import {
   updateInquiryNotes,
   assignInquiry,
 } from '../controllers/adminInquiriesController.js';
+import {
+  searchHsnEndpoint,
+  listRateMasterEndpoint,
+  createRateMasterEndpoint,
+  updateRateMasterEndpoint,
+  deactivateRateMasterEndpoint,
+  verifyProductTaxEndpoint,
+} from '../controllers/adminTaxController.js';
 
 const router = Router();
 
@@ -110,6 +118,14 @@ router.post('/products', requireAdminAuth(['CATALOGUE_MANAGER']), createProduct)
 router.put('/products/:id', requireAdminAuth(['CATALOGUE_MANAGER']), updateProduct);
 router.patch('/products/:id/archive', requireAdminAuth(['CATALOGUE_MANAGER']), archiveProduct);
 router.patch('/products/:id/restore', requireAdminAuth(['CATALOGUE_MANAGER']), restoreProduct);
+router.post('/products/:id/tax-verify', requireAdminAuth(['CATALOGUE_MANAGER']), verifyProductTaxEndpoint);
+
+// 2.5 Assisted GST/HSN Classification & Verified Rate Master (Catalogue & Super Admin)
+router.get('/tax/hsn/search', requireAdminAuth(), searchHsnEndpoint);
+router.get('/tax/rates', requireAdminAuth(), listRateMasterEndpoint);
+router.post('/tax/rates', requireAdminAuth(['CATALOGUE_MANAGER']), createRateMasterEndpoint);
+router.put('/tax/rates/:id', requireAdminAuth(['CATALOGUE_MANAGER']), updateRateMasterEndpoint);
+router.delete('/tax/rates/:id', requireAdminAuth(['CATALOGUE_MANAGER']), deactivateRateMasterEndpoint);
 
 // 3. Collections (Catalogue & Super Admin)
 router.get('/collections', requireAdminAuth(), listCollections);

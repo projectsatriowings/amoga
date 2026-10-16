@@ -20,6 +20,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { HsnClassificationWidget } from '../components/HsnClassificationWidget';
 import { BackButton } from '../../../components/ui/BackButton';
 import { invalidateProductsCache } from '../../../hooks/useProducts';
 
@@ -114,7 +115,7 @@ export function AdminProductForm() {
   const { id } = useParams();
   const isEditing = Boolean(id);
   const navigate = useNavigate();
-  const { adminFetch } = useAdminStore();
+  const { adminFetch, admin } = useAdminStore();
 
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(isEditing);
@@ -131,7 +132,7 @@ export function AdminProductForm() {
 
   // Section toggle state
   const [showAdditionalSpecs, setShowAdditionalSpecs] = useState(false);
-  const [showTaxSection, setShowTaxSection] = useState(false);
+  const [showTaxSection, setShowTaxSection] = useState(true);
   const [hasVariants, setHasVariants] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -162,12 +163,17 @@ export function AdminProductForm() {
     packSize: '',
     specs: {},
 
-    // Tax & Compliance
-    hsnCode: '2104',
-    gstRate: '5.00',
+    // Tax & Compliance (Assisted Classification via HSN_SAC.pdf reference & Rate Master)
+    hsnCode: '',
+    gstRate: '',
     isTaxInclusive: true,
     cessRate: '0.00',
     taxClassification: 'GOODS',
+    taxTreatment: 'TAXABLE',
+    taxVerificationStatus: 'PENDING',
+    taxConfirmedBy: null,
+    taxConfirmedAt: null,
+    taxNotes: '',
 
     // Variants
     variants: [],
@@ -218,10 +224,15 @@ export function AdminProductForm() {
             packSize: p.packSize || '',
             specs: p.specs || {},
             hsnCode: p.hsnCode || '',
-            gstRate: p.gstRate !== null && p.gstRate !== undefined ? String(p.gstRate) : '5.00',
+            gstRate: p.gstRate !== null && p.gstRate !== undefined ? String(p.gstRate) : '',
             isTaxInclusive: p.isTaxInclusive !== undefined ? Boolean(p.isTaxInclusive) : true,
             cessRate: p.cessRate !== null && p.cessRate !== undefined ? String(p.cessRate) : '0.00',
             taxClassification: p.taxClassification || 'GOODS',
+            taxTreatment: p.taxTreatment || 'TAXABLE',
+            taxVerificationStatus: p.taxVerificationStatus || 'PENDING',
+            taxConfirmedBy: p.taxConfirmedBy || null,
+            taxConfirmedAt: p.taxConfirmedAt || null,
+            taxNotes: p.taxNotes || '',
             variants: existingVariants.map((v) => ({
               id: v.id,
               name: v.name || '',
@@ -229,6 +240,10 @@ export function AdminProductForm() {
               price: v.price !== null && v.price !== undefined ? String(v.price) : '',
               stockQuantity: v.stockQuantity ?? 25,
               inStock: v.inStock !== undefined ? Boolean(v.inStock) : true,
+              hsnCode: v.hsnCode || '',
+              gstRate: v.gstRate !== null && v.gstRate !== undefined ? String(v.gstRate) : '',
+              taxTreatment: v.taxTreatment || '',
+              taxVerificationStatus: v.taxVerificationStatus || '',
             })),
           });
 
@@ -286,11 +301,6 @@ export function AdminProductForm() {
         const nextCatName = available.length > 0 ? available[0].name : '';
         updated.category = nextCat;
         updated.categoryName = nextCatName;
-
-        // Auto-update suggested HSN code if not explicitly changed
-        if (CATEGORY_HSN_SUGGESTIONS[value]?.[0]?.code) {
-          updated.hsnCode = CATEGORY_HSN_SUGGESTIONS[value][0].code;
-        }
 
         // Fetch fresh SKU preview for new collection
         fetchSkuPreview(value, nextCat);
@@ -432,6 +442,10 @@ export function AdminProductForm() {
       if (formData.gstRate === '' || formData.gstRate === null || isNaN(Number(formData.gstRate))) {
         errors.gstRate = 'GST rate is required for live tax compliance';
       }
+
+      if (formData.taxVerificationStatus !== 'VERIFIED') {
+        errors.taxVerificationStatus = 'Tax classification must be confirmed and verified by an authorized user before publishing live.';
+      }
     }
 
     setFieldErrors(errors);
@@ -445,7 +459,7 @@ export function AdminProductForm() {
     if (!validateForm(targetStatus)) {
       setError(
         targetStatus === 'active'
-          ? 'Please correct the highlighted fields before publishing live.'
+          ? 'Please correct the highlighted fields and confirm tax verification before publishing live.'
           : 'Please enter a product name and collection.'
       );
       return;
@@ -477,6 +491,11 @@ export function AdminProductForm() {
         isTaxInclusive: Boolean(formData.isTaxInclusive),
         cessRate: formData.cessRate !== '' && formData.cessRate !== null ? Number(formData.cessRate) : 0,
         taxClassification: formData.taxClassification || 'GOODS',
+        taxTreatment: formData.taxTreatment || 'TAXABLE',
+        taxVerificationStatus: formData.taxVerificationStatus || 'PENDING',
+        taxConfirmedBy: formData.taxConfirmedBy || null,
+        taxConfirmedAt: formData.taxConfirmedAt || null,
+        taxNotes: formData.taxNotes || null,
         isActive: targetStatus === 'active',
         status: targetStatus,
         variants: hasVariants
@@ -487,6 +506,10 @@ export function AdminProductForm() {
               price: v.price !== '' ? Number(v.price) : null,
               stockQuantity: Number(v.stockQuantity) || 0,
               inStock: Boolean(v.inStock),
+              hsnCode: v.hsnCode?.trim() || null,
+              gstRate: v.gstRate !== '' && v.gstRate !== null && v.gstRate !== undefined ? Number(v.gstRate) : null,
+              taxTreatment: v.taxTreatment || null,
+              taxVerificationStatus: v.taxVerificationStatus || null,
             }))
           : [],
       };
@@ -1284,10 +1307,22 @@ export function AdminProductForm() {
               <ShieldCheck className="w-4 h-4 text-[#722F37]" />
               <div>
                 <h2 className="font-serif text-sm font-bold text-[#1A1817] uppercase tracking-wider">
-                  D. Tax & Compliance (HSN & GST)
+                  D. Assisted GST & HSN Classification
                 </h2>
                 <p className="text-[11px] text-[#7A7167]">
-                  HSN: {formData.hsnCode || 'Not set'} | GST: {formData.gstRate || 0}% | {formData.isTaxInclusive ? 'Inclusive' : 'Exclusive'}
+                  HSN: <span className="font-mono font-medium">{formData.hsnCode || 'Not classified'}</span> | GST:{' '}
+                  <span className="font-medium">{formData.gstRate !== '' && formData.gstRate !== null ? `${formData.gstRate}%` : 'Unassigned'}</span> | Status:{' '}
+                  <span
+                    className={`font-semibold ${
+                      formData.taxVerificationStatus === 'VERIFIED'
+                        ? 'text-emerald-700'
+                        : formData.taxVerificationStatus === 'EXEMPT'
+                        ? 'text-blue-700'
+                        : 'text-amber-700'
+                    }`}
+                  >
+                    {formData.taxVerificationStatus || 'PENDING'}
+                  </span>
                 </p>
               </div>
             </div>
@@ -1298,104 +1333,15 @@ export function AdminProductForm() {
           </button>
 
           {showTaxSection && (
-            <div className="p-5 sm:p-6 border-t border-[#EAE4D9] space-y-4 bg-white/40">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {/* HSN Code */}
-                <div>
-                  <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                    HSN Code {formData.status === 'active' && <span className="text-rose-600">*</span>}
-                  </label>
-                  <input
-                    type="text"
-                    name="hsnCode"
-                    value={formData.hsnCode || ''}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 5007"
-                    maxLength={8}
-                    className={`w-full px-3 py-2 bg-white border rounded text-xs font-mono text-[#1A1817] outline-none ${
-                      fieldErrors.hsnCode ? 'border-rose-400 bg-rose-50/20' : 'border-[#D5CEC2] focus:border-[#722F37]'
-                    }`}
-                  />
-                  {fieldErrors.hsnCode && (
-                    <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.hsnCode}</p>
-                  )}
-                </div>
-
-                {/* GST Rate */}
-                <div>
-                  <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                    GST Rate (%) {formData.status === 'active' && <span className="text-rose-600">*</span>}
-                  </label>
-                  <select
-                    name="gstRate"
-                    value={formData.gstRate}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
-                  >
-                    <option value="0.00">0% (Nil / Exempt)</option>
-                    <option value="3.00">3% (Silver & Jewellery)</option>
-                    <option value="5.00">5% (Sarees, Teas, Basic Food)</option>
-                    <option value="12.00">12% (Food Mixes, Soups)</option>
-                    <option value="18.00">18% (Standard Rate)</option>
-                    <option value="28.00">28% (Luxury items)</option>
-                  </select>
-                </div>
-
-                {/* Price Includes GST */}
-                <div>
-                  <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                    Price Includes GST
-                  </label>
-                  <select
-                    name="isTaxInclusive"
-                    value={formData.isTaxInclusive ? 'true' : 'false'}
-                    onChange={(e) => setFormData((p) => ({ ...p, isTaxInclusive: e.target.value === 'true' }))}
-                    className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
-                  >
-                    <option value="true">Yes (Tax-Inclusive)</option>
-                    <option value="false">No (Tax-Exclusive)</option>
-                  </select>
-                </div>
-
-                {/* Compensation Cess */}
-                <div>
-                  <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                    Compensation Cess (%)
-                  </label>
-                  <input
-                    type="number"
-                    name="cessRate"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={formData.cessRate}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                    className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs font-mono text-[#1A1817] focus:border-[#722F37] outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* HSN quick presets for current collection */}
-              {(CATEGORY_HSN_SUGGESTIONS[formData.category] || CATEGORY_HSN_SUGGESTIONS[formData.collectionId]) && (
-                <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
-                  <span className="text-[10px] text-[#7A7167]">Suggested HSN:</span>
-                  {(CATEGORY_HSN_SUGGESTIONS[formData.category] || CATEGORY_HSN_SUGGESTIONS[formData.collectionId] || []).map((sug) => (
-                    <button
-                      key={sug.code}
-                      type="button"
-                      onClick={() => setFormData((p) => ({ ...p, hsnCode: sug.code }))}
-                      className={`px-2 py-0.5 rounded text-[10px] border transition-colors cursor-pointer ${
-                        formData.hsnCode === sug.code
-                          ? 'bg-[#722F37] text-white border-[#722F37]'
-                          : 'bg-white text-[#4A423B] border-[#D5CEC2] hover:bg-[#F0ECE1]'
-                      }`}
-                    >
-                      {sug.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="p-5 sm:p-6 border-t border-[#EAE4D9] bg-white/60">
+              <HsnClassificationWidget
+                productName={formData.name}
+                formData={formData}
+                setFormData={setFormData}
+                currentUser={admin}
+                adminFetch={adminFetch}
+                fieldErrors={fieldErrors}
+              />
             </div>
           )}
         </div>
@@ -1493,6 +1439,39 @@ export function AdminProductForm() {
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+                  </div>
+
+                  {/* Optional Variant-Level Tax Override */}
+                  <div className="sm:col-span-5 pt-2 border-t border-stone-100 flex flex-wrap items-center gap-3 text-[11px] text-[#7A7167]">
+                    <span className="font-semibold uppercase text-[10px] text-stone-500">Tax Override (Optional):</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px]">HSN:</span>
+                      <input
+                        type="text"
+                        value={v.hsnCode || ''}
+                        onChange={(e) => handleVariantChange(idx, 'hsnCode', e.target.value)}
+                        placeholder={formData.hsnCode || 'Inherit parent'}
+                        maxLength={8}
+                        className="w-24 px-2 py-1 border border-[#D5CEC2] rounded text-xs font-mono bg-white"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px]">GST %:</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={v.gstRate || ''}
+                        onChange={(e) => handleVariantChange(idx, 'gstRate', e.target.value)}
+                        placeholder={formData.gstRate ? `${formData.gstRate}%` : 'Inherit'}
+                        className="w-20 px-2 py-1 border border-[#D5CEC2] rounded text-xs font-mono bg-white"
+                      />
+                    </div>
+                    {v.hsnCode && (
+                      <span className="text-[10px] text-[#722F37] font-medium">
+                        Variant-specific tax rate active
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

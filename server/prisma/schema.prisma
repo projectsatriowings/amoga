@@ -68,6 +68,11 @@ model Product {
   isTaxInclusive   Boolean          @default(true)
   cessRate         Decimal?         @default(0.00) @db.Decimal(5, 2)
   taxClassification String?         @default("GOODS")
+  taxTreatment      String?         @default("TAXABLE")
+  taxVerificationStatus String      @default("PENDING_VERIFICATION")
+  taxConfirmedBy    String?
+  taxConfirmedAt    DateTime?
+  taxNotes          String?         @db.Text
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
@@ -99,6 +104,11 @@ model ProductVariant {
   gstRate       Decimal?       @db.Decimal(5, 2)
   isTaxInclusive Boolean?
   cessRate      Decimal?       @default(0.00) @db.Decimal(5, 2)
+  taxTreatment  String?        @default("TAXABLE")
+  taxVerificationStatus String? @default("PENDING_VERIFICATION")
+  taxConfirmedBy String?
+  taxConfirmedAt DateTime?
+  taxNotes      String?        @db.Text
   inStock          Boolean          @default(true)
   stockQuantity    Int              @default(25)
   reservedQuantity Int              @default(0)
@@ -541,6 +551,8 @@ model StoreSetting {
   defaultGstRate           Decimal        @default(5.00) @db.Decimal(5, 2)
   defaultHsnCode           String?        @default("5007")
   isTaxInclusiveDefault    Boolean        @default(true)
+  requireTaxVerificationForCheckout Boolean @default(true)
+  strictTaxCompliance               Boolean @default(false)
 
   updatedAt                DateTime       @default(now()) @updatedAt
 
@@ -675,5 +687,44 @@ model SkuSequence {
   updatedAt  DateTime @updatedAt
 
   @@map("sku_sequences")
+}
+
+model HsnReference {
+  id             String   @id @default(uuid())
+  hsnCode        String
+  description    String   @db.Text
+  level          String   // 'CHAPTER' | 'HEADING' | 'SUBHEADING' | 'TARIFF_ITEM' | 'OTHER'
+  codeLength     Int
+  sourceFileName String   @default("HSN_SAC.pdf")
+  importDate     DateTime @default(now())
+  sourcePage     Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([hsnCode])
+  @@index([level])
+  @@map("hsn_references")
+}
+
+model GstRateMaster {
+  id             String    @id @default(uuid())
+  hsnCode        String
+  description    String    @db.Text
+  gstRate        Decimal   @db.Decimal(5, 2)
+  taxTreatment   String    @default("TAXABLE") // 'TAXABLE' | 'NIL_RATED' | 'EXEMPT' | 'NON_GST'
+  cessRate       Decimal   @default(0.00) @db.Decimal(5, 2)
+  effectiveFrom  DateTime?
+  effectiveTo    DateTime?
+  officialSource String?
+  status         String    @default("APPROVED") // 'APPROVED' | 'PENDING_REVIEW' | 'INACTIVE'
+  verifiedBy     String?
+  verifiedAt     DateTime?
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([hsnCode])
+  @@index([status])
+  @@map("gst_rate_master")
 }
 

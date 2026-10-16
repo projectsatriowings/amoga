@@ -369,6 +369,9 @@ export function calculateOrderTaxes({
       cessAmount,
       totalTax: lineTotalTax,
       finalItemTotal,
+      taxVerificationStatus: item.taxVerificationStatus || 'PENDING_VERIFICATION',
+      isTaxVerified: Boolean(item.isTaxVerified),
+      taxTreatment: item.taxTreatment || 'TAXABLE',
     };
   });
 

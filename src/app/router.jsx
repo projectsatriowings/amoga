@@ -46,6 +46,7 @@ import { AdminSettings } from '../features/admin/pages/AdminSettings';
 import { AdminAuditLogs } from '../features/admin/pages/AdminAuditLogs';
 import { AdminCustomerInquiries } from '../features/admin/pages/AdminCustomerInquiries';
 import { AdminReviews } from '../features/admin/pages/AdminReviews';
+import { AdminTaxRates } from '../features/admin/pages/AdminTaxRates';
 import { DeveloperOnlyRoute } from '../features/admin/components/DeveloperOnlyRoute';
 
 /**
@@ -323,6 +324,7 @@ export const router = createBrowserRouter([
       { path: 'products/bulk-upload', element: <AdminBulkUpload /> },
       { path: 'products/new', element: <AdminProductForm /> },
       { path: 'products/:id/edit', element: <AdminProductForm /> },
+      { path: 'tax-rates', element: <AdminTaxRates /> },
       {
         path: 'collections',
         element: (

@@ -207,6 +207,21 @@ export async function resolveAndValidateCart(cartItems = []) {
     const unitPriceRupees = Number((unitPricePaise / 100).toFixed(2));
     const lineTotalRupees = Number((lineTotalPaise / 100).toFixed(2));
 
+    const storeSettings = await getCachedStoreSettings();
+    const lineTaxStatus = selectedVariant?.taxVerificationStatus || product.taxVerificationStatus || 'PENDING_VERIFICATION';
+    const lineHsn = selectedVariant?.hsnCode || product.hsnCode || null;
+    const lineGst = selectedVariant?.gstRate !== undefined && selectedVariant?.gstRate !== null
+      ? Number(selectedVariant.gstRate)
+      : (product.gstRate !== undefined && product.gstRate !== null ? Number(product.gstRate) : null);
+    const isTaxVerified = lineTaxStatus === 'VERIFIED' && Boolean(lineHsn) && lineGst !== null;
+
+    if (storeSettings?.isTaxEnabled) {
+      if (storeSettings?.strictTaxCompliance && !isTaxVerified) {
+        errors.push(`"${product.name}" requires verified GST/HSN tax classification before it can be purchased for live taxable sales.`);
+        continue;
+      }
+    }
+
     lines.push({
       productId: product.id,
       sourceId: product.sourceId,
@@ -217,10 +232,11 @@ export async function resolveAndValidateCart(cartItems = []) {
       variantName: selectedVariant?.name || null,
       image: product.image,
       sku: selectedVariant?.sku || product.sku || null,
-      hsnCode: selectedVariant?.hsnCode || product.hsnCode || null,
-      gstRate: selectedVariant?.gstRate !== undefined && selectedVariant?.gstRate !== null
-        ? Number(selectedVariant.gstRate)
-        : (product.gstRate !== undefined && product.gstRate !== null ? Number(product.gstRate) : null),
+      hsnCode: lineHsn,
+      gstRate: lineGst,
+      taxTreatment: selectedVariant?.taxTreatment || product.taxTreatment || 'TAXABLE',
+      taxVerificationStatus: lineTaxStatus,
+      isTaxVerified,
       isTaxInclusive: selectedVariant?.isTaxInclusive !== undefined && selectedVariant?.isTaxInclusive !== null
         ? Boolean(selectedVariant.isTaxInclusive)
         : (product.isTaxInclusive !== undefined ? Boolean(product.isTaxInclusive) : true),

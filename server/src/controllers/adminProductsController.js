@@ -310,6 +310,11 @@ export async function createProduct(req, res) {
           isTaxInclusive: Boolean(isTaxInclusive),
           cessRate: Number(cessRate || 0),
           taxClassification: String(taxClassification || 'GOODS').trim(),
+          taxTreatment: req.body.taxTreatment || 'TAXABLE',
+          taxVerificationStatus: req.body.taxVerificationStatus || 'PENDING_VERIFICATION',
+          taxConfirmedBy: (req.body.taxVerificationStatus === 'VERIFIED') ? (req.admin?.email || 'admin@amoga.com') : null,
+          taxConfirmedAt: (req.body.taxVerificationStatus === 'VERIFIED') ? new Date() : null,
+          taxNotes: req.body.taxNotes ? String(req.body.taxNotes).trim() : null,
         },
       });
 
@@ -339,6 +344,11 @@ export async function createProduct(req, res) {
                 gstRate: v.gstRate !== undefined && v.gstRate !== null ? Number(v.gstRate) : numGstRate,
                 isTaxInclusive: v.isTaxInclusive !== undefined ? Boolean(v.isTaxInclusive) : Boolean(isTaxInclusive),
                 cessRate: v.cessRate !== undefined ? Number(v.cessRate) : Number(cessRate || 0),
+                taxTreatment: v.taxTreatment || req.body.taxTreatment || 'TAXABLE',
+                taxVerificationStatus: v.taxVerificationStatus || req.body.taxVerificationStatus || 'PENDING_VERIFICATION',
+                taxConfirmedBy: (v.taxVerificationStatus === 'VERIFIED' || req.body.taxVerificationStatus === 'VERIFIED') ? (req.admin?.email || 'admin@amoga.com') : null,
+                taxConfirmedAt: (v.taxVerificationStatus === 'VERIFIED' || req.body.taxVerificationStatus === 'VERIFIED') ? new Date() : null,
+                taxNotes: v.taxNotes ? String(v.taxNotes).trim() : null,
                 stockQuantity: Math.max(0, parseInt(v.stockQuantity, 10) || 25),
                 lowStockThreshold: Math.max(0, parseInt(v.lowStockThreshold, 10) || 5),
                 inStock: v.inStock !== undefined ? Boolean(v.inStock) : true,
@@ -530,6 +540,18 @@ export async function updateProduct(req, res) {
       if (isTaxInclusive !== undefined) updateData.isTaxInclusive = Boolean(isTaxInclusive);
       if (cessRate !== undefined) updateData.cessRate = Number(cessRate || 0);
       if (taxClassification !== undefined) updateData.taxClassification = String(taxClassification).trim();
+      if (req.body.taxTreatment !== undefined) updateData.taxTreatment = req.body.taxTreatment;
+      if (req.body.taxVerificationStatus !== undefined) {
+        updateData.taxVerificationStatus = req.body.taxVerificationStatus;
+        if (req.body.taxVerificationStatus === 'VERIFIED') {
+          updateData.taxConfirmedBy = req.admin?.email || 'admin@amoga.com';
+          updateData.taxConfirmedAt = new Date();
+        } else if (req.body.taxVerificationStatus === 'PENDING_VERIFICATION') {
+          updateData.taxConfirmedBy = null;
+          updateData.taxConfirmedAt = null;
+        }
+      }
+      if (req.body.taxNotes !== undefined) updateData.taxNotes = req.body.taxNotes ? String(req.body.taxNotes).trim() : null;
 
       const p = await tx.product.update({
         where: { id },
@@ -566,6 +588,11 @@ export async function updateProduct(req, res) {
                 gstRate: v.gstRate !== undefined && v.gstRate !== null ? Number(v.gstRate) : undefined,
                 isTaxInclusive: v.isTaxInclusive !== undefined ? Boolean(v.isTaxInclusive) : undefined,
                 cessRate: v.cessRate !== undefined ? Number(v.cessRate) : undefined,
+                taxTreatment: v.taxTreatment !== undefined ? v.taxTreatment : undefined,
+                taxVerificationStatus: v.taxVerificationStatus !== undefined ? v.taxVerificationStatus : undefined,
+                taxConfirmedBy: v.taxVerificationStatus === 'VERIFIED' ? (req.admin?.email || 'admin@amoga.com') : undefined,
+                taxConfirmedAt: v.taxVerificationStatus === 'VERIFIED' ? new Date() : undefined,
+                taxNotes: v.taxNotes !== undefined ? v.taxNotes : undefined,
                 stockQuantity: v.stockQuantity !== undefined ? Number(v.stockQuantity) : undefined,
                 lowStockThreshold: v.lowStockThreshold !== undefined ? Number(v.lowStockThreshold) : undefined,
                 inStock: v.inStock !== undefined ? Boolean(v.inStock) : undefined,

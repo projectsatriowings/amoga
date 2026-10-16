@@ -153,3 +153,21 @@ Category-specific columns enrich filtering, technical specifications, and compli
 3. **Initial Inventory Import (`INITIAL_INVENTORY`)**:
    - Uses the `Inventory` sheet to adjust warehouse stock counts.
    - Creates immutable `InventoryLog` audit entries with timestamp and administrator email.
+
+---
+
+## 8. Statutory GST & Tax Compliance Columns
+
+The bulk import engine supports strict tax attributes cross-referenced against the `HSN_SAC.pdf` reference catalogue and verified GST Rate Master:
+
+| Header in Sheet | DB Mapping | Requirement | Accepted Values / Rules |
+|---|---|---|---|
+| `HSN Code` | `hsnCode` | **OPTIONAL (Required for Active)** | 4 to 8 digit HSN/SAC string (e.g. `5007`, `2104`, `0902`, `7113`). Leading zeroes are strictly preserved. |
+| `GST Rate (%)` | `gstRate` | **OPTIONAL (Required for Active)** | Numeric percentage: `0`, `3`, `5`, `12`, `18`, `28`. |
+| `Tax Treatment` | `taxTreatment` | **OPTIONAL** | One of: `TAXABLE`, `EXEMPT`, `NIL_RATED`, `NON_GST`. Defaults to `TAXABLE`. |
+| `Tax Inclusive (Yes/No)` | `isTaxInclusive` | **OPTIONAL** | `Yes` (default) or `No`. Indicates whether selling price already includes GST. |
+| `Tax Verification Status` | `taxVerificationStatus` | **OPTIONAL** | `PENDING` (default) or `VERIFIED`. |
+| `Compensation Cess (%)` | `cessRate` | **OPTIONAL** | Numeric percentage (defaults to `0.00`). |
+
+> **Unsafe Assignment Safeguard:** If a row specifies `Tax Verification Status` as `VERIFIED`, both `HSN Code` and `GST Rate` must be present and valid. Rows with missing or ambiguous tax details are flagged or kept as `PENDING` until an authorized user verifies them.
+

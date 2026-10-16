@@ -1432,6 +1432,9 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
       const isTaxInclusiveRaw = getCellByNormalized(row, headerMap, 'tax inclusive (yes/no)', 'tax inclusive', 'is tax inclusive').toLowerCase();
       const cessRateVal = getNumericByNormalized(row, headerMap, 'gst cess rate %', 'cess rate', 'cess %');
       const taxClassification = getCellByNormalized(row, headerMap, 'tax classification') || 'GOODS';
+      const taxVerificationStatusRaw = getCellByNormalized(row, headerMap, 'tax verification status', 'tax verification', 'tax status', 'verification status');
+      const taxTreatmentRaw = getCellByNormalized(row, headerMap, 'tax treatment', 'tax treatment type');
+      const taxNotes = getCellByNormalized(row, headerMap, 'tax notes', 'tax comments', 'tax note');
       const statusRaw = getCellByNormalized(row, headerMap, 'publication status', 'status').toLowerCase();
       const inStockRaw = getCellByNormalized(row, headerMap, 'in stock').toLowerCase();
       const stockQtyVal = getNumericByNormalized(row, headerMap, 'stock quantity');
@@ -1753,6 +1756,70 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         }
       }
 
+      // 7.4.1 Validate Tax Inclusive
+      let parsedIsTaxInclusive = true;
+      if (isTaxInclusiveRaw) {
+        if (['yes', 'true', '1', 'y', 'inclusive'].includes(isTaxInclusiveRaw)) {
+          parsedIsTaxInclusive = true;
+        } else if (['no', 'false', '0', 'n', 'exclusive'].includes(isTaxInclusiveRaw)) {
+          parsedIsTaxInclusive = false;
+        } else {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Tax Inclusive (Yes/No)',
+            code: 'INVALID_TAX_INCLUSIVE',
+            message: `Tax Inclusive value "${isTaxInclusiveRaw}" is invalid. Expected "Yes" or "No".`,
+          });
+        }
+      }
+
+      // 7.4.2 Validate Tax Treatment
+      let parsedTaxTreatment = 'TAXABLE';
+      if (taxTreatmentRaw) {
+        const normTreatment = taxTreatmentRaw.toUpperCase();
+        if (['TAXABLE', 'NIL_RATED', 'EXEMPT', 'NON_GST'].includes(normTreatment)) {
+          parsedTaxTreatment = normTreatment;
+        } else {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Tax Treatment',
+            code: 'INVALID_TAX_TREATMENT',
+            message: `Tax Treatment "${taxTreatmentRaw}" is invalid. Permitted: TAXABLE, NIL_RATED, EXEMPT, NON_GST.`,
+          });
+        }
+      }
+
+      // 7.4.3 Validate Tax Verification Status without silently guessing
+      let parsedTaxVerificationStatus = 'PENDING_VERIFICATION';
+      if (taxVerificationStatusRaw) {
+        const normStatus = taxVerificationStatusRaw.toUpperCase().replace(/\s+/g, '_');
+        if (['VERIFIED', 'PENDING_VERIFICATION', 'EXEMPT', 'UNCLASSIFIED'].includes(normStatus)) {
+          parsedTaxVerificationStatus = normStatus;
+        } else {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Tax Verification Status',
+            code: 'INVALID_TAX_VERIFICATION_STATUS',
+            message: `Tax Verification Status "${taxVerificationStatusRaw}" is invalid. Permitted: VERIFIED, PENDING_VERIFICATION, EXEMPT, UNCLASSIFIED.`,
+          });
+        }
+      }
+
+      if (parsedTaxVerificationStatus === 'VERIFIED') {
+        if (!parsedHsn || parsedGstRate === null) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Tax Verification Status',
+            code: 'CANNOT_VERIFY_WITHOUT_TAX_DETAILS',
+            message: 'Product cannot be marked as VERIFIED when HSN Code or GST Rate is missing or invalid.',
+          });
+        }
+      }
+
       // 7.5 Tax Compliance Publication Safeguard:
       // If product lacks required HSN/GST, safeguard statutory compliance by falling back to Draft status
       let isTaxCompliant = Boolean(parsedHsn && parsedGstRate !== null);
@@ -1957,9 +2024,12 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         sku: parsedSku,
         hsnCode: parsedHsn,
         gstRate: parsedGstRate,
-        isTaxInclusive: isTaxInclusiveRaw === 'no' || isTaxInclusiveRaw === 'false' ? false : true,
+        isTaxInclusive: parsedIsTaxInclusive,
         cessRate: parsedCessRate,
         taxClassification: String(taxClassification || 'GOODS').trim().toUpperCase(),
+        taxTreatment: parsedTaxTreatment,
+        taxVerificationStatus: parsedTaxVerificationStatus,
+        taxNotes: taxNotes || null,
         variants: [],
       });
     }
@@ -2297,6 +2367,11 @@ export async function executeProductImport(validationResult, options = {}, admin
                 isTaxInclusive: Boolean(prod.isTaxInclusive),
                 cessRate: Number(prod.cessRate || 0),
                 taxClassification: prod.taxClassification || 'GOODS',
+                taxTreatment: prod.taxTreatment || 'TAXABLE',
+                taxVerificationStatus: prod.taxVerificationStatus || 'PENDING_VERIFICATION',
+                taxConfirmedBy: prod.taxVerificationStatus === 'VERIFIED' ? adminEmail : null,
+                taxConfirmedAt: prod.taxVerificationStatus === 'VERIFIED' ? new Date() : null,
+                taxNotes: prod.taxNotes || null,
               },
             });
 
@@ -2392,6 +2467,11 @@ export async function executeProductImport(validationResult, options = {}, admin
                 isTaxInclusive: prod.isTaxInclusive !== undefined ? Boolean(prod.isTaxInclusive) : existing.isTaxInclusive,
                 cessRate: prod.cessRate !== undefined ? Number(prod.cessRate) : existing.cessRate,
                 taxClassification: prod.taxClassification || existing.taxClassification,
+                taxTreatment: prod.taxTreatment || existing.taxTreatment || 'TAXABLE',
+                taxVerificationStatus: prod.taxVerificationStatus || existing.taxVerificationStatus || 'PENDING_VERIFICATION',
+                taxConfirmedBy: prod.taxVerificationStatus === 'VERIFIED' ? adminEmail : existing.taxConfirmedBy,
+                taxConfirmedAt: prod.taxVerificationStatus === 'VERIFIED' ? new Date() : existing.taxConfirmedAt,
+                taxNotes: prod.taxNotes !== undefined ? prod.taxNotes : existing.taxNotes,
               },
             });
 
