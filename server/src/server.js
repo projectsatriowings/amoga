@@ -7,22 +7,10 @@ async function startServer() {
   console.log(`Environment: ${env.NODE_ENV}`);
   console.log(`Target Port: ${env.PORT}`);
 
-  // Check database connectivity
-  let dbConnected = false;
-  try {
-    dbConnected = await checkDatabaseHealth();
-  } catch (err) {
-    console.error('Database connection attempt error:', err.message);
-  }
-
-  if (!dbConnected) {
-    console.warn('⚠️ WARNING: Initial connection to PostgreSQL database was not established.');
-    console.warn('⚠️ Serving frontend and static endpoints. Configure DATABASE_URL in environment to activate full database capabilities.');
-  } else {
-    console.log('✓ PostgreSQL database connected successfully.');
-  }
-
   const host = '0.0.0.0';
+  let dbConnected = false;
+
+  // Bind and start listening immediately so clients do not encounter ECONNREFUSED during restarts
   const server = app.listen(env.PORT, host, () => {
     console.log(`✓ Amoga Server is listening on http://${host}:${env.PORT}`);
     console.log(`✓ API Health Endpoint: http://${host}:${env.PORT}/api/health`);
@@ -38,6 +26,18 @@ async function startServer() {
     }
     process.exit(1);
   });
+
+  // Verify database connectivity in background without delaying server binding
+  try {
+    dbConnected = await checkDatabaseHealth();
+    if (dbConnected) {
+      console.log('✓ PostgreSQL database connected successfully.');
+    } else {
+      console.warn('⚠️ WARNING: Initial connection to PostgreSQL database was not established.');
+    }
+  } catch (err) {
+    console.error('Database connection attempt error:', err.message);
+  }
 
   // Graceful shutdown handling
   const shutdown = async (signal) => {

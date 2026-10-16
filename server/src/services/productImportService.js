@@ -2,6 +2,8 @@ import ExcelJS from 'exceljs';
 import { prisma } from '../config/prisma.js';
 import { logAdminAction } from '../utils/adminAuth.js';
 import { broadcastProductUpdate } from '../controllers/productsController.js';
+import { generateProductSku, generateVariantSku, isValidSkuFormat } from './skuService.js';
+import { validateHsnCode, validateGstRate, validateProductTaxCompliance } from './taxService.js';
 
 export const TEMPLATE_VERSION = 'AMOGA-TEMPLATE-v1.0';
 
@@ -22,6 +24,7 @@ export const COLLECTION_INFO = {
       superfoods: 'Superfoods',
       honey: 'Wild Honey & Preserves',
     },
+    description: 'Traditional South Indian culinary staples, cold-pressed oils, stone-ground podis, and nourishing millet mixes.',
   },
   tea: {
     id: 'tea',
@@ -32,6 +35,7 @@ export const COLLECTION_INFO = {
       leaf: 'Medicinal Leaf Brews',
       herbal: 'Herbal & Root Brews',
     },
+    description: 'Artisanal single-estate loose leaf teas, whole flower botanical infusions, and restorative Ayurvedic herbal brews.',
   },
   sarees: {
     id: 'sarees',
@@ -44,6 +48,7 @@ export const COLLECTION_INFO = {
       wedding: 'Bridal & Wedding Sarees',
       contemporary: 'Contemporary Weaves',
     },
+    description: 'Handloom Kanchipuram mulberry silks, Banarasi brocades, and heirloom drapes woven on traditional pit looms.',
   },
   jewellery: {
     id: 'jewellery',
@@ -56,8 +61,94 @@ export const COLLECTION_INFO = {
       bracelets: 'Bracelets & Cuffs',
       traditional: 'Traditional Silver',
     },
+    description: 'BIS 925 hallmarked sterling silver jewellery featuring natural gemstones, architectural bezels, and rhodium anti-tarnish finish.',
   },
 };
+
+/**
+ * Normalizes header string by removing asterisks, parentheses, and extra whitespace for robust lookup.
+ */
+export function normalizeHeader(str) {
+  return String(str || '')
+    .replace(/[*()\/]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * Scans candidate rows (rows 1 to 5) to dynamically detect the true header row.
+ * Returns { headerRowNumber, headerMap, rawHeaderMap }
+ */
+function findHeaderRow(sheet, requiredKeywords = ['collection code', 'product code', 'product name']) {
+  const maxSearchRow = Math.min(sheet.rowCount || 5, 6);
+  for (let r = 1; r <= maxSearchRow; r++) {
+    const row = sheet.getRow(r);
+    const headerMap = new Map();
+    const rawHeaderMap = new Map();
+    let keywordMatches = 0;
+
+    row.eachCell((cell, colNumber) => {
+      const rawVal = String(cell.value || '').trim();
+      if (rawVal) {
+        const norm = normalizeHeader(rawVal);
+        headerMap.set(norm, colNumber);
+        rawHeaderMap.set(rawVal, colNumber);
+
+        if (requiredKeywords.some((kw) => norm.includes(kw))) {
+          keywordMatches++;
+        }
+      }
+    });
+
+    if (keywordMatches >= 1) {
+      return { headerRowNumber: r, headerMap, rawHeaderMap };
+    }
+  }
+
+  // Fallback to row 1
+  const headerMap = new Map();
+  const rawHeaderMap = new Map();
+  sheet.getRow(1).eachCell((cell, colNumber) => {
+    const rawVal = String(cell.value || '').trim();
+    if (rawVal) {
+      headerMap.set(normalizeHeader(rawVal), colNumber);
+      rawHeaderMap.set(rawVal, colNumber);
+    }
+  });
+  return { headerRowNumber: 1, headerMap, rawHeaderMap };
+}
+
+/**
+ * Safely extracts a string cell value by normalized header names.
+ */
+function getCellByNormalized(row, headerMap, ...headerKeys) {
+  for (const key of headerKeys) {
+    const norm = normalizeHeader(key);
+    const colIdx = headerMap.get(norm);
+    if (colIdx) {
+      const cell = row.getCell(colIdx);
+      if (!cell || cell.value === null || cell.value === undefined) continue;
+      if (typeof cell.value === 'object') {
+        if (cell.value.text) return String(cell.value.text).trim();
+        if (cell.value.result) return String(cell.value.result).trim();
+      }
+      return String(cell.value).trim();
+    }
+  }
+  return '';
+}
+
+/**
+ * Safely extracts a numeric cell value by normalized header names.
+ */
+function getNumericByNormalized(row, headerMap, ...headerKeys) {
+  const raw = getCellByNormalized(row, headerMap, ...headerKeys);
+  if (!raw) return null;
+  const clean = raw.replace(/[₹,\s]/g, '');
+  const num = Number(clean);
+  return isNaN(num) ? 'INVALID' : num;
+}
 
 /**
  * Generates the official multi-sheet Excel workbook template for bulk product import.
@@ -69,23 +160,44 @@ export async function generateProductImportTemplate() {
   workbook.created = new Date();
   workbook.modified = new Date();
 
-  // Style constants
-  const primaryHeaderFill = {
+  // Color Tokens & Header Styles
+  const mandatoryHeaderFill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FF722F37' }, // Amoga luxury deep burgundy
+    fgColor: { argb: 'FF722F37' }, // Deep Burgundy (Required *)
   };
-  const secondaryHeaderFill = {
+  const optionalHeaderFill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FF1E293B' }, // Dark slate
+    fgColor: { argb: 'FF1E293B' }, // Dark Slate (Core Optional)
   };
-  const categoryHeaderFill = {
+  const foodHeaderFill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FF4A3B32' }, // Warm artisanal brown
+    fgColor: { argb: 'FF2D5A27' }, // Forest Green (Wholesome Pantry)
   };
-  const headerFont = {
+  const teaHeaderFill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF1E564E' }, // Botanical Teal (Wellness Tea)
+  };
+  const sareesHeaderFill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF581C44' }, // Royal Plum (Heritage Sarees)
+  };
+  const jewelleryHeaderFill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF3E4C59' }, // Slate Silver (Sterling Silver)
+  };
+  const customSpecsHeaderFill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF4A3B32' }, // Warm Bronze (JSON Specs)
+  };
+
+  const headerFontWhite = {
     name: 'Calibri',
     size: 11,
     bold: true,
@@ -93,174 +205,249 @@ export async function generateProductImportTemplate() {
   };
 
   // ----------------------------------------------------
-  // SHEET 1: READ ME
+  // SHEET 1: START HERE (Welcome, Legend, Instructions, Images)
   // ----------------------------------------------------
-  const readMeSheet = workbook.addWorksheet('Read Me', {
+  const startHereSheet = workbook.addWorksheet('Start Here', {
     views: [{ showGridLines: true }],
   });
-  readMeSheet.getColumn(1).width = 28;
-  readMeSheet.getColumn(2).width = 85;
+  startHereSheet.getColumn(1).width = 30;
+  startHereSheet.getColumn(2).width = 90;
 
-  readMeSheet.addRow(['AMOGA BULK PRODUCT IMPORT GUIDE', '']);
-  readMeSheet.addRow(['Template Version', TEMPLATE_VERSION]);
-  readMeSheet.addRow(['Supported Collections', 'Wholesome Pantry (food), Wellness Tea (tea), Heritage Sarees (sarees), Sterling Silver (jewellery)']);
-  readMeSheet.addRow(['Currency', 'Indian Rupee (INR ₹)']);
-  readMeSheet.addRow(['', '']);
+  startHereSheet.addRow(['AMOGA BULK PRODUCT IMPORT — START HERE', '']);
+  startHereSheet.addRow(['Template Version', TEMPLATE_VERSION]);
+  startHereSheet.addRow(['Supported Collections', 'Wholesome Pantry (food), Wellness Tea (tea), Heritage Sarees (sarees), Sterling Silver (jewellery)']);
+  startHereSheet.addRow(['Default Currency', 'Indian Rupee (INR ₹)']);
+  startHereSheet.addRow(['', '']);
 
-  readMeSheet.addRow(['INSTRUCTIONS & USAGE RULES', '']);
-  readMeSheet.addRow([
-    '1. Products Sheet',
-    'Add your base products here. Each product must have a unique Product Code (sourceId). Required fields: Collection Code, Product Code, Product Name, Category Code, Description, Primary Image URL.',
+  startHereSheet.addRow(['1. MANDATORY FIELD LEGEND (HOW TO USE *)', '']);
+  startHereSheet.addRow([
+    'Columns with Asterisk (*)',
+    'MANDATORY FIELDS. A product CANNOT be created if any mandatory column is left blank. These include: Collection Code *, Product Code *, Product Name *, Category Code *, Description *, and Primary Image URL *.',
   ]);
-  readMeSheet.addRow([
-    '2. Category-Specific Fields',
-    'Columns are grouped for Pantry (food), Tea, Sarees, and Jewellery. Fill in the columns corresponding to your collection.',
+  startHereSheet.addRow([
+    'Columns without Asterisk',
+    'OPTIONAL FIELDS. You can leave these blank if the information is unavailable. Optional fields enrich the customer experience, storefront search, and SEO, but will not block the product import.',
   ]);
-  readMeSheet.addRow([
-    '3. Variants Sheet',
-    'If a product has multiple colors, sizes, or weights (e.g. Sarees with different shades, Rings with different sizes, Teas with multiple pack sizes), list them on the Variants sheet mapped to the parent Product Code.',
+  startHereSheet.addRow([
+    'Category-Specific Columns',
+    'Columns grouped under Pantry, Tea, Sarees, and Jewellery apply ONLY to products belonging to that collection. For example, Sarees columns are ignored for Food products.',
   ]);
-  readMeSheet.addRow([
-    '4. Inventory Sheet',
-    'Use this sheet when running in "Initial Inventory Import" mode to audit, establish, or update stock counts with an official reason note.',
-  ]);
-  readMeSheet.addRow([
-    '5. Collections Reference',
-    'Consult the "Collections" sheet for valid collection codes and approved category IDs.',
-  ]);
-  readMeSheet.addRow([
-    '6. Pricing & Publication',
-    'Products without a valid selling price will automatically remain in Draft mode and will not be purchasable. For items intended for immediate sale, provide a valid Selling Price and set Publication Status to "Published".',
-  ]);
-  readMeSheet.addRow(['', '']);
+  startHereSheet.addRow(['', '']);
 
-  readMeSheet.addRow(['IMPORT MODES EXPLAINED', '']);
-  readMeSheet.addRow([
-    'Create New Products',
-    'Creates products that do not exist yet. Fails or skips if a product code or slug already exists in the database. Safe for new catalogue releases.',
+  startHereSheet.addRow(['2. IMAGE URL GUIDELINES (DO NOT USE LOCAL PATHS)', '']);
+  startHereSheet.addRow([
+    'Valid Image URL Format',
+    'Primary Image URL * must be a publicly accessible web URL (e.g. https://res.cloudinary.com/... or https://images.unsplash.com/...) OR an internal application path (e.g. /images/gatekeeper-food.jpg or /uploads/uuid.jpg).',
   ]);
-  readMeSheet.addRow([
-    'Update Existing Products',
-    'Matches existing products by Product Code and updates their fields, images, descriptions, pricing, and variants.',
+  startHereSheet.addRow([
+    'Local File Paths NOT Allowed',
+    'Do NOT use local computer paths like "C:\\Users\\admin\\Desktop\\photo.jpg" or "file:///...". The server and customers cannot access files stored on your private computer drive.',
   ]);
-  readMeSheet.addRow([
-    'Initial Inventory Import',
-    'Processes stock counts separately and records audit entries in the Inventory Log. Does not overwrite descriptive product copy.',
+  startHereSheet.addRow([
+    'How to Upload New Images',
+    'To upload local images, open Admin Panel → Products → Add Product → Upload File. The file is uploaded to the secure /uploads/ directory and provides an instant path you can paste into this spreadsheet.',
+  ]);
+  startHereSheet.addRow(['', '']);
+
+  startHereSheet.addRow(['3. PRICING & PUBLICATION RULES', '']);
+  startHereSheet.addRow([
+    'Publication Status',
+    'Supported values: "Draft" (default) or "Published". Products imported as "Draft" remain hidden from storefront customers until an admin reviews and publishes them.',
+  ]);
+  startHereSheet.addRow([
+    'Unpriced Products Rule',
+    'Any product with Publication Status "Published" MUST have a valid Selling Price (> ₹0), either on the Products sheet or on its child Variants sheet. Unpriced products are automatically rejected if marked Published.',
+  ]);
+  startHereSheet.addRow([
+    'Variant Pricing',
+    'If a product is priced exclusively through its variants (e.g. Sarees with different zari work, or Rings with different gemstone sizes), leave the product-level price blank and provide prices on the "Variants" sheet.',
+  ]);
+  startHereSheet.addRow(['', '']);
+
+  startHereSheet.addRow(['4. STEP-BY-STEP IMPORT PROCESS', '']);
+  startHereSheet.addRow([
+    'Step 1: Fill Products Sheet',
+    'Enter one row per product on the "Products" sheet. Choose a valid Collection Code and Category Code from the "Collections & Categories" sheet.',
+  ]);
+  startHereSheet.addRow([
+    'Step 2: Add Variants (Optional)',
+    'If products have multiple sizes, colors, or weights, list them on the "Variants" sheet linked by the parent "Product Code *".',
+  ]);
+  startHereSheet.addRow([
+    'Step 3: Consult the Field Guide',
+    'If you are unsure about any column, refer to the "Field Guide" sheet for detailed definitions, accepted values, and practical examples.',
+  ]);
+  startHereSheet.addRow([
+    'Step 4: Upload and Validate',
+    'Navigate to Admin Panel → Products → Bulk Upload. Drag and drop your completed .xlsx file and click "Validate File".',
+  ]);
+  startHereSheet.addRow([
+    'Step 5: Review & Import',
+    'Inspect the parsed preview table and resolve any row-level validation errors. Once validation passes, click "Import Products" to safely commit the records.',
   ]);
 
-  // Style Read Me
-  readMeSheet.getRow(1).font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FF722F37' } };
-  readMeSheet.getRow(6).font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FF1A1817' } };
-  readMeSheet.getRow(14).font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FF1A1817' } };
+  // Style Start Here Sheet
+  startHereSheet.getRow(1).font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FF722F37' } };
+  startHereSheet.getRow(6).font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FF1A1817' } };
+  startHereSheet.getRow(11).font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FF1A1817' } };
+  startHereSheet.getRow(16).font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FF1A1817' } };
+  startHereSheet.getRow(21).font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FF1A1817' } };
 
   // ----------------------------------------------------
   // SHEET 2: PRODUCTS
   // ----------------------------------------------------
   const productsSheet = workbook.addWorksheet('Products', {
-    views: [{ state: 'frozen', ySplit: 1 }],
+    views: [{ state: 'frozen', ySplit: 2 }],
   });
 
-  const productColumns = [
-    // Core shared fields
-    { header: 'Collection Code*', key: 'collectionId', width: 16 },
-    { header: 'Product Code*', key: 'sourceId', width: 22 },
-    { header: 'Product Name*', key: 'name', width: 32 },
-    { header: 'Slug', key: 'slug', width: 26 },
-    { header: 'Category Code*', key: 'category', width: 18 },
-    { header: 'Category Name', key: 'categoryName', width: 22 },
-    { header: 'Tagline', key: 'tagline', width: 35 },
-    { header: 'Description*', key: 'description', width: 50 },
-    { header: 'Primary Image URL*', key: 'image', width: 35 },
-    { header: 'Gallery Image URLs', key: 'gallery', width: 40 },
-    { header: 'Pack Size / Weight', key: 'packSize', width: 20 },
-    { header: 'Selling Price (INR)', key: 'price', width: 18 },
-    { header: 'Original Price / MRP (INR)', key: 'originalPrice', width: 24 },
-    { header: 'Discount Label', key: 'discount', width: 16 },
-    { header: 'Publication Status', key: 'status', width: 18 },
-    { header: 'In Stock', key: 'inStock', width: 12 },
-    { header: 'Stock Quantity', key: 'stockQuantity', width: 16 },
-    { header: 'Low Stock Threshold', key: 'lowStockThreshold', width: 20 },
-    { header: 'Featured', key: 'isFeatured', width: 12 },
-    { header: 'Badge', key: 'badge', width: 16 },
-    { header: 'Tags', key: 'tags', width: 25 },
+  const productColumnDefs = [
+    // 1. Mandatory Common Fields
+    { header: 'Collection Code *', key: 'collectionId', width: 18, type: 'mandatory' },
+    { header: 'Product Code *', key: 'sourceId', width: 22, type: 'mandatory' },
+    { header: 'Product Name *', key: 'name', width: 34, type: 'mandatory' },
+    { header: 'Category Code *', key: 'category', width: 18, type: 'mandatory' },
+    { header: 'Description *', key: 'description', width: 48, type: 'mandatory' },
+    { header: 'Primary Image URL *', key: 'image', width: 36, type: 'mandatory' },
 
-    // Category Specific - Pantry (Food)
-    { header: 'Pantry: Ingredients', key: 'food_ingredients', width: 32 },
-    { header: 'Pantry: Allergens', key: 'food_allergens', width: 22 },
-    { header: 'Pantry: Dietary Details', key: 'food_dietary', width: 24 },
-    { header: 'Pantry: Servings', key: 'food_servings', width: 16 },
-    { header: 'Pantry: Preparation Instructions', key: 'food_prep', width: 35 },
-    { header: 'Pantry: Storage Instructions', key: 'food_storage', width: 25 },
-    { header: 'Pantry: Shelf Life', key: 'food_shelfLife', width: 18 },
-    { header: 'Pantry: FSSAI / Compliance', key: 'food_compliance', width: 24 },
+    // 2. Core Optional Fields
+    { header: 'Slug (Auto-generated if blank)', key: 'slug', width: 28, type: 'optional' },
+    { header: 'Category Name', key: 'categoryName', width: 22, type: 'optional' },
+    { header: 'Tagline', key: 'tagline', width: 32, type: 'optional' },
+    { header: 'Gallery Image URLs', key: 'gallery', width: 38, type: 'optional' },
+    { header: 'Pack Size / Weight', key: 'packSize', width: 20, type: 'optional' },
+    { header: 'Selling Price (INR)', key: 'price', width: 18, type: 'optional' },
+    { header: 'MRP / Compare Price (INR)', key: 'originalPrice', width: 24, type: 'optional' },
+    { header: 'Discount Label', key: 'discount', width: 16, type: 'optional' },
+    { header: 'SKU (Auto-generated if blank)', key: 'sku', width: 26, type: 'optional' },
+    { header: 'HSN Code *', key: 'hsnCode', width: 18, type: 'mandatory' },
+    { header: 'GST Rate % *', key: 'gstRate', width: 18, type: 'mandatory' },
+    { header: 'Tax Inclusive (Yes/No)', key: 'isTaxInclusive', width: 22, type: 'optional' },
+    { header: 'GST Cess Rate %', key: 'cessRate', width: 18, type: 'optional' },
+    { header: 'Tax Classification', key: 'taxClassification', width: 20, type: 'optional' },
+    { header: 'Publication Status', key: 'status', width: 18, type: 'optional' },
+    { header: 'In Stock', key: 'inStock', width: 12, type: 'optional' },
+    { header: 'Stock Quantity', key: 'stockQuantity', width: 16, type: 'optional' },
+    { header: 'Low Stock Threshold', key: 'lowStockThreshold', width: 20, type: 'optional' },
+    { header: 'Featured', key: 'isFeatured', width: 12, type: 'optional' },
+    { header: 'Badge', key: 'badge', width: 16, type: 'optional' },
+    { header: 'Tags', key: 'tags', width: 26, type: 'optional' },
 
-    // Category Specific - Wellness Tea
-    { header: 'Tea: Ingredients', key: 'tea_ingredients', width: 30 },
-    { header: 'Tea: Form', key: 'tea_form', width: 18 },
-    { header: 'Tea: Caffeine Info', key: 'tea_caffeine', width: 24 },
-    { header: 'Tea: Brewing Temp (°C)', key: 'tea_temp', width: 22 },
-    { header: 'Tea: Brewing Time (mins)', key: 'tea_time', width: 22 },
-    { header: 'Tea: Serving Size', key: 'tea_serving', width: 18 },
-    { header: 'Tea: Harvest Season', key: 'tea_harvest', width: 24 },
+    // 3. Category Specific - Wholesome Pantry (food)
+    { header: 'Pantry: Ingredients', key: 'food_ingredients', width: 32, type: 'food' },
+    { header: 'Pantry: Allergens', key: 'food_allergens', width: 22, type: 'food' },
+    { header: 'Pantry: Dietary Details', key: 'food_dietary', width: 24, type: 'food' },
+    { header: 'Pantry: Pack Weight / Size', key: 'food_packWeight', width: 22, type: 'food' },
+    { header: 'Pantry: Servings', key: 'food_servings', width: 16, type: 'food' },
+    { header: 'Pantry: Preparation Instructions', key: 'food_prep', width: 35, type: 'food' },
+    { header: 'Pantry: Storage Instructions', key: 'food_storage', width: 25, type: 'food' },
+    { header: 'Pantry: Shelf Life', key: 'food_shelfLife', width: 18, type: 'food' },
+    { header: 'Pantry: FSSAI / Compliance', key: 'food_compliance', width: 24, type: 'food' },
 
-    // Category Specific - Heritage Sarees
-    { header: 'Sarees: Fabric', key: 'saree_fabric', width: 30 },
-    { header: 'Sarees: Weave Type', key: 'saree_weave', width: 28 },
-    { header: 'Sarees: Length (m)', key: 'saree_length', width: 18 },
-    { header: 'Sarees: Blouse Piece Details', key: 'saree_blouse', width: 30 },
-    { header: 'Sarees: Primary Colour', key: 'saree_color', width: 20 },
-    { header: 'Sarees: Border Details', key: 'saree_border', width: 30 },
-    { header: 'Sarees: Care Instructions', key: 'saree_care', width: 24 },
+    // 4. Category Specific - Wellness Tea (tea)
+    { header: 'Tea: Ingredients', key: 'tea_ingredients', width: 30, type: 'tea' },
+    { header: 'Tea: Type', key: 'tea_type', width: 20, type: 'tea' },
+    { header: 'Tea: Form', key: 'tea_form', width: 18, type: 'tea' },
+    { header: 'Tea: Caffeine Info', key: 'tea_caffeine', width: 24, type: 'tea' },
+    { header: 'Tea: Brewing Temp (°C)', key: 'tea_temp', width: 22, type: 'tea' },
+    { header: 'Tea: Brewing Time (mins)', key: 'tea_time', width: 22, type: 'tea' },
+    { header: 'Tea: Serving Size', key: 'tea_serving', width: 18, type: 'tea' },
+    { header: 'Tea: Harvest Season', key: 'tea_harvest', width: 22, type: 'tea' },
+    { header: 'Tea: Storage Instructions', key: 'tea_storage', width: 26, type: 'tea' },
+    { header: 'Tea: Disclaimer', key: 'tea_disclaimer', width: 28, type: 'tea' },
 
-    // Category Specific - Sterling Silver Jewellery
-    { header: 'Jewellery: Type', key: 'jewel_type', width: 18 },
-    { header: 'Jewellery: Metal Type', key: 'jewel_metal', width: 22 },
-    { header: 'Jewellery: Verified Purity', key: 'jewel_purity', width: 20 },
-    { header: 'Jewellery: Gross Weight (g)', key: 'jewel_weight', width: 24 },
-    { header: 'Jewellery: Stone Details', key: 'jewel_stone', width: 28 },
-    { header: 'Jewellery: Plating / Finish', key: 'jewel_finish', width: 24 },
-    { header: 'Jewellery: Standard Size', key: 'jewel_size', width: 20 },
-    { header: 'Jewellery: Hallmark Info', key: 'jewel_hallmark', width: 24 },
-    { header: 'Jewellery: Care Instructions', key: 'jewel_care', width: 28 },
+    // 5. Category Specific - Heritage Sarees (sarees)
+    { header: 'Sarees: Fabric', key: 'saree_fabric', width: 30, type: 'sarees' },
+    { header: 'Sarees: Weave Type', key: 'saree_weave', width: 28, type: 'sarees' },
+    { header: 'Sarees: Length (m)', key: 'saree_length', width: 18, type: 'sarees' },
+    { header: 'Sarees: Blouse Piece Details', key: 'saree_blouse', width: 30, type: 'sarees' },
+    { header: 'Sarees: Primary Colour', key: 'saree_color', width: 20, type: 'sarees' },
+    { header: 'Sarees: Border Details', key: 'saree_border', width: 30, type: 'sarees' },
+    { header: 'Sarees: Occasion', key: 'saree_occasion', width: 24, type: 'sarees' },
+    { header: 'Sarees: Care Instructions', key: 'saree_care', width: 26, type: 'sarees' },
+    { header: 'Sarees: Authenticity / Mark', key: 'saree_authenticity', width: 24, type: 'sarees' },
 
-    // Custom Raw Specs JSON
-    { header: 'Custom Specs JSON', key: 'custom_specs', width: 25 },
+    // 6. Category Specific - Sterling Silver (jewellery)
+    { header: 'Jewellery: Type', key: 'jewel_type', width: 18, type: 'jewellery' },
+    { header: 'Jewellery: Metal Type', key: 'jewel_metal', width: 22, type: 'jewellery' },
+    { header: 'Jewellery: Verified Purity', key: 'jewel_purity', width: 20, type: 'jewellery' },
+    { header: 'Jewellery: Gross Weight (g)', key: 'jewel_weight', width: 24, type: 'jewellery' },
+    { header: 'Jewellery: Stone Details', key: 'jewel_stone', width: 28, type: 'jewellery' },
+    { header: 'Jewellery: Plating / Finish', key: 'jewel_finish', width: 24, type: 'jewellery' },
+    { header: 'Jewellery: Size', key: 'jewel_size', width: 18, type: 'jewellery' },
+    { header: 'Jewellery: Hallmark Details', key: 'jewel_hallmark', width: 24, type: 'jewellery' },
+    { header: 'Jewellery: Care Instructions', key: 'jewel_care', width: 28, type: 'jewellery' },
+
+    // 7. Custom Raw Specs JSON
+    { header: 'Custom Specs JSON', key: 'custom_specs', width: 25, type: 'custom' },
   ];
 
-  productsSheet.columns = productColumns;
+  // Set column widths
+  productColumnDefs.forEach((col, idx) => {
+    productsSheet.getColumn(idx + 1).width = col.width;
+  });
 
-  // Style header row
-  const prodHeaderRow = productsSheet.getRow(1);
-  prodHeaderRow.height = 26;
-  prodHeaderRow.eachCell((cell, colNumber) => {
-    cell.font = headerFont;
-    cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    if (colNumber <= 11) {
-      cell.fill = primaryHeaderFill;
-    } else if (colNumber <= 21) {
-      cell.fill = secondaryHeaderFill;
+  // Row 1: Banner explaining required fields
+  const bannerRow = productsSheet.getRow(1);
+  bannerRow.height = 28;
+  bannerRow.getCell(1).value =
+    'NOTE: Columns marked with asterisk (*) are MANDATORY to create a product. All other columns are optional. Category columns apply only to that specific collection. See "Field Guide" sheet for full details.';
+  bannerRow.getCell(1).font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF92400E' } };
+  bannerRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+  bannerRow.getCell(1).fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFFEF3C7' }, // Soft warm amber
+  };
+
+  // Row 2: Headers
+  const headerRow = productsSheet.getRow(2);
+  headerRow.height = 28;
+  productColumnDefs.forEach((col, idx) => {
+    const cell = headerRow.getCell(idx + 1);
+    cell.value = col.header;
+    cell.font = headerFontWhite;
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: false };
+
+    if (col.type === 'mandatory') {
+      cell.fill = mandatoryHeaderFill;
+    } else if (col.type === 'optional') {
+      cell.fill = optionalHeaderFill;
+    } else if (col.type === 'food') {
+      cell.fill = foodHeaderFill;
+    } else if (col.type === 'tea') {
+      cell.fill = teaHeaderFill;
+    } else if (col.type === 'sarees') {
+      cell.fill = sareesHeaderFill;
+    } else if (col.type === 'jewellery') {
+      cell.fill = jewelleryHeaderFill;
     } else {
-      cell.fill = categoryHeaderFill;
+      cell.fill = customSpecsHeaderFill;
     }
   });
 
-  // Pre-populate with 4 sample products (one per collection)
+  // Sample realistic products across all four collections
   const sampleProducts = [
     {
       collectionId: 'food',
       sourceId: 'f-sample-moringa-soup',
       name: 'Organic Moringa & Pepper Soup Mix',
-      slug: 'organic-moringa-pepper-soup-mix',
       category: 'soups',
+      description: 'Hand-harvested organic drumstick leaves dried and stone-ground with roasted lentils, cumin, and Malabar black pepper. 100% natural and comforting.',
+      image: '/images/food-soups-hero.jpg',
+      slug: 'organic-moringa-pepper-soup-mix',
       categoryName: 'Soup Mixes',
       tagline: 'Wholesome drumstick leaf soup infused with Malabar black pepper',
-      description: 'Hand-harvested organic moringa leaves naturally dried and stone-ground with roasted lentils, cumin, and Malabar black pepper. Nutritious, warming, and 100% natural.',
-      image: '/images/food/food-soups-hero.jpg',
       gallery: '',
       packSize: '150 g',
       price: 249,
       originalPrice: 299,
       discount: '17% OFF',
+      sku: 'AMOGA-SOUP001',
+      hsnCode: '2106',
+      gstRate: 12,
+      isTaxInclusive: 'Yes',
+      cessRate: 0,
+      taxClassification: 'GOODS',
       status: 'Published',
       inStock: 'Yes',
       stockQuantity: 45,
@@ -271,27 +458,34 @@ export async function generateProductImportTemplate() {
       food_ingredients: 'Organic Moringa Leaves, Toor Dal, Malabar Black Pepper, Cumin, Garlic, Sea Salt',
       food_allergens: 'None',
       food_dietary: '100% Vegetarian, Gluten-Free',
+      food_packWeight: '150 g Glass Jar',
       food_servings: '6-8 bowls',
       food_prep: 'Mix 2 tbsp with 200ml boiling water. Simmer for 2 mins and serve hot.',
       food_storage: 'Store in an airtight container in a cool, dry place.',
       food_shelfLife: '9 Months',
-      food_compliance: 'FSSAI Certified',
+      food_compliance: 'FSSAI Lic. No. 11522001000456',
     },
     {
       collectionId: 'tea',
       sourceId: 'tea-sample-chamomile-calm',
       name: 'Kashmir Chamomile & Mint Tea',
-      slug: 'kashmir-chamomile-mint-tea',
       category: 'flower',
+      description: 'Whole Egyptian chamomile blossoms blended with refreshing mountain spearmint. Naturally caffeine-free evening relaxation ritual.',
+      image: '/images/food-teas-hero.jpg',
+      slug: 'kashmir-chamomile-mint-tea',
       categoryName: 'Botanical Flower Brews',
-      tagline: 'Whole Egyptian chamomile blossoms with Himalayan spearmint',
-      description: 'Soothe the senses with whole chamomile blossoms blended with refreshing mountain mint. Caffeine-free evening relaxation ritual.',
-      image: '/images/tea/tea-chamomile.jpg',
+      tagline: 'Whole chamomile blossoms with Himalayan spearmint',
       gallery: '',
       packSize: '50 g Tin',
       price: 499,
       originalPrice: 599,
       discount: '16% OFF',
+      sku: 'AMOGA-TEA001',
+      hsnCode: '0902',
+      gstRate: 5,
+      isTaxInclusive: 'Yes',
+      cessRate: 0,
+      taxClassification: 'GOODS',
       status: 'Published',
       inStock: 'Yes',
       stockQuantity: 30,
@@ -300,28 +494,37 @@ export async function generateProductImportTemplate() {
       badge: 'Artisanal',
       tags: 'tea, herbal, chamomile, caffeine-free',
       tea_ingredients: 'Whole Chamomile Blossoms, Himalayan Spearmint Leaves',
+      tea_type: 'Botanical Herbal Infusion',
       tea_form: 'Whole Flower & Leaf',
       tea_caffeine: 'Naturally Caffeine Free',
       tea_temp: '90°C',
       tea_time: '4-5 mins',
-      tea_serving: '1 tsp (2g) per cup',
+      tea_serving: '1 tsp (2g) per 200ml cup',
       tea_harvest: 'Spring 2026',
+      tea_storage: 'Store in airtight tin away from moisture.',
+      tea_disclaimer: 'Not intended to treat or prevent medical ailments.',
     },
     {
       collectionId: 'sarees',
       sourceId: 's-sample-royal-wine-silk',
-      name: 'Kanchipuram Silk Saree in Royal Wine',
-      slug: 'kanchipuram-silk-saree-royal-wine',
+      name: 'Kanchipuram Pure Silk Saree in Royal Wine',
       category: 'silk',
+      description: 'Handwoven on traditional pit looms in Kanchipuram by master weavers. Features authentic interlocking Korvai technique, rich temple border, and contrast zari pallu.',
+      image: '/images/saree-kanchipuram.jpg',
+      slug: 'kanchipuram-pure-silk-saree-royal-wine',
       categoryName: 'Silk Sarees',
       tagline: 'Handwoven pure mulberry silk with rich gold zari peacock border',
-      description: 'Handwoven on traditional pit looms in Kanchipuram by master weavers. Features authentic interlocking Korvai technique, rich temple motifs, and contrast pallu.',
-      image: '/images/sarees/saree-kanchipuram.jpg',
       gallery: '',
       packSize: 'Standard (6.3 m)',
       price: 18999,
       originalPrice: 22000,
       discount: '14% OFF',
+      sku: 'AMOGA-SAR001',
+      hsnCode: '5007',
+      gstRate: 5,
+      isTaxInclusive: 'Yes',
+      cessRate: 0,
+      taxClassification: 'GOODS',
       status: 'Published',
       inStock: 'Yes',
       stockQuantity: 8,
@@ -333,20 +536,22 @@ export async function generateProductImportTemplate() {
       saree_weave: 'Handloom Korvai Weave',
       saree_length: '6.3 m (including blouse)',
       saree_blouse: 'Unstitched contrast silk blouse (80 cm)',
-      saree_color: 'Royal Wine',
+      saree_color: 'Royal Wine & Antique Gold',
       saree_border: 'Traditional Temple Border with Tested Gold Zari',
-      saree_care: 'Strictly Dry Clean Only',
+      saree_occasion: 'Wedding, Bridal, Traditional Festive',
+      saree_care: 'Strictly Dry Clean Only. Store in breathable muslin wrap.',
+      saree_authenticity: 'Silk Mark Certified',
     },
     {
       collectionId: 'jewellery',
       sourceId: 'j-sample-solstice-ring',
       name: 'Solstice Moonstone Ring in 925 Silver',
-      slug: 'solstice-moonstone-ring-925-silver',
       category: 'rings',
+      description: 'Featuring a luminous natural oval rainbow moonstone held in an architectural sterling silver bezel. Finished with anti-tarnish rhodium plating for lasting brilliance.',
+      image: '/images/jewellery-solstice-ring.jpg',
+      slug: 'solstice-moonstone-ring-925-silver',
       categoryName: 'Rings',
       tagline: 'Hand-set natural rainbow moonstone in architectural 925 sterling silver',
-      description: 'Featuring a luminous natural oval moonstone held in a contemporary sculptural bezel. Finished with anti-tarnish rhodium plating for lasting brilliance.',
-      image: '/images/jewellery/jewellery-solstice-ring.jpg',
       gallery: '',
       packSize: '1 Piece',
       price: 3499,
@@ -367,48 +572,107 @@ export async function generateProductImportTemplate() {
       jewel_finish: 'Anti-Tarnish Rhodium Finish',
       jewel_size: 'US 7',
       jewel_hallmark: 'BIS 925 Hallmarked',
-      jewel_care: 'Store in provided airtight velvet pouch; keep away from water and perfume',
+      jewel_care: 'Store in provided airtight velvet pouch; keep away from water and perfume.',
     },
   ];
 
   sampleProducts.forEach((item) => {
-    productsSheet.addRow(item);
+    const rowValues = productColumnDefs.map((col) => item[col.key] ?? '');
+    productsSheet.addRow(rowValues);
+  });
+
+  // Data validations for dropdown fields on Products sheet
+  productsSheet.dataValidations.add('A3:A500', {
+    type: 'list',
+    allowBlank: false,
+    formulae: ['"food,tea,sarees,jewellery"'],
+  });
+  productsSheet.dataValidations.add('Q3:Q500', {
+    type: 'list',
+    allowBlank: true,
+    formulae: ['"0,3,5,12,18,28"'],
+  });
+  productsSheet.dataValidations.add('R3:R500', {
+    type: 'list',
+    allowBlank: true,
+    formulae: ['"Yes,No"'],
+  });
+  productsSheet.dataValidations.add('T3:T500', {
+    type: 'list',
+    allowBlank: true,
+    formulae: ['"GOODS,SERVICES"'],
+  });
+  productsSheet.dataValidations.add('U3:U500', {
+    type: 'list',
+    allowBlank: true,
+    formulae: ['"Draft,Published"'],
+  });
+  productsSheet.dataValidations.add('V3:V500', {
+    type: 'list',
+    allowBlank: true,
+    formulae: ['"Yes,No"'],
+  });
+  productsSheet.dataValidations.add('Y3:Y500', {
+    type: 'list',
+    allowBlank: true,
+    formulae: ['"Yes,No"'],
   });
 
   // ----------------------------------------------------
   // SHEET 3: VARIANTS
   // ----------------------------------------------------
   const variantsSheet = workbook.addWorksheet('Variants', {
-    views: [{ state: 'frozen', ySplit: 1 }],
+    views: [{ state: 'frozen', ySplit: 2 }],
   });
 
-  const variantColumns = [
-    { header: 'Product Code*', key: 'productCode', width: 24 },
-    { header: 'Variant Name*', key: 'variantName', width: 26 },
-    { header: 'Variant SKU*', key: 'sku', width: 24 },
-    { header: 'Variant Type', key: 'type', width: 18 },
-    { header: 'Option Value', key: 'optionValue', width: 22 },
-    { header: 'Selling Price (INR)', key: 'price', width: 18 },
-    { header: 'Stock Quantity', key: 'stockQuantity', width: 16 },
-    { header: 'Low Stock Threshold', key: 'lowStockThreshold', width: 20 },
-    { header: 'In Stock', key: 'inStock', width: 12 },
-    { header: 'Variant Attributes JSON', key: 'attributesJson', width: 30 },
+  const variantColumnDefs = [
+    { header: 'Product Code *', key: 'productCode', width: 24, type: 'mandatory' },
+    { header: 'Variant Name *', key: 'variantName', width: 26, type: 'mandatory' },
+    { header: 'Variant SKU (Auto-generated if blank)', key: 'sku', width: 28, type: 'optional' },
+    { header: 'Variant Type', key: 'type', width: 18, type: 'optional' },
+    { header: 'Option Value', key: 'optionValue', width: 22, type: 'optional' },
+    { header: 'Selling Price (INR)', key: 'price', width: 18, type: 'optional' },
+    { header: 'HSN Code (Optional)', key: 'hsnCode', width: 20, type: 'optional' },
+    { header: 'GST Rate % (Optional)', key: 'gstRate', width: 20, type: 'optional' },
+    { header: 'Tax Inclusive (Yes/No)', key: 'isTaxInclusive', width: 22, type: 'optional' },
+    { header: 'GST Cess Rate % (Optional)', key: 'cessRate', width: 22, type: 'optional' },
+    { header: 'Stock Quantity', key: 'stockQuantity', width: 16, type: 'optional' },
+    { header: 'Low Stock Threshold', key: 'lowStockThreshold', width: 20, type: 'optional' },
+    { header: 'In Stock', key: 'inStock', width: 12, type: 'optional' },
+    { header: 'Variant Attributes JSON', key: 'attributesJson', width: 30, type: 'optional' },
   ];
 
-  variantsSheet.columns = variantColumns;
-  const varHeaderRow = variantsSheet.getRow(1);
-  varHeaderRow.height = 26;
-  varHeaderRow.eachCell((cell) => {
-    cell.font = headerFont;
-    cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = secondaryHeaderFill;
+  variantColumnDefs.forEach((col, idx) => {
+    variantsSheet.getColumn(idx + 1).width = col.width;
   });
 
-  // Sample variants
+  // Row 1: Banner for Variants
+  const varBanner = variantsSheet.getRow(1);
+  varBanner.height = 28;
+  varBanner.getCell(1).value =
+    'NOTE: Use this sheet to specify color, size, weight, or shade variations. Product Code * must match an existing row on the Products sheet.';
+  varBanner.getCell(1).font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF92400E' } };
+  varBanner.getCell(1).fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFFEF3C7' },
+  };
+
+  // Row 2: Headers
+  const varHeader = variantsSheet.getRow(2);
+  varHeader.height = 28;
+  variantColumnDefs.forEach((col, idx) => {
+    const cell = varHeader.getCell(idx + 1);
+    cell.value = col.header;
+    cell.font = headerFontWhite;
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cell.fill = col.type === 'mandatory' ? mandatoryHeaderFill : optionalHeaderFill;
+  });
+
   const sampleVariants = [
     {
       productCode: 's-sample-royal-wine-silk',
-      variantName: 'Royal Wine',
+      variantName: 'Royal Wine & Antique Gold',
       sku: 'SAR-WINE-01',
       type: 'color',
       optionValue: '#451523',
@@ -420,7 +684,7 @@ export async function generateProductImportTemplate() {
     },
     {
       productCode: 's-sample-royal-wine-silk',
-      variantName: 'Temple Crimson',
+      variantName: 'Temple Crimson & Gold',
       sku: 'SAR-CRIMSON-02',
       type: 'color',
       optionValue: '#7A1C28',
@@ -456,30 +720,59 @@ export async function generateProductImportTemplate() {
     },
   ];
 
-  sampleVariants.forEach((v) => variantsSheet.addRow(v));
+  sampleVariants.forEach((v) => {
+    variantsSheet.addRow(variantColumnDefs.map((col) => v[col.key] ?? ''));
+  });
+
+  variantsSheet.dataValidations.add('D3:D500', {
+    type: 'list',
+    allowBlank: true,
+    formulae: ['"color,size,weight,custom"'],
+  });
+  variantsSheet.dataValidations.add('I3:I500', {
+    type: 'list',
+    allowBlank: true,
+    formulae: ['"Yes,No"'],
+  });
 
   // ----------------------------------------------------
   // SHEET 4: INVENTORY
   // ----------------------------------------------------
   const inventorySheet = workbook.addWorksheet('Inventory', {
-    views: [{ state: 'frozen', ySplit: 1 }],
+    views: [{ state: 'frozen', ySplit: 2 }],
   });
 
-  const invColumns = [
-    { header: 'Product Code*', key: 'productCode', width: 26 },
-    { header: 'Variant SKU', key: 'sku', width: 22 },
-    { header: 'New Stock Quantity*', key: 'newStock', width: 20 },
-    { header: 'Low Stock Threshold', key: 'threshold', width: 20 },
-    { header: 'Adjustment Reason*', key: 'reason', width: 35 },
+  const invColumnDefs = [
+    { header: 'Product Code *', key: 'productCode', width: 26, type: 'mandatory' },
+    { header: 'Variant SKU', key: 'sku', width: 22, type: 'optional' },
+    { header: 'New Stock Quantity *', key: 'newStock', width: 22, type: 'mandatory' },
+    { header: 'Low Stock Threshold', key: 'threshold', width: 20, type: 'optional' },
+    { header: 'Adjustment Reason *', key: 'reason', width: 36, type: 'mandatory' },
   ];
 
-  inventorySheet.columns = invColumns;
-  const invHeaderRow = inventorySheet.getRow(1);
-  invHeaderRow.height = 26;
-  invHeaderRow.eachCell((cell) => {
-    cell.font = headerFont;
+  invColumnDefs.forEach((col, idx) => {
+    inventorySheet.getColumn(idx + 1).width = col.width;
+  });
+
+  const invBanner = inventorySheet.getRow(1);
+  invBanner.height = 28;
+  invBanner.getCell(1).value =
+    'NOTE: Used exclusively in "Initial Inventory Import" mode to set or audit warehouse stock counts with official audit reasons.';
+  invBanner.getCell(1).font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF92400E' } };
+  invBanner.getCell(1).fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFFEF3C7' },
+  };
+
+  const invHeader = inventorySheet.getRow(2);
+  invHeader.height = 28;
+  invColumnDefs.forEach((col, idx) => {
+    const cell = invHeader.getCell(idx + 1);
+    cell.value = col.header;
+    cell.font = headerFontWhite;
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = primaryHeaderFill;
+    cell.fill = col.type === 'mandatory' ? mandatoryHeaderFill : optionalHeaderFill;
   });
 
   const sampleInventory = [
@@ -499,28 +792,474 @@ export async function generateProductImportTemplate() {
     },
   ];
 
-  sampleInventory.forEach((item) => inventorySheet.addRow(item));
+  sampleInventory.forEach((item) => {
+    inventorySheet.addRow(invColumnDefs.map((col) => item[col.key] ?? ''));
+  });
 
   // ----------------------------------------------------
-  // SHEET 5: COLLECTIONS REFERENCE
+  // SHEET 5: FIELD GUIDE (Complete Column Reference & Explanations)
   // ----------------------------------------------------
-  const collectionsSheet = workbook.addWorksheet('Collections', {
+  const guideSheet = workbook.addWorksheet('Field Guide', {
+    views: [{ state: 'frozen', ySplit: 1 }],
+  });
+
+  const guideColumns = [
+    { header: 'Column Header', key: 'header', width: 30 },
+    { header: 'Requirement', key: 'requirement', width: 16 },
+    { header: 'Applicable Collection', key: 'collection', width: 22 },
+    { header: 'Description & Business Purpose', key: 'description', width: 50 },
+    { header: 'Accepted Values / Format', key: 'format', width: 32 },
+    { header: 'Example Value', key: 'example', width: 30 },
+  ];
+
+  guideSheet.columns = guideColumns;
+  const guideHeaderRow = guideSheet.getRow(1);
+  guideHeaderRow.height = 28;
+  guideHeaderRow.eachCell((cell) => {
+    cell.font = headerFontWhite;
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cell.fill = optionalHeaderFill;
+  });
+
+  const fieldGuideEntries = [
+    // Mandatory Common Fields
+    {
+      header: 'Collection Code *',
+      requirement: 'MANDATORY *',
+      collection: 'All Collections',
+      description: 'System collection key to place the product into the correct universe.',
+      format: 'food, tea, sarees, jewellery',
+      example: 'food',
+    },
+    {
+      header: 'Product Code *',
+      requirement: 'MANDATORY *',
+      collection: 'All Collections',
+      description: 'Unique internal SKU or identifier used for imports and inventory tracking.',
+      format: 'Unique alphanumeric text (lowercase & hyphens recommended)',
+      example: 'f-moringa-soup-01',
+    },
+    {
+      header: 'Product Name *',
+      requirement: 'MANDATORY *',
+      collection: 'All Collections',
+      description: 'Customer-facing product title displayed on storefront and order invoices.',
+      format: 'Text string (up to 150 chars)',
+      example: 'Organic Moringa & Pepper Soup Mix',
+    },
+    {
+      header: 'Category Code *',
+      requirement: 'MANDATORY *',
+      collection: 'All Collections',
+      description: 'Subcategory identifier matching the chosen collection.',
+      format: 'See "Collections & Categories" sheet',
+      example: 'soups (for food), silk (for sarees)',
+    },
+    {
+      header: 'Description *',
+      requirement: 'MANDATORY *',
+      collection: 'All Collections',
+      description: 'Detailed product story, ingredients summary, origin, or drape description.',
+      format: 'Plain text or rich paragraphs',
+      example: 'Hand-harvested organic drumstick leaves dried and stone-ground...',
+    },
+    {
+      header: 'Primary Image URL *',
+      requirement: 'MANDATORY *',
+      collection: 'All Collections',
+      description: 'Publicly reachable HTTPS image URL or media path. Local files (C:\\...) NOT allowed.',
+      format: 'HTTPS URL or /images/... or /uploads/...',
+      example: '/images/food-soups-hero.jpg',
+    },
+
+    // Core Optional Fields
+    {
+      header: 'Slug (Auto-generated if blank)',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'URL-friendly product handle. If left empty, auto-generated from Product Name.',
+      format: 'Lowercase letters, numbers, and hyphens',
+      example: 'organic-moringa-pepper-soup',
+    },
+    {
+      header: 'Category Name',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Human-friendly category display name. Auto-filled from Category Code if empty.',
+      format: 'Text string',
+      example: 'Soup Mixes',
+    },
+    {
+      header: 'Tagline',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Short promotional subtitle appearing under product title.',
+      format: 'Text string (up to 100 chars)',
+      example: 'Wholesome drumstick leaf soup infused with pepper',
+    },
+    {
+      header: 'Gallery Image URLs',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Additional secondary product images for gallery carousel.',
+      format: 'Comma-separated URLs',
+      example: 'https://..., https://...',
+    },
+    {
+      header: 'Pack Size / Weight',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Physical pack size or measurement displayed next to price.',
+      format: 'Text string',
+      example: '150 g Glass Jar, 6.3 m with blouse',
+    },
+    {
+      header: 'Selling Price (INR)',
+      requirement: 'CONDITIONAL',
+      collection: 'All Collections',
+      description: 'Selling price in Indian Rupees. Required if product is Published and has no variant prices.',
+      format: 'Positive number without currency symbols',
+      example: '249',
+    },
+    {
+      header: 'MRP / Compare Price (INR)',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Strikethrough reference price in Rupees to show discount.',
+      format: 'Positive number',
+      example: '299',
+    },
+    {
+      header: 'Discount Label',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Badge indicating savings or promo.',
+      format: 'Text string',
+      example: '17% OFF',
+    },
+    {
+      header: 'SKU (Auto-generated if blank)',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Stock Keeping Unit. Leave blank to auto-generate based on category sequence (e.g. AMOGA-SAR001, AMOGA-TEA001, AMOGA-MAS001, AMOGA-SOUP001, AMOGA-MIL001, AMOGA-POD001, AMOGA-SIL001). Custom SKUs must be unique.',
+      format: 'Alphanumeric, hyphens, underscores (3-40 chars)',
+      example: 'AMOGA-SAR001',
+    },
+    {
+      header: 'HSN Code *',
+      requirement: 'MANDATORY (For Live Sale)',
+      collection: 'All Collections',
+      description: 'Harmonized System of Nomenclature code for statutory GST compliance. 2 to 8 digit numeric code (e.g. 5007 for Silk Sarees, 7113 for Silver Jewellery, 0902 for Tea, 2106 for Food/Soup mixes, 1904 for Millets, 0910 for Spices/Podis). Required for published products.',
+      format: '2 to 8 digits numeric string',
+      example: '5007',
+    },
+    {
+      header: 'GST Rate % *',
+      requirement: 'MANDATORY (For Live Sale)',
+      collection: 'All Collections',
+      description: 'Applicable GST rate percentage. Standard slabs: 0, 3, 5, 12, 18, 28 (e.g. 3% for Silver, 5% for Sarees & Tea, 12% for Soups/Food mixes). Required for published products.',
+      format: 'Number (0, 3, 5, 12, 18, 28)',
+      example: '5',
+    },
+    {
+      header: 'Tax Inclusive (Yes/No)',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Specifies whether selling price already includes GST. Defaults to Yes for retail transparency.',
+      format: 'Yes, No',
+      example: 'Yes',
+    },
+    {
+      header: 'GST Cess Rate %',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Additional GST Compensation Cess percentage if applicable to the luxury item.',
+      format: 'Non-negative number',
+      example: '0',
+    },
+    {
+      header: 'Tax Classification',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Supply classification. Defaults to GOODS.',
+      format: 'GOODS, SERVICES',
+      example: 'GOODS',
+    },
+    {
+      header: 'Publication Status',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Visibility on storefront. Defaults to "Draft" for safety.',
+      format: 'Draft, Published',
+      example: 'Published',
+    },
+    {
+      header: 'In Stock',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Availability flag. Defaults to Yes.',
+      format: 'Yes, No',
+      example: 'Yes',
+    },
+    {
+      header: 'Stock Quantity',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Initial available inventory units. Defaults to 50.',
+      format: 'Non-negative integer',
+      example: '45',
+    },
+    {
+      header: 'Low Stock Threshold',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Triggers admin warning when stock falls below this quantity. Defaults to 5.',
+      format: 'Integer >= 0',
+      example: '5',
+    },
+    {
+      header: 'Featured',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Highlights item on category hero grids and collection homepages.',
+      format: 'Yes, No',
+      example: 'Yes',
+    },
+    {
+      header: 'Badge',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Small tag pill on product card.',
+      format: 'Text string',
+      example: 'Bestseller, Silk Mark, BIS 925',
+    },
+    {
+      header: 'Tags',
+      requirement: 'OPTIONAL',
+      collection: 'All Collections',
+      description: 'Search keywords separated by commas.',
+      format: 'Comma-separated keywords',
+      example: 'organic, soup, gluten-free',
+    },
+
+    // Category Specific - Wholesome Pantry
+    {
+      header: 'Pantry: Ingredients',
+      requirement: 'RECOMMENDED',
+      collection: 'Wholesome Pantry (food)',
+      description: 'Full ingredients list. Strongly recommended for Indian food compliance.',
+      format: 'Comma-separated ingredients',
+      example: 'Organic Moringa, Toor Dal, Black Pepper, Cumin',
+    },
+    {
+      header: 'Pantry: Allergens',
+      requirement: 'OPTIONAL',
+      collection: 'Wholesome Pantry (food)',
+      description: 'Allergen advisory or facility warnings.',
+      format: 'Text string',
+      example: 'Processed in facility handling nuts and sesame',
+    },
+    {
+      header: 'Pantry: Dietary Details',
+      requirement: 'OPTIONAL',
+      collection: 'Wholesome Pantry (food)',
+      description: 'Dietary highlights (vegetarian, vegan, preservative-free).',
+      format: 'Text string',
+      example: '100% Vegetarian, Gluten-Free',
+    },
+    {
+      header: 'Pantry: Servings',
+      requirement: 'OPTIONAL',
+      collection: 'Wholesome Pantry (food)',
+      description: 'Approximate number of servings per pack.',
+      format: 'Text string',
+      example: '6-8 bowls',
+    },
+    {
+      header: 'Pantry: Preparation Instructions',
+      requirement: 'OPTIONAL',
+      collection: 'Wholesome Pantry (food)',
+      description: 'Cooking or reconstitution instructions for customer.',
+      format: 'Text string',
+      example: 'Mix 2 tbsp with 200ml boiling water. Simmer 2 mins.',
+    },
+    {
+      header: 'Pantry: Storage Instructions',
+      requirement: 'OPTIONAL',
+      collection: 'Wholesome Pantry (food)',
+      description: 'Recommended storage environment.',
+      format: 'Text string',
+      example: 'Store in airtight container in cool, dry place',
+    },
+    {
+      header: 'Pantry: Shelf Life',
+      requirement: 'OPTIONAL',
+      collection: 'Wholesome Pantry (food)',
+      description: 'Best before duration from manufacture.',
+      format: 'Text string',
+      example: '9 Months from manufacture',
+    },
+    {
+      header: 'Pantry: FSSAI / Compliance',
+      requirement: 'OPTIONAL',
+      collection: 'Wholesome Pantry (food)',
+      description: 'FSSAI License number or regulatory registration.',
+      format: 'Text string / license number',
+      example: 'FSSAI Lic. No. 11522001000456',
+    },
+
+    // Category Specific - Wellness Tea
+    {
+      header: 'Tea: Ingredients',
+      requirement: 'RECOMMENDED',
+      collection: 'Wellness Tea (tea)',
+      description: 'Tea leaves, herbs, and botanicals list.',
+      format: 'Text string',
+      example: 'Whole Chamomile Blossoms, Himalayan Spearmint',
+    },
+    {
+      header: 'Tea: Form',
+      requirement: 'OPTIONAL',
+      collection: 'Wellness Tea (tea)',
+      description: 'Physical presentation of tea leaves.',
+      format: 'Loose Leaf, Whole Flower & Leaf, Pyramid Bags',
+      example: 'Whole Flower & Leaf',
+    },
+    {
+      header: 'Tea: Caffeine Info',
+      requirement: 'OPTIONAL',
+      collection: 'Wellness Tea (tea)',
+      description: 'Caffeine strength level.',
+      format: 'Naturally Caffeine Free, Low, Medium, High',
+      example: 'Naturally Caffeine Free',
+    },
+    {
+      header: 'Tea: Brewing Temp (°C)',
+      requirement: 'OPTIONAL',
+      collection: 'Wellness Tea (tea)',
+      description: 'Ideal water temperature for steeping.',
+      format: 'Degrees Celsius (e.g. 85°C - 90°C)',
+      example: '90°C',
+    },
+    {
+      header: 'Tea: Brewing Time (mins)',
+      requirement: 'OPTIONAL',
+      collection: 'Wellness Tea (tea)',
+      description: 'Recommended steeping duration.',
+      format: 'Minutes (e.g. 4-5 mins)',
+      example: '4-5 mins',
+    },
+
+    // Category Specific - Heritage Sarees
+    {
+      header: 'Sarees: Fabric',
+      requirement: 'RECOMMENDED',
+      collection: 'Heritage Sarees (sarees)',
+      description: 'Specific silk or textile composition.',
+      format: 'Text string',
+      example: '100% Pure Mulberry Silk / Katan Silk',
+    },
+    {
+      header: 'Sarees: Weave Type',
+      requirement: 'OPTIONAL',
+      collection: 'Heritage Sarees (sarees)',
+      description: 'Traditional weaving technique.',
+      format: 'Text string',
+      example: 'Handloom Korvai Interlocking Weave',
+    },
+    {
+      header: 'Sarees: Length (m)',
+      requirement: 'OPTIONAL',
+      collection: 'Heritage Sarees (sarees)',
+      description: 'Full saree length in metres.',
+      format: 'Length in metres',
+      example: '6.3 m (including blouse piece)',
+    },
+    {
+      header: 'Sarees: Blouse Piece Details',
+      requirement: 'OPTIONAL',
+      collection: 'Heritage Sarees (sarees)',
+      description: 'Details on blouse fabric included with the saree.',
+      format: 'Text string',
+      example: 'Unstitched contrast silk blouse (80 cm)',
+    },
+    {
+      header: 'Sarees: Care Instructions',
+      requirement: 'OPTIONAL',
+      collection: 'Heritage Sarees (sarees)',
+      description: 'Washing and storage advice for fine silks.',
+      format: 'Text string',
+      example: 'Strictly Dry Clean Only. Store in muslin wrap.',
+    },
+
+    // Category Specific - Sterling Silver Jewellery
+    {
+      header: 'Jewellery: Type',
+      requirement: 'RECOMMENDED',
+      collection: 'Sterling Silver (jewellery)',
+      description: 'Classification of jewellery item.',
+      format: 'Ring, Necklace, Earrings, Bracelet, Cuff',
+      example: 'Ring',
+    },
+    {
+      header: 'Jewellery: Metal Type',
+      requirement: 'RECOMMENDED',
+      collection: 'Sterling Silver (jewellery)',
+      description: 'Metal composition and hallmark grade.',
+      format: 'Text string',
+      example: '925 Sterling Silver',
+    },
+    {
+      header: 'Jewellery: Gross Weight (g)',
+      requirement: 'OPTIONAL',
+      collection: 'Sterling Silver (jewellery)',
+      description: 'Item weight in grams.',
+      format: 'Grams (e.g. 5.8 g)',
+      example: '5.8 g',
+    },
+    {
+      header: 'Jewellery: Stone Details',
+      requirement: 'OPTIONAL',
+      collection: 'Sterling Silver (jewellery)',
+      description: 'Natural or lab gemstones incorporated into the piece.',
+      format: 'Text string',
+      example: 'Natural Rainbow Moonstone',
+    },
+    {
+      header: 'Jewellery: Hallmark Details',
+      requirement: 'OPTIONAL',
+      collection: 'Sterling Silver (jewellery)',
+      description: 'Official hallmarking certification info.',
+      format: 'Text string',
+      example: 'BIS 925 Hallmarked',
+    },
+  ];
+
+  fieldGuideEntries.forEach((entry) => {
+    guideSheet.addRow(entry);
+  });
+
+  // ----------------------------------------------------
+  // SHEET 6: COLLECTIONS & CATEGORIES (Reference List)
+  // ----------------------------------------------------
+  const collectionsSheet = workbook.addWorksheet('Collections & Categories', {
     views: [{ state: 'frozen', ySplit: 1 }],
   });
 
   collectionsSheet.columns = [
     { header: 'Collection Code', key: 'code', width: 18 },
-    { header: 'Collection Name', key: 'name', width: 25 },
+    { header: 'Collection Name', key: 'name', width: 24 },
     { header: 'Approved Category Codes', key: 'cats', width: 45 },
     { header: 'Category Display Names', key: 'catNames', width: 55 },
+    { header: 'Collection Scope & Description', key: 'desc', width: 60 },
   ];
 
   const colHeaderRow = collectionsSheet.getRow(1);
-  colHeaderRow.height = 26;
+  colHeaderRow.height = 28;
   colHeaderRow.eachCell((cell) => {
-    cell.font = headerFont;
+    cell.font = headerFontWhite;
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = categoryHeaderFill;
+    cell.fill = mandatoryHeaderFill;
   });
 
   Object.values(COLLECTION_INFO).forEach((col) => {
@@ -529,6 +1268,7 @@ export async function generateProductImportTemplate() {
       name: col.name,
       cats: col.categories.join(', '),
       catNames: Object.values(col.categoryNames).join(', '),
+      desc: col.description,
     });
   });
 
@@ -572,12 +1312,12 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
     };
   }
 
-  // 2. Read template version if Read Me exists
-  let templateVersion = '1.0.0';
-  const readMeSheet = workbook.getWorksheet('Read Me');
-  if (readMeSheet) {
+  // 2. Read template version if Start Here or Read Me exists
+  let templateVersion = TEMPLATE_VERSION;
+  const startHereSheet = workbook.getWorksheet('Start Here') || workbook.getWorksheet('Read Me');
+  if (startHereSheet) {
     try {
-      const vCell = readMeSheet.getCell('B2').value || readMeSheet.getCell('B3').value;
+      const vCell = startHereSheet.getCell('B2').value || startHereSheet.getCell('B3').value;
       if (vCell) templateVersion = String(vCell).trim();
     } catch {
       // Non-blocking
@@ -593,7 +1333,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
   // Fetch all existing product sourceIds, slugs, and variant SKUs for conflict detection
   const [existingProducts, existingVariants] = await Promise.all([
     prisma.product.findMany({
-      select: { id: true, sourceId: true, slug: true, collectionId: true, name: true, price: true, stockQuantity: true },
+      select: { id: true, sourceId: true, slug: true, collectionId: true, name: true, price: true, stockQuantity: true, sku: true },
     }),
     prisma.productVariant.findMany({
       select: { id: true, sku: true, productId: true, name: true },
@@ -602,48 +1342,50 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
 
   const existingSourceIdMap = new Map();
   const existingSlugCollectionMap = new Map(); // key: `${collectionId}::${slug}`
+  const existingSkuMap = new Map();
+
   existingProducts.forEach((p) => {
     existingSourceIdMap.set(p.sourceId.toLowerCase(), p);
     existingSlugCollectionMap.set(`${p.collectionId}::${p.slug.toLowerCase()}`, p);
+    if (p.sku) existingSkuMap.set(p.sku.toLowerCase(), { type: 'Product', id: p.id, name: p.name });
   });
 
-  const existingSkuMap = new Map();
   existingVariants.forEach((v) => {
-    if (v.sku) existingSkuMap.set(v.sku.toLowerCase(), v);
+    if (v.sku) existingSkuMap.set(v.sku.toLowerCase(), { type: 'Variant', id: v.id, name: v.name });
   });
 
   // Track in-sheet uniqueness
   const seenSourceIdsInSheet = new Set();
   const seenSlugsInSheet = new Set();
+  const seenSkusInSheet = new Set();
   const parsedProducts = [];
 
   if (productsSheet) {
-    // Parse Products Worksheet
-    const headerRow = productsSheet.getRow(1);
-    const colIndexMap = {};
-    headerRow.eachCell((cell, colNumber) => {
-      const val = String(cell.value || '').trim();
-      colIndexMap[val] = colNumber;
-    });
+    // Dynamic Header Detection
+    const { headerRowNumber, headerMap, rawHeaderMap } = findHeaderRow(productsSheet, [
+      'collection code',
+      'product code',
+      'product name',
+    ]);
 
-    // Check critical header columns
-    const requiredHeaders = [
-      'Collection Code*',
-      'Product Code*',
-      'Product Name*',
-      'Category Code*',
-      'Description*',
-      'Primary Image URL*',
+    // Check critical mandatory columns using normalized names
+    const mandatoryKeys = [
+      { key: 'collection code', label: 'Collection Code *' },
+      { key: 'product code', label: 'Product Code *' },
+      { key: 'product name', label: 'Product Name *' },
+      { key: 'category code', label: 'Category Code *' },
+      { key: 'description', label: 'Description *' },
+      { key: 'primary image url', label: 'Primary Image URL *' },
     ];
 
-    for (const reqH of requiredHeaders) {
-      if (!colIndexMap[reqH]) {
+    for (const m of mandatoryKeys) {
+      if (!headerMap.has(m.key)) {
         errors.push({
           sheet: 'Products',
-          row: 1,
-          column: reqH,
+          row: headerRowNumber,
+          column: m.label,
           code: 'MISSING_REQUIRED_COLUMN',
-          message: `Required column "${reqH}" was not found in the Products header row.`,
+          message: `Mandatory column "${m.label}" was not found in the Products header row.`,
         });
       }
     }
@@ -661,435 +1403,567 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
       };
     }
 
-  const getCellVal = (row, headerName) => {
-    const colIdx = colIndexMap[headerName];
-    if (!colIdx) return '';
-    const cell = row.getCell(colIdx);
-    if (!cell || cell.value === null || cell.value === undefined) return '';
-    if (typeof cell.value === 'object') {
-      if (cell.value.text) return String(cell.value.text).trim();
-      if (cell.value.result) return String(cell.value.result).trim();
-    }
-    return String(cell.value).trim();
-  };
-
-  const getNumericVal = (row, headerName) => {
-    const raw = getCellVal(row, headerName);
-    if (!raw) return null;
-    const clean = raw.replace(/[₹,\s]/g, '');
-    const num = Number(clean);
-    return isNaN(num) ? 'INVALID' : num;
-  };
-
-  const rowCount = productsSheet.rowCount;
-  for (let r = 2; r <= rowCount; r++) {
-    const row = productsSheet.getRow(r);
-    // If row is entirely blank, skip
-    let hasAnyData = false;
-    row.eachCell(() => {
-      hasAnyData = true;
-    });
-    if (!hasAnyData) continue;
-
-    const collectionId = getCellVal(row, 'Collection Code*').toLowerCase();
-    const sourceId = getCellVal(row, 'Product Code*');
-    const name = getCellVal(row, 'Product Name*');
-    let slug = getCellVal(row, 'Slug');
-    const category = getCellVal(row, 'Category Code*');
-    const categoryName = getCellVal(row, 'Category Name');
-    const tagline = getCellVal(row, 'Tagline');
-    const description = getCellVal(row, 'Description*');
-    const image = getCellVal(row, 'Primary Image URL*');
-    const galleryRaw = getCellVal(row, 'Gallery Image URLs');
-    const packSize = getCellVal(row, 'Pack Size / Weight');
-    const priceVal = getNumericVal(row, 'Selling Price (INR)');
-    const origPriceVal = getNumericVal(row, 'Original Price / MRP (INR)');
-    const discount = getCellVal(row, 'Discount Label');
-    const statusRaw = getCellVal(row, 'Publication Status').toLowerCase();
-    const inStockRaw = getCellVal(row, 'In Stock').toLowerCase();
-    const stockQtyVal = getNumericVal(row, 'Stock Quantity');
-    const thresholdVal = getNumericVal(row, 'Low Stock Threshold');
-    const featuredRaw = getCellVal(row, 'Featured').toLowerCase();
-    const badge = getCellVal(row, 'Badge');
-    const tagsRaw = getCellVal(row, 'Tags');
-
-    // 1. Validate Collection
-    if (!collectionId) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Collection Code*',
-        code: 'REQUIRED_FIELD_EMPTY',
-        message: 'Collection Code is required (e.g. food, tea, sarees, jewellery).',
+    const rowCount = productsSheet.rowCount;
+    for (let r = headerRowNumber + 1; r <= rowCount; r++) {
+      const row = productsSheet.getRow(r);
+      let hasAnyData = false;
+      row.eachCell(() => {
+        hasAnyData = true;
       });
-    } else if (!validCollectionIds.has(collectionId)) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Collection Code*',
-        code: 'INVALID_COLLECTION',
-        message: `Collection "${collectionId}" does not exist. Permitted: ${Array.from(validCollectionIds).join(', ')}.`,
-      });
-    } else if (selectedCollection !== 'all' && collectionId !== selectedCollection) {
-      warnings.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Collection Code*',
-        code: 'COLLECTION_MISMATCH',
-        message: `Product belongs to "${collectionId}", but import filter is set to "${selectedCollection}".`,
-      });
-    }
+      if (!hasAnyData) continue;
 
-    // 2. Validate Product Code
-    if (!sourceId) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Product Code*',
-        code: 'REQUIRED_FIELD_EMPTY',
-        message: 'Product Code is required and must be unique.',
-      });
-    } else {
-      const lowerSourceId = sourceId.toLowerCase();
-      if (seenSourceIdsInSheet.has(lowerSourceId)) {
+      const collectionId = getCellByNormalized(row, headerMap, 'collection code', 'collectionid').toLowerCase();
+      const sourceId = getCellByNormalized(row, headerMap, 'product code', 'sourceid');
+      const name = getCellByNormalized(row, headerMap, 'product name', 'name');
+      let slug = getCellByNormalized(row, headerMap, 'slug', 'slug auto-generated if blank');
+      const category = getCellByNormalized(row, headerMap, 'category code', 'category');
+      const categoryName = getCellByNormalized(row, headerMap, 'category name');
+      const tagline = getCellByNormalized(row, headerMap, 'tagline');
+      const description = getCellByNormalized(row, headerMap, 'description');
+      const image = getCellByNormalized(row, headerMap, 'primary image url', 'image');
+      const galleryRaw = getCellByNormalized(row, headerMap, 'gallery image urls', 'gallery');
+      const packSize = getCellByNormalized(row, headerMap, 'pack size / weight', 'pack size', 'packsize');
+      const priceVal = getNumericByNormalized(row, headerMap, 'selling price inr', 'selling price', 'price');
+      const origPriceVal = getNumericByNormalized(row, headerMap, 'mrp / compare price inr', 'original price / mrp inr', 'compare price');
+      const discount = getCellByNormalized(row, headerMap, 'discount label', 'discount');
+      const skuRaw = getCellByNormalized(row, headerMap, 'sku (auto-generated if blank)', 'sku', 'product sku');
+      const hsnCodeRaw = getCellByNormalized(row, headerMap, 'hsn code *', 'hsn code', 'hsn', 'hsn/sac code');
+      const gstRateVal = getNumericByNormalized(row, headerMap, 'gst rate % *', 'gst rate %', 'gst rate', 'gst %');
+      const isTaxInclusiveRaw = getCellByNormalized(row, headerMap, 'tax inclusive (yes/no)', 'tax inclusive', 'is tax inclusive').toLowerCase();
+      const cessRateVal = getNumericByNormalized(row, headerMap, 'gst cess rate %', 'cess rate', 'cess %');
+      const taxClassification = getCellByNormalized(row, headerMap, 'tax classification') || 'GOODS';
+      const statusRaw = getCellByNormalized(row, headerMap, 'publication status', 'status').toLowerCase();
+      const inStockRaw = getCellByNormalized(row, headerMap, 'in stock').toLowerCase();
+      const stockQtyVal = getNumericByNormalized(row, headerMap, 'stock quantity');
+      const thresholdVal = getNumericByNormalized(row, headerMap, 'low stock threshold');
+      const featuredRaw = getCellByNormalized(row, headerMap, 'featured').toLowerCase();
+      const badge = getCellByNormalized(row, headerMap, 'badge');
+      const tagsRaw = getCellByNormalized(row, headerMap, 'tags');
+
+      // 1. Validate Collection
+      if (!collectionId) {
         errors.push({
           sheet: 'Products',
           row: r,
-          column: 'Product Code*',
-          code: 'DUPLICATE_IN_WORKBOOK',
-          message: `Product Code "${sourceId}" is duplicated within this workbook.`,
+          column: 'Collection Code *',
+          code: 'REQUIRED_FIELD_EMPTY',
+          message: 'Collection Code is required (e.g. food, tea, sarees, jewellery).',
+        });
+      } else if (!validCollectionIds.has(collectionId)) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Collection Code *',
+          code: 'INVALID_COLLECTION',
+          message: `Collection "${collectionId}" does not exist. Permitted: ${Array.from(validCollectionIds).join(', ')}.`,
+        });
+      } else if (selectedCollection !== 'all' && collectionId !== selectedCollection) {
+        warnings.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Collection Code *',
+          code: 'COLLECTION_MISMATCH',
+          message: `Product belongs to "${collectionId}", but import filter is set to "${selectedCollection}".`,
+        });
+      }
+
+      // 2. Validate Product Code
+      if (!sourceId) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Product Code *',
+          code: 'REQUIRED_FIELD_EMPTY',
+          message: 'Product Code is required for unique identification.',
         });
       } else {
-        seenSourceIdsInSheet.add(lowerSourceId);
+        const lowerSourceId = sourceId.toLowerCase();
+        if (seenSourceIdsInSheet.has(lowerSourceId)) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Product Code *',
+            code: 'DUPLICATE_IN_WORKBOOK',
+            message: `Product Code "${sourceId}" is duplicated within this workbook.`,
+          });
+        } else {
+          seenSourceIdsInSheet.add(lowerSourceId);
+        }
+
+        if (mode === 'CREATE_NEW' && existingSourceIdMap.has(lowerSourceId)) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Product Code *',
+            code: 'PRODUCT_ALREADY_EXISTS',
+            message: `Product Code "${sourceId}" already exists in database. In "Create New" mode, existing products cannot be overwritten.`,
+          });
+        } else if (mode === 'UPDATE_EXISTING' && !existingSourceIdMap.has(lowerSourceId)) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Product Code *',
+            code: 'PRODUCT_NOT_FOUND',
+            message: `Product Code "${sourceId}" was not found in database to update.`,
+          });
+        }
       }
 
-      if (mode === 'CREATE_NEW' && existingSourceIdMap.has(lowerSourceId)) {
+      // 3. Validate Name & Auto-Generate Slug if Blank
+      if (!name) {
         errors.push({
           sheet: 'Products',
           row: r,
-          column: 'Product Code*',
-          code: 'PRODUCT_ALREADY_EXISTS',
-          message: `Product Code "${sourceId}" already exists in database. In "Create New" mode, existing products cannot be overwritten.`,
-        });
-      } else if (mode === 'UPDATE_EXISTING' && !existingSourceIdMap.has(lowerSourceId)) {
-        errors.push({
-          sheet: 'Products',
-          row: r,
-          column: 'Product Code*',
-          code: 'PRODUCT_NOT_FOUND',
-          message: `Product Code "${sourceId}" was not found in database to update.`,
-        });
-      }
-    }
-
-    // 3. Validate Name & Slug
-    if (!name) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Product Name*',
-        code: 'REQUIRED_FIELD_EMPTY',
-        message: 'Product Name is required.',
-      });
-    } else {
-      if (!slug) {
-        slug = name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '');
-      } else {
-        slug = slug
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '');
-      }
-
-      const slugKey = `${collectionId}::${slug}`;
-      if (seenSlugsInSheet.has(slugKey)) {
-        errors.push({
-          sheet: 'Products',
-          row: r,
-          column: 'Slug',
-          code: 'DUPLICATE_SLUG_IN_WORKBOOK',
-          message: `Slug "${slug}" is duplicated within collection "${collectionId}" in this workbook.`,
+          column: 'Product Name *',
+          code: 'REQUIRED_FIELD_EMPTY',
+          message: 'Product Name is required.',
         });
       } else {
-        seenSlugsInSheet.add(slugKey);
+        if (!slug) {
+          slug = name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        } else {
+          slug = slug
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        }
+
+        const slugKey = `${collectionId}::${slug}`;
+        if (seenSlugsInSheet.has(slugKey)) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Slug',
+            code: 'DUPLICATE_SLUG_IN_WORKBOOK',
+            message: `Slug "${slug}" is duplicated within collection "${collectionId}" in this workbook.`,
+          });
+        } else {
+          seenSlugsInSheet.add(slugKey);
+        }
+
+        if (mode === 'CREATE_NEW' && existingSlugCollectionMap.has(slugKey)) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Slug',
+            code: 'SLUG_ALREADY_EXISTS',
+            message: `Slug "${slug}" already exists in collection "${collectionId}". Please specify a distinct slug.`,
+          });
+        }
       }
 
-      if (mode === 'CREATE_NEW' && existingSlugCollectionMap.has(slugKey)) {
+      // 4. Validate Category Code Against Collection
+      const allowedCategories = COLLECTION_INFO[collectionId]?.categories || [];
+      if (!category) {
         errors.push({
           sheet: 'Products',
           row: r,
-          column: 'Slug',
-          code: 'SLUG_ALREADY_EXISTS',
-          message: `Slug "${slug}" already exists in collection "${collectionId}". Please specify a distinct slug.`,
+          column: 'Category Code *',
+          code: 'REQUIRED_FIELD_EMPTY',
+          message: `Category Code is required. Valid categories for "${collectionId}": ${allowedCategories.join(', ')}.`,
+        });
+      } else if (allowedCategories.length > 0 && !allowedCategories.includes(category.toLowerCase())) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Category Code *',
+          code: 'INVALID_CATEGORY',
+          message: `Category Code "${category}" is not valid for collection "${collectionId}". Allowed: ${allowedCategories.join(', ')}.`,
         });
       }
-    }
 
-    // 4. Validate Category Code
-    if (!category) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Category Code*',
-        code: 'REQUIRED_FIELD_EMPTY',
-        message: 'Category Code is required.',
-      });
-    }
+      // 5. Validate Description
+      if (!description) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Description *',
+          code: 'REQUIRED_FIELD_EMPTY',
+          message: 'Product description is required.',
+        });
+      }
 
-    // 5. Validate Description
-    if (!description) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Description*',
-        code: 'REQUIRED_FIELD_EMPTY',
-        message: 'Product description is required.',
-      });
-    }
+      // 6. Validate Image URL (Reject Local Paths)
+      if (!image) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Primary Image URL *',
+          code: 'REQUIRED_FIELD_EMPTY',
+          message: 'Primary Image URL is required to display the product on the storefront.',
+        });
+      } else if (/^[a-zA-Z]:\\|^file:\/\//i.test(image)) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Primary Image URL *',
+          code: 'LOCAL_IMAGE_PATH_INVALID',
+          message: `Local file path "${image}" cannot be accessed by the server. Please provide an HTTPS image URL or upload the file in Admin Panel to get an /uploads/ path.`,
+        });
+      } else if (!image.startsWith('/') && !image.startsWith('http://') && !image.startsWith('https://')) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Primary Image URL *',
+          code: 'INVALID_IMAGE_URL',
+          message: `Primary image URL "${image}" must start with https://, http://, or a server path like /images/... or /uploads/...`,
+        });
+      }
 
-    // 6. Validate Image URL
-    if (!image) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Primary Image URL*',
-        code: 'REQUIRED_FIELD_EMPTY',
-        message: 'Primary Image URL is required.',
-      });
-    } else if (!image.startsWith('/') && !image.startsWith('http://') && !image.startsWith('https://')) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Primary Image URL*',
-        code: 'INVALID_IMAGE_URL',
-        message: `Primary image "${image}" must be a root path (e.g. /images/...) or a valid HTTP/HTTPS URL.`,
-      });
-    }
+      // 7. Validate Numeric Prices
+      if (priceVal === 'INVALID') {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Selling Price (INR)',
+          code: 'INVALID_NUMERIC',
+          message: 'Selling Price must be a valid number or left blank.',
+        });
+      } else if (priceVal !== null && priceVal < 0) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Selling Price (INR)',
+          code: 'NEGATIVE_PRICE',
+          message: 'Selling Price cannot be negative.',
+        });
+      }
 
-    // 7. Validate Numeric Prices
-    if (priceVal === 'INVALID') {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Selling Price (INR)',
-        code: 'INVALID_NUMERIC',
-        message: 'Selling Price must be a valid number or left blank.',
-      });
-    } else if (priceVal !== null && priceVal < 0) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Selling Price (INR)',
-        code: 'NEGATIVE_PRICE',
-        message: 'Selling Price cannot be negative.',
-      });
-    }
+      if (origPriceVal === 'INVALID') {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'MRP / Compare Price (INR)',
+          code: 'INVALID_NUMERIC',
+          message: 'Compare Price must be a valid number or left blank.',
+        });
+      } else if (origPriceVal !== null && origPriceVal < 0) {
+        errors.push({
+          sheet: 'Products',
+          row: r,
+          column: 'MRP / Compare Price (INR)',
+          code: 'NEGATIVE_PRICE',
+          message: 'Compare Price cannot be negative.',
+        });
+      }
 
-    if (origPriceVal === 'INVALID') {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Original Price / MRP (INR)',
-        code: 'INVALID_NUMERIC',
-        message: 'Original Price must be a valid number or left blank.',
-      });
-    } else if (origPriceVal !== null && origPriceVal < 0) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Original Price / MRP (INR)',
-        code: 'NEGATIVE_PRICE',
-        message: 'Original Price cannot be negative.',
-      });
-    }
+      // Publication status
+      const wantsPublish = statusRaw === 'published' || statusRaw === 'active' || statusRaw === 'live';
 
-    // Publication rules: unpriced products cannot be published
-    const wantsPublish = statusRaw === 'published' || statusRaw === 'active' || statusRaw === 'live';
-    if (wantsPublish && (priceVal === null || priceVal === 0)) {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Publication Status',
-        code: 'UNPRICED_CANNOT_BE_PUBLISHED',
-        message: 'Unpriced products cannot be published directly. Provide an approved selling price or set status to "Draft".',
-      });
-    }
+      // 7.1 Validate SKU (if provided)
+      let parsedSku = null;
+      if (skuRaw) {
+        if (!isValidSkuFormat(skuRaw)) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'SKU (Auto-generated if blank)',
+            code: 'INVALID_SKU_FORMAT',
+            message: `SKU "${skuRaw}" is invalid. Must be 3-40 alphanumeric characters, hyphens or underscores.`,
+          });
+        } else {
+          const lowerSku = skuRaw.toLowerCase();
+          if (seenSkusInSheet.has(lowerSku)) {
+            errors.push({
+              sheet: 'Products',
+              row: r,
+              column: 'SKU (Auto-generated if blank)',
+              code: 'DUPLICATE_SKU_IN_WORKBOOK',
+              message: `SKU "${skuRaw}" is duplicated within this workbook.`,
+            });
+          } else {
+            seenSkusInSheet.add(lowerSku);
+            parsedSku = skuRaw.toUpperCase();
+          }
 
-    // 8. Validate Stock Quantity
-    let parsedStockQty = 50;
-    if (stockQtyVal === 'INVALID') {
-      errors.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Stock Quantity',
-        code: 'INVALID_NUMERIC',
-        message: 'Stock Quantity must be an integer.',
-      });
-    } else if (stockQtyVal !== null) {
-      if (stockQtyVal < 0) {
+          if (mode === 'CREATE_NEW' && existingSkuMap.has(lowerSku)) {
+            errors.push({
+              sheet: 'Products',
+              row: r,
+              column: 'SKU (Auto-generated if blank)',
+              code: 'SKU_ALREADY_EXISTS',
+              message: `SKU "${skuRaw}" already exists in the database.`,
+            });
+          }
+        }
+      }
+
+      // 7.2 Validate HSN Code
+      let parsedHsn = null;
+      if (hsnCodeRaw) {
+        const hsnCheck = validateHsnCode(hsnCodeRaw);
+        if (!hsnCheck.isValid) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'HSN Code *',
+            code: 'INVALID_HSN_FORMAT',
+            message: hsnCheck.message,
+          });
+        } else {
+          parsedHsn = hsnCheck.cleanHsn;
+        }
+      }
+
+      // 7.3 Validate GST Rate
+      let parsedGstRate = null;
+      if (gstRateVal !== null && gstRateVal !== '') {
+        if (gstRateVal === 'INVALID') {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'GST Rate % *',
+            code: 'INVALID_NUMERIC',
+            message: 'GST Rate must be a valid number.',
+          });
+        } else {
+          const gstCheck = validateGstRate(gstRateVal);
+          if (!gstCheck.isValid) {
+            errors.push({
+              sheet: 'Products',
+              row: r,
+              column: 'GST Rate % *',
+              code: 'INVALID_GST_RATE',
+              message: gstCheck.message,
+            });
+          } else {
+            parsedGstRate = gstCheck.rate;
+          }
+        }
+      }
+
+      // 7.4 Validate Cess Rate
+      let parsedCessRate = 0;
+      if (cessRateVal !== null && cessRateVal !== '') {
+        if (cessRateVal === 'INVALID' || cessRateVal < 0) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'GST Cess Rate %',
+            code: 'INVALID_CESS_RATE',
+            message: 'GST Cess Rate must be a non-negative number.',
+          });
+        } else {
+          parsedCessRate = cessRateVal;
+        }
+      }
+
+      // 7.5 Tax Compliance Publication Safeguard:
+      // If product lacks required HSN/GST, safeguard statutory compliance by falling back to Draft status
+      let isTaxCompliant = Boolean(parsedHsn && parsedGstRate !== null);
+      let effectivelyActive = wantsPublish;
+      if (wantsPublish && !isTaxCompliant) {
+        effectivelyActive = false;
+        warnings.push({
+          sheet: 'Products',
+          row: r,
+          column: 'Publication Status',
+          code: 'TAX_COMPLIANCE_DRAFT_FALLBACK',
+          message: 'Product lacks valid HSN Code and/or GST Rate. To ensure statutory GST compliance, publication status has been defaulted to Draft.',
+        });
+      }
+
+      // 8. Validate Stock Quantity
+      let parsedStockQty = 50;
+      if (stockQtyVal === 'INVALID') {
         errors.push({
           sheet: 'Products',
           row: r,
           column: 'Stock Quantity',
-          code: 'NEGATIVE_STOCK',
-          message: 'Stock Quantity cannot be negative.',
+          code: 'INVALID_NUMERIC',
+          message: 'Stock Quantity must be an integer.',
         });
-      } else {
-        parsedStockQty = Math.floor(stockQtyVal);
+      } else if (stockQtyVal !== null) {
+        if (stockQtyVal < 0) {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Stock Quantity',
+            code: 'NEGATIVE_STOCK',
+            message: 'Stock Quantity cannot be negative.',
+          });
+        } else {
+          parsedStockQty = Math.floor(stockQtyVal);
+        }
       }
-    }
 
-    let parsedThreshold = 5;
-    if (thresholdVal === 'INVALID') {
-      warnings.push({
-        sheet: 'Products',
-        row: r,
-        column: 'Low Stock Threshold',
-        code: 'INVALID_NUMERIC',
-        message: 'Low Stock Threshold was not a valid number; using default threshold of 5.',
-      });
-    } else if (thresholdVal !== null && thresholdVal >= 0) {
-      parsedThreshold = Math.floor(thresholdVal);
-    }
-
-    // 9. Collect Category-Specific Specs
-    const specs = {};
-    if (collectionId === 'food') {
-      const ing = getCellVal(row, 'Pantry: Ingredients');
-      const allg = getCellVal(row, 'Pantry: Allergens');
-      const diet = getCellVal(row, 'Pantry: Dietary Details');
-      const serv = getCellVal(row, 'Pantry: Servings');
-      const prep = getCellVal(row, 'Pantry: Preparation Instructions');
-      const stor = getCellVal(row, 'Pantry: Storage Instructions');
-      const life = getCellVal(row, 'Pantry: Shelf Life');
-      const comp = getCellVal(row, 'Pantry: FSSAI / Compliance');
-      if (ing) specs.ingredients = ing;
-      if (allg) specs.allergens = allg;
-      if (diet) specs.dietary = diet;
-      if (serv) specs.servings = serv;
-      if (prep) specs.preparation = prep;
-      if (stor) specs.storage = stor;
-      if (life) specs.shelfLife = life;
-      if (comp) specs.compliance = comp;
-
-      if (!ing) {
+      let parsedThreshold = 5;
+      if (thresholdVal === 'INVALID') {
         warnings.push({
           sheet: 'Products',
           row: r,
-          column: 'Pantry: Ingredients',
-          code: 'MISSING_FOOD_INGREDIENTS',
-          message: 'Listing food ingredients is strongly recommended for Indian food compliance.',
+          column: 'Low Stock Threshold',
+          code: 'INVALID_NUMERIC',
+          message: 'Low Stock Threshold was not a valid number; using default threshold of 5.',
         });
+      } else if (thresholdVal !== null && thresholdVal >= 0) {
+        parsedThreshold = Math.floor(thresholdVal);
       }
-    } else if (collectionId === 'tea') {
-      const ing = getCellVal(row, 'Tea: Ingredients');
-      const form = getCellVal(row, 'Tea: Form');
-      const caff = getCellVal(row, 'Tea: Caffeine Info');
-      const temp = getCellVal(row, 'Tea: Brewing Temp (°C)');
-      const time = getCellVal(row, 'Tea: Brewing Time (mins)');
-      const serv = getCellVal(row, 'Tea: Serving Size');
-      const harv = getCellVal(row, 'Tea: Harvest Season');
-      if (ing) specs.ingredients = ing;
-      if (form) specs.teaForm = form;
-      if (caff) specs.caffeineLevel = caff;
-      if (temp) specs.brewingTemp = temp;
-      if (time) specs.steepTime = time;
-      if (serv) specs.servingSize = serv;
-      if (harv) specs.harvestSeason = harv;
-    } else if (collectionId === 'sarees') {
-      const fab = getCellVal(row, 'Sarees: Fabric');
-      const wea = getCellVal(row, 'Sarees: Weave Type');
-      const len = getCellVal(row, 'Sarees: Length (m)');
-      const blo = getCellVal(row, 'Sarees: Blouse Piece Details');
-      const col = getCellVal(row, 'Sarees: Primary Colour');
-      const bor = getCellVal(row, 'Sarees: Border Details');
-      const car = getCellVal(row, 'Sarees: Care Instructions');
-      if (fab) specs.fabric = fab;
-      if (wea) specs.weave = wea;
-      if (len) specs.sareeLength = len;
-      if (blo) specs.blousePiece = blo;
-      if (col) specs.primaryColor = col;
-      if (bor) specs.borderDetails = bor;
-      if (car) specs.careInstructions = car;
-    } else if (collectionId === 'jewellery') {
-      const typ = getCellVal(row, 'Jewellery: Type');
-      const met = getCellVal(row, 'Jewellery: Metal Type');
-      const pur = getCellVal(row, 'Jewellery: Verified Purity');
-      const wei = getCellVal(row, 'Jewellery: Gross Weight (g)');
-      const sto = getCellVal(row, 'Jewellery: Stone Details');
-      const fin = getCellVal(row, 'Jewellery: Plating / Finish');
-      const siz = getCellVal(row, 'Jewellery: Standard Size');
-      const hal = getCellVal(row, 'Jewellery: Hallmark Info');
-      const car = getCellVal(row, 'Jewellery: Care Instructions');
-      if (typ) specs.jewelleryType = typ;
-      if (met) specs.metal = met;
-      if (pur) specs.purity = pur;
-      if (wei) specs.weight = wei;
-      if (sto) specs.gemstone = sto;
-      if (fin) specs.plating = fin;
-      if (siz) specs.standardSize = siz;
-      if (hal) specs.hallmark = hal;
-      if (car) specs.careInstructions = car;
-    }
 
-    // 10. Parse Custom Raw Specs JSON if provided
-    const customJsonRaw = getCellVal(row, 'Custom Specs JSON');
-    if (customJsonRaw) {
-      try {
-        const parsedCustom = JSON.parse(customJsonRaw);
-        if (typeof parsedCustom === 'object' && parsedCustom !== null) {
-          Object.assign(specs, parsedCustom);
+      // 9. Collect Category-Specific Specs
+      const specs = {};
+      if (collectionId === 'food') {
+        const ing = getCellByNormalized(row, headerMap, 'pantry: ingredients', 'pantry ingredients');
+        const allg = getCellByNormalized(row, headerMap, 'pantry: allergens', 'pantry allergens');
+        const diet = getCellByNormalized(row, headerMap, 'pantry: dietary details', 'pantry dietary');
+        const packW = getCellByNormalized(row, headerMap, 'pantry: pack weight / size', 'pantry pack weight');
+        const serv = getCellByNormalized(row, headerMap, 'pantry: servings', 'pantry servings');
+        const prep = getCellByNormalized(row, headerMap, 'pantry: preparation instructions', 'pantry prep');
+        const stor = getCellByNormalized(row, headerMap, 'pantry: storage instructions', 'pantry storage');
+        const life = getCellByNormalized(row, headerMap, 'pantry: shelf life', 'pantry shelf life');
+        const comp = getCellByNormalized(row, headerMap, 'pantry: fssai / compliance', 'pantry fssai compliance');
+
+        if (ing) specs.ingredients = ing;
+        if (allg) specs.allergens = allg;
+        if (diet) specs.dietary = diet;
+        if (packW) specs.packWeight = packW;
+        if (serv) specs.servings = serv;
+        if (prep) specs.preparation = prep;
+        if (stor) specs.storage = stor;
+        if (life) specs.shelfLife = life;
+        if (comp) specs.compliance = comp;
+
+        if (!ing) {
+          warnings.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Pantry: Ingredients',
+            code: 'MISSING_FOOD_INGREDIENTS',
+            message: 'Listing food ingredients is strongly recommended for Indian food compliance.',
+          });
         }
-      } catch {
-        errors.push({
-          sheet: 'Products',
-          row: r,
-          column: 'Custom Specs JSON',
-          code: 'MALFORMED_JSON',
-          message: 'Custom Specs JSON is not valid JSON.',
-        });
+      } else if (collectionId === 'tea') {
+        const ing = getCellByNormalized(row, headerMap, 'tea: ingredients', 'tea ingredients');
+        const typ = getCellByNormalized(row, headerMap, 'tea: type', 'tea type');
+        const form = getCellByNormalized(row, headerMap, 'tea: form', 'tea form');
+        const caff = getCellByNormalized(row, headerMap, 'tea: caffeine info', 'tea caffeine');
+        const temp = getCellByNormalized(row, headerMap, 'tea: brewing temp °c', 'tea brewing temp');
+        const time = getCellByNormalized(row, headerMap, 'tea: brewing time mins', 'tea brewing time');
+        const serv = getCellByNormalized(row, headerMap, 'tea: serving size', 'tea serving');
+        const harv = getCellByNormalized(row, headerMap, 'tea: harvest season', 'tea harvest');
+        const stor = getCellByNormalized(row, headerMap, 'tea: storage instructions', 'tea storage');
+        const disc = getCellByNormalized(row, headerMap, 'tea: disclaimer', 'tea disclaimer');
+
+        if (ing) specs.ingredients = ing;
+        if (typ) specs.teaType = typ;
+        if (form) specs.teaForm = form;
+        if (caff) specs.caffeineLevel = caff;
+        if (temp) specs.brewingTemp = temp;
+        if (time) specs.steepTime = time;
+        if (serv) specs.servingSize = serv;
+        if (harv) specs.harvestSeason = harv;
+        if (stor) specs.storage = stor;
+        if (disc) specs.disclaimer = disc;
+      } else if (collectionId === 'sarees') {
+        const fab = getCellByNormalized(row, headerMap, 'sarees: fabric', 'sarees fabric');
+        const wea = getCellByNormalized(row, headerMap, 'sarees: weave type', 'sarees weave');
+        const len = getCellByNormalized(row, headerMap, 'sarees: length m', 'sarees length');
+        const blo = getCellByNormalized(row, headerMap, 'sarees: blouse piece details', 'sarees blouse');
+        const col = getCellByNormalized(row, headerMap, 'sarees: primary colour', 'sarees color');
+        const bor = getCellByNormalized(row, headerMap, 'sarees: border details', 'sarees border');
+        const occ = getCellByNormalized(row, headerMap, 'sarees: occasion', 'sarees occasion');
+        const car = getCellByNormalized(row, headerMap, 'sarees: care instructions', 'sarees care');
+        const aut = getCellByNormalized(row, headerMap, 'sarees: authenticity / mark', 'sarees authenticity');
+
+        if (fab) specs.fabric = fab;
+        if (wea) specs.weave = wea;
+        if (len) specs.sareeLength = len;
+        if (blo) specs.blousePiece = blo;
+        if (col) specs.primaryColor = col;
+        if (bor) specs.borderDetails = bor;
+        if (occ) specs.occasion = occ;
+        if (car) specs.careInstructions = car;
+        if (aut) specs.authenticity = aut;
+      } else if (collectionId === 'jewellery') {
+        const typ = getCellByNormalized(row, headerMap, 'jewellery: type', 'jewellery type');
+        const met = getCellByNormalized(row, headerMap, 'jewellery: metal type', 'jewellery metal');
+        const pur = getCellByNormalized(row, headerMap, 'jewellery: verified purity', 'jewellery purity');
+        const wei = getCellByNormalized(row, headerMap, 'jewellery: gross weight g', 'jewellery weight');
+        const sto = getCellByNormalized(row, headerMap, 'jewellery: stone details', 'jewellery stone');
+        const fin = getCellByNormalized(row, headerMap, 'jewellery: plating / finish', 'jewellery plating');
+        const siz = getCellByNormalized(row, headerMap, 'jewellery: size', 'jewellery standard size');
+        const hal = getCellByNormalized(row, headerMap, 'jewellery: hallmark details', 'jewellery hallmark');
+        const car = getCellByNormalized(row, headerMap, 'jewellery: care instructions', 'jewellery care');
+
+        if (typ) specs.jewelleryType = typ;
+        if (met) specs.metal = met;
+        if (pur) specs.purity = pur;
+        if (wei) specs.weight = wei;
+        if (sto) specs.gemstone = sto;
+        if (fin) specs.plating = fin;
+        if (siz) specs.standardSize = siz;
+        if (hal) specs.hallmark = hal;
+        if (car) specs.careInstructions = car;
       }
-    }
 
-    // Parse Gallery URLs
-    let gallery = [];
-    if (galleryRaw) {
-      gallery = galleryRaw
-        .split(',')
-        .map((u) => u.trim())
-        .filter(Boolean);
-    }
+      // 10. Parse Custom Specs JSON if provided
+      const customJsonRaw = getCellByNormalized(row, headerMap, 'custom specs json');
+      if (customJsonRaw) {
+        try {
+          const parsedCustom = JSON.parse(customJsonRaw);
+          if (typeof parsedCustom === 'object' && parsedCustom !== null) {
+            Object.assign(specs, parsedCustom);
+          }
+        } catch {
+          errors.push({
+            sheet: 'Products',
+            row: r,
+            column: 'Custom Specs JSON',
+            code: 'MALFORMED_JSON',
+            message: 'Custom Specs JSON is not valid JSON.',
+          });
+        }
+      }
 
-    parsedProducts.push({
-      rowNumber: r,
-      collectionId,
-      sourceId,
-      name,
-      slug,
-      category,
-      categoryName: categoryName || category,
-      tagline: tagline || null,
-      description,
-      image,
-      gallery,
-      packSize: packSize || null,
-      price: priceVal !== 'INVALID' ? priceVal : null,
-      originalPrice: origPriceVal !== 'INVALID' ? origPriceVal : null,
-      discount: discount || null,
-      isActive: wantsPublish,
-      inStock: inStockRaw === 'no' || inStockRaw === 'false' ? false : parsedStockQty > 0,
-      stockQuantity: parsedStockQty,
-      lowStockThreshold: parsedThreshold,
-      isFeatured: featuredRaw === 'yes' || featuredRaw === 'true',
-      badge: badge || null,
-      specs,
-      variants: [],
-    });
+      // Parse Gallery URLs
+      let gallery = [];
+      if (galleryRaw) {
+        gallery = galleryRaw
+          .split(',')
+          .map((u) => u.trim())
+          .filter(Boolean);
+      }
+
+      parsedProducts.push({
+        rowNumber: r,
+        collectionId,
+        sourceId,
+        name,
+        slug,
+        category,
+        categoryName: categoryName || category,
+        tagline: tagline || null,
+        description,
+        image,
+        gallery,
+        packSize: packSize || null,
+        price: priceVal !== 'INVALID' ? priceVal : null,
+        originalPrice: origPriceVal !== 'INVALID' ? origPriceVal : null,
+        discount: discount || null,
+        isActive: effectivelyActive,
+        wantsPublish,
+        taxCompliant: isTaxCompliant,
+        inStock: inStockRaw === 'no' || inStockRaw === 'false' ? false : parsedStockQty > 0,
+        stockQuantity: parsedStockQty,
+        lowStockThreshold: parsedThreshold,
+        isFeatured: featuredRaw === 'yes' || featuredRaw === 'true',
+        badge: badge || null,
+        specs,
+        sku: parsedSku,
+        hsnCode: parsedHsn,
+        gstRate: parsedGstRate,
+        isTaxInclusive: isTaxInclusiveRaw === 'no' || isTaxInclusiveRaw === 'false' ? false : true,
+        cessRate: parsedCessRate,
+        taxClassification: String(taxClassification || 'GOODS').trim().toUpperCase(),
+        variants: [],
+      });
+    }
   }
-}
 
   // ----------------------------------------------------
   // Parse Variants Worksheet (if present)
@@ -1099,30 +1973,14 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
   const seenVariantSkus = new Set();
 
   if (variantsSheet) {
-    const varHeaderRow = variantsSheet.getRow(1);
-    const varColIndexMap = {};
-    varHeaderRow.eachCell((cell, colNumber) => {
-      varColIndexMap[String(cell.value || '').trim()] = colNumber;
-    });
-
-    const getVarCellVal = (row, headerName) => {
-      const idx = varColIndexMap[headerName];
-      if (!idx) return '';
-      const cell = row.getCell(idx);
-      if (!cell || cell.value === null || cell.value === undefined) return '';
-      return String(cell.value).trim();
-    };
-
-    const getVarNumeric = (row, headerName) => {
-      const raw = getVarCellVal(row, headerName);
-      if (!raw) return null;
-      const clean = raw.replace(/[₹,\s]/g, '');
-      const num = Number(clean);
-      return isNaN(num) ? 'INVALID' : num;
-    };
+    const { headerRowNumber, headerMap } = findHeaderRow(variantsSheet, [
+      'product code',
+      'variant name',
+      'variant sku',
+    ]);
 
     const vRowCount = variantsSheet.rowCount;
-    for (let r = 2; r <= vRowCount; r++) {
+    for (let r = headerRowNumber + 1; r <= vRowCount; r++) {
       const row = variantsSheet.getRow(r);
       let hasData = false;
       row.eachCell(() => {
@@ -1130,22 +1988,22 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
       });
       if (!hasData) continue;
 
-      const productCode = getVarCellVal(row, 'Product Code*');
-      const variantName = getVarCellVal(row, 'Variant Name*');
-      const sku = getVarCellVal(row, 'Variant SKU*');
-      const type = getVarCellVal(row, 'Variant Type') || 'custom';
-      const optionVal = getVarCellVal(row, 'Option Value');
-      const priceVal = getVarNumeric(row, 'Selling Price (INR)');
-      const stockVal = getVarNumeric(row, 'Stock Quantity');
-      const threshVal = getVarNumeric(row, 'Low Stock Threshold');
-      const inStockRaw = getVarCellVal(row, 'In Stock').toLowerCase();
-      const attrsJsonRaw = getVarCellVal(row, 'Variant Attributes JSON');
+      const productCode = getCellByNormalized(row, headerMap, 'product code');
+      const variantName = getCellByNormalized(row, headerMap, 'variant name');
+      const sku = getCellByNormalized(row, headerMap, 'variant sku', 'sku');
+      const type = getCellByNormalized(row, headerMap, 'variant type', 'type') || 'custom';
+      const optionVal = getCellByNormalized(row, headerMap, 'option value');
+      const priceVal = getNumericByNormalized(row, headerMap, 'selling price inr', 'selling price', 'price');
+      const stockVal = getNumericByNormalized(row, headerMap, 'stock quantity');
+      const threshVal = getNumericByNormalized(row, headerMap, 'low stock threshold');
+      const inStockRaw = getCellByNormalized(row, headerMap, 'in stock').toLowerCase();
+      const attrsJsonRaw = getCellByNormalized(row, headerMap, 'variant attributes json');
 
       if (!productCode) {
         errors.push({
           sheet: 'Variants',
           row: r,
-          column: 'Product Code*',
+          column: 'Product Code *',
           code: 'REQUIRED_FIELD_EMPTY',
           message: 'Product Code is required to link variant to its parent product.',
         });
@@ -1156,7 +2014,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
           errors.push({
             sheet: 'Variants',
             row: r,
-            column: 'Product Code*',
+            column: 'Product Code *',
             code: 'PARENT_PRODUCT_NOT_FOUND',
             message: `Parent product "${productCode}" was not found in the Products sheet or database.`,
           });
@@ -1167,7 +2025,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         errors.push({
           sheet: 'Variants',
           row: r,
-          column: 'Variant Name*',
+          column: 'Variant Name *',
           code: 'REQUIRED_FIELD_EMPTY',
           message: 'Variant Name is required (e.g. Royal Wine, US 7).',
         });
@@ -1177,7 +2035,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         errors.push({
           sheet: 'Variants',
           row: r,
-          column: 'Variant SKU*',
+          column: 'Variant SKU *',
           code: 'REQUIRED_FIELD_EMPTY',
           message: 'Variant SKU is required and must be unique.',
         });
@@ -1187,7 +2045,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
           errors.push({
             sheet: 'Variants',
             row: r,
-            column: 'Variant SKU*',
+            column: 'Variant SKU *',
             code: 'DUPLICATE_SKU_IN_WORKBOOK',
             message: `Variant SKU "${sku}" is duplicated within this workbook.`,
           });
@@ -1199,7 +2057,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
           errors.push({
             sheet: 'Variants',
             row: r,
-            column: 'Variant SKU*',
+            column: 'Variant SKU *',
             code: 'SKU_ALREADY_EXISTS',
             message: `SKU "${sku}" already exists in the database.`,
           });
@@ -1224,7 +2082,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         }
       }
 
-      parsedVariants.push({
+      const variantRecord = {
         rowNumber: r,
         productCode,
         variantName,
@@ -1236,12 +2094,31 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         lowStockThreshold: threshVal !== null && threshVal !== 'INVALID' ? Math.max(0, Math.floor(threshVal)) : 5,
         inStock: inStockRaw === 'no' || inStockRaw === 'false' ? false : true,
         attributes: parsedAttrs,
-      });
+      };
+
+      parsedVariants.push(variantRecord);
 
       // Link to parent in parsedProducts
       const parent = parsedProducts.find((p) => p.sourceId.toLowerCase() === productCode.toLowerCase());
       if (parent) {
-        parent.variants.push(parsedVariants[parsedVariants.length - 1]);
+        parent.variants.push(variantRecord);
+      }
+    }
+  }
+
+  // Publication pricing check: verify unpriced products cannot be published
+  for (const prod of parsedProducts) {
+    if (prod.wantsPublish) {
+      const hasBasePrice = prod.price !== null && prod.price > 0;
+      const hasVariantPrice = prod.variants.some((v) => v.price !== null && v.price > 0);
+      if (!hasBasePrice && !hasVariantPrice) {
+        errors.push({
+          sheet: 'Products',
+          row: prod.rowNumber,
+          column: 'Publication Status',
+          code: 'UNPRICED_CANNOT_BE_PUBLISHED',
+          message: 'Unpriced products cannot be published directly. Provide an approved selling price (on Products or Variants sheet) or set Publication Status to "Draft".',
+        });
       }
     }
   }
@@ -1251,22 +2128,14 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
   // ----------------------------------------------------
   const parsedInventory = [];
   if (inventorySheet) {
-    const invHeaderRow = inventorySheet.getRow(1);
-    const invColIndexMap = {};
-    invHeaderRow.eachCell((cell, colNumber) => {
-      invColIndexMap[String(cell.value || '').trim()] = colNumber;
-    });
-
-    const getInvCellVal = (row, headerName) => {
-      const idx = invColIndexMap[headerName];
-      if (!idx) return '';
-      const cell = row.getCell(idx);
-      if (!cell || cell.value === null || cell.value === undefined) return '';
-      return String(cell.value).trim();
-    };
+    const { headerRowNumber, headerMap } = findHeaderRow(inventorySheet, [
+      'product code',
+      'new stock quantity',
+      'adjustment reason',
+    ]);
 
     const iRowCount = inventorySheet.rowCount;
-    for (let r = 2; r <= iRowCount; r++) {
+    for (let r = headerRowNumber + 1; r <= iRowCount; r++) {
       const row = inventorySheet.getRow(r);
       let hasData = false;
       row.eachCell(() => {
@@ -1274,17 +2143,17 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
       });
       if (!hasData) continue;
 
-      const productCode = getInvCellVal(row, 'Product Code*');
-      const sku = getInvCellVal(row, 'Variant SKU');
-      const newStockRaw = getInvCellVal(row, 'New Stock Quantity*');
-      const threshRaw = getInvCellVal(row, 'Low Stock Threshold');
-      const reason = getInvCellVal(row, 'Adjustment Reason*');
+      const productCode = getCellByNormalized(row, headerMap, 'product code');
+      const sku = getCellByNormalized(row, headerMap, 'variant sku', 'sku');
+      const newStockRaw = getCellByNormalized(row, headerMap, 'new stock quantity', 'new stock');
+      const threshRaw = getCellByNormalized(row, headerMap, 'low stock threshold');
+      const reason = getCellByNormalized(row, headerMap, 'adjustment reason', 'reason');
 
       if (!productCode) {
         errors.push({
           sheet: 'Inventory',
           row: r,
-          column: 'Product Code*',
+          column: 'Product Code *',
           code: 'REQUIRED_FIELD_EMPTY',
           message: 'Product Code is required for inventory adjustment.',
         });
@@ -1295,7 +2164,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         errors.push({
           sheet: 'Inventory',
           row: r,
-          column: 'New Stock Quantity*',
+          column: 'New Stock Quantity *',
           code: 'INVALID_STOCK_QTY',
           message: 'New Stock Quantity must be a non-negative integer.',
         });
@@ -1305,7 +2174,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         errors.push({
           sheet: 'Inventory',
           row: r,
-          column: 'Adjustment Reason*',
+          column: 'Adjustment Reason *',
           code: 'REQUIRED_FIELD_EMPTY',
           message: 'An audit reason note is strictly required for stock updates.',
         });
@@ -1396,6 +2265,8 @@ export async function executeProductImport(validationResult, options = {}, admin
               throw new Error(`Product Code "${prod.sourceId}" already exists in the database.`);
             }
 
+            const finalProdSku = prod.sku || (await generateProductSku(prod.collectionId, prod.category, tx));
+
             const created = await tx.product.create({
               data: {
                 sourceId: lowerSourceId,
@@ -1420,6 +2291,12 @@ export async function executeProductImport(validationResult, options = {}, admin
                 badge: prod.badge,
                 specs: prod.specs,
                 verified: true,
+                sku: finalProdSku,
+                hsnCode: prod.hsnCode,
+                gstRate: prod.gstRate !== null ? Number(prod.gstRate) : null,
+                isTaxInclusive: Boolean(prod.isTaxInclusive),
+                cessRate: Number(prod.cessRate || 0),
+                taxClassification: prod.taxClassification || 'GOODS',
               },
             });
 
@@ -1445,13 +2322,19 @@ export async function executeProductImport(validationResult, options = {}, admin
 
             // Create child variants if mapped
             if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+              let varIdx = 1;
               for (const v of prod.variants) {
+                const varSku = v.sku || generateVariantSku(finalProdSku, varIdx++);
                 const createdVar = await tx.productVariant.create({
                   data: {
                     productId: created.id,
                     name: v.variantName,
-                    sku: v.sku,
+                    sku: varSku,
                     price: v.price !== null ? v.price : prod.price,
+                    hsnCode: v.hsnCode || prod.hsnCode,
+                    gstRate: v.gstRate !== undefined && v.gstRate !== null ? Number(v.gstRate) : (prod.gstRate !== null ? Number(prod.gstRate) : null),
+                    isTaxInclusive: v.isTaxInclusive !== undefined ? Boolean(v.isTaxInclusive) : Boolean(prod.isTaxInclusive),
+                    cessRate: v.cessRate !== undefined ? Number(v.cessRate) : Number(prod.cessRate || 0),
                     stockQuantity: v.stockQuantity,
                     lowStockThreshold: v.lowStockThreshold,
                     inStock: Boolean(v.inStock),
@@ -1460,6 +2343,7 @@ export async function executeProductImport(validationResult, options = {}, admin
                 });
                 createdVariantsCount++;
 
+                // Log inventory for variant
                 await tx.inventoryLog.create({
                   data: {
                     productId: created.id,
@@ -1467,7 +2351,7 @@ export async function executeProductImport(validationResult, options = {}, admin
                     previousStock: 0,
                     adjustedStock: v.stockQuantity,
                     delta: v.stockQuantity,
-                    reason: 'Initial Bulk Excel Variant Import',
+                    reason: `Initial Variant Stocking: ${v.sku}`,
                     adminEmail,
                     adminId: validAdminId,
                     actor: `ADMIN: ${adminEmail}`,
@@ -1479,48 +2363,55 @@ export async function executeProductImport(validationResult, options = {}, admin
             }
           } else if (mode === 'UPDATE_EXISTING') {
             if (!existing) {
-              throw new Error(`Product Code "${prod.sourceId}" does not exist to update.`);
+              throw new Error(`Product Code "${prod.sourceId}" was not found in the database to update.`);
             }
-
-            const updateData = {
-              name: prod.name,
-              category: prod.category,
-              categoryName: prod.categoryName,
-              description: prod.description,
-              image: prod.image,
-              gallery: prod.gallery,
-              specs: prod.specs,
-              isActive: Boolean(prod.isActive),
-            };
-
-            if (prod.tagline !== undefined) updateData.tagline = prod.tagline;
-            if (prod.packSize !== undefined) updateData.packSize = prod.packSize;
-            if (prod.price !== null) updateData.price = prod.price;
-            if (prod.originalPrice !== null) updateData.originalPrice = prod.originalPrice;
-            if (prod.discount !== undefined) updateData.discount = prod.discount;
-            if (prod.badge !== undefined) updateData.badge = prod.badge;
-            if (prod.isFeatured !== undefined) updateData.isFeatured = prod.isFeatured;
 
             const updated = await tx.product.update({
               where: { id: existing.id },
-              data: updateData,
+              data: {
+                name: prod.name,
+                slug: prod.slug,
+                category: prod.category,
+                categoryName: prod.categoryName,
+                tagline: prod.tagline,
+                description: prod.description,
+                image: prod.image,
+                gallery: prod.gallery,
+                packSize: prod.packSize,
+                price: prod.price !== null ? prod.price : existing.price,
+                originalPrice: prod.originalPrice !== null ? prod.originalPrice : existing.originalPrice,
+                discount: prod.discount,
+                isActive: Boolean(prod.isActive),
+                isFeatured: Boolean(prod.isFeatured),
+                badge: prod.badge,
+                specs: Object.assign({}, existing.specs || {}, prod.specs || {}),
+                lowStockThreshold: prod.lowStockThreshold,
+                sku: prod.sku || existing.sku,
+                hsnCode: prod.hsnCode || existing.hsnCode,
+                gstRate: prod.gstRate !== null ? Number(prod.gstRate) : existing.gstRate,
+                isTaxInclusive: prod.isTaxInclusive !== undefined ? Boolean(prod.isTaxInclusive) : existing.isTaxInclusive,
+                cessRate: prod.cessRate !== undefined ? Number(prod.cessRate) : existing.cessRate,
+                taxClassification: prod.taxClassification || existing.taxClassification,
+              },
             });
 
             importedProductIds.push(updated.id);
             updatedCount++;
 
-            // Sync or update variants if provided
+            // Update or add variants
             if (Array.isArray(prod.variants) && prod.variants.length > 0) {
               for (const v of prod.variants) {
-                const matchVar = existing.variants.find(
+                const existingVar = existing.variants.find(
                   (ev) => ev.sku && ev.sku.toLowerCase() === v.sku.toLowerCase()
                 );
-                if (matchVar) {
+
+                if (existingVar) {
                   await tx.productVariant.update({
-                    where: { id: matchVar.id },
+                    where: { id: existingVar.id },
                     data: {
                       name: v.variantName,
-                      price: v.price !== null ? v.price : matchVar.price,
+                      price: v.price !== null ? v.price : existingVar.price,
+                      lowStockThreshold: v.lowStockThreshold,
                       attributes: v.attributes,
                     },
                   });
@@ -1530,7 +2421,7 @@ export async function executeProductImport(validationResult, options = {}, admin
                       productId: existing.id,
                       name: v.variantName,
                       sku: v.sku,
-                      price: v.price !== null ? v.price : existing.price,
+                      price: v.price !== null ? v.price : prod.price,
                       stockQuantity: v.stockQuantity,
                       lowStockThreshold: v.lowStockThreshold,
                       inStock: Boolean(v.inStock),
@@ -1546,52 +2437,57 @@ export async function executeProductImport(validationResult, options = {}, admin
       }
 
       // ----------------------------------------------------
-      // MODE 3: INITIAL_INVENTORY / INVENTORY AUDIT IMPORT
+      // MODE 3: INITIAL_INVENTORY
       // ----------------------------------------------------
-      if (mode === 'INITIAL_INVENTORY' || (parsedInventory.length > 0 && mode === 'CREATE_NEW')) {
+      if (mode === 'INITIAL_INVENTORY' && parsedInventory.length > 0) {
         for (const item of parsedInventory) {
+          const lowerCode = item.productCode.toLowerCase();
           const prod = await tx.product.findUnique({
-            where: { sourceId: item.productCode.toLowerCase() },
+            where: { sourceId: lowerCode },
             include: { variants: true },
           });
 
-          if (!prod) continue;
+          if (!prod) {
+            throw new Error(`Inventory target product "${item.productCode}" not found in database.`);
+          }
 
           if (item.sku) {
-            const v = prod.variants.find(
-              (varItem) => varItem.sku && varItem.sku.toLowerCase() === item.sku.toLowerCase()
-            );
-            if (v) {
-              const prev = v.stockQuantity;
-              const delta = item.newStock - prev;
-              await tx.productVariant.update({
-                where: { id: v.id },
-                data: {
-                  stockQuantity: item.newStock,
-                  inStock: item.newStock > 0,
-                  ...(item.threshold !== undefined ? { lowStockThreshold: item.threshold } : {}),
-                },
-              });
-
-              await tx.inventoryLog.create({
-                data: {
-                  productId: prod.id,
-                  variantId: v.id,
-                  previousStock: prev,
-                  adjustedStock: item.newStock,
-                  delta,
-                  reason: item.reason,
-                  adminEmail,
-                  adminId: validAdminId,
-                  actor: `ADMIN: ${adminEmail}`,
-                  type: delta >= 0 ? 'RESTOCK' : 'MANUAL_ADJUSTMENT',
-                },
-              });
-              inventoryAdjustmentsCount++;
+            const variant = prod.variants.find((v) => v.sku && v.sku.toLowerCase() === item.sku.toLowerCase());
+            if (!variant) {
+              throw new Error(`Target SKU "${item.sku}" not found for product "${item.productCode}".`);
             }
+
+            const prevStock = variant.stockQuantity;
+            const delta = item.newStock - prevStock;
+
+            await tx.productVariant.update({
+              where: { id: variant.id },
+              data: {
+                stockQuantity: item.newStock,
+                inStock: item.newStock > 0,
+                ...(item.threshold !== undefined ? { lowStockThreshold: item.threshold } : {}),
+              },
+            });
+
+            await tx.inventoryLog.create({
+              data: {
+                productId: prod.id,
+                variantId: variant.id,
+                previousStock: prevStock,
+                adjustedStock: item.newStock,
+                delta,
+                reason: item.reason,
+                adminEmail,
+                adminId: validAdminId,
+                actor: `ADMIN: ${adminEmail}`,
+                type: delta >= 0 ? 'RESTOCK' : 'ADJUSTMENT',
+              },
+            });
+            inventoryAdjustmentsCount++;
           } else {
-            const prev = prod.stockQuantity;
-            const delta = item.newStock - prev;
+            const prevStock = prod.stockQuantity;
+            const delta = item.newStock - prevStock;
+
             await tx.product.update({
               where: { id: prod.id },
               data: {
@@ -1605,14 +2501,14 @@ export async function executeProductImport(validationResult, options = {}, admin
               data: {
                 productId: prod.id,
                 variantId: null,
-                previousStock: prev,
+                previousStock: prevStock,
                 adjustedStock: item.newStock,
                 delta,
                 reason: item.reason,
                 adminEmail,
                 adminId: validAdminId,
                 actor: `ADMIN: ${adminEmail}`,
-                type: delta >= 0 ? 'RESTOCK' : 'MANUAL_ADJUSTMENT',
+                type: delta >= 0 ? 'RESTOCK' : 'ADJUSTMENT',
               },
             });
             inventoryAdjustmentsCount++;
@@ -1620,114 +2516,107 @@ export async function executeProductImport(validationResult, options = {}, admin
         }
       }
 
-      // Log master admin audit action
-      await logAdminAction({
-        adminId: validAdminId,
-        adminEmail,
-        action: 'BULK_PRODUCT_IMPORT',
-        entityType: 'ProductCatalogue',
-        entityId: null,
-        details: {
-          mode,
-          createdCount,
-          updatedCount,
-          createdVariantsCount,
-          inventoryAdjustmentsCount,
-          productCodes: parsedProducts.map((p) => p.sourceId),
-        },
-      });
-
       return {
         createdCount,
         updatedCount,
         createdVariantsCount,
         inventoryAdjustmentsCount,
         importedProductIds,
+        summary: {
+          productsCreated: createdCount,
+          productsUpdated: updatedCount,
+          variantsCreated: createdVariantsCount,
+          inventoryLogsCreated: inventoryAdjustmentsCount,
+        },
       };
     },
-    {
-      maxWait: 20000,
-      timeout: 45000,
-    }
+    { timeout: 30000 }
   );
 
-  // Broadcast live refresh across all active storefronts
-  for (const cid of VALID_COLLECTION_IDS) {
-    try {
-      broadcastProductUpdate(cid);
-    } catch {
-      // Non-blocking broadcast
+  // Broadcast revalidation across all collections
+  try {
+    for (const cId of VALID_COLLECTION_IDS) {
+      broadcastProductUpdate(cId);
     }
+  } catch {
+    // Non-blocking for background SSE
   }
 
-  return {
-    success: true,
-    mode,
-    summary: {
-      productsCreated: result.createdCount,
-      productsUpdated: result.updatedCount,
-      variantsCreated: result.createdVariantsCount,
-      inventoryLogsCreated: result.inventoryAdjustmentsCount,
-    },
-    importedProductIds: result.importedProductIds,
-  };
+  return result;
 }
 
 /**
- * Generates an Excel error report workbook for download when validation errors occur.
+ * Generates an Excel error report workbook for download.
  */
 export async function generateErrorReportExcel(errors = [], warnings = []) {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'Amoga E-Commerce Validation Engine';
-  workbook.created = new Date();
+  workbook.creator = 'Amoga Validation Engine';
 
-  const sheet = workbook.addWorksheet('Validation Issues', {
+  // Sheet 1: Errors
+  const errSheet = workbook.addWorksheet('Validation Errors', {
     views: [{ state: 'frozen', ySplit: 1 }],
   });
 
-  sheet.columns = [
-    { header: 'Severity', key: 'severity', width: 14 },
-    { header: 'Sheet Name', key: 'sheet', width: 18 },
-    { header: 'Row Number', key: 'row', width: 14 },
+  errSheet.columns = [
+    { header: 'Worksheet', key: 'sheet', width: 20 },
+    { header: 'Row #', key: 'row', width: 10 },
     { header: 'Column Name', key: 'column', width: 28 },
-    { header: 'Error Code', key: 'code', width: 24 },
-    { header: 'Explanation & Suggested Fix', key: 'message', width: 65 },
+    { header: 'Error Code', key: 'code', width: 28 },
+    { header: 'Explanation & Guidance', key: 'message', width: 65 },
   ];
 
-  const headerRow = sheet.getRow(1);
-  headerRow.height = 24;
-  headerRow.eachCell((cell) => {
-    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+  const headerFont = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+  const errFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF991B1B' } }; // Deep Red
+
+  const errHeader = errSheet.getRow(1);
+  errHeader.height = 26;
+  errHeader.eachCell((cell) => {
+    cell.font = headerFont;
+    cell.fill = errFill;
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF991B1B' }, // Strong warning crimson
-    };
   });
 
-  errors.forEach((err) => {
-    const r = sheet.addRow({
-      severity: 'ERROR',
-      sheet: err.sheet,
-      row: err.row || '-',
-      column: err.column,
-      code: err.code,
-      message: err.message,
+  errors.forEach((e) => {
+    errSheet.addRow({
+      sheet: e.sheet || 'General',
+      row: e.row || '-',
+      column: e.column || '-',
+      code: e.code || 'UNKNOWN_ERROR',
+      message: e.message || 'Validation failed.',
     });
-    r.getCell('severity').font = { color: { argb: 'FFDC2626' }, bold: true };
   });
 
-  warnings.forEach((warn) => {
-    const r = sheet.addRow({
-      severity: 'WARNING',
-      sheet: warn.sheet,
-      row: warn.row || '-',
-      column: warn.column,
-      code: warn.code,
-      message: warn.message,
+  // Sheet 2: Warnings
+  const warnSheet = workbook.addWorksheet('Warnings & Recommendations', {
+    views: [{ state: 'frozen', ySplit: 1 }],
+  });
+
+  warnSheet.columns = [
+    { header: 'Worksheet', key: 'sheet', width: 20 },
+    { header: 'Row #', key: 'row', width: 10 },
+    { header: 'Column Name', key: 'column', width: 28 },
+    { header: 'Warning Code', key: 'code', width: 28 },
+    { header: 'Recommendation Note', key: 'message', width: 65 },
+  ];
+
+  const warnFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB45309' } }; // Amber
+
+  const warnHeader = warnSheet.getRow(1);
+  warnHeader.height = 26;
+  warnHeader.eachCell((cell) => {
+    cell.font = headerFont;
+    cell.fill = warnFill;
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+
+  warnings.forEach((w) => {
+    warnSheet.addRow({
+      sheet: w.sheet || 'General',
+      row: w.row || '-',
+      column: w.column || '-',
+      code: w.code || 'UNKNOWN_WARNING',
+      message: w.message || 'Advisory notice.',
     });
-    r.getCell('severity').font = { color: { argb: 'FFD97706' }, bold: true };
   });
 
   const buffer = await workbook.xlsx.writeBuffer();

@@ -11,6 +11,7 @@ import { Container } from '../../components/ui/Container';
 import { SectionHeading } from '../../components/ui/SectionHeading';
 import { FOOD_PRODUCTS, getFeaturedProducts } from './data/products';
 import { useProducts } from '../../hooks/useProducts';
+import { ExploreCollectionsSection } from '../collections';
 
 export function FoodStorefront() {
   const { products: apiProducts } = useProducts({
@@ -100,6 +101,9 @@ export function FoodStorefront() {
 
       {/* 6. Promotional / Brand Heritage Banner */}
       <FoodPromoBanner />
+
+      {/* 7. Explore Collections Showcase */}
+      <ExploreCollectionsSection currentCollectionId="food" />
     </div>
   );
 }

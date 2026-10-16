@@ -4,6 +4,7 @@ import { SareeFeaturedGrid } from './components/SareeFeaturedGrid';
 import { SareeCategoryGrid } from './components/SareeCategoryGrid';
 import { EditorialTextileFeature } from './components/EditorialTextileFeature';
 import { SareePromoBanner } from './components/SareePromoBanner';
+import { ExploreCollectionsSection } from '../collections';
 
 
 export function SareesStorefront() {
@@ -23,6 +24,9 @@ export function SareesStorefront() {
 
       {/* 5. Promotional Campaign Banner */}
       <SareePromoBanner />
+
+      {/* 6. Explore Collections Showcase */}
+      <ExploreCollectionsSection currentCollectionId="sarees" />
     </div>
   );
 }

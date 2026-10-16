@@ -19,104 +19,137 @@ The AMOGA Bulk Product Import system allows authorized Catalogue Managers and Ad
 
 ---
 
-## 2. Workbook Structure & Template
+## 2. Workbook Structure & Sheets
 
 Always download the latest official template using the **Download Excel Template** button in the admin interface.
 
-The template version is tracked via `AMOGA-TEMPLATE-v1.0` in the `Read Me` sheet.
+The template version is tracked via `AMOGA-TEMPLATE-v1.0` in the `Start Here` sheet.
 
 ### Sheets Included:
-1. **Read Me**: Version tag, collection identifiers, instructions, and rules.
-2. **Products**: Shared catalog fields and category-specific attributes.
-3. **Variants**: Option dimensions, SKU mappings, variant pricing, and stock.
-4. **Inventory**: SKU-level stock adjustment targets with warehouse locations and movement reasons.
-5. **Collections**: Reference list of collection codes and descriptions.
+1. **`Start Here`**: Instructions, mandatory-field legend (`*`), step-by-step import workflow, and image URL guidance.
+2. **`Products`**: Common product fields plus category-specific attribute groups.
+3. **`Variants`**: Color, size, weight, and option variants mapped to parent products.
+4. **`Inventory`**: SKU-level stock adjustment targets with audit movement reasons.
+5. **`Field Guide`**: Complete column-by-column reference with required/optional status, collection scope, accepted formats, and real examples.
+6. **`Collections & Categories`**: Master reference list of all supported collection codes, category codes, and category display names.
 
 ---
 
-## 3. Product Columns & Category Specifications
+## 3. Mandatory vs. Optional Fields
 
-### Shared Product Fields (Sheet: `Products`)
-| Column | Description | Required? | Example |
+### Mandatory Common Fields (Marked with `*` in Header Row)
+A product **CANNOT** be created if any of these columns are empty:
+
+| Header in Sheet | DB Mapping | Requirement | Accepted Values / Rules |
 |---|---|---|---|
-| `Product Code` | Unique SKU / Source identifier | Yes | `tea-himalayan-green` |
-| `Collection Code` | One of `food`, `tea`, `sarees`, `jewellery` | Yes | `tea` |
-| `Product Name` | Customer-facing title | Yes | `Himalayan Lemongrass Green Tea` |
-| `Slug` | URL slug | Yes | `himalayan-lemongrass-green-tea` |
-| `Description` | Rich markdown or plain text description | Yes | `Delicate whole leaf green tea with hand-crushed lemongrass...` |
-| `Selling Price (INR)` | Selling price in Rupees (cannot be 0 if published) | Yes | `399` |
-| `MRP / Compare Price (INR)`| Strikethrough price in Rupees | Optional | `499` |
-| `Stock Quantity` | Base stock quantity | Yes | `50` |
-| `Publication Status` | `published` or `draft` | Yes | `published` |
-| `Primary Image URL` | Image URL (`.jpg`, `.jpeg`, `.png`, `.webp`) | Yes | `https://images.unsplash.com/...` |
-| `Gallery Images` | Comma-separated image URLs | Optional | `https://..., https://...` |
-| `Brand` | Brand name | Optional | `Amoga Wellness` |
-| `Tags` | Comma-separated tags | Optional | `tea, green tea, wellness, organic` |
-| `Weight (g)` | Net weight in grams | Optional | `100` |
+| `Collection Code *` | `collectionId` | **MANDATORY \*** | One of: `food`, `tea`, `sarees`, `jewellery` |
+| `Product Code *` | `sourceId` | **MANDATORY \*** | Unique identifier per product (e.g. `f-moringa-01`) |
+| `Product Name *` | `name` | **MANDATORY \*** | Customer-facing title |
+| `Category Code *` | `category` | **MANDATORY \*** | Must match an approved category code for that collection |
+| `Description *` | `description` | **MANDATORY \*** | Informative description of product |
+| `Primary Image URL *` | `image` | **MANDATORY \*** | Valid HTTPS URL or root path (`/images/...` or `/uploads/...`) |
 
-### Category-Specific Specifications:
-- **Wholesome Pantry (`food`)**:
-  - `Ingredients`: Comma-separated list (e.g. `Horsegram, Black Pepper, Cumin, Sea Salt`)
-  - `Allergens`: Allergen warnings (e.g. `Processed in a facility handling sesame and nuts`)
-  - `Dietary Details`: e.g. `100% Vegetarian, No Preservatives, High Protein`
-  - `Servings`: e.g. `10 cups`
-  - `Preparation Instructions`: e.g. `Mix 1 tablespoon in 200ml boiling water for 3 minutes.`
-  - `Storage Details`: e.g. `Store in a cool dry place away from direct sunlight.`
-  - `FSSAI License`: e.g. `11522001000456`
-- **Wellness Tea (`tea`)**:
-  - `Tea Form`: e.g. `Loose Leaf`, `Pyramid Tea Bags`, `Single Estate Whole Leaf`
-  - `Caffeine Level`: e.g. `Low`, `Medium`, `High`, `Caffeine Free`
-  - `Brewing Temp`: e.g. `85°C - 90°C`
-  - `Brewing Time`: e.g. `3 - 4 minutes`
-  - `Serving Size`: e.g. `2g per 200ml cup`
-- **Heritage Sarees (`sarees`)**:
-  - `Fabric`: e.g. `Pure Kanchipuram Silk`, `Mysore Crepe Silk`, `Banarasi Georgette`
-  - `Weave Type`: e.g. `Korvai Handloom`, `Jacquard Zari Weave`
-  - `Saree Length`: e.g. `5.5 Metres`
-  - `Blouse Piece`: e.g. `Included (0.8 Metres Unstitched)`
-  - `Colour`: e.g. `Crimson Red & Antique Gold`
-  - `Border`: e.g. `Traditional Temple Zari Border`
-  - `Care Instructions`: e.g. `Dry Clean Only. Store in muslin wrap.`
-- **Sterling Silver (`jewellery`)**:
-  - `Jewellery Type`: e.g. `Stud Earrings`, `Choker Necklace`, `Stackable Ring`
-  - `Metal Type`: e.g. `925 Sterling Silver`
-  - `Verified Purity`: e.g. `92.5% Fine Silver`
-  - `Metal Weight (g)`: e.g. `4.2`
-  - `Stone Details`: e.g. `AAA Grade Cubic Zirconia`
-  - `Plating`: e.g. `Rhodium Anti-Tarnish Finish`, `18K Gold Vermeil`
-  - `Hallmark Info`: e.g. `BIS 925 Hallmarked`
+### Core Optional Fields (Blank values are safely defaulted)
+| Header in Sheet | DB Mapping | Requirement | Default / Auto-handling |
+|---|---|---|---|
+| `Slug (Auto-generated if blank)` | `slug` | **OPTIONAL** | If left empty, **automatically generated** from `Product Name` (e.g. `organic-moringa-pepper-soup`) |
+| `Category Name` | `categoryName` | **OPTIONAL** | Auto-filled from Category Code if blank |
+| `Tagline` | `tagline` | **OPTIONAL** | Short subtitle under product title |
+| `Gallery Image URLs` | `gallery` | **OPTIONAL** | Comma-separated secondary image URLs |
+| `Pack Size / Weight` | `packSize` | **OPTIONAL** | Measurement text (e.g. `150 g`, `Standard 6.3m`) |
+| `Selling Price (INR)` | `price` | **CONDITIONAL** | Required if `Publication Status` is `Published` (unless priced via Variants). Products without a price are saved as **Draft**. |
+| `MRP / Compare Price (INR)`| `originalPrice` | **OPTIONAL** | Strikethrough price in Rupees (e.g. `299`) |
+| `Discount Label` | `discount` | **OPTIONAL** | Promo badge (e.g. `17% OFF`) |
+| `Publication Status` | `isActive` | **OPTIONAL** | `Draft` (default) or `Published` |
+| `In Stock` | `inStock` | **OPTIONAL** | `Yes` (default) or `No` |
+| `Stock Quantity` | `stockQuantity` | **OPTIONAL** | Available units. Defaults to `50` |
+| `Low Stock Threshold` | `lowStockThreshold`| **OPTIONAL** | Reorder threshold. Defaults to `5` |
+| `Featured` | `isFeatured` | **OPTIONAL** | `Yes` or `No` (defaults to `No`) |
+| `Badge` | `badge` | **OPTIONAL** | e.g. `Bestseller`, `Silk Mark`, `BIS 925` |
+| `Tags` | search tags | **OPTIONAL** | Comma-separated search keywords |
 
 ---
 
-## 4. Import Modes
+## 4. Category-Specific Fields (Enrichment Only)
+
+Category-specific columns enrich filtering, technical specifications, and compliance details. They are **never blocking** for products of another collection:
+
+### Wholesome Pantry (`food`)
+- `Pantry: Ingredients` (Recommended for FSSAI compliance)
+- `Pantry: Allergens`
+- `Pantry: Dietary Details`
+- `Pantry: Pack Weight / Size`
+- `Pantry: Servings`
+- `Pantry: Preparation Instructions`
+- `Pantry: Storage Instructions`
+- `Pantry: Shelf Life`
+- `Pantry: FSSAI / Compliance`
+
+### Wellness Tea (`tea`)
+- `Tea: Ingredients` (Recommended)
+- `Tea: Type`
+- `Tea: Form`
+- `Tea: Caffeine Info`
+- `Tea: Brewing Temp (°C)`
+- `Tea: Brewing Time (mins)`
+- `Tea: Serving Size`
+- `Tea: Harvest Season`
+- `Tea: Storage Instructions`
+- `Tea: Disclaimer`
+
+### Heritage Sarees (`sarees`)
+- `Sarees: Fabric` (Recommended)
+- `Sarees: Weave Type`
+- `Sarees: Length (m)`
+- `Sarees: Blouse Piece Details`
+- `Sarees: Primary Colour`
+- `Sarees: Border Details`
+- `Sarees: Occasion`
+- `Sarees: Care Instructions`
+- `Sarees: Authenticity / Mark`
+
+### Sterling Silver (`jewellery`)
+- `Jewellery: Type` (Recommended)
+- `Jewellery: Metal Type` (Recommended)
+- `Jewellery: Verified Purity`
+- `Jewellery: Gross Weight (g)`
+- `Jewellery: Stone Details`
+- `Jewellery: Plating / Finish`
+- `Jewellery: Size`
+- `Jewellery: Hallmark Details`
+- `Jewellery: Care Instructions`
+
+---
+
+## 5. Image URL Guidance
+
+- `Primary Image URL *` must contain a publicly accessible web URL (`https://...`) or an internal path (`/images/...` or `/uploads/...`).
+- **Do NOT use local computer paths** (e.g. `C:\Users\admin\Desktop\photo.jpg` or `file:///...`). The server and customers cannot view files from your local hard drive.
+- **How to upload image files**:
+  1. Open Admin Panel → Products → **Add Product**.
+  2. Click **Upload File** in the Media section to select files from your computer.
+  3. The system stores the file in `/uploads/` and provides the exact path for your spreadsheet.
+
+---
+
+## 6. Pricing & Publication Rules
+
+1. **Unpriced Products Cannot Be Published**:
+   - If `Publication Status` is `Published`, the product must have a positive selling price (> ₹0) either on the `Products` sheet or on its child `Variants` sheet.
+   - Products without a price are automatically held in **Draft** mode.
+2. **Variant-Priced Products**:
+   - If items vary in price by size, color, or weight, leave the product-level price blank (or at the base price) and enter specific variant prices on the `Variants` sheet.
+
+---
+
+## 7. Import Modes
 
 1. **Create New Products (`CREATE_NEW`)**:
-   - Creates new products that do not exist yet.
-   - Rejects any rows with product codes, slugs, or SKUs already present in the database.
-   - Prevents accidental overwrites.
+   - Inserts products that do not exist yet.
+   - Rejects duplicate product codes or slugs to prevent accidental overwrites.
 2. **Update Existing Products (`UPDATE_EXISTING`)**:
-   - Matches records using `Product Code` or `Slug`.
-   - Updates title, description, prices, images, and category attributes.
-   - Preserves historical records, existing variants, and orders.
+   - Matches records by `Product Code` or `Slug`.
+   - Safely updates descriptions, images, prices, category specs, and variants.
 3. **Initial Inventory Import (`INITIAL_INVENTORY`)**:
-   - Dedicated mode to initialize or adjust inventory.
-   - Creates immutable `InventoryLog` ledger entries (`INVENTORY_IMPORT` / `INITIAL_STOCK`).
-   - Maintains audit trails with administrator ID and timestamp.
-
----
-
-## 5. Pricing & Publication Safety Rules
-
-- **Drafts by Default**: Products can be imported as `draft` for internal review.
-- **Unpriced Products Cannot Be Published**: The system will automatically reject any row marked as `published` if the price is missing or zero.
-- **Atomic Transactions**: If any unrecoverable database error occurs, Prisma rolls back the entire batch, preventing half-imported products or orphaned variants.
-- **Automatic Storefront Synchronization**: Upon successful import, the server notifies all active storefront clients to refresh their catalog cache in real-time.
-
----
-
-## 6. Error Handling & Downloadable Reports
-
-If any validation issue occurs:
-1. The admin UI displays the exact **Sheet Name**, **Row Number**, **Column Name**, and human-readable reason.
-2. The **Import Products** button is locked until errors are resolved.
-3. Click **Download Error Report** to receive an Excel file containing all failed rows and error details.
+   - Uses the `Inventory` sheet to adjust warehouse stock counts.
+   - Creates immutable `InventoryLog` audit entries with timestamp and administrator email.

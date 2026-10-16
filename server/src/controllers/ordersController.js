@@ -1,3 +1,4 @@
+import { prisma } from '../config/prisma.js';
 import { createOrder, getOrderByReference } from '../services/checkoutService.js';
 import { createOrderBodySchema } from '../schemas/checkoutSchemas.js';
 
@@ -109,3 +110,38 @@ export async function getOrder(req, res, next) {
     next(error);
   }
 }
+
+export async function getOrderInvoice(req, res, next) {
+  try {
+    const { orderReference } = req.params;
+    let guestAccessToken = req.headers['x-guest-access-token'] || req.query.token;
+    if (!guestAccessToken && req.headers.authorization?.startsWith('Bearer ')) {
+      guestAccessToken = req.headers.authorization.slice(7).trim();
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { orderReference },
+      include: { items: true },
+    });
+
+    if (!order) {
+      return res.status(404).send('Order not found');
+    }
+
+    if (order.guestAccessTokenHash && guestAccessToken) {
+      const { verifyGuestAccessToken } = await import('../utils/security.js');
+      const isAuthorized = verifyGuestAccessToken(guestAccessToken, order.guestAccessTokenHash);
+      if (!isAuthorized) {
+        return res.status(403).send('Unauthorized to view this invoice');
+      }
+    }
+
+    const { renderInvoiceHtml } = await import('../services/invoiceService.js');
+    const html = renderInvoiceHtml(order);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(html);
+  } catch (error) {
+    next(error);
+  }
+}
+

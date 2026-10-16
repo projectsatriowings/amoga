@@ -6,6 +6,8 @@ import {
   verifyGuestAccessToken,
 } from '../utils/security.js';
 import { reserveStock, releaseExpiredReservations } from './inventoryService.js';
+import { calculateOrderTaxes, validateGstin, round2 } from './taxService.js';
+import { allocateInvoiceNumber } from './invoiceService.js';
 
 let cachedStoreSettings = null;
 let lastSettingsFetch = 0;
@@ -214,6 +216,17 @@ export async function resolveAndValidateCart(cartItems = []) {
       variantId: selectedVariant?.id || null,
       variantName: selectedVariant?.name || null,
       image: product.image,
+      sku: selectedVariant?.sku || product.sku || null,
+      hsnCode: selectedVariant?.hsnCode || product.hsnCode || null,
+      gstRate: selectedVariant?.gstRate !== undefined && selectedVariant?.gstRate !== null
+        ? Number(selectedVariant.gstRate)
+        : (product.gstRate !== undefined && product.gstRate !== null ? Number(product.gstRate) : null),
+      isTaxInclusive: selectedVariant?.isTaxInclusive !== undefined && selectedVariant?.isTaxInclusive !== null
+        ? Boolean(selectedVariant.isTaxInclusive)
+        : (product.isTaxInclusive !== undefined ? Boolean(product.isTaxInclusive) : true),
+      cessRate: selectedVariant?.cessRate !== undefined && selectedVariant?.cessRate !== null
+        ? Number(selectedVariant.cessRate)
+        : (product.cessRate !== undefined && product.cessRate !== null ? Number(product.cessRate) : 0),
       unitPrice: unitPriceRupees,
       unitPricePaise,
       quantity: qty,
@@ -461,17 +474,28 @@ export async function createOrder({
     appliedCoupon = coupon;
   }
 
-  // 4. Generate Cryptographically Secure Reference & Guest Access Token
+  // 4. Validate B2B Customer GSTIN if provided
+  let validatedCustomerGstin = null;
+  if (customer.gstin && customer.gstin.trim()) {
+    const gstinCheck = validateGstin(customer.gstin.trim());
+    if (!gstinCheck.isValid) {
+      const err = new Error(gstinCheck.message);
+      err.status = 400;
+      err.details = [gstinCheck.message];
+      throw err;
+    }
+    validatedCustomerGstin = gstinCheck.cleanGstin;
+  }
+
+  // 5. Generate Cryptographically Secure Reference & Guest Access Token
   const orderReference = generateOrderReference();
   const guestAccessToken = generateGuestAccessToken();
   const guestAccessTokenHash = hashGuestAccessToken(guestAccessToken);
 
   // Authoritative financial totals in exact integer paise incorporating store shipping & tax settings
   let shippingPaise = 0;
-  let taxPercentage = 5.0;
 
   if (storeSettings) {
-    taxPercentage = Number(storeSettings.taxPercentage || 5);
     const freeThresholdPaise = Math.round(Number(storeSettings.freeShippingThreshold || 2000) * 100);
     const standardRatePaise = Math.round(Number(storeSettings.shippingStandardRate || 0) * 100);
 
@@ -485,17 +509,31 @@ export async function createOrder({
   const subtotalRupees = validation.subtotal;
   const shippingAmountRupees = Number((shippingPaise / 100).toFixed(2));
   const discountAmountRupees = Number((discountPaise / 100).toFixed(2));
-  const totalAmountPaise = Math.max(0, validation.subtotalPaise - discountPaise + shippingPaise);
-  const totalAmountRupees = Number((totalAmountPaise / 100).toFixed(2));
 
-  // Taxes are inclusive in prices (GST on luxury craft goods), recorded for accounting compliance
-  const taxPaise = Math.round((validation.subtotalPaise * taxPercentage) / (100 + taxPercentage));
-  const taxAmountRupees = Number((taxPaise / 100).toFixed(2));
+  // Authoritative GST calculation across all items respecting intra/inter-state and inclusive/exclusive pricing
+  const taxCalculation = calculateOrderTaxes({
+    items: validation.lines,
+    sellerSettings: storeSettings || {},
+    destination: {
+      state: customer.state.trim(),
+      pincode: customer.pincode.trim(),
+    },
+    discountRupees: discountAmountRupees,
+  });
+
+  const taxAmountRupees = taxCalculation.taxAmount;
+
+  // For tax-exclusive products, line totals might have additional tax added
+  const totalPayableLinesRupees = taxCalculation.lineTaxes.reduce(
+    (sum, line) => sum + (line.finalItemTotal || 0),
+    0
+  );
+  const totalAmountRupees = round2(Math.max(0, totalPayableLinesRupees + shippingAmountRupees));
 
   // Resolve customer ID if registered
   const resolvedCustomerId = customerId || existingCust?.id || null;
 
-  // 5. Atomic database transaction
+  // 6. Atomic database transaction
   const createdOrder = await prisma.$transaction(async (tx) => {
     // Atomically increment coupon usage count if applied
     if (appliedCoupon) {
@@ -505,9 +543,15 @@ export async function createOrder({
       });
     }
 
+    // Allocate sequential GST Tax Invoice Number
+    const invoiceNumber = await allocateInvoiceNumber(tx);
+    const invoiceDate = new Date();
+
     const order = await tx.order.create({
       data: {
         orderReference,
+        invoiceNumber,
+        invoiceDate,
         idempotencyKey: idempotencyKey || null,
         guestAccessTokenHash,
         status: 'PENDING_CONFIRMATION',
@@ -517,6 +561,23 @@ export async function createOrder({
         taxAmount: taxAmountRupees,
         discountAmount: discountAmountRupees,
         totalAmount: totalAmountRupees,
+        sellerLegalName: taxCalculation.taxSnapshot.seller.legalName,
+        sellerTradeName: taxCalculation.taxSnapshot.seller.tradeName,
+        sellerGstin: taxCalculation.taxSnapshot.seller.gstin,
+        sellerAddress: taxCalculation.taxSnapshot.seller.address,
+        sellerState: storeSettings?.sellerState || 'Tamil Nadu',
+        sellerStateCode: taxCalculation.sellerStateCode,
+        customerGstin: validatedCustomerGstin,
+        customerBusinessName: customer.businessName ? customer.businessName.trim() : null,
+        placeOfSupply: taxCalculation.placeOfSupply,
+        placeOfSupplyCode: taxCalculation.placeOfSupplyCode,
+        isInterState: taxCalculation.isInterState,
+        taxableAmount: taxCalculation.taxableAmount,
+        cgstAmount: taxCalculation.cgstAmount,
+        sgstAmount: taxCalculation.sgstAmount,
+        igstAmount: taxCalculation.igstAmount,
+        cessAmount: taxCalculation.cessAmount,
+        taxSnapshot: taxCalculation.taxSnapshot,
         customerId: resolvedCustomerId,
         customerName: customer.fullName.trim(),
         customerEmail: customerEmailClean,
@@ -529,17 +590,34 @@ export async function createOrder({
         deliveryInstructions: customer.instructions ? customer.instructions.trim() : null,
         isDemo: Boolean(isDemo),
         items: {
-          create: validation.lines.map((line) => ({
-            productId: line.productId,
-            variantId: line.variantId,
-            collectionId: line.collectionId,
-            productName: line.productName,
-            variantName: line.variantName,
-            unitPrice: line.unitPrice,
-            quantity: line.quantity,
-            lineTotal: line.lineTotal,
-            image: line.image,
-          })),
+          create: taxCalculation.lineTaxes.map((taxLine, idx) => {
+            const origLine = validation.lines[idx];
+            return {
+              productId: origLine.productId,
+              variantId: origLine.variantId,
+              collectionId: origLine.collectionId,
+              productName: origLine.productName,
+              variantName: origLine.variantName,
+              unitPrice: origLine.unitPrice,
+              quantity: origLine.quantity,
+              lineTotal: origLine.lineTotal,
+              image: origLine.image,
+              sku: origLine.sku || null,
+              hsnCode: taxLine.hsnCode || null,
+              gstRate: taxLine.gstRate,
+              isTaxInclusive: taxLine.isTaxInclusive,
+              taxableAmount: taxLine.taxableAmount,
+              cgstRate: taxLine.cgstRate,
+              cgstAmount: taxLine.cgstAmount,
+              sgstRate: taxLine.sgstRate,
+              sgstAmount: taxLine.sgstAmount,
+              igstRate: taxLine.igstRate,
+              igstAmount: taxLine.igstAmount,
+              cessRate: taxLine.cessRate,
+              cessAmount: taxLine.cessAmount,
+              totalTax: taxLine.totalTax,
+            };
+          }),
         },
       },
       include: {
@@ -569,7 +647,7 @@ export async function createOrder({
           orderId: order.id,
           paymentReference: `AMOGA-COD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
           provider: 'cod',
-          amountPaise: totalAmountPaise,
+          amountPaise: Math.round(totalAmountRupees * 100),
           amount: totalAmountRupees,
           currency: 'INR',
           status: 'PENDING',
@@ -607,12 +685,19 @@ export async function createOrder({
     paymentMethod,
     currency: createdOrder.currency,
     appliedCoupon: appliedCoupon ? appliedCoupon.code : null,
+    invoiceNumber: createdOrder.invoiceNumber,
+    invoiceDate: createdOrder.invoiceDate,
     totals: {
       subtotal: Number(createdOrder.subtotal.toFixed(2)),
       shippingAmount: Number(createdOrder.shippingAmount.toFixed(2)),
       taxAmount: Number(createdOrder.taxAmount.toFixed(2)),
       discountAmount: Number(createdOrder.discountAmount.toFixed(2)),
       totalAmount: Number(createdOrder.totalAmount.toFixed(2)),
+      taxableAmount: Number(createdOrder.taxableAmount.toFixed(2)),
+      cgstAmount: Number(createdOrder.cgstAmount.toFixed(2)),
+      sgstAmount: Number(createdOrder.sgstAmount.toFixed(2)),
+      igstAmount: Number(createdOrder.igstAmount.toFixed(2)),
+      cessAmount: Number(createdOrder.cessAmount.toFixed(2)),
     },
     customer: {
       fullName: createdOrder.customerName,
@@ -624,6 +709,8 @@ export async function createOrder({
       state: createdOrder.state,
       pincode: createdOrder.pincode,
       instructions: createdOrder.deliveryInstructions,
+      gstin: createdOrder.customerGstin,
+      businessName: createdOrder.customerBusinessName,
     },
     items: createdOrder.items.map((i) => ({
       id: i.id,
@@ -632,6 +719,14 @@ export async function createOrder({
       collectionId: i.collectionId,
       productName: i.productName,
       variantName: i.variantName,
+      sku: i.sku,
+      hsnCode: i.hsnCode,
+      gstRate: i.gstRate ? Number(i.gstRate) : null,
+      taxableAmount: i.taxableAmount ? Number(i.taxableAmount) : null,
+      cgstAmount: i.cgstAmount ? Number(i.cgstAmount) : null,
+      sgstAmount: i.sgstAmount ? Number(i.sgstAmount) : null,
+      igstAmount: i.igstAmount ? Number(i.igstAmount) : null,
+      totalTax: i.totalTax ? Number(i.totalTax) : null,
       unitPrice: Number(i.unitPrice.toFixed(2)),
       quantity: i.quantity,
       lineTotal: Number(i.lineTotal.toFixed(2)),
@@ -666,15 +761,27 @@ export async function getOrderByReference(orderReference, guestAccessToken) {
   }
 
   return {
+    id: order.id,
     orderReference: order.orderReference,
+    invoiceNumber: order.invoiceNumber,
+    invoiceDate: order.invoiceDate,
     status: order.status,
     paymentStatus: order.paymentStatus,
     currency: order.currency,
+    placeOfSupply: order.placeOfSupply,
+    placeOfSupplyCode: order.placeOfSupplyCode,
+    isInterState: order.isInterState,
     totals: {
       subtotal: Number(order.subtotal.toFixed(2)),
       shippingAmount: Number(order.shippingAmount.toFixed(2)),
       taxAmount: Number(order.taxAmount.toFixed(2)),
+      discountAmount: Number(order.discountAmount.toFixed(2)),
       totalAmount: Number(order.totalAmount.toFixed(2)),
+      taxableAmount: Number(order.taxableAmount.toFixed(2)),
+      cgstAmount: Number(order.cgstAmount.toFixed(2)),
+      sgstAmount: Number(order.sgstAmount.toFixed(2)),
+      igstAmount: Number(order.igstAmount.toFixed(2)),
+      cessAmount: Number(order.cessAmount.toFixed(2)),
     },
     payments: order.payments.map((p) => ({
       paymentReference: p.paymentReference,
@@ -695,6 +802,8 @@ export async function getOrderByReference(orderReference, guestAccessToken) {
       state: order.state,
       pincode: order.pincode,
       instructions: order.deliveryInstructions,
+      gstin: order.customerGstin,
+      businessName: order.customerBusinessName,
     },
     items: order.items.map((i) => ({
       id: i.id,
@@ -703,6 +812,14 @@ export async function getOrderByReference(orderReference, guestAccessToken) {
       collectionId: i.collectionId,
       productName: i.productName,
       variantName: i.variantName,
+      sku: i.sku,
+      hsnCode: i.hsnCode,
+      gstRate: i.gstRate ? Number(i.gstRate) : null,
+      taxableAmount: i.taxableAmount ? Number(i.taxableAmount) : null,
+      cgstAmount: i.cgstAmount ? Number(i.cgstAmount) : null,
+      sgstAmount: i.sgstAmount ? Number(i.sgstAmount) : null,
+      igstAmount: i.igstAmount ? Number(i.igstAmount) : null,
+      totalTax: i.totalTax ? Number(i.totalTax) : null,
       unitPrice: Number(i.unitPrice.toFixed(2)),
       quantity: i.quantity,
       lineTotal: Number(i.lineTotal.toFixed(2)),

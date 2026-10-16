@@ -6,6 +6,10 @@ import {
   User,
   MapPin,
   Clock,
+  FileText,
+  Download,
+  Receipt,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { BackButton } from '../../../components/ui/BackButton';
@@ -146,9 +150,24 @@ export function AdminOrderDetail() {
         <div>
           <span className="text-[10px] font-mono uppercase tracking-wider text-[#7A7167]">Order Reference</span>
           <h1 className="font-mono text-xl font-bold text-[#1A1817]">{order.orderReference}</h1>
+          {order.invoiceNumber && (
+            <p className="text-xs font-mono text-[#722F37] mt-1 font-semibold flex items-center gap-1.5">
+              <Receipt className="w-3.5 h-3.5 text-[#722F37]" />
+              <span>Tax Invoice #{order.invoiceNumber}</span>
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.open(`/api/admin/orders/${order.id}/invoice`, '_blank')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#722F37] text-white rounded text-xs font-semibold hover:bg-[#5E2229] transition-colors shadow-xs cursor-pointer"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Download GST Invoice</span>
+          </button>
+
           <div className="text-right">
             <span className="block text-[10px] font-mono uppercase text-[#7A7167]">Order Status</span>
             <span className="inline-block px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-[#722F37]/10 text-[#722F37] border border-[#722F37]/30">
@@ -349,15 +368,32 @@ export function AdminOrderDetail() {
             <p className="font-mono text-[#7A7167]">{order.customerPhone}</p>
           </div>
 
+          {/* B2B Customer GSTIN info */}
+          {order.customerGstin && (
+            <div className="p-2.5 rounded bg-amber-50/60 border border-amber-200 text-xs space-y-1">
+              <span className="text-[10px] font-mono uppercase font-bold text-amber-900 flex items-center gap-1">
+                <Receipt className="w-3 h-3" />
+                <span>B2B Tax Invoice Client</span>
+              </span>
+              {order.customerBusinessName && (
+                <p className="font-semibold text-[#1A1817]">{order.customerBusinessName}</p>
+              )}
+              <p className="font-mono text-[11px] text-[#4A423B]">GSTIN: {order.customerGstin}</p>
+            </div>
+          )}
+
           <div className="pt-2 border-t border-[#EAE4D9] text-xs text-[#4A423B] space-y-1">
             <div className="flex items-center gap-1.5 font-medium text-[#1A1817] mb-1">
               <MapPin className="w-3.5 h-3.5 text-[#8C6320]" />
-              <span>Delivery Destination</span>
+              <span>Delivery Destination & Place of Supply</span>
             </div>
             <p>{order.addressLine1}</p>
             {order.addressLine2 && <p>{order.addressLine2}</p>}
             <p>
               {order.city}, {order.state} — <span className="font-mono font-medium">{order.pincode}</span>
+            </p>
+            <p className="text-[11px] text-[#7A7167]">
+              Place of Supply: <strong>{order.placeOfSupply || order.state}</strong> ({order.isInterState ? 'Inter-State / IGST' : 'Intra-State / CGST + SGST'})
             </p>
             {order.deliveryInstructions && (
               <p className="text-[11px] text-[#8C6320] italic mt-2">
@@ -369,34 +405,67 @@ export function AdminOrderDetail() {
 
         {/* Financial Breakdown */}
         <div className="bg-[#FBF9F5] p-6 rounded-lg border border-[#E5E0D5] space-y-3">
-          <div className="flex items-center gap-2 border-b border-[#EAE4D9] pb-3">
-            <CreditCard className="w-4 h-4 text-[#8C6320]" />
-            <h2 className="font-serif text-base font-bold text-[#1A1817]">Financial Breakdown</h2>
+          <div className="flex items-center justify-between border-b border-[#EAE4D9] pb-3">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-[#8C6320]" />
+              <h2 className="font-serif text-base font-bold text-[#1A1817]">Financial & Tax Breakdown</h2>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#EFEAE1] text-[#4A423B]">
+              {order.isInterState ? 'IGST Applicable' : 'CGST + SGST Applicable'}
+            </span>
           </div>
 
           <div className="space-y-2 text-xs text-[#5C544C]">
             <div className="flex justify-between">
-              <span>Items Subtotal:</span>
-              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{order.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span>Gross Items Value:</span>
+              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{Number(order.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
+            <div className="flex justify-between">
+              <span>Taxable Value:</span>
+              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{Number(order.taxableAmount || (order.subtotal - order.taxAmount)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            </div>
+
+            {/* GST Split */}
+            {!order.isInterState ? (
+              <>
+                <div className="flex justify-between text-[#7A7167]">
+                  <span>CGST (Central Tax):</span>
+                  <span className="font-mono tabular-nums">₹{Number(order.cgstAmount || (order.taxAmount / 2)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between text-[#7A7167]">
+                  <span>SGST (State Tax):</span>
+                  <span className="font-mono tabular-nums">₹{Number(order.sgstAmount || (order.taxAmount / 2)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between text-[#7A7167]">
+                <span>IGST (Integrated Tax):</span>
+                <span className="font-mono tabular-nums">₹{Number(order.igstAmount || order.taxAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              </div>
+            )}
+
+            {Number(order.cessAmount || 0) > 0 && (
+              <div className="flex justify-between text-[#7A7167]">
+                <span>Cess:</span>
+                <span className="font-mono tabular-nums">₹{Number(order.cessAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              </div>
+            )}
+
             <div className="flex justify-between">
               <span>Shipping Charge:</span>
-              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{order.shippingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{Number(order.shippingAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Taxes (GST Included):</span>
-              <span className="font-sans font-medium text-[#1A1817] tabular-nums">₹{order.taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-            </div>
+
             {order.discountAmount > 0 && (
               <div className="flex justify-between text-emerald-800">
                 <span>Promotional Discount:</span>
-                <span className="font-sans font-medium tabular-nums">-₹{order.discountAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span className="font-sans font-medium tabular-nums">-₹{Number(order.discountAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             )}
             <div className="pt-2 border-t border-[#EAE4D9] flex justify-between text-sm font-bold text-[#1A1817]">
               <span>Authoritative Total:</span>
               <span className="font-sans font-bold text-lg text-[#722F37] tabular-nums">
-                ₹{order.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                ₹{Number(order.totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
           </div>
@@ -405,44 +474,57 @@ export function AdminOrderDetail() {
 
       {/* Frozen Order Line Items Table */}
       <div className="bg-[#FBF9F5] rounded-lg border border-[#E5E0D5] overflow-hidden">
-        <div className="p-4 border-b border-[#E5E0D5] bg-[#F5F2EB]">
+        <div className="p-4 border-b border-[#E5E0D5] bg-[#F5F2EB] flex items-center justify-between">
           <h2 className="font-serif text-sm font-bold text-[#1A1817]">
-            Historical Frozen Line Items ({order.items.length})
+            Historical Frozen Line Items & Tax Snapshot ({order.items.length})
           </h2>
+          <span className="text-[10px] font-mono text-[#7A7167]">Persisted at Checkout</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-[#332D28]">
             <thead className="bg-[#FAF7F0] text-[10px] font-mono uppercase text-[#7A7167] border-b border-[#E5E0D5]">
               <tr>
-                <th className="px-5 py-3">Product Name</th>
-                <th className="px-5 py-3">Collection</th>
-                <th className="px-5 py-3">Variant</th>
-                <th className="px-5 py-3">Unit Price</th>
-                <th className="px-5 py-3">Quantity</th>
-                <th className="px-5 py-3 text-right">Line Total</th>
+                <th className="px-4 py-3">Product Name</th>
+                <th className="px-4 py-3">SKU</th>
+                <th className="px-4 py-3">HSN</th>
+                <th className="px-4 py-3">Variant</th>
+                <th className="px-4 py-3 text-right">Unit Price</th>
+                <th className="px-4 py-3 text-right">GST %</th>
+                <th className="px-4 py-3 text-right">Tax</th>
+                <th className="px-4 py-3 text-center">Qty</th>
+                <th className="px-4 py-3 text-right">Line Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EAE4D9]">
               {order.items.map((item) => (
                 <tr key={item.id} className="hover:bg-[#F5F2EB]/50">
-                  <td className="px-5 py-3 font-medium text-[#1A1817]">
+                  <td className="px-4 py-3 font-medium text-[#1A1817]">
                     {item.productName}
                   </td>
-                  <td className="px-5 py-3 font-mono uppercase text-[10px] text-[#7A7167]">
-                    {item.collectionId}
+                  <td className="px-4 py-3 font-mono text-[10px] text-[#722F37]">
+                    {item.sku || '—'}
                   </td>
-                  <td className="px-5 py-3 font-sans text-[#5C544C]">
+                  <td className="px-4 py-3 font-mono text-[10px] text-[#7A7167]">
+                    {item.hsnCode || '—'}
+                  </td>
+                  <td className="px-4 py-3 font-sans text-[#5C544C]">
                     {item.variantName || 'Standard'}
                   </td>
-                  <td className="px-5 py-3 font-sans tabular-nums">
-                    ₹{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  <td className="px-4 py-3 font-sans tabular-nums text-right">
+                    ₹{Number(item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="px-5 py-3 font-sans font-semibold tabular-nums">
+                  <td className="px-4 py-3 font-mono text-right text-[10px]">
+                    {item.gstRate ? `${Number(item.gstRate)}%` : '5%'}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-right text-[10px] text-[#7A7167]">
+                    ₹{Number(item.totalTax || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="px-4 py-3 font-sans font-semibold tabular-nums text-center">
                     {item.quantity}
                   </td>
-                  <td className="px-5 py-3 font-sans font-semibold tabular-nums text-right text-[#1A1817]">
-                    ₹{item.lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  <td className="px-4 py-3 font-sans font-semibold tabular-nums text-right text-[#1A1817]">
+                    ₹{Number(item.lineTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
               ))}

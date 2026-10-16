@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, AlertCircle, Info } from 'lucide-react';
+import { ArrowRight, AlertCircle, Info, Receipt } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { useCustomerStore } from '../../account/store/useCustomerStore';
 
@@ -23,6 +23,8 @@ export const CheckoutForm = () => {
     state: customerDetails?.state || '',
     pincode: customerDetails?.pincode || '',
     instructions: customerDetails?.instructions || customerDetails?.deliveryInstructions || '',
+    businessName: customerDetails?.businessName || '',
+    gstin: customerDetails?.gstin || '',
   }));
 
   // Track fields modified by user to prevent asynchronous profile updates from overwriting user changes
@@ -43,6 +45,8 @@ export const CheckoutForm = () => {
         'city',
         'state',
         'pincode',
+        'businessName',
+        'gstin',
       ];
       fields.forEach((field) => {
         if (!dirtyFieldsRef.current.has(field) && customerDetails[field] && !prev[field]) {
@@ -165,6 +169,15 @@ export const CheckoutForm = () => {
         return null;
       }
 
+      case 'gstin': {
+        if (!value || !value.trim()) return null;
+        const cleanGstin = value.trim().toUpperCase();
+        if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(cleanGstin)) {
+          return 'Please enter a valid 15-character GSTIN (e.g. 29AAAAA0000A1Z5) or leave blank';
+        }
+        return null;
+      }
+
       default:
         return null;
     }
@@ -202,6 +215,7 @@ export const CheckoutForm = () => {
       'city',
       'state',
       'pincode',
+      'gstin',
     ];
 
     fieldsToValidate.forEach((field) => {
@@ -689,6 +703,95 @@ export const CheckoutForm = () => {
               }}
               placeholder="Gate code, landmark, or delivery time preferences..."
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Optional Business GSTIN Details for B2B Tax Invoicing */}
+      <div
+        className="p-5 rounded-2xl border transition-all space-y-3"
+        style={{
+          backgroundColor: 'var(--collection-card-bg, #FAF8F5)',
+          borderColor: 'var(--collection-border, #E5E0D5)',
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Receipt className="w-4 h-4 text-[#722F37]" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1A1817]">
+              Business Purchase / Claim GST Credit (Optional)
+            </span>
+          </div>
+          <span className="text-[10px] text-[#7A7167] bg-[#EFEAE1] px-2 py-0.5 rounded-full font-mono">
+            B2B Tax Invoice
+          </span>
+        </div>
+        <p className="text-xs text-[#7A7167]">
+          Provide your company GSTIN if you wish to receive a statutory B2B Tax Invoice to claim Input Tax Credit (ITC).
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div>
+            <label
+              htmlFor="businessName"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              Registered Business Name
+            </label>
+            <input
+              id="businessName"
+              name="businessName"
+              type="text"
+              value={formData.businessName || ''}
+              onChange={handleChange}
+              placeholder="e.g. Acme Studio Pvt Ltd"
+              className="checkout-input w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none"
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: 'var(--collection-input-border, var(--collection-border))',
+              }}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="gstin"
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--collection-text)' }}
+            >
+              Customer GSTIN
+            </label>
+            <input
+              id="gstin"
+              name="gstin"
+              type="text"
+              maxLength={15}
+              value={formData.gstin || ''}
+              onChange={(e) => {
+                const upper = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+                handleChange({ target: { name: 'gstin', value: upper } });
+              }}
+              onBlur={handleBlur}
+              placeholder="e.g. 29AAAAA0000A1Z5"
+              className={`checkout-input w-full px-4 py-3 rounded-xl border text-sm font-mono uppercase transition-all outline-none ${
+                errors.gstin
+                  ? 'border-[#DC2626] bg-red-500/10 focus:ring-2 focus:ring-[#DC2626]/30'
+                  : 'focus:ring-2 focus:ring-[var(--collection-focus-ring)]'
+              }`}
+              style={{
+                backgroundColor: 'var(--collection-input-bg)',
+                color: 'var(--collection-input-text, #292820)',
+                borderColor: errors.gstin ? '#DC2626' : 'var(--collection-input-border, var(--collection-border))',
+              }}
+            />
+            {errors.gstin && (
+              <p id="gstin-error" className="mt-1 text-xs text-[#DC2626] flex items-center gap-1 font-medium">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errors.gstin}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>

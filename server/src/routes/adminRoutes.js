@@ -13,6 +13,8 @@ import {
   updateProduct,
   archiveProduct,
   restoreProduct,
+  getNextSkuPreview,
+  validateSkuEndpoint,
 } from '../controllers/adminProductsController.js';
 import {
   downloadTemplate,
@@ -40,6 +42,7 @@ import {
   getOrderById,
   updateOrderStatus,
   updateOrderTracking,
+  getOrderInvoice,
 } from '../controllers/adminOrdersController.js';
 import {
   listPayments,
@@ -96,6 +99,8 @@ router.get('/dashboard/stats', requireAdminAuth(), getDashboardStats);
 
 // 2. Products & Variants (Catalogue & Super Admin)
 router.get('/products', requireAdminAuth(), listProducts);
+router.get('/products/sku/generate', requireAdminAuth(['CATALOGUE_MANAGER']), getNextSkuPreview);
+router.post('/products/sku/validate', requireAdminAuth(['CATALOGUE_MANAGER']), validateSkuEndpoint);
 router.get('/products/import/template', requireAdminAuth(['CATALOGUE_MANAGER']), downloadTemplate);
 router.post('/products/import/validate', requireAdminAuth(['CATALOGUE_MANAGER']), validateWorkbook);
 router.post('/products/import/execute', requireAdminAuth(['CATALOGUE_MANAGER']), executeImport);
@@ -124,6 +129,7 @@ router.get('/inventory/alerts', requireAdminAuth(), getInventoryAlerts);
 // 5. Orders & Fulfilment (Order Manager & Super Admin)
 router.get('/orders', requireAdminAuth(), listOrders);
 router.get('/orders/:id', requireAdminAuth(), getOrderById);
+router.get('/orders/:id/invoice', requireAdminAuth(['ORDER_MANAGER']), getOrderInvoice);
 router.patch('/orders/:id/status', requireAdminAuth(['ORDER_MANAGER']), updateOrderStatus);
 router.patch('/orders/:id/tracking', requireAdminAuth(['ORDER_MANAGER']), updateOrderTracking);
 

@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.js';
 import { hashPassword, logAdminAction } from '../utils/adminAuth.js';
+import { validateGstin, validateHsnCode, validateGstRate, resolveGstStateCode } from '../services/taxService.js';
 
 // Sensitive keys that must be redacted from audit log payloads
 const SENSITIVE_KEYS = new Set([
@@ -109,6 +110,7 @@ export async function getStoreSettings(req, res) {
             shippingStandardRate: Number(settings.shippingStandardRate),
             freeShippingThreshold: Number(settings.freeShippingThreshold),
             taxPercentage: Number(settings.taxPercentage),
+            defaultGstRate: Number(settings.defaultGstRate || 5.0),
           }
         : {
             id: 'default',
@@ -118,6 +120,22 @@ export async function getStoreSettings(req, res) {
             shippingStandardRate: 0,
             freeShippingThreshold: 2000,
             taxPercentage: 5,
+            sellerLegalName: 'Amoga Luxury Private Limited',
+            sellerTradeName: 'Amoga',
+            sellerAddressLine1: '108, Heritage Walk, Anna Salai',
+            sellerAddressLine2: 'T. Nagar',
+            sellerCity: 'Chennai',
+            sellerState: 'Tamil Nadu',
+            sellerStateCode: '33',
+            sellerPincode: '600017',
+            sellerGstin: '33AAACA1234A1Z5',
+            sellerPan: 'AAACA1234A',
+            invoicePrefix: 'AMOGA/2026-27/',
+            invoiceSequence: 1001,
+            isTaxEnabled: true,
+            defaultGstRate: 5.0,
+            defaultHsnCode: '5007',
+            isTaxInclusiveDefault: true,
             enableOrderNotifications: true,
             enableInventoryAlerts: true,
           },
@@ -163,6 +181,22 @@ export async function updateStoreSettings(req, res) {
       taxPercentage,
       enableOrderNotifications,
       enableInventoryAlerts,
+      sellerLegalName,
+      sellerTradeName,
+      sellerAddressLine1,
+      sellerAddressLine2,
+      sellerCity,
+      sellerState,
+      sellerStateCode,
+      sellerPincode,
+      sellerGstin,
+      sellerPan,
+      invoicePrefix,
+      invoiceSequence,
+      isTaxEnabled,
+      defaultGstRate,
+      defaultHsnCode,
+      isTaxInclusiveDefault,
     } = req.body;
 
     // Strict Server-side Validation
@@ -213,6 +247,40 @@ export async function updateStoreSettings(req, res) {
       }
     }
 
+    let validatedGstin = undefined;
+    let computedStateCode = sellerStateCode;
+    if (sellerGstin !== undefined && sellerGstin.trim()) {
+      const gstinResult = validateGstin(sellerGstin.trim());
+      if (!gstinResult.isValid) {
+        return res.status(400).json({
+          error: 'INVALID_GSTIN',
+          message: gstinResult.message,
+        });
+      }
+      validatedGstin = gstinResult.cleanGstin;
+      computedStateCode = gstinResult.stateCode;
+    }
+
+    if (defaultGstRate !== undefined && defaultGstRate !== null) {
+      const gstCheck = validateGstRate(defaultGstRate);
+      if (!gstCheck.isValid) {
+        return res.status(400).json({
+          error: 'INVALID_GST_RATE',
+          message: gstCheck.message,
+        });
+      }
+    }
+
+    if (defaultHsnCode !== undefined && defaultHsnCode.trim()) {
+      const hsnCheck = validateHsnCode(defaultHsnCode.trim());
+      if (!hsnCheck.isValid) {
+        return res.status(400).json({
+          error: 'INVALID_HSN_CODE',
+          message: hsnCheck.message,
+        });
+      }
+    }
+
     // Retrieve previous settings to compute readable field-by-field diff
     const previous = await prisma.storeSetting.findUnique({
       where: { id: 'default' },
@@ -242,6 +310,22 @@ export async function updateStoreSettings(req, res) {
         taxPercentage: taxPercentage !== undefined ? Number(taxPercentage) : undefined,
         enableOrderNotifications: enableOrderNotifications !== undefined ? Boolean(enableOrderNotifications) : undefined,
         enableInventoryAlerts: enableInventoryAlerts !== undefined ? Boolean(enableInventoryAlerts) : undefined,
+        sellerLegalName: sellerLegalName !== undefined ? sellerLegalName.trim() : undefined,
+        sellerTradeName: sellerTradeName !== undefined ? sellerTradeName.trim() : undefined,
+        sellerAddressLine1: sellerAddressLine1 !== undefined ? sellerAddressLine1.trim() : undefined,
+        sellerAddressLine2: sellerAddressLine2 !== undefined ? sellerAddressLine2.trim() : undefined,
+        sellerCity: sellerCity !== undefined ? sellerCity.trim() : undefined,
+        sellerState: sellerState !== undefined ? sellerState.trim() : undefined,
+        sellerStateCode: computedStateCode !== undefined ? computedStateCode : undefined,
+        sellerPincode: sellerPincode !== undefined ? sellerPincode.trim() : undefined,
+        sellerGstin: validatedGstin !== undefined ? validatedGstin : undefined,
+        sellerPan: sellerPan !== undefined ? sellerPan.trim().toUpperCase() : undefined,
+        invoicePrefix: invoicePrefix !== undefined ? invoicePrefix.trim() : undefined,
+        invoiceSequence: invoiceSequence !== undefined ? parseInt(invoiceSequence, 10) : undefined,
+        isTaxEnabled: isTaxEnabled !== undefined ? Boolean(isTaxEnabled) : undefined,
+        defaultGstRate: defaultGstRate !== undefined && defaultGstRate !== null ? Number(defaultGstRate) : undefined,
+        defaultHsnCode: defaultHsnCode !== undefined ? defaultHsnCode.trim() : undefined,
+        isTaxInclusiveDefault: isTaxInclusiveDefault !== undefined ? Boolean(isTaxInclusiveDefault) : undefined,
       },
       create: {
         id: 'default',
@@ -253,18 +337,31 @@ export async function updateStoreSettings(req, res) {
         taxPercentage: Number(taxPercentage || 5),
         enableOrderNotifications: Boolean(enableOrderNotifications ?? true),
         enableInventoryAlerts: Boolean(enableInventoryAlerts ?? true),
+        sellerLegalName: sellerLegalName ? sellerLegalName.trim() : 'Amoga Luxury Private Limited',
+        sellerTradeName: sellerTradeName ? sellerTradeName.trim() : 'Amoga',
+        sellerAddressLine1: sellerAddressLine1 ? sellerAddressLine1.trim() : '108, Heritage Walk, Anna Salai',
+        sellerAddressLine2: sellerAddressLine2 ? sellerAddressLine2.trim() : 'T. Nagar',
+        sellerCity: sellerCity ? sellerCity.trim() : 'Chennai',
+        sellerState: sellerState ? sellerState.trim() : 'Tamil Nadu',
+        sellerStateCode: computedStateCode || '33',
+        sellerPincode: sellerPincode ? sellerPincode.trim() : '600017',
+        sellerGstin: validatedGstin || '33AAACA1234A1Z5',
+        sellerPan: sellerPan ? sellerPan.trim().toUpperCase() : 'AAACA1234A',
+        invoicePrefix: invoicePrefix ? invoicePrefix.trim() : 'AMOGA/2026-27/',
+        invoiceSequence: parseInt(invoiceSequence, 10) || 1001,
+        isTaxEnabled: isTaxEnabled !== undefined ? Boolean(isTaxEnabled) : true,
+        defaultGstRate: Number(defaultGstRate || 5.0),
+        defaultHsnCode: defaultHsnCode ? defaultHsnCode.trim() : '5007',
+        isTaxInclusiveDefault: isTaxInclusiveDefault !== undefined ? Boolean(isTaxInclusiveDefault) : true,
       },
     });
 
     const newValues = {
-      storeName: updated.storeName,
-      contactEmail: updated.contactEmail,
-      contactPhone: updated.contactPhone,
+      ...updated,
       shippingStandardRate: Number(updated.shippingStandardRate),
       freeShippingThreshold: Number(updated.freeShippingThreshold),
       taxPercentage: Number(updated.taxPercentage),
-      enableOrderNotifications: updated.enableOrderNotifications,
-      enableInventoryAlerts: updated.enableInventoryAlerts,
+      defaultGstRate: Number(updated.defaultGstRate || 5.0),
     };
 
     // Calculate changes diff

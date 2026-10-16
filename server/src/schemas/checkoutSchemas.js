@@ -26,6 +26,8 @@ export const customerDetailsSchema = z.object({
     .trim()
     .regex(/^[1-9][0-9]{5}$/, 'PIN code must be a valid 6-digit Indian postal code'),
   instructions: z.string().trim().max(500).optional().nullable(),
+  gstin: z.string().trim().max(15).optional().nullable(),
+  businessName: z.string().trim().max(150).optional().nullable(),
 });
 
 export const createOrderBodySchema = z.object({

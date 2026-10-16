@@ -88,13 +88,20 @@ describe('AMOGA — Bulk Product Excel Import System Suite', () => {
     await workbook.xlsx.load(buffer);
 
     const sheets = workbook.worksheets.map((s) => s.name);
-    assert.deepEqual(sheets, ['Read Me', 'Products', 'Variants', 'Inventory', 'Collections']);
+    assert.deepEqual(sheets, [
+      'Start Here',
+      'Products',
+      'Variants',
+      'Inventory',
+      'Field Guide',
+      'Collections & Categories',
+    ]);
 
-    const readMe = workbook.getWorksheet('Read Me');
-    assert.equal(readMe.getCell('B2').value, TEMPLATE_VERSION);
+    const startHere = workbook.getWorksheet('Start Here');
+    assert.equal(startHere.getCell('B2').value, TEMPLATE_VERSION);
 
     const products = workbook.getWorksheet('Products');
-    assert.ok(products.rowCount >= 5, 'Should have header + 4 sample products');
+    assert.ok(products.rowCount >= 6, 'Should have banner + header + 4 sample products');
   });
 
   it('2. GET /api/admin/products/import/template returns downloadable spreadsheet', async () => {

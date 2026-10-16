@@ -9,6 +9,7 @@ import { TEA_PRODUCTS } from './data/products';
 
 import { useProducts } from '../../hooks/useProducts';
 import { useCollection } from '../../hooks/useCollection';
+import { ExploreCollectionsSection } from '../collections';
 
 export function TeaStorefront() {
   const { collection } = useCollection('tea');
@@ -181,6 +182,9 @@ export function TeaStorefront() {
           </div>
         </Container>
       </section>
+
+      {/* 3. Explore Collections Showcase */}
+      <ExploreCollectionsSection currentCollectionId="tea" />
     </div>
   );
 }

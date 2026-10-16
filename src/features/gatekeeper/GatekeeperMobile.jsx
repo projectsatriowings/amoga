@@ -226,7 +226,7 @@ export function GatekeeperMobile({
               <div className="pt-3 flex flex-col items-start w-full">
                 <LiquidGlassCta
                   collectionId={current.id}
-                  label={current.ctaText || 'Shop Collection'}
+                  label={current.ctaText || 'EXPLORE COLLECTION'}
                   disabled={isExiting}
                   onClick={() => onSelect(current)}
                   className="w-full sm:w-auto justify-center"

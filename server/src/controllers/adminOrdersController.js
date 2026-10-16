@@ -364,3 +364,32 @@ export async function updateOrderTracking(req, res) {
     });
   }
 }
+
+export async function getOrderInvoice(req, res) {
+  try {
+    const { id } = req.params;
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [{ id }, { orderReference: id }],
+      },
+      include: {
+        items: true,
+        payments: true,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).send('Order not found');
+    }
+
+    const { renderInvoiceHtml } = await import('../services/invoiceService.js');
+    const html = renderInvoiceHtml(order);
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(html);
+  } catch (err) {
+    console.error('[ADMIN GET INVOICE ERROR]:', err);
+    return res.status(500).send('Failed to generate invoice');
+  }
+}
+

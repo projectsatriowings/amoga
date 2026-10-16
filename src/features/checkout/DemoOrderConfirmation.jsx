@@ -151,7 +151,7 @@ export const DemoOrderConfirmation = () => {
                 </span>
               </div>
 
-              {/* Action Buttons: Track Order & My Account */}
+              {/* Action Buttons: Track Order, Invoice & My Account */}
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
                 <Link
                   to={`/track/${encodeURIComponent(orderId)}`}
@@ -161,6 +161,15 @@ export const DemoOrderConfirmation = () => {
                   <span>Track Your Order</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
+                <a
+                  href={`/api/orders/${encodeURIComponent(orderId)}/invoice${guestToken ? `?token=${encodeURIComponent(guestToken)}` : ''}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#722F37] border border-[#DDD5C7] text-xs font-semibold tracking-wider transition-all shadow-sm cursor-pointer"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#722F37]" />
+                  <span>Download Tax Invoice</span>
+                </a>
                 <Link
                   to="/account?tab=orders"
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#2C0E1A] border border-[#DDD5C7] text-xs font-semibold tracking-wider transition-all shadow-sm"

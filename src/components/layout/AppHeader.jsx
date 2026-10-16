@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, Heart, Menu, X, User, Truck, LogOut } from 'lucide-react';
 import amogaLogo from '../../assets/images/amoga-logo.png';
 import { COLLECTIONS } from '../../data/collections';
-import { IconButton } from '../ui/IconButton';
 import { Container } from '../ui/Container';
 
 import { useStore } from '../../store/useStore';

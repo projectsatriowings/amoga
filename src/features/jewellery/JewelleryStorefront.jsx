@@ -4,6 +4,7 @@ import { JewelleryFeaturedGrid } from './components/JewelleryFeaturedGrid';
 import { JewelleryCategoryGrid } from './components/JewelleryCategoryGrid';
 import { JewelleryEditorialFeature } from './components/JewelleryEditorialFeature';
 import { JewelleryPromoBanner } from './components/JewelleryPromoBanner';
+import { ExploreCollectionsSection } from '../collections';
 
 
 export function JewelleryStorefront() {
@@ -23,6 +24,9 @@ export function JewelleryStorefront() {
 
       {/* 5. Promotional Consultation Banner */}
       <JewelleryPromoBanner />
+
+      {/* 6. Explore Collections Showcase */}
+      <ExploreCollectionsSection currentCollectionId="jewellery" />
     </div>
   );
 }

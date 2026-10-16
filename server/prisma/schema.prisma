@@ -62,6 +62,12 @@ model Product {
   sourceCatalogue  String?
   verified         Boolean          @default(false)
   isActive         Boolean          @default(true)
+  sku              String?          @unique
+  hsnCode          String?
+  gstRate          Decimal?         @db.Decimal(5, 2)
+  isTaxInclusive   Boolean          @default(true)
+  cessRate         Decimal?         @default(0.00) @db.Decimal(5, 2)
+  taxClassification String?         @default("GOODS")
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
@@ -87,8 +93,12 @@ model ProductVariant {
   sourceId      String?        // e.g. 'v-wine', 'ring-16'
   productId     String
   name          String         // e.g. 'Royal Wine', 'US 7'
-  sku           String?
+  sku           String?        @unique
   price         Decimal?       @db.Decimal(10, 2)
+  hsnCode       String?
+  gstRate       Decimal?       @db.Decimal(5, 2)
+  isTaxInclusive Boolean?
+  cessRate      Decimal?       @default(0.00) @db.Decimal(5, 2)
   inStock          Boolean          @default(true)
   stockQuantity    Int              @default(25)
   reservedQuantity Int              @default(0)
@@ -153,6 +163,27 @@ model Order {
   taxAmount             Decimal       @default(0.00) @db.Decimal(10, 2)
   discountAmount        Decimal       @default(0.00) @db.Decimal(10, 2)
   totalAmount           Decimal       @db.Decimal(10, 2)
+
+  // GST and Tax Compliance Snapshot
+  invoiceNumber         String?       @unique
+  invoiceDate           DateTime?
+  sellerLegalName       String?
+  sellerTradeName       String?
+  sellerGstin           String?
+  sellerAddress         String?
+  sellerState           String?
+  sellerStateCode       String?
+  customerGstin         String?
+  customerBusinessName  String?
+  placeOfSupply         String?
+  placeOfSupplyCode     String?
+  isInterState          Boolean       @default(false)
+  taxableAmount         Decimal       @default(0.00) @db.Decimal(10, 2)
+  cgstAmount            Decimal       @default(0.00) @db.Decimal(10, 2)
+  sgstAmount            Decimal       @default(0.00) @db.Decimal(10, 2)
+  igstAmount            Decimal       @default(0.00) @db.Decimal(10, 2)
+  cessAmount            Decimal       @default(0.00) @db.Decimal(10, 2)
+  taxSnapshot           Json?
 
   // Customer Contact & Shipping Destination Snapshot
   customerName          String
@@ -325,6 +356,22 @@ model OrderItem {
   lineTotal     Decimal         @db.Decimal(10, 2)
   image         String?         @db.Text
 
+  // GST & SKU snapshot
+  sku           String?
+  hsnCode       String?
+  gstRate       Decimal?        @db.Decimal(5, 2)
+  isTaxInclusive Boolean        @default(true)
+  taxableAmount Decimal?        @db.Decimal(10, 2)
+  cgstRate      Decimal?        @db.Decimal(5, 2)
+  cgstAmount    Decimal?        @db.Decimal(10, 2)
+  sgstRate      Decimal?        @db.Decimal(5, 2)
+  sgstAmount    Decimal?        @db.Decimal(10, 2)
+  igstRate      Decimal?        @db.Decimal(5, 2)
+  igstAmount    Decimal?        @db.Decimal(10, 2)
+  cessRate      Decimal?        @db.Decimal(5, 2)
+  cessAmount    Decimal?        @db.Decimal(10, 2)
+  totalTax      Decimal?        @db.Decimal(10, 2)
+
   order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product       Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
   variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
@@ -476,6 +523,25 @@ model StoreSetting {
   taxPercentage            Decimal        @default(5.00) @db.Decimal(5, 2)
   enableOrderNotifications Boolean        @default(true)
   enableInventoryAlerts    Boolean        @default(true)
+
+  // Seller Registered Tax Details & Compliance
+  sellerLegalName          String?        @default("Amoga Luxury Private Limited")
+  sellerTradeName          String?        @default("Amoga")
+  sellerAddressLine1       String?        @default("108, Heritage Walk, Anna Salai")
+  sellerAddressLine2       String?        @default("T. Nagar")
+  sellerCity               String?        @default("Chennai")
+  sellerState              String?        @default("Tamil Nadu")
+  sellerStateCode          String?        @default("33")
+  sellerPincode            String?        @default("600017")
+  sellerGstin              String?        @default("33AAACA1234A1Z5")
+  sellerPan                String?        @default("AAACA1234A")
+  invoicePrefix            String?        @default("AMOGA/2026-27/")
+  invoiceSequence          Int            @default(1001)
+  isTaxEnabled             Boolean        @default(true)
+  defaultGstRate           Decimal        @default(5.00) @db.Decimal(5, 2)
+  defaultHsnCode           String?        @default("5007")
+  isTaxInclusiveDefault    Boolean        @default(true)
+
   updatedAt                DateTime       @default(now()) @updatedAt
 
   @@map("store_settings")
@@ -601,5 +667,13 @@ model Review {
   @@index([productId, status])
   @@index([customerId])
   @@map("reviews")
+}
+
+model SkuSequence {
+  prefix     String   @id
+  lastNumber Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@map("sku_sequences")
 }
 

@@ -29,7 +29,15 @@ export function GatekeeperHub() {
       const cached = sessionStorage.getItem('amoga_gatekeeper_collections');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((c) => {
+            const staticMatch = COLLECTIONS.find((s) => s.id === c.id);
+            return {
+              ...c,
+              ctaText: staticMatch?.ctaText || 'EXPLORE COLLECTION',
+            };
+          });
+        }
       }
     } catch {
       // fallback
@@ -88,7 +96,7 @@ export function GatekeeperHub() {
               number: String(idx + 1).padStart(2, '0'),
               features: staticMatch?.features || ['Authentic Sourcing', 'Verified Catalogue'],
               badge: staticMatch?.badge || 'Collection',
-              ctaText: staticMatch?.ctaText || 'Shop Collection',
+              ctaText: staticMatch?.ctaText || 'EXPLORE COLLECTION',
             };
           });
 

@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Package,
   ChevronRight,
+  FileText,
 } from 'lucide-react';
 
 /**
@@ -320,14 +321,26 @@ export function OrderTrackingPage() {
                       )}
                     </div>
 
-                    <span className="text-[11px] text-[#7A7167] font-sans">
-                      Placed on{' '}
-                      {new Date(trackingData.createdAt).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="text-[11px] text-[#7A7167] font-sans">
+                        Placed on{' '}
+                        {new Date(trackingData.createdAt).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+
+                      <a
+                        href={`/api/orders/${trackingData.orderReference}/invoice`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-[#722F37] text-white hover:bg-[#5E2229] transition-colors shadow-2xs"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Download Tax Invoice</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
 

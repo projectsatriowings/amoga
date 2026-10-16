@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, ShieldCheck, CheckCircle2, AlertCircle, RefreshCw, Layers } from 'lucide-react';
+import { Save, ShieldCheck, CheckCircle2, AlertCircle, RefreshCw, Layers, Building, Receipt, FileText } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { SystemHealthCard } from '../components/SystemHealthCard';
 import { BackButton } from '../../../components/ui/BackButton';
@@ -288,6 +288,231 @@ export function AdminSettings() {
               />
               <span className="font-medium text-[#1A1817]">Enable Low Inventory Dispatch Alerts</span>
             </label>
+          </div>
+        </div>
+
+        {/* Statutory Seller Tax & GST Compliance (Rule 46 Invoice Generator) */}
+        <div className="bg-[#FBF9F5] p-6 rounded-2xl border border-[#E5E0D5] space-y-5">
+          <div className="border-b border-[#EAE4D9] pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="font-serif text-base font-bold text-[#1A1817] flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-[#722F37]" />
+                <span>Seller Tax & GST Compliance Settings (Rule 46 Invoices)</span>
+              </h2>
+              <p className="text-[11px] text-[#7A7167] mt-0.5">
+                Statutory business registration, GSTIN, place of supply, and sequential tax invoice numbering.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#EFEAE1] text-[#4A423B] border border-[#D5CEC2]">
+              CGST / SGST / IGST Engine
+            </span>
+          </div>
+
+          {/* Legal Business & GSTIN Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div className="lg:col-span-2">
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Seller Legal Business Name *
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.sellerLegalName || ''}
+                onChange={(e) => setSettings({ ...settings, sellerLegalName: e.target.value })}
+                placeholder="e.g. Amoga Luxury Crafts Private Limited"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Appears as statutory supplier on Tax Invoices.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Trade Name
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.sellerTradeName || ''}
+                onChange={(e) => setSettings({ ...settings, sellerTradeName: e.target.value })}
+                placeholder="e.g. Amoga"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Seller GSTIN *
+              </label>
+              <input
+                type="text"
+                maxLength={15}
+                disabled={!isSuperAdmin}
+                value={settings?.sellerGstin || ''}
+                onChange={(e) => {
+                  const val = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+                  const pan = val.length >= 12 ? val.substring(2, 12) : settings?.sellerPan;
+                  const stateCode = val.length >= 2 ? val.substring(0, 2) : settings?.sellerStateCode;
+                  setSettings({ ...settings, sellerGstin: val, sellerPan: pan, sellerStateCode: stateCode });
+                }}
+                placeholder="33AAACA1234A1Z5"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">
+                {/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(settings?.sellerGstin || '') ? (
+                  <span className="text-emerald-700 font-semibold">✓ Valid 15-character GSTIN format</span>
+                ) : settings?.sellerGstin ? (
+                  <span className="text-amber-700">Format: 2 digits + 10-char PAN + 1 + Z + 1</span>
+                ) : (
+                  '15-digit GST Identification Number'
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Registration Details: State, PAN, Pincode */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Seller PAN
+              </label>
+              <input
+                type="text"
+                maxLength={10}
+                disabled={!isSuperAdmin}
+                value={settings?.sellerPan || ''}
+                onChange={(e) => setSettings({ ...settings, sellerPan: e.target.value.toUpperCase() })}
+                placeholder="AAACA1234A"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Seller State *
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.sellerState || ''}
+                onChange={(e) => setSettings({ ...settings, sellerState: e.target.value })}
+                placeholder="e.g. Tamil Nadu"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                State Code (GST) *
+              </label>
+              <input
+                type="text"
+                maxLength={2}
+                disabled={!isSuperAdmin}
+                value={settings?.sellerStateCode || ''}
+                onChange={(e) => setSettings({ ...settings, sellerStateCode: e.target.value })}
+                placeholder="33"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Used to determine CGST/SGST vs IGST.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Pincode *
+              </label>
+              <input
+                type="text"
+                maxLength={6}
+                disabled={!isSuperAdmin}
+                value={settings?.sellerPincode || ''}
+                onChange={(e) => setSettings({ ...settings, sellerPincode: e.target.value })}
+                placeholder="600017"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+            </div>
+          </div>
+
+          {/* Registered Business Address */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="sm:col-span-2">
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Registered Address Line 1 *
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.sellerAddressLine1 || ''}
+                onChange={(e) => setSettings({ ...settings, sellerAddressLine1: e.target.value })}
+                placeholder="108, Heritage Walk, Anna Salai"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Address Line 2
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.sellerAddressLine2 || ''}
+                onChange={(e) => setSettings({ ...settings, sellerAddressLine2: e.target.value })}
+                placeholder="T. Nagar"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+            </div>
+          </div>
+
+          {/* Invoice Numbering & Sequence */}
+          <div className="p-4 bg-white rounded-xl border border-[#E5E0D5] space-y-3">
+            <div className="border-b border-[#F0ECE1] pb-2">
+              <h3 className="text-xs font-bold text-[#1A1817] uppercase flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-[#722F37]" />
+                <span>GST Tax Invoice Sequence (Rule 46 Mandatory)</span>
+              </h3>
+              <p className="text-[10px] text-[#7A7167]">
+                Consecutive serial numbers containing only alphabets, numerals, or special characters hyphen and slash.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                  Invoice Number Prefix *
+                </label>
+                <input
+                  type="text"
+                  disabled={!isSuperAdmin}
+                  value={settings?.invoicePrefix || 'AMOGA/2026-27/'}
+                  onChange={(e) => setSettings({ ...settings, invoicePrefix: e.target.value })}
+                  placeholder="AMOGA/2026-27/"
+                  className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                  Next Sequence Number *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  disabled={!isSuperAdmin}
+                  value={settings?.invoiceSequence ?? 1001}
+                  onChange={(e) => setSettings({ ...settings, invoiceSequence: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                  Sample Invoice Preview
+                </label>
+                <div className="px-3 py-2 bg-[#FAF8F5] border border-dashed border-[#D5CEC2] rounded text-xs font-mono font-bold text-[#722F37]">
+                  {settings?.invoicePrefix || 'AMOGA/2026-27/'}{String(settings?.invoiceSequence ?? 1001).padStart(4, '0')}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
