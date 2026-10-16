@@ -40,10 +40,10 @@ export function NotFound() {
             404
           </h1>
           <h2 className="mt-4 text-xl sm:text-2xl font-light text-[#C6C8CD]">
-            This collection sanctuary could not be located.
+            This page could not be found.
           </h2>
           <p className="mt-3 text-sm sm:text-base text-[#9FA1A8] max-w-md mx-auto leading-relaxed">
-            The link you followed may be expired or the route is still in architectural preparation.
+            The link you followed may be incorrect, expired, or temporarily unavailable.
           </p>
 
           {/* Quick Collection Gateways */}
@@ -54,7 +54,7 @@ export function NotFound() {
             >
               <div className="text-xs uppercase tracking-wider text-[#3F7B43] font-semibold">01</div>
               <div className="text-sm font-medium text-white group-hover:text-[#65815A]">Wholesome Pantry</div>
-              <div className="text-xs text-[#9FA1A8] mt-0.5">Traditional Blends</div>
+              <div className="text-xs text-[#9FA1A8] mt-0.5">Traditional Food Mixes</div>
             </Link>
 
             <Link
@@ -63,7 +63,7 @@ export function NotFound() {
             >
               <div className="text-xs uppercase tracking-wider text-[#65815A] font-semibold">02</div>
               <div className="text-sm font-medium text-white group-hover:text-[#8CA483]">Wellness Tea</div>
-              <div className="text-xs text-[#9FA1A8] mt-0.5">Botanical Rituals</div>
+              <div className="text-xs text-[#9FA1A8] mt-0.5">Herbal Teas & Infusions</div>
             </Link>
 
             <Link
@@ -72,7 +72,7 @@ export function NotFound() {
             >
               <div className="text-xs uppercase tracking-wider text-[#C5A46D] font-semibold">03</div>
               <div className="text-sm font-medium text-white group-hover:text-[#C5A46D]">Heritage Sarees</div>
-              <div className="text-xs text-[#9FA1A8] mt-0.5">Timeless Weaves</div>
+              <div className="text-xs text-[#9FA1A8] mt-0.5">Traditional Sarees</div>
             </Link>
 
             <Link
@@ -81,7 +81,7 @@ export function NotFound() {
             >
               <div className="text-xs uppercase tracking-wider text-[#C6C8CD] font-semibold">04</div>
               <div className="text-sm font-medium text-white group-hover:text-[#C6C8CD]">Sterling Silver</div>
-              <div className="text-xs text-[#9FA1A8] mt-0.5">Modern Heirlooms</div>
+              <div className="text-xs text-[#9FA1A8] mt-0.5">Silver Jewellery</div>
             </Link>
           </div>
 
@@ -93,7 +93,7 @@ export function NotFound() {
                 leftIcon={<ArrowLeft className="w-4 h-4" />}
                 className="bg-[#1C1D20] text-[#F4F4F2] border-white/10 hover:border-white/20"
               >
-                Return to Gatekeeper
+                Return to Home
               </Button>
             </Link>
           </div>
@@ -102,7 +102,7 @@ export function NotFound() {
 
       {/* Footer */}
       <footer className="w-full text-center text-xs text-[#6B6D74]">
-        Amoga Unified E-Commerce Architecture &copy; {CURRENT_YEAR}
+        Amoga E-Commerce &copy; {CURRENT_YEAR}
       </footer>
     </div>
   );

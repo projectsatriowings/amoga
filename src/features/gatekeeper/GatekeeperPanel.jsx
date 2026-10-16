@@ -299,7 +299,7 @@ export function GatekeeperPanel({
           >
             <LiquidGlassCta
               collectionId={collection.id}
-              label={collection.ctaText || 'EXPLORE COLLECTION'}
+              label={collection.ctaText || 'Shop Collection'}
               onClick={(e) => {
                 e.stopPropagation();
                 onSelect(collection);

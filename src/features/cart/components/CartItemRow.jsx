@@ -170,11 +170,11 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
             )}
             {availability.isOutOfStock ? (
               <span className="text-[10px] font-mono uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-300">
-                Out of Stock
+                Currently Out of Stock
               </span>
             ) : availability.isLowStock ? (
               <span className="text-[10px] font-mono uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">
-                Only {availability.availableQuantity} left
+                Only {availability.availableQuantity} Left
               </span>
             ) : null}
           </div>
@@ -213,13 +213,13 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
           {exceedsStock && (
             <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center gap-1.5 mt-1 font-sans">
               <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-              <span>Only {availability.availableQuantity} available in stock. Please adjust quantity before checkout.</span>
+              <span>Only {availability.availableQuantity} left in stock. Please adjust quantity before checkout.</span>
             </div>
           )}
           {availability.isOutOfStock && (
             <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center gap-1.5 mt-1 font-sans">
               <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-              <span>This item is currently out of stock. Please save for later or remove to proceed.</span>
+              <span>This product is currently out of stock. Please save for later or remove to proceed.</span>
             </div>
           )}
         </div>

@@ -12,7 +12,7 @@ export function FoodPromoBanner() {
           <div className="relative z-10 max-w-2xl space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-mono uppercase tracking-widest text-[#C5A46D]">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Gourmet Pantry Curation</span>
+              <span>Wholesome Indian Pantry</span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif leading-tight">
@@ -31,7 +31,7 @@ export function FoodPromoBanner() {
                   collection="food"
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                  Explore Complete Food Range
+                  Shop All Pantry Products
                 </Button>
               </Link>
             </div>

@@ -37,7 +37,7 @@ export const JEWELLERY_CATEGORIES = [
     name: 'Earrings',
     tagline: 'Weightless micro-studs, drops, and hoops for everyday refinement',
     image: modelHero,
-    badge: 'Modern Heirlooms',
+    badge: 'Silver Jewellery',
     count: 2,
   },
   {

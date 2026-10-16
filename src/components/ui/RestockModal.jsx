@@ -155,10 +155,10 @@ export function RestockModal({ isOpen, onClose, product, selectedVariant = null 
                   <span>Back in Stock Alert</span>
                 </div>
                 <h3 id="restock-modal-title" className="font-serif text-xl font-bold text-[#1A1817]">
-                  Notify Me When Available
+                  Notify Me When Back in Stock
                 </h3>
                 <p className="text-xs text-[#6B6359] leading-relaxed">
-                  Register your contact details to receive an alert the exact moment this artisan creation is restocked.
+                  Enter your contact details to receive an alert when this product is back in stock.
                 </p>
               </div>
 
@@ -179,7 +179,7 @@ export function RestockModal({ isOpen, onClose, product, selectedVariant = null 
                     </p>
                   )}
                   <span className="inline-block mt-0.5 text-[10px] font-mono uppercase text-rose-700 font-semibold">
-                    Currently Unavailable
+                    Currently Out of Stock
                   </span>
                 </div>
               </div>
@@ -239,7 +239,7 @@ export function RestockModal({ isOpen, onClose, product, selectedVariant = null 
                     required
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    placeholder={channel === 'EMAIL' ? 'concierge@example.com' : 'e.g. 98765 43210'}
+                    placeholder={channel === 'EMAIL' ? 'yourname@example.com' : 'e.g. 98765 43210'}
                     className="w-full px-3.5 py-2.5 bg-white border border-[#D5CEC2] rounded-xl text-xs text-[#1A1817] placeholder-[#A0988C] focus:outline-none focus:border-[#722F37] transition-colors shadow-2xs"
                   />
                 </div>
@@ -268,14 +268,14 @@ export function RestockModal({ isOpen, onClose, product, selectedVariant = null 
                   ) : (
                     <>
                       <Bell className="w-3.5 h-3.5 text-[#C5A46D]" />
-                      <span>Notify Me When In Stock</span>
+                      <span>Notify Me When Back in Stock</span>
                     </>
                   )}
                 </button>
 
                 <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#8C8377]">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>Official Amoga Atelier restock notice policy</span>
+                  <span>100% Privacy &bull; No Spam Guarantee</span>
                 </div>
               </form>
             </div>

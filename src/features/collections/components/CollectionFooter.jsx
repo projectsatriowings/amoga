@@ -94,7 +94,7 @@ export function CollectionFooter({ collectionId = 'food' }) {
               className="font-serif text-sm font-semibold mb-3 tracking-wider uppercase"
               style={{ color: palette.heading || '#173B2A' }}
             >
-              Artisanal Houses
+              Shop Collections
             </h4>
             <ul className="space-y-2 text-xs opacity-80">
               <li>
@@ -119,36 +119,41 @@ export function CollectionFooter({ collectionId = 'food' }) {
               </li>
               <li>
                 <Link to="/" className="hover:underline hover:opacity-100">
-                  Gatekeeper Portal
+                  All Collections
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 4: Trust & Concierge */}
+          {/* Col 4: Trust & Support */}
           <div>
             <h4
               className="font-serif text-sm font-semibold mb-3 tracking-wider uppercase"
               style={{ color: palette.heading || '#173B2A' }}
             >
-              Client Care
+              Customer Support
             </h4>
             <ul className="space-y-2 text-xs opacity-80">
               <li>
                 <a href="#contact" className="hover:underline hover:opacity-100">
-                  Concierge Desk
+                  Contact Us
                 </a>
               </li>
               <li>
                 <Link to="/cart" className="hover:underline hover:opacity-100">
-                  Cart & Checkout
+                  My Cart
                 </Link>
               </li>
               <li>
-                <span className="opacity-60">Pan-India Insured Dispatch</span>
+                <Link to="/track" className="hover:underline hover:opacity-100">
+                  Track Your Order
+                </Link>
               </li>
               <li>
-                <span className="opacity-60">Authenticity Guarantee</span>
+                <span className="opacity-60">Pan-India Delivery</span>
+              </li>
+              <li>
+                <span className="opacity-60">100% Genuine Quality</span>
               </li>
             </ul>
           </div>
@@ -157,12 +162,12 @@ export function CollectionFooter({ collectionId = 'food' }) {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs opacity-70">
           <div>
-            {`© ${CURRENT_YEAR} AMOGA Luxury & Heritage Commerce. All rights reserved.`}
+            {`© ${CURRENT_YEAR} AMOGA. All rights reserved.`}
           </div>
           <div className="flex items-center gap-6 text-[11px] font-mono">
-            <span>Razorpay Sandbox Active</span>
+            <span>Razorpay Test Mode</span>
             <span>SSL Secured</span>
-            <span>Pan-India Logistics</span>
+            <span>Pan-India Delivery</span>
           </div>
         </div>
       </Container>

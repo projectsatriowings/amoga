@@ -41,7 +41,7 @@ export function SoupCollectionSection() {
           <div className="lg:col-span-7 space-y-6 order-1 lg:order-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[#C5A46D] text-xs font-mono tracking-widest uppercase">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Authentic Recipe Formulations</span>
+              <span>Traditional Indian Soup Mixes</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#F1EDE4] leading-tight">
@@ -52,7 +52,7 @@ export function SoupCollectionSection() {
             </h2>
 
             <p className="text-sm sm:text-base text-[#EAE6D9]/80 leading-relaxed max-w-xl">
-              From bright lemon coriander and botanical moringa leaves to comforting creamy garlic mushroom and traditional thippili, every soup ready mix offers guests a nutritious culinary pause.
+              From bright lemon coriander and nutritious moringa leaves to comforting creamy garlic mushroom and traditional thippili, every soup mix is easy to prepare for healthy everyday meals.
             </p>
 
             {/* 20-Product Recipe Tags Pill Cloud */}
@@ -85,7 +85,7 @@ export function SoupCollectionSection() {
                   collection="sarees"
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                  Explore All 20 Soups
+                  Shop All 20 Soups
                 </Button>
               </Link>
             </div>

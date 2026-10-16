@@ -198,7 +198,7 @@ export function SareeProductCard({ product }) {
                   type="button"
                   onClick={handleActionClick}
                   className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 bg-[#451523] text-rose-200 hover:bg-[#581c2d] border border-rose-300/30 cursor-pointer shadow-md"
-                  title="Notify Me When Available"
+                  title="Notify Me When Back in Stock"
                 >
                   <Bell className="w-3.5 h-3.5 text-[#C5A46D]" />
                   <span>Notify</span>
@@ -212,7 +212,7 @@ export function SareeProductCard({ product }) {
                       ? 'bg-[#E5C78B] text-[#2C0E1A] shadow-md'
                       : 'bg-[#C5A46D] text-[#2C0E1A] hover:bg-[#d9bb85]'
                   }`}
-                  title={justAdded ? 'Added to Bag' : 'Add Saree to Bag'}
+                  title={justAdded ? 'Added to Cart' : 'Add to Cart'}
                 >
                   {justAdded ? (
                     <>

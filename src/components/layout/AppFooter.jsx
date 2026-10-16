@@ -61,10 +61,10 @@ export function AppFooter({ activeCollection }) {
                 : isTea
                 ? 'Amoga Wellness Tea curates botanical teas and herbal infusions for your everyday tea ritual.'
                 : isSarees
-                ? 'Amoga Heritage Sarees celebrates master handloom weavers, authentic temple Kanchipuram silks, Banarasi brocades, and ceremonial textiles passed down through generations.'
+                ? 'Amoga Heritage Sarees celebrates master handloom weavers, authentic temple Kanchipuram silks, Banarasi brocades, and traditional sarees.'
                 : isJewellery
-                ? 'Amoga Sterling Silver curates modern heirlooms, solid 925 sterling silver bands, fluid pendants, and architectural cuffs designed for quiet, lasting elegance.'
-                : 'One unified luxury identity across four distinctive artisanal universes: Wholesome Pantry, Wellness Tea, Heritage Sarees, and Sterling Silver.'}
+                ? 'Amoga Sterling Silver offers solid 925 sterling silver rings, fluid pendants, and handcrafted jewellery for everyday wear and gifting.'
+                : 'Simple, authentic quality across four collections: Wholesome Pantry, Wellness Tea, Heritage Sarees, and Sterling Silver.'}
             </p>
 
             {isFood && (
@@ -105,7 +105,7 @@ export function AppFooter({ activeCollection }) {
               <div className="p-3.5 rounded-xl bg-[#381222] border border-[#C5A46D]/20 max-w-sm space-y-1.5 text-xs">
                 <div className="flex items-center gap-2 font-semibold text-[#C5A46D]">
                   <PhoneCall className="w-3.5 h-3.5" />
-                  <span>Bridal Concierge & Private Appointments:</span>
+                  <span>Customer Support & Bridal Orders:</span>
                 </div>
                 <div className="font-mono text-[#F6EBD8] flex items-center gap-2 flex-wrap">
                   <a href="tel:+919940018593" className="hover:underline font-semibold">+91 9940018593</a>
@@ -122,7 +122,7 @@ export function AppFooter({ activeCollection }) {
               <div className="p-3.5 rounded-xl bg-[#343238] border border-[#B9B8B5]/20 max-w-sm space-y-1.5 text-xs">
                 <div className="flex items-center gap-2 font-semibold text-[#B9B8B5]">
                   <PhoneCall className="w-3.5 h-3.5" />
-                  <span>Silver Sizing & Care Consultations:</span>
+                  <span>Customer Support & Jewellery Enquiries:</span>
                 </div>
                 <div className="font-mono text-[#F7F3EB] flex items-center gap-2 flex-wrap">
                   <a href="tel:+919940018593" className="hover:underline font-semibold">+91 9940018593</a>
@@ -295,8 +295,8 @@ export function AppFooter({ activeCollection }) {
                   <li>Verified Handloom Provenance</li>
                   <li>Pure Mulberry Silkmark Silks</li>
                   <li>Authentic Zari Craftsmanship</li>
-                  <li>Temple & Regal Motifs</li>
-                  <li>Insured Nationwide White-Glove Care</li>
+                  <li>Temple & Traditional Motifs</li>
+                  <li>Insured Pan-India Delivery</li>
                 </>
               ) : (
                 <>
@@ -310,35 +310,35 @@ export function AppFooter({ activeCollection }) {
             </ul>
           </div>
 
-          {/* Client Concierge & Store Policies */}
+          {/* Customer Support & Store Policies */}
           <div className="space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-widest font-semibold opacity-90">
-              Client Concierge
+              Customer Support
             </h4>
             <ul className="space-y-2 text-xs opacity-75">
               <li>
                 <Link to="/track" className="hover:opacity-100 hover:underline">
-                  Track Any Order
+                  Track Your Order
                 </Link>
               </li>
               <li>
                 <Link to="/account" className="hover:opacity-100 hover:underline">
-                  My Patron Account
+                  My Account
                 </Link>
               </li>
               <li>
                 <Link to="/account?tab=orders" className="hover:opacity-100 hover:underline">
-                  Order History
+                  My Orders
                 </Link>
               </li>
               <li>
                 <Link to="/shipping-policy" className="hover:opacity-100 hover:underline">
-                  Shipping Terms
+                  Shipping Policy
                 </Link>
               </li>
               <li>
                 <Link to="/returns-policy" className="hover:opacity-100 hover:underline">
-                  Returns & Care
+                  Returns and Product Care
                 </Link>
               </li>
             </ul>

@@ -134,7 +134,7 @@ export function JewelleryProductDetail() {
     if (res?.success) {
       setAddedNotice(true);
     } else {
-      setAddError('Could not add piece to bag. Please try again.');
+      setAddError('Could not add jewellery to cart. Please try again.');
     }
   };
 
@@ -145,7 +145,7 @@ export function JewelleryProductDetail() {
       return;
     }
     if (!hasPrice) {
-      setAddError('This jewellery piece is currently awaiting confirmed retail pricing.');
+      setAddError('This jewellery is currently awaiting price confirmation.');
       return;
     }
     if (availability.availableQuantity > 0 && quantity > availability.availableQuantity) {
@@ -293,7 +293,7 @@ export function JewelleryProductDetail() {
                 </span>
                 <span className="text-[#B9B8B5]/40">&bull;</span>
                 <span className="text-xs font-mono text-[#B9B8B5]/80">
-                  {`SKU: ${product.id}`}
+                  {`Product Code: ${product.id}`}
                 </span>
               </div>
 
@@ -440,7 +440,7 @@ export function JewelleryProductDetail() {
                     className="flex-1 py-3.5 px-5 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-200 font-medium text-xs uppercase tracking-wider hover:bg-amber-500/30 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
                   >
                     <Bell className="w-4 h-4 text-amber-300" />
-                    <span>Notify Me When Available</span>
+                    <span>Notify Me When Back in Stock</span>
                   </button>
                 ) : hasPrice ? (
                   <>
@@ -451,7 +451,7 @@ export function JewelleryProductDetail() {
                     >
                       <ShoppingBag className="w-4 h-4" />
                       <span>
-                        {addedNotice ? 'Added to Bag!' : 'Add Piece to Bag'}
+                        {addedNotice ? 'Added to Cart!' : 'Add to Cart'}
                       </span>
                     </button>
 

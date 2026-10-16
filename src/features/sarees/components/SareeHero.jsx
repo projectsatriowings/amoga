@@ -153,7 +153,7 @@ export function SareeHero() {
                 to="/sarees/products"
                 className="px-6 py-3.5 rounded-xl bg-[#C5A46D] text-[#2C0E1A] font-medium text-xs uppercase tracking-wider hover:bg-[#d9bb85] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl active:scale-[0.98]"
               >
-                <span>Explore Sarees</span>
+                <span>Shop Sarees</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
@@ -162,7 +162,7 @@ export function SareeHero() {
                 className="px-5 py-3.5 rounded-xl bg-[#451523] text-[#F6EBD8] border border-[#C5A46D]/30 font-medium text-xs uppercase tracking-wider hover:bg-[#581c2d] hover:border-[#C5A46D] transition-all flex items-center gap-2"
               >
                 <Compass className="w-4 h-4 text-[#C5A46D]" />
-                <span>View Collections</span>
+                <span>Shop Collections</span>
               </a>
             </div>
           </motion.div>

@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
@@ -150,13 +151,22 @@ export function AdminProducts() {
             Unified inventory across all 4 Amoga collections: Wholesome Pantry, Wellness Tea, Heritage Sarees, Sterling Silver
           </p>
         </div>
-        <Link
-          to="/admin/products/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#722F37] text-white text-xs font-semibold rounded shadow-sm hover:bg-[#5E2229] transition-colors w-fit"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Product</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/admin/products/bulk-upload"
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#1E1916] text-[#F5F2EB] text-xs font-semibold rounded shadow-xs hover:bg-[#332C27] transition-colors border border-[#4A4036]"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-[#D1B072]" />
+            <span>Bulk Product Upload</span>
+          </Link>
+          <Link
+            to="/admin/products/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#722F37] text-white text-xs font-semibold rounded shadow-sm hover:bg-[#5E2229] transition-colors w-fit"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Product</span>
+          </Link>
+        </div>
       </div>
 
       {/* Filter Tabs by Collection */}

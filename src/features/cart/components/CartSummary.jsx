@@ -59,7 +59,7 @@ export const CartSummary = () => {
           className="font-serif text-2xl"
           style={{ color: 'var(--collection-heading)' }}
         >
-          Order Summary
+          Your Order Summary
         </h2>
         <span
           className="text-xs font-mono uppercase tracking-wider px-2.5 py-1 rounded-full border"
@@ -91,12 +91,12 @@ export const CartSummary = () => {
         </div>
 
         <div className="flex justify-between items-start text-xs" style={{ color: 'var(--collection-text-muted)' }}>
-          <span>Standard Delivery</span>
+          <span>Delivery Charges</span>
           <span
             className="text-right italic font-medium"
             style={{ color: 'var(--collection-accent)' }}
           >
-            Complimentary during preview
+            Free Delivery
           </span>
         </div>
 
@@ -113,7 +113,7 @@ export const CartSummary = () => {
           <div>
             <p className="font-semibold">No Items Selected for Checkout</p>
             <p className="mt-0.5 text-amber-800 leading-relaxed">
-              Please check the box next to at least one product in your bag to purchase. Unselected products will remain saved in your bag.
+              Please check the box next to at least one product in your cart to purchase. Unselected products will remain saved in your cart.
             </p>
           </div>
         </div>
@@ -145,14 +145,14 @@ export const CartSummary = () => {
         </div>
       )}
 
-      {/* Payable Total for Selected Items */}
+      {/* Total Amount for Selected Items */}
       <div className="py-6 flex justify-between items-baseline">
         <div>
           <span className="text-base font-medium block" style={{ color: 'var(--collection-text)' }}>
-            Selected Payable
+            Total Amount
           </span>
           <span className="text-xs" style={{ color: 'var(--collection-text-muted)' }}>
-            Authoritatively confirmed at checkout
+            Inclusive of all taxes
           </span>
         </div>
         <span
@@ -195,7 +195,7 @@ export const CartSummary = () => {
             ? 'Select Items to Checkout'
             : hasStockIssues
             ? 'Adjust Stock Quantities to Proceed'
-            : `Checkout Selected Items (${selectedCount})`}
+            : `Continue to Checkout (${selectedCount})`}
         </span>
         <ArrowRight className="w-4 h-4" />
       </button>
@@ -210,11 +210,11 @@ export const CartSummary = () => {
       >
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-          <span>Selective purchase: unselected items remain in your bag</span>
+          <span>Unselected items remain saved in your cart</span>
         </div>
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>Authoritative backend prices and integer paise precision</span>
+          <span>Secure payments with Razorpay</span>
         </div>
       </div>
 
@@ -224,7 +224,7 @@ export const CartSummary = () => {
           className="text-xs uppercase tracking-wider hover:underline font-semibold"
           style={{ color: 'var(--collection-accent)' }}
         >
-          &larr; Continue Browsing Collections
+          &larr; Shop Collections
         </Link>
       </div>
     </div>

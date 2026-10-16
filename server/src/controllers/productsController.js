@@ -91,7 +91,7 @@ export async function getProducts(req, res, next) {
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
 
-    const { collection, category, q, sort = 'default', page = '1', limit = '100' } = req.query;
+    const { collection, collectionId, category, q, sort = 'default', page = '1', limit = '100' } = req.query;
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10) || 100));
@@ -101,8 +101,9 @@ export async function getProducts(req, res, next) {
       isActive: true,
     };
 
-    if (collection) {
-      where.collectionId = collection.toLowerCase();
+    const targetCollection = (collection || collectionId || '').trim();
+    if (targetCollection && targetCollection !== 'all') {
+      where.collectionId = targetCollection.toLowerCase();
     }
 
     if (category && category !== 'all') {

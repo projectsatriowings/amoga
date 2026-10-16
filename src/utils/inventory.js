@@ -32,13 +32,13 @@ export function resolveAvailability(product, selectedVariant = null) {
     const isLowStock = inStock && available <= threshold;
 
     let label = 'In Stock';
-    let detailText = `${available} available`;
+    let detailText = `${available} in stock`;
     if (isOutOfStock) {
-      label = 'Out of Stock';
-      detailText = 'Notify Me When Available';
+      label = 'Currently Out of Stock';
+      detailText = 'Notify Me When Back in Stock';
     } else if (isLowStock) {
-      label = 'Low Stock';
-      detailText = `Only ${available} remaining`;
+      label = 'Only Few Left';
+      detailText = `Only ${available} Left`;
     }
 
     return {
@@ -68,13 +68,13 @@ export function resolveAvailability(product, selectedVariant = null) {
   const isLowStock = inStock && available <= threshold;
 
   let label = 'In Stock';
-  let detailText = `${available} available`;
+  let detailText = `${available} in stock`;
   if (isOutOfStock) {
-    label = 'Out of Stock';
-    detailText = 'Notify Me When Available';
+    label = 'Currently Out of Stock';
+    detailText = 'Notify Me When Back in Stock';
   } else if (isLowStock) {
-    label = 'Low Stock';
-    detailText = `Only ${available} remaining`;
+    label = 'Only Few Left';
+    detailText = `Only ${available} Left`;
   }
 
   return {

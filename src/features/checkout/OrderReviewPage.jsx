@@ -468,7 +468,7 @@ export const OrderReviewPage = () => {
             className="font-serif text-2xl mb-2"
             style={{ color: 'var(--collection-heading)' }}
           >
-            No Active Bag for Review
+            Your Cart is Empty
           </h1>
           <p
             className="text-sm mb-6"
@@ -484,7 +484,7 @@ export const OrderReviewPage = () => {
               color: 'var(--collection-button-text, #FFFFFF)',
             }}
           >
-            Return to Shopping Bag
+            Return to Cart
           </Link>
         </div>
       </div>
@@ -509,7 +509,7 @@ export const OrderReviewPage = () => {
           <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[var(--collection-text-muted)]">
             <li>
               <Link to="/" className="hover:text-[var(--collection-accent)] transition-colors">
-                Portal
+                Home
               </Link>
             </li>
             <li>
@@ -517,7 +517,7 @@ export const OrderReviewPage = () => {
             </li>
             <li>
               <Link to="/cart" className="hover:text-[var(--collection-accent)] transition-colors">
-                Bag
+                Cart
               </Link>
             </li>
             <li>
@@ -542,15 +542,15 @@ export const OrderReviewPage = () => {
         <div className="pb-6 border-b border-[var(--collection-border)] mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl sm:text-4xl text-[var(--collection-heading)]">
-              Order Review & Confirmation
+              Review Your Order
             </h1>
             <p className="mt-1 text-sm text-[var(--collection-text-muted)]">
-              Please inspect your selections, delivery address, and payment method before confirming your order.
+              Please check your items, delivery address, and payment method before placing your order.
             </p>
           </div>
           <span className="text-xs uppercase tracking-widest text-[var(--collection-accent)] bg-[var(--collection-section-bg)] px-3.5 py-1.5 rounded-full border border-[var(--collection-border)] font-semibold self-start sm:self-auto flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-[var(--collection-accent)]" />
-            Verified Atelier Checkout
+            Secure Checkout
           </span>
         </div>
 
@@ -572,10 +572,10 @@ export const OrderReviewPage = () => {
               className="font-semibold text-sm"
               style={{ color: 'var(--collection-heading)' }}
             >
-              Artisanal Order Review
+              Order Confirmation
             </h2>
             <p className="mt-1 text-xs opacity-90 text-[var(--collection-text-muted)]">
-              Stock allocations are atomically reserved for your order. Select your preferred payment method below to finalize your booking with the Amoga Atelier.
+              Items are reserved for your order. Select your payment method below to complete your order.
             </p>
           </div>
         </div>
@@ -615,13 +615,13 @@ export const OrderReviewPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Order Items & Customer Card (8 cols) */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Delivery Destination Card */}
+            {/* Delivery Address Card */}
             <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 border border-[var(--collection-border)] shadow-sm transition-colors">
               <div className="flex items-center justify-between pb-3 border-b border-[var(--collection-border)] mb-4">
                 <div className="flex items-center gap-2 text-[var(--collection-accent)]">
                   <Truck className="w-4 h-4" />
                   <h2 className="font-serif text-lg font-semibold text-[var(--collection-heading)]">
-                    Delivery Destination
+                    Delivery Address
                   </h2>
                 </div>
                 <Link
@@ -646,7 +646,7 @@ export const OrderReviewPage = () => {
                   </div>
                   <div>
                     <span className="block text-[11px] uppercase tracking-wider text-[var(--collection-text-muted)] font-medium mb-1">
-                      Shipping Address
+                      Delivery Address
                     </span>
                     <p className="break-words text-[var(--collection-text)]">{customerDetails.addressLine1}</p>
                     {customerDetails.addressLine2 && <p className="break-words text-[var(--collection-text)]">{customerDetails.addressLine2}</p>}
@@ -674,7 +674,7 @@ export const OrderReviewPage = () => {
                 <div className="flex items-center gap-2 text-[var(--collection-accent)]">
                   <CreditCard className="w-4 h-4" />
                   <h2 className="font-serif text-lg font-semibold text-[var(--collection-heading)]">
-                    Payment Method
+                    Choose Payment Method
                   </h2>
                 </div>
                 <span className="text-xs font-mono uppercase tracking-wider text-[var(--collection-accent)] font-semibold">
@@ -721,7 +721,7 @@ export const OrderReviewPage = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-xs sm:text-sm text-[var(--collection-text)] flex items-center gap-2">
                       <Truck className="w-4 h-4 text-[var(--collection-accent)]" />
-                      <span>Cash on Delivery</span>
+                      <span>Cash on Delivery (COD)</span>
                     </span>
                     <input
                       type="radio"
@@ -733,7 +733,7 @@ export const OrderReviewPage = () => {
                     />
                   </div>
                   <p className="text-[11px] text-[var(--collection-text)] opacity-85 leading-relaxed">
-                    Pay in cash or UPI upon courier arrival at your delivery doorstep.
+                    Pay with cash or UPI when your order is delivered.
                   </p>
                 </label>
               </div>
@@ -825,7 +825,7 @@ export const OrderReviewPage = () => {
           <div className="lg:col-span-4">
             <div className="bg-[var(--collection-card-bg)] rounded-2xl p-6 sm:p-7 border border-[var(--collection-border)] shadow-sm sticky top-28 space-y-6 transition-colors">
               <h2 className="font-serif text-xl text-[var(--collection-heading)] border-b border-[var(--collection-border)] pb-3">
-                Final Payable Summary
+                Your Order Summary
               </h2>
 
               <div className="space-y-3 text-xs text-[var(--collection-text)]">
@@ -847,11 +847,11 @@ export const OrderReviewPage = () => {
                 )}
 
                 <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
-                  <span>Standard Shipping</span>
-                  <span className="italic text-[var(--collection-accent)]">Complimentary</span>
+                  <span>Delivery Charges</span>
+                  <span className="italic text-[var(--collection-accent)]">Free Delivery</span>
                 </div>
                 <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
-                  <span>Taxes & Duties</span>
+                  <span>Taxes</span>
                   <span className="italic">Included</span>
                 </div>
 
@@ -962,13 +962,13 @@ export const OrderReviewPage = () => {
                   className="text-[var(--collection-text)] opacity-85 hover:opacity-100 hover:text-[var(--collection-accent)] font-medium flex items-center justify-center gap-1 transition-colors"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Return to Checkout Form</span>
+                  <span>Back to Delivery Address</span>
                 </Link>
                 <Link
                   to="/cart"
                   className="text-[var(--collection-text)] opacity-75 hover:opacity-100 hover:text-[var(--collection-accent)] font-medium transition-colors"
                 >
-                  Return to Shopping Bag
+                  Back to Cart
                 </Link>
               </div>
             </div>

@@ -191,13 +191,13 @@ export function JewelleryProductList() {
               {activeCategoryObj.name}
             </h1>
             <span className="text-xs font-mono text-[#B9B8B5] px-3 py-1 rounded bg-[#343238] border border-[#B9B8B5]/20 self-start sm:self-auto">
-              Showing {filteredProducts.length} of {apiProducts.length} Pieces
+              Showing {filteredProducts.length} of {apiProducts.length} Products
             </span>
           </div>
 
           <p className="text-xs sm:text-sm text-[#B9B8B5] max-w-2xl font-sans">
             {activeCategoryObj.tagline ||
-              'Explore our curated collection of verified sterling silver rings, necklaces, and modern heirlooms.'}
+              'Explore our collection of sterling silver jewellery for everyday wear, celebrations, and gifting.'}
           </p>
         </div>
 
@@ -210,7 +210,7 @@ export function JewelleryProductList() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search by piece name, stone, or style..."
+                placeholder="Search by product name, stone, or style..."
                 className="w-full pl-9 pr-8 py-2.5 rounded-lg text-xs bg-[#242326] border border-[#B9B8B5]/25 focus:outline-none focus:border-[#C6AD82] text-[#F7F3EB] placeholder:text-[#F7F3EB]/40"
               />
               <Search className="w-4 h-4 text-[#B9B8B5] absolute left-3 top-3 pointer-events-none" />

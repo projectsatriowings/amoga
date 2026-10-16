@@ -10,11 +10,11 @@ export function ReturnsCarePage() {
       <Container>
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between gap-4 mb-8">
-          <BackButton fallbackTo="/" label="Back to Atelier" />
+          <BackButton fallbackTo="/" label="Back to Home" />
           <nav className="text-xs font-mono text-[#8C8377] flex items-center gap-2">
             <Link to="/" className="hover:text-[#722F37]">Home</Link>
             <span>/</span>
-            <span className="text-[#292820] font-semibold">Returns & Care</span>
+            <span className="text-[#292820] font-semibold">Returns and Product Care</span>
           </nav>
         </div>
 
@@ -22,13 +22,13 @@ export function ReturnsCarePage() {
         <div className="max-w-3xl mb-12 space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#722F37]/10 border border-[#722F37]/20 text-[#722F37] text-xs font-mono font-semibold uppercase tracking-wider">
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Patron Protection & Artisanal Heritage Care</span>
+            <span>Customer Protection & Product Care</span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#1A1817]">
-            Returns, Exchanges & Product Care
+            Returns and Product Care
           </h1>
           <p className="text-sm sm:text-base text-[#656056] leading-relaxed">
-            We hold ourselves to the highest standards of authentic craftsmanship. Read our return policies, transit defect resolution protocols, and maintenance guides for handloom silks, sterling silver jewellery, and perishable pantry goods.
+            We hold ourselves to the highest standards of authentic quality. Read our return policies, transit defect resolution protocols, and maintenance guides for handloom silks, sterling silver jewellery, and pantry goods.
           </p>
         </div>
 
@@ -38,22 +38,22 @@ export function ReturnsCarePage() {
           <div className="p-8 rounded-3xl bg-white border border-[#E5E0D5] shadow-sm space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#722F37]/10 text-[#722F37] text-xs font-mono font-semibold uppercase">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Weaves & Fine Jewellery</span>
+              <span>Sarees & Silver Jewellery</span>
             </div>
             <h2 className="font-serif text-2xl font-semibold text-[#1A1817]">
-              7-Day Inspection Window
+              7-Day Return & Exchange Window
             </h2>
             <p className="text-xs sm:text-sm text-[#4A423B] leading-relaxed">
-              Heritage sarees and 925 sterling silver jewellery may be requested for exchange or return within <strong>7 days</strong> of verified delivery, provided items remain in their original unworn condition with tags, authenticity certificates, and archival boxes intact.
+              Traditional sarees and 925 sterling silver jewellery may be requested for exchange or return within <strong>7 days</strong> of delivery, provided items remain in their original unworn condition with tags intact.
             </p>
             <ul className="space-y-2 text-xs text-[#656056] pt-2">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#3F7B43] shrink-0" />
-                <span>Complimentary reverse pickup arranged from your address</span>
+                <span>Free reverse pickup from your delivery address</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#3F7B43] shrink-0" />
-                <span>Full refund or replacement upon workshop quality inspection</span>
+                <span>Full refund or replacement upon quality check</span>
               </li>
             </ul>
           </div>
@@ -86,22 +86,22 @@ export function ReturnsCarePage() {
         {/* Product Care Instructions Guide */}
         <div className="max-w-4xl space-y-8 bg-white p-8 sm:p-12 rounded-3xl border border-[#E5E0D5] shadow-sm mb-12">
           <h2 className="font-serif text-2xl font-semibold text-[#1A1817]">
-            Artisanal Maintenance & Care Guides
+            Product Care & Maintenance Guides
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
             <div className="space-y-2 p-5 rounded-2xl bg-[#F8F6F0] border border-[#E5E0D5]">
-              <h3 className="font-serif text-base font-semibold text-[#1A1817]">Heritage Silk Sarees</h3>
+              <h3 className="font-serif text-base font-semibold text-[#1A1817]">Traditional Silk Sarees</h3>
               <ul className="text-xs text-[#656056] space-y-1.5 list-disc pl-4 leading-relaxed">
                 <li>Dry clean only by specialized saree cleaners.</li>
                 <li>Store folded inside breathable unbleached cotton muslin cloth.</li>
-                <li>Periodically air the drape in indirect shade to prevent zari tarnish.</li>
+                <li>Periodically air the saree in indirect shade to prevent zari tarnish.</li>
                 <li>Avoid spraying perfume, deodorants, or water mist directly on zari work.</li>
               </ul>
             </div>
 
             <div className="space-y-2 p-5 rounded-2xl bg-[#F8F6F0] border border-[#E5E0D5]">
-              <h3 className="font-serif text-base font-semibold text-[#1A1817]">925 Sterling Silver</h3>
+              <h3 className="font-serif text-base font-semibold text-[#1A1817]">925 Sterling Silver Jewellery</h3>
               <ul className="text-xs text-[#656056] space-y-1.5 list-disc pl-4 leading-relaxed">
                 <li>Store in individual zip-lock bags or lined velvet pouches away from moisture.</li>
                 <li>Wipe gently with the microfiber polishing cloth provided after wear.</li>
@@ -121,9 +121,9 @@ export function ReturnsCarePage() {
             </div>
 
             <div className="space-y-2 p-5 rounded-2xl bg-[#F8F6F0] border border-[#E5E0D5]">
-              <h3 className="font-serif text-base font-semibold text-[#1A1817]">Botanical Tisanes & Herbal Teas</h3>
+              <h3 className="font-serif text-base font-semibold text-[#1A1817]">Herbal Teas & Infusions</h3>
               <ul className="text-xs text-[#656056] space-y-1.5 list-disc pl-4 leading-relaxed">
-                <li>Reseal foil pouch tightly or store in opaque airtight botanical canisters.</li>
+                <li>Reseal foil pouch tightly or store in opaque airtight tea canisters.</li>
                 <li>Protect whole flower blossoms (such as Blue Pea & Hibiscus) from sunlight.</li>
                 <li>Brew with freshly boiled water (90°C–95°C) to release delicate polyphenols.</li>
                 <li>Do not refrigerate open dry loose leaf tea as condensation spoils flavor.</li>
@@ -132,14 +132,14 @@ export function ReturnsCarePage() {
           </div>
         </div>
 
-        {/* Return Concierge Contact */}
+        {/* Return Customer Support Contact */}
         <div className="max-w-4xl p-6 sm:p-8 rounded-2xl bg-[#722F37]/5 border border-[#722F37]/20 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center sm:text-left">
             <h3 className="font-serif text-lg font-semibold text-[#1A1817]">
               Need to initiate a return or exchange?
             </h3>
             <p className="text-xs text-[#656056]">
-              Contact our concierge team with your order reference number and delivery details.
+              Contact our customer support team with your order number and delivery details.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -148,13 +148,13 @@ export function ReturnsCarePage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#722F37] text-white text-xs font-semibold hover:bg-[#5E2229] transition-colors"
             >
               <Mail className="w-3.5 h-3.5" />
-              <span>Email Concierge Desk</span>
+              <span>Email Customer Support</span>
             </a>
             <Link
               to="/account?tab=orders"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#D5CEC2] text-xs font-semibold text-[#4A423B] hover:bg-[#F8F6F0] transition-colors"
             >
-              <span>View Past Orders</span>
+              <span>My Orders</span>
             </Link>
           </div>
         </div>

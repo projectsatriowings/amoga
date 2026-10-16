@@ -49,7 +49,7 @@ export function CollectionContactSection({ collectionId = 'food', className = ''
             className="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal tracking-tight"
             style={{ color: headingColor }}
           >
-            {contact.heading || 'Concierge & Client Care'}
+            {contact.heading || 'Customer Support'}
           </h2>
           <p
             className="text-xs sm:text-sm mt-2.5 max-w-2xl leading-relaxed opacity-90"

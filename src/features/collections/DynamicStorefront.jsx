@@ -291,11 +291,11 @@ export function DynamicStorefront() {
                 <ShoppingBag className="w-6 h-6" />
               </div>
               <h3 className="font-serif text-xl text-[#1A1817]">
-                {products.length === 0 ? 'Offerings Arriving Soon' : 'No Matching Offerings'}
+                {products.length === 0 ? 'Products Arriving Soon' : 'No Matching Products'}
               </h3>
               <p className="text-xs text-[#7A7167] leading-relaxed">
                 {products.length === 0
-                  ? `New artisanal selections for ${collection.name} are currently being curated by our master atelier.`
+                  ? `New products for ${collection.name} are being prepared and will be added soon.`
                   : 'Try clearing your category filter or search query to view all items.'}
               </p>
               {products.length === 0 && (
@@ -305,7 +305,7 @@ export function DynamicStorefront() {
                     className="inline-flex items-center gap-1.5 text-xs font-semibold hover:underline"
                     style={{ color: accentColor }}
                   >
-                    <span>Browse All Amoga Universes</span>
+                    <span>Shop All Amoga Collections</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -397,7 +397,7 @@ export function DynamicStorefront() {
                           style={{ backgroundColor: accentColor }}
                         >
                           <ShoppingBag className="w-3.5 h-3.5" />
-                          <span>Add to Bag</span>
+                          <span>Add to Cart</span>
                         </button>
                       </div>
                     </div>

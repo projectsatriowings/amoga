@@ -74,7 +74,7 @@ export function JewelleryHero() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: accentColor }}>
-                      Modern Heirlooms
+                      Silver Jewellery
                     </div>
                     <div className="font-serif text-sm" style={{ color: textColor }}>
                       {subheading || 'Pure 925 Sterling Silver'}
@@ -153,7 +153,7 @@ export function JewelleryHero() {
                 to="/jewellery/products"
                 className="px-6 py-3.5 rounded-xl bg-[#B9B8B5] text-[#242326] font-medium text-xs uppercase tracking-wider hover:bg-white transition-all flex items-center gap-2 shadow-lg hover:shadow-xl active:scale-[0.98]"
               >
-                <span>Explore Jewellery</span>
+                <span>Shop Jewellery</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
@@ -162,7 +162,7 @@ export function JewelleryHero() {
                 className="px-6 py-3.5 rounded-xl bg-[#343238] text-[#F7F3EB] border border-[#B9B8B5]/25 font-medium text-xs uppercase tracking-wider hover:bg-[#3E3C44] hover:border-[#B9B8B5] transition-all flex items-center gap-2"
               >
                 <Compass className="w-4 h-4 text-[#B9B8B5]" />
-                <span>Discover the Collection</span>
+                <span>Shop Collection</span>
               </a>
             </div>
           </motion.div>

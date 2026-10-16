@@ -134,7 +134,7 @@ export const CheckoutForm = () => {
         return null;
 
       case 'phone': {
-        if (!value.trim()) return 'Phone number is required';
+        if (!value.trim()) return 'Mobile number is required';
         // Indian phone format: optional +91 or 0, followed by 10 digits starting with 6,7,8,9
         const cleanPhone = value.replace(/[\s-]/g, '');
         if (!/^(?:\+91|0)?[6-9]\d{9}$/.test(cleanPhone)) {
@@ -358,14 +358,14 @@ export const CheckoutForm = () => {
             )}
           </div>
 
-          {/* Phone */}
+          {/* Mobile Number */}
           <div>
             <label
               htmlFor="phone"
               className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
               style={{ color: 'var(--collection-text)' }}
             >
-              Phone Number <span className="text-[#DC2626] font-bold">*</span>
+              Mobile Number <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="phone"
@@ -428,7 +428,7 @@ export const CheckoutForm = () => {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase font-serif tracking-widest text-[#722F37] font-semibold">
-                Saved Delivery Addresses
+                Saved Addresses
               </span>
               <span className="text-[11px] text-[#8C7A6B]">
                 Click an address to autofill
@@ -632,7 +632,7 @@ export const CheckoutForm = () => {
               className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
               style={{ color: 'var(--collection-text)' }}
             >
-              PIN / Postal Code <span className="text-[#DC2626] font-bold">*</span>
+              PIN Code <span className="text-[#DC2626] font-bold">*</span>
             </label>
             <input
               id="pincode"
@@ -701,7 +701,7 @@ export const CheckoutForm = () => {
           className="text-xs uppercase tracking-widest font-semibold transition-colors py-3 hover:underline cursor-pointer"
           style={{ color: 'var(--collection-text-muted)' }}
         >
-          &larr; Return to Shopping Bag
+          &larr; Return to Cart
         </button>
 
         <button
@@ -713,7 +713,7 @@ export const CheckoutForm = () => {
             color: 'var(--collection-button-text, #FFFFFF)',
           }}
         >
-          <span>Continue to Order Review</span>
+          <span>Continue to Payment</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

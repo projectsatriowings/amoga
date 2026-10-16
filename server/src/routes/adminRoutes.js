@@ -15,6 +15,12 @@ import {
   restoreProduct,
 } from '../controllers/adminProductsController.js';
 import {
+  downloadTemplate,
+  validateWorkbook,
+  executeImport,
+  downloadErrorReport,
+} from '../controllers/adminProductImportController.js';
+import {
   listCollections,
   createCollection,
   updateCollection,
@@ -90,6 +96,10 @@ router.get('/dashboard/stats', requireAdminAuth(), getDashboardStats);
 
 // 2. Products & Variants (Catalogue & Super Admin)
 router.get('/products', requireAdminAuth(), listProducts);
+router.get('/products/import/template', requireAdminAuth(['CATALOGUE_MANAGER']), downloadTemplate);
+router.post('/products/import/validate', requireAdminAuth(['CATALOGUE_MANAGER']), validateWorkbook);
+router.post('/products/import/execute', requireAdminAuth(['CATALOGUE_MANAGER']), executeImport);
+router.post('/products/import/error-report', requireAdminAuth(['CATALOGUE_MANAGER']), downloadErrorReport);
 router.get('/products/:id', requireAdminAuth(), getProductById);
 router.post('/products', requireAdminAuth(['CATALOGUE_MANAGER']), createProduct);
 router.put('/products/:id', requireAdminAuth(['CATALOGUE_MANAGER']), updateProduct);

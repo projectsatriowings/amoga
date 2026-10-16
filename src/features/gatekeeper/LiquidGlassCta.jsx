@@ -11,7 +11,7 @@ import { ArrowRight } from 'lucide-react';
 export const LiquidGlassCta = React.forwardRef(function LiquidGlassCta(
   {
     collectionId = 'food',
-    label = 'Explore Collection',
+    label = 'Shop Collection',
     onClick,
     disabled = false,
     className = '',

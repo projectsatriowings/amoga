@@ -116,10 +116,10 @@ export function ProductReviewsSection({
           <div>
             <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest opacity-75 mb-1">
               <Sparkles className="w-3.5 h-3.5" style={{ color: accentColor }} />
-              <span>Patron Experiences</span>
+              <span>Customer Reviews</span>
             </div>
             <h2 id="reviews-heading" className="text-2xl sm:text-3xl font-serif" style={{ color: headingColor }}>
-              Client Reviews & Ratings
+              Customer Reviews & Ratings
             </h2>
           </div>
 
@@ -174,7 +174,7 @@ export function ProductReviewsSection({
             <p className="text-xs opacity-85 leading-relaxed">&ldquo;{myReview.content}&rdquo;</p>
             {myReview.status === 'PENDING' && (
               <p className="text-[11px] opacity-70 italic font-mono pt-1">
-                Our concierge verifies every submission against atelier craft standards. Your rating will be added to the verified public score once approved.
+                Our team reviews every submission before publication. Your review will be added once approved.
               </p>
             )}
           </div>
@@ -335,7 +335,7 @@ export function ProductReviewsSection({
         {loading ? (
           <div className="py-12 text-center text-xs opacity-60">
             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            <span>Loading verified patron reviews...</span>
+            <span>Loading verified customer reviews...</span>
           </div>
         ) : aggregate.totalReviews === 0 && reviews.length === 0 ? (
           /* Honest Empty State: No fabricated stars or fake reviews */
@@ -343,9 +343,9 @@ export function ProductReviewsSection({
             <div className="w-12 h-12 rounded-full border border-current/20 flex items-center justify-center mx-auto opacity-60">
               <Star className="w-6 h-6 stroke-1" />
             </div>
-            <h3 className="font-serif text-lg">No Patron Reviews Yet</h3>
+            <h3 className="font-serif text-lg">No Customer Reviews Yet</h3>
             <p className="text-xs opacity-75 max-w-md mx-auto leading-relaxed">
-              Every Amoga review represents a genuine patron experience. Be the first to share your reflections on this artisanal curation.
+              Every Amoga review represents a genuine customer experience. Be the first to share your review on this product.
             </p>
             {!myReview && !showForm && (
               <div className="pt-2">
@@ -423,7 +423,7 @@ export function ProductReviewsSection({
                         {rev.isVerifiedBuyer && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold">
                             <ShieldCheck className="w-3 h-3" />
-                            <span>Verified Patron</span>
+                            <span>Verified Buyer</span>
                           </span>
                         )}
                       </div>

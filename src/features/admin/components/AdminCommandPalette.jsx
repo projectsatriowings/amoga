@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Terminal,
   Code2,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
@@ -55,6 +56,14 @@ export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
       path: '/admin/products',
       icon: Package,
       shortcut: 'G P',
+    },
+    {
+      id: 'bulk-upload',
+      title: 'Bulk Product Upload (Excel .xlsx)',
+      category: 'Catalogue & Stock',
+      path: '/admin/products/bulk-upload',
+      icon: FileSpreadsheet,
+      shortcut: 'G B',
     },
     {
       id: 'inventory',

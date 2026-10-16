@@ -11,13 +11,13 @@ export function SareePromoBanner() {
           <div className="space-y-2 max-w-xl text-center md:text-left">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-[#C5A46D]">
               <Crown className="w-3.5 h-3.5" />
-              <span>Amoga Bridal & Trousseau Curation</span>
+              <span>Amoga Wedding & Bridal Sarees</span>
             </div>
             <h3 className="font-serif text-2xl sm:text-3xl text-[#F6EBD8]">
-              Private Consultations for Ceremonial Weaves
+              Personal Help with Wedding Sarees
             </h3>
             <p className="text-xs sm:text-sm text-[#D4C2A7] font-sans">
-              Connect with our silk specialists for bridal trousseau selections, customized color matching, and handloom provenance verification.
+              Connect with our saree specialists for bridal selections, colour matching, and handloom queries.
             </p>
           </div>
 
@@ -26,7 +26,7 @@ export function SareePromoBanner() {
               to="/sarees/products?category=wedding"
               className="px-5 py-2.5 rounded-xl bg-[#C5A46D] text-[#2C0E1A] text-xs font-medium uppercase tracking-wider hover:bg-[#d9bb85] transition-colors flex items-center gap-2 shadow-md"
             >
-              <span>Explore Wedding Silks</span>
+              <span>Shop Wedding Sarees</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
 
@@ -35,7 +35,7 @@ export function SareePromoBanner() {
               className="px-5 py-2.5 rounded-xl bg-[#381222] text-[#F6EBD8] border border-[#C5A46D]/30 text-xs font-medium uppercase tracking-wider hover:bg-[#451523] transition-colors flex items-center gap-2"
             >
               <Phone className="w-3.5 h-3.5 text-[#C5A46D]" />
-              <span>Call Concierge</span>
+              <span>Call Us</span>
             </a>
           </div>
         </div>

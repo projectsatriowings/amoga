@@ -156,7 +156,7 @@ export function JewelleryProductCard({ product }) {
             {/* Available Sizes count preview if present */}
             {product.sizes && product.sizes.length > 0 && (
               <div className="text-[10px] font-mono text-[#B9B8B5]/60 mt-1.5">
-                {`Available in ${product.sizes.length} sizes`}
+                {`Available in ${product.sizes.length} Sizes`}
               </div>
             )}
           </div>
@@ -180,7 +180,7 @@ export function JewelleryProductCard({ product }) {
                 to={`/jewellery/products/${product.slug}`}
                 onClick={(e) => e.stopPropagation()}
                 className="p-2 rounded-lg bg-[#242326] hover:bg-[#3E3C44] text-[#F7F3EB] text-xs transition-colors border border-[#B9B8B5]/20"
-                title="View Piece Details"
+                title="View Product Details"
               >
                 <Eye className="w-3.5 h-3.5" />
               </Link>
@@ -190,7 +190,7 @@ export function JewelleryProductCard({ product }) {
                   type="button"
                   onClick={handleActionClick}
                   className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 bg-[#242326] text-rose-200 hover:bg-[#3E3C44] border border-rose-400/30 cursor-pointer shadow-md"
-                  title="Notify Me When Available"
+                  title="Notify Me When Back in Stock"
                 >
                   <Bell className="w-3.5 h-3.5 text-[#B9B8B5]" />
                   <span>Notify</span>
@@ -204,7 +204,7 @@ export function JewelleryProductCard({ product }) {
                       ? 'bg-white text-[#111215] shadow-md'
                       : 'bg-[#B9B8B5] text-[#242326] hover:bg-white'
                   }`}
-                  title={justAdded ? 'Added to Bag' : 'Add Piece to Bag'}
+                  title={justAdded ? 'Added to Cart' : 'Add to Cart'}
                 >
                   {justAdded ? (
                     <>

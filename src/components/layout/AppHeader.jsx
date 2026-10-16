@@ -62,9 +62,9 @@ export function AppHeader({ activeCollection }) {
           borderColor: 'rgba(255, 255, 255, 0.1)',
         }}
       >
-        <span>Complimentary Pan-India Shipping on Artisanal Orders</span>
+        <span>Free Pan-India Delivery on Orders Above ₹999</span>
         <span className="hidden sm:inline ml-3 opacity-80">
-          • Concierge: +91 9940018593
+          • Call Us: +91 9940018593
         </span>
       </div>
 
@@ -130,7 +130,7 @@ export function AppHeader({ activeCollection }) {
             type="button"
             onClick={openCart}
             className="relative h-9 w-9 p-0 flex items-center justify-center rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer shrink-0"
-            aria-label="View Shopping Cart"
+            aria-label="My Cart"
           >
             <ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
@@ -159,7 +159,7 @@ export function AppHeader({ activeCollection }) {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-current/10 py-4 px-6 space-y-3 bg-inherit">
           <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono mb-2">
-            Amoga Shopping Collections
+            Shop Collections
           </div>
 
           {COLLECTIONS.map((col, idx) => (
@@ -223,7 +223,7 @@ export function AppHeader({ activeCollection }) {
                   className="flex items-center gap-2 py-2 text-sm font-medium"
                 >
                   <User className="w-4 h-4 text-[#C5A46D]" />
-                  <span>Sign In / Register</span>
+                  <span>Sign In / Create Account</span>
                 </Link>
                 <Link
                   to="/track"

@@ -145,7 +145,7 @@ export function CustomerAccountPage() {
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-[#722F37] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs text-[#7A7167] font-mono uppercase tracking-widest">
-            Loading Amoga Client Atelier...
+            Loading Your Account...
           </p>
         </div>
       </div>
@@ -216,7 +216,7 @@ export function CustomerAccountPage() {
             }`}
           >
             <MapPin className="w-4 h-4" />
-            <span>Delivery Addresses ({addresses.length})</span>
+            <span>Saved Addresses ({addresses.length})</span>
           </button>
           <button
             onClick={() => handleTabChange('profile')}
@@ -227,7 +227,7 @@ export function CustomerAccountPage() {
             }`}
           >
             <User className="w-4 h-4" />
-            <span>Profile & Account</span>
+            <span>My Profile</span>
           </button>
         </div>
 
@@ -244,13 +244,13 @@ export function CustomerAccountPage() {
                 </h3>
                 <p className="text-xs text-[#7A7167] max-w-sm mx-auto">
                   Your orders will appear here once you make a purchase from
-                  Heritage Sarees, Wholesome Pantry, Wellness Tea, or Sterling Silver.
+                  Wholesome Pantry, Wellness Tea, Heritage Sarees, or Sterling Silver.
                 </p>
                 <Link
                   to="/"
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#722F37] text-[#F6EBD8] rounded-xl text-xs font-semibold uppercase tracking-wider hover:bg-[#5E2229] transition-all shadow"
                 >
-                  <span>Explore Collections</span>
+                  <span>Shop Collections</span>
                   <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -265,7 +265,7 @@ export function CustomerAccountPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-mono uppercase text-[#7A7167]">
-                            Order Reference:
+                            Order Number:
                           </span>
                           <span className="font-mono text-sm font-bold text-[#722F37]">
                             {order.orderReference}
@@ -286,7 +286,11 @@ export function CustomerAccountPage() {
                             order.status
                           )}`}
                         >
-                          {order.status}
+                          {order.status === 'PROCESSING'
+                            ? 'Preparing'
+                            : order.status === 'DISPATCHED'
+                            ? 'Shipped'
+                            : order.status}
                         </span>
                         <span
                           className={`px-2.5 py-0.5 rounded text-[11px] font-mono font-medium ${
@@ -295,7 +299,7 @@ export function CustomerAccountPage() {
                               : 'bg-amber-50 text-amber-800'
                           }`}
                         >
-                          {order.paymentStatus === 'SUCCEEDED' ? 'Payment Verified' : order.paymentStatus}
+                          {order.paymentStatus === 'SUCCEEDED' ? 'Payment Successful' : order.paymentStatus}
                         </span>
                       </div>
                     </div>
@@ -333,7 +337,7 @@ export function CustomerAccountPage() {
                     {/* Bottom Info & Track CTA */}
                     <div className="pt-4 border-t border-[#EFECE6] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
-                        <span className="text-xs text-[#7A7167]">Authoritative Total: </span>
+                        <span className="text-xs text-[#7A7167]">Total Amount: </span>
                         <span className="font-sans text-base font-bold text-[#722F37] tabular-nums">
                           ₹{order.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </span>
@@ -362,10 +366,10 @@ export function CustomerAccountPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-serif text-lg font-bold text-[#1F0811]">
-                  Saved Delivery Addresses
+                  Saved Addresses
                 </h2>
                 <p className="text-xs text-[#7A7167]">
-                  Manage delivery addresses for seamless, 1-click checkout.
+                  Manage your delivery addresses for faster checkout.
                 </p>
               </div>
 
@@ -404,7 +408,7 @@ export function CustomerAccountPage() {
                     <p>{addr.addressLine1}</p>
                     {addr.addressLine2 && <p>{addr.addressLine2}</p>}
                     <p>
-                      {addr.city}, {addr.state} — <span className="font-mono">{addr.pincode}</span>
+                      {addr.city}, {addr.state} — <span className="font-mono">PIN: {addr.pincode}</span>
                     </p>
                     <p className="font-mono text-[#7A7167] pt-1">Phone: {addr.phone}</p>
                   </div>
@@ -418,7 +422,7 @@ export function CustomerAccountPage() {
                         Set as Default
                       </button>
                     ) : (
-                      <span className="text-[11px] text-[#7A7167] italic">Primary Address</span>
+                      <span className="text-[11px] text-[#7A7167] italic">Default Address</span>
                     )}
 
                     <button
@@ -458,7 +462,7 @@ export function CustomerAccountPage() {
                   <form onSubmit={handleAddAddress} className="space-y-3 text-xs">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[#4A423B] mb-1">Residence Label</label>
+                        <label className="block text-[#4A423B] mb-1">Address Type</label>
                         <select
                           value={addressLabel}
                           onChange={(e) => setAddressLabel(e.target.value)}
@@ -466,13 +470,12 @@ export function CustomerAccountPage() {
                         >
                           <option value="Home">Home</option>
                           <option value="Work">Work</option>
-                          <option value="Palace Estate">Palace Estate</option>
-                          <option value="Summer Residence">Summer Residence</option>
+                          <option value="Other">Other</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-[#4A423B] mb-1">Recipient Name *</label>
+                        <label className="block text-[#4A423B] mb-1">Full Name *</label>
                         <input
                           type="text"
                           required
@@ -485,13 +488,13 @@ export function CustomerAccountPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[#4A423B] mb-1">Phone Number *</label>
+                      <label className="block text-[#4A423B] mb-1">Mobile Number *</label>
                       <input
                         type="tel"
                         required
                         value={addressPhone}
                         onChange={(e) => setAddressPhone(e.target.value)}
-                        placeholder="10-digit mobile"
+                        placeholder="10-digit mobile number"
                         className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
                       />
                     </div>
@@ -503,7 +506,7 @@ export function CustomerAccountPage() {
                         required
                         value={addressLine1}
                         onChange={(e) => setAddressLine1(e.target.value)}
-                        placeholder="Flat, Mansion, Street Name"
+                        placeholder="Flat, House no., Building, Street"
                         className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
                       />
                     </div>
@@ -514,7 +517,7 @@ export function CustomerAccountPage() {
                         type="text"
                         value={addressLine2}
                         onChange={(e) => setAddressLine2(e.target.value)}
-                        placeholder="Apartment, Landmark, Suite"
+                        placeholder="Area, Landmark, Colony (Optional)"
                         className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
                       />
                     </div>
@@ -561,7 +564,7 @@ export function CustomerAccountPage() {
                         className="rounded border-[#DDD5C7] text-[#722F37] focus:ring-[#722F37]"
                       />
                       <label htmlFor="defAddressCheck" className="text-xs text-[#4A423B]">
-                        Set as primary default residence
+                        Set as default delivery address
                       </label>
                     </div>
 
@@ -577,7 +580,7 @@ export function CustomerAccountPage() {
                         type="submit"
                         className="px-5 py-2 bg-[#722F37] text-[#F6EBD8] rounded-xl text-xs font-semibold hover:bg-[#5E2229]"
                       >
-                        Save Residence
+                        Save Address
                       </button>
                     </div>
                   </form>
@@ -592,10 +595,10 @@ export function CustomerAccountPage() {
           <div className="bg-white rounded-2xl border border-[#E5E0D5] p-6 sm:p-8 max-w-2xl space-y-6">
             <div>
               <h2 className="font-serif text-lg font-bold text-[#1F0811]">
-                Patron Profile Information
+                Profile Details
               </h2>
               <p className="text-xs text-[#7A7167]">
-                Update your registered patron name and primary telephone contact.
+                Update your name and contact mobile number.
               </p>
             </div>
 
@@ -625,7 +628,7 @@ export function CustomerAccountPage() {
 
               <div>
                 <label className="block text-[#4A423B] font-medium mb-1.5">
-                  Email Address (Primary Identity)
+                  Email Address
                 </label>
                 <input
                   type="email"
@@ -634,12 +637,12 @@ export function CustomerAccountPage() {
                   className="w-full px-3.5 py-2.5 bg-[#EDE8E0] border border-[#DDD5C7] rounded-xl text-xs text-[#7A7167] cursor-not-allowed font-mono"
                 />
                 <span className="text-[11px] text-[#7A7167] mt-1 block">
-                  To change your account email, please contact concierge support.
+                  To change your registered email, please contact customer support.
                 </span>
               </div>
 
               <div>
-                <label className="block text-[#4A423B] font-medium mb-1.5">Phone Number</label>
+                <label className="block text-[#4A423B] font-medium mb-1.5">Mobile Number</label>
                 <input
                   type="tel"
                   value={editPhone}
@@ -655,7 +658,7 @@ export function CustomerAccountPage() {
                   disabled={isLoading}
                   className="px-6 py-2.5 bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-semibold rounded-xl transition-all shadow"
                 >
-                  Save Profile Changes
+                  Save Changes
                 </button>
               </div>
             </form>

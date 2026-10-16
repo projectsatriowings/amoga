@@ -56,7 +56,7 @@ export const CheckoutPage = () => {
             className="text-sm mb-6 leading-relaxed"
             style={{ color: 'var(--collection-text-muted)' }}
           >
-            You have not selected any items from your shopping bag for purchase. Please return to your bag and select the products you wish to order.
+            You have not selected any items from your cart for purchase. Please return to your cart and select the products you wish to order.
           </p>
           <Link
             to="/cart"
@@ -67,7 +67,7 @@ export const CheckoutPage = () => {
             }}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Return to Shopping Bag</span>
+            <span>Return to Cart</span>
           </Link>
         </div>
       </div>
@@ -84,9 +84,9 @@ export const CheckoutPage = () => {
       }}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb Navigation & Return to Bag */}
+        {/* Breadcrumb Navigation & Return to Cart */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <BackButton fallbackTo="/cart" label="Back to Bag" />
+          <BackButton fallbackTo="/cart" label="Back to Cart" />
 
           <nav aria-label="Breadcrumb">
             <ol
@@ -95,7 +95,7 @@ export const CheckoutPage = () => {
             >
               <li>
                 <Link to="/" className="hover:opacity-80 transition-opacity">
-                  Portal
+                  Home
                 </Link>
               </li>
               <li>
@@ -103,7 +103,7 @@ export const CheckoutPage = () => {
               </li>
               <li>
                 <Link to="/cart" className="hover:opacity-80 transition-opacity">
-                  Bag
+                  Cart
                 </Link>
               </li>
               <li>
@@ -114,7 +114,7 @@ export const CheckoutPage = () => {
                 style={{ color: 'var(--collection-accent)' }}
                 aria-current="page"
               >
-                Checkout & Delivery
+                Delivery Address
               </li>
             </ol>
           </nav>
@@ -125,7 +125,7 @@ export const CheckoutPage = () => {
             style={{ color: 'var(--collection-accent)' }}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Shopping Bag (Items Preserved)</span>
+            <span>Back to Cart</span>
           </Link>
         </div>
 
@@ -165,15 +165,15 @@ export const CheckoutPage = () => {
             className="font-serif text-3xl sm:text-4xl"
             style={{ color: 'var(--collection-heading)' }}
           >
-            Delivery & Customer Details
+            Delivery Address
           </h1>
           <p
             className="mt-1 text-sm leading-relaxed"
             style={{ color: 'var(--collection-text-muted)' }}
           >
             {isBuyNow
-              ? 'Complete your single item purchase. Your existing shopping bag remains completely untouched.'
-              : 'Purchasing only your selected items. Unselected items will remain safely stored in your shopping bag.'}
+              ? 'Complete your single item purchase. Your cart remains untouched.'
+              : 'Purchasing only your selected items. Unselected items remain saved in your cart.'}
           </p>
         </div>
 
@@ -184,13 +184,13 @@ export const CheckoutPage = () => {
             <div>
               <h2 className="font-semibold text-sm">Action Required: Unpriced Items</h2>
               <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                Your checkout contains items with pricing pending approval. Please return to your shopping bag and uncheck or remove unpriced items before you can proceed.
+                Your checkout contains items with pricing pending approval. Please return to your cart and uncheck or remove unpriced items before you can proceed.
               </p>
               <Link
                 to="/cart"
                 className="mt-2 inline-block text-xs font-semibold text-amber-900 underline underline-offset-4"
               >
-                Review and Edit Bag Selection
+                Review Cart Selection
               </Link>
             </div>
           </div>

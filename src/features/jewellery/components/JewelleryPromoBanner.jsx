@@ -11,13 +11,13 @@ export function JewelleryPromoBanner() {
           <div className="space-y-2 max-w-xl text-center md:text-left">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-[#B9B8B5]">
               <Sparkles className="w-3.5 h-3.5 text-[#C6AD82]" />
-              <span>Amoga Silver Concierge</span>
+              <span>Amoga Silver Jewellery</span>
             </div>
             <h3 className="font-serif text-2xl sm:text-3xl text-[#F7F3EB]">
-              Personalized Sizing & Gifting Consultations
+              Personal Help with Sizing & Gifting
             </h3>
             <p className="text-xs sm:text-sm text-[#B9B8B5] font-sans">
-              Connect with our silver specialists for ring size recommendations, chain length advice, and bespoke packaging for memorable milestones.
+              Connect with our team for ring size guidance, chain length advice, and gift packaging options.
             </p>
           </div>
 
@@ -26,7 +26,7 @@ export function JewelleryPromoBanner() {
               to="/jewellery/products?category=rings"
               className="px-5 py-2.5 rounded-xl bg-[#B9B8B5] text-[#242326] text-xs font-medium uppercase tracking-wider hover:bg-white transition-colors flex items-center gap-2 shadow-md"
             >
-              <span>Explore Silver Rings</span>
+              <span>Shop Silver Rings</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
 
@@ -35,7 +35,7 @@ export function JewelleryPromoBanner() {
               className="px-5 py-2.5 rounded-xl bg-[#343238] text-[#F7F3EB] border border-[#B9B8B5]/25 text-xs font-medium uppercase tracking-wider hover:bg-[#3E3C44] transition-colors flex items-center gap-2"
             >
               <Phone className="w-3.5 h-3.5 text-[#B9B8B5]" />
-              <span>Call Concierge</span>
+              <span>Call Us</span>
             </a>
           </div>
         </div>

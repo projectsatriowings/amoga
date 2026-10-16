@@ -110,7 +110,7 @@ export function TeaStorefront() {
                   to="/tea/products"
                   className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-[#2C1E11] text-[#FAF1BB] hover:bg-[#8C6320] hover:text-white text-xs font-mono font-semibold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md"
                 >
-                  <span>EXPLORE COLLECTION</span>
+                  <span>SHOP TEA</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 
@@ -119,7 +119,7 @@ export function TeaStorefront() {
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FFFDF5] border border-[#B88E38]/30 text-[#2C1E11] hover:bg-white hover:border-[#8C6320]/50 text-xs font-mono font-medium tracking-wider uppercase transition-all shadow-sm"
                 >
                   <Compass className="w-3.5 h-3.5 text-[#8C6320]" />
-                  <span>All Collections</span>
+                  <span>Shop Collections</span>
                 </Link>
               </div>
             </div>

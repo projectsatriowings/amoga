@@ -65,7 +65,7 @@ export function SareeCategoryGrid() {
                 </p>
 
                 <div className="pt-2 flex items-center gap-1.5 text-xs text-[#C5A46D] font-mono uppercase tracking-wider group-hover:translate-x-1 transition-transform">
-                  <span>Explore Weaves</span>
+                  <span>Shop Sarees</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </div>

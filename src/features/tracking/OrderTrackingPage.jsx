@@ -147,8 +147,8 @@ export function OrderTrackingPage() {
   const getActiveBadgeLabel = (step, idx) => {
     if (trackingData?.status === 'PENDING_PAYMENT' && idx === 0) return 'Awaiting Payment';
     if (trackingData?.status === 'PENDING_CONFIRMATION' && idx === 0) return 'Verifying Order';
-    if (step.key === 'PROCESSING') return 'Processing';
-    if (step.key === 'DISPATCHED') return 'In Transit';
+    if (step.key === 'PROCESSING') return 'Preparing';
+    if (step.key === 'DISPATCHED') return 'Shipped';
     return 'In Progress';
   };
 
@@ -197,14 +197,14 @@ export function OrderTrackingPage() {
         {/* Navigation Breadcrumb */}
         <div className="flex items-center gap-2 text-xs font-mono text-[#7A7167]">
           <Link to="/" className="hover:text-[#722F37] hover:underline">
-            Portal
+            Home
           </Link>
           <ChevronRight className="w-3.5 h-3.5 opacity-60" />
           <Link to="/account" className="hover:text-[#722F37] hover:underline">
-            Account
+            My Account
           </Link>
           <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-          <span className="font-semibold text-[#1F0811]">Order Tracking</span>
+          <span className="font-semibold text-[#1F0811]">Track Your Order</span>
         </div>
 
         {/* Order Reference Search Bar */}
@@ -217,7 +217,7 @@ export function OrderTrackingPage() {
                 required
                 value={inputRef}
                 onChange={(e) => setInputRef(e.target.value)}
-                placeholder="Enter Amoga Order Reference (e.g. AMOGA-ORD-2026-XXXXX)"
+                placeholder="Enter Amoga Order Number (e.g. AMOGA-ORD-2026-XXXXX)"
                 className="w-full pl-10 pr-4 py-2.5 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs font-mono text-[#1F0811] placeholder-[#8A8177] focus:outline-none focus:ring-2 focus:ring-[#722F37] focus:border-transparent transition-all"
               />
             </div>
@@ -227,7 +227,7 @@ export function OrderTrackingPage() {
               className="px-6 py-2.5 bg-[#722F37] hover:bg-[#5E2229] active:scale-[0.99] text-[#F6EBD8] text-xs font-semibold uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
-                <span>Retrieving...</span>
+                <span>Checking...</span>
               ) : (
                 <>
                   <Truck className="w-4 h-4" />
@@ -242,8 +242,8 @@ export function OrderTrackingPage() {
         {loading && (
           <div className="bg-white rounded-3xl border border-[#E8E2D8] p-12 text-center space-y-3 shadow-xs">
             <div className="w-10 h-10 border-2 border-[#722F37] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="font-serif text-base text-[#1F0811]">Consulting Atelier Records...</p>
-            <p className="text-xs text-[#7A7167]">Retrieving authoritative milestone and courier dispatch updates.</p>
+            <p className="font-serif text-base text-[#1F0811]">Finding Your Order Details...</p>
+            <p className="text-xs text-[#7A7167]">Checking the latest updates on your order and delivery.</p>
           </div>
         )}
 
@@ -252,7 +252,7 @@ export function OrderTrackingPage() {
           <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 flex items-start gap-3">
             <AlertTriangle className="w-4 h-4 text-rose-700 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Unable to locate tracking details</p>
+              <p className="font-bold">Unable to find order tracking details</p>
               <p className="text-[11px] mt-0.5">{error}</p>
             </div>
           </div>
@@ -271,17 +271,17 @@ export function OrderTrackingPage() {
                       ORDER TRACKING
                     </span>
                     <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#1F0811] font-normal tracking-tight">
-                      Your Order Journey
+                      Track Your Order
                     </h2>
                     <p className="text-xs sm:text-sm text-[#7A7167] font-sans leading-relaxed max-w-xl">
-                      From our artisans to your doorstep, here's where your order stands.
+                      Here are the latest updates on your order and delivery.
                     </p>
                   </div>
 
                   {/* Order Reference & Status Badges */}
                   <div className="flex flex-wrap items-center sm:flex-col sm:items-end gap-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#7A7167]">Reference</span>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#7A7167]">Order Number</span>
                       <span className="font-mono text-xs font-bold text-[#1F0811]">
                         {trackingData.orderReference}
                       </span>
@@ -303,7 +303,13 @@ export function OrderTrackingPage() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#722F37] opacity-75" />
                             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#722F37]" />
                           </span>
-                          <span>{trackingData.status.replace(/_/g, ' ')}</span>
+                          <span>
+                            {trackingData.status === 'PROCESSING'
+                              ? 'Preparing Your Order'
+                              : trackingData.status === 'DISPATCHED'
+                              ? 'Shipped'
+                              : trackingData.status.replace(/_/g, ' ')}
+                          </span>
                         </span>
                       )}
 
@@ -325,16 +331,16 @@ export function OrderTrackingPage() {
                   </div>
                 </div>
 
-                {/* Courier & AWB Banner if Shipped */}
+                {/* Courier & Tracking Number Banner if Shipped */}
                 {(trackingData.carrier || trackingData.trackingNumber) && (
                   <div className="p-3.5 sm:p-4 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-2.5 text-[#1F0811]">
                       <Truck className="w-4 h-4 text-[#8C6320] shrink-0" />
                       <span>
-                        Logistics Carrier: <strong>{trackingData.carrier || 'Premium Courier Partner'}</strong>
+                        Courier Partner: <strong>{trackingData.carrier || 'Standard Courier'}</strong>
                         {trackingData.trackingNumber && (
                           <>
-                            {' '}&bull; Waybill / AWB:{' '}
+                            {' '}&bull; Tracking Number:{' '}
                             <span className="font-mono text-[#722F37] font-semibold">
                               {trackingData.trackingNumber}
                             </span>
@@ -350,7 +356,7 @@ export function OrderTrackingPage() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#722F37] hover:text-[#5E2229] underline shrink-0"
                       >
-                        <span>Courier Portal</span>
+                        <span>Track on Courier Website</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     )}
@@ -506,7 +512,7 @@ export function OrderTrackingPage() {
                           {step.key === 'DISPATCHED' && trackingData.carrier && (
                             <div className="mt-2 text-[11px] font-mono text-[#7A7167]">
                               Handled by <strong>{trackingData.carrier}</strong>
-                              {trackingData.trackingNumber && ` • AWB: ${trackingData.trackingNumber}`}
+                              {trackingData.trackingNumber && ` • Tracking Number: ${trackingData.trackingNumber}`}
                             </div>
                           )}
                         </div>
@@ -569,7 +575,7 @@ export function OrderTrackingPage() {
                   <span>Verify Email to View Full Order Details</span>
                 </div>
                 <p className="text-xs text-amber-800 leading-relaxed font-sans max-w-2xl">
-                  To protect your privacy, your recipient address and item breakdown are masked. Enter the email address used during purchase to verify ownership.
+                  To protect your privacy, your delivery address and item breakdown are masked. Enter the email address used during purchase to verify ownership.
                 </p>
 
                 <form onSubmit={handleVerificationSubmit} className="flex flex-col sm:flex-row gap-3 pt-2 max-w-md">
@@ -586,7 +592,7 @@ export function OrderTrackingPage() {
                     disabled={loading}
                     className="px-5 py-2 bg-[#722F37] text-[#F6EBD8] text-xs font-semibold rounded-xl hover:bg-[#5E2229] transition-all cursor-pointer"
                   >
-                    Verify Access
+                    Verify Email
                   </button>
                 </form>
               </div>
@@ -600,7 +606,7 @@ export function OrderTrackingPage() {
                   <div className="flex items-center gap-2 border-b border-[#EFECE6] pb-3">
                     <MapPin className="w-4 h-4 text-[#8C6320]" />
                     <h3 className="font-serif text-sm font-bold text-[#1F0811]">
-                      Delivery Destination
+                      Delivery Address
                     </h3>
                   </div>
 
@@ -614,7 +620,7 @@ export function OrderTrackingPage() {
                     )}
                     <p>
                       {`${trackingData.deliveryDestination.city}, ${trackingData.deliveryDestination.state} — `}
-                      <span className="font-mono">{trackingData.deliveryDestination.pincode}</span>
+                      <span className="font-mono">PIN: {trackingData.deliveryDestination.pincode}</span>
                     </p>
                     <p className="font-mono text-[#7A7167] pt-1">
                       Phone: {trackingData.customerPhone}
@@ -627,7 +633,7 @@ export function OrderTrackingPage() {
                   <div className="flex items-center gap-2 border-b border-[#EFECE6] pb-3">
                     <Package className="w-4 h-4 text-[#8C6320]" />
                     <h3 className="font-serif text-sm font-bold text-[#1F0811]">
-                      Artisanal Items ({trackingData.items?.length || 0})
+                      Order Items ({trackingData.items?.length || 0})
                     </h3>
                   </div>
 
@@ -649,7 +655,7 @@ export function OrderTrackingPage() {
 
                   {trackingData.financialTotals && (
                     <div className="pt-3 border-t border-[#EFECE6] flex justify-between text-xs font-bold text-[#1F0811]">
-                      <span>Order Total:</span>
+                      <span>Total Amount:</span>
                       <span className="text-sm font-bold text-[#722F37] tabular-nums">
                         ₹{trackingData.financialTotals.totalAmount.toLocaleString('en-IN', {
                           minimumFractionDigits: 2,

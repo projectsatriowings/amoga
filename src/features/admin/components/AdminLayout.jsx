@@ -31,6 +31,7 @@ import {
   RefreshCw,
   Code2,
   Terminal,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminCommandPalette } from './AdminCommandPalette';
@@ -140,6 +141,7 @@ export function AdminLayout() {
       title: 'CATALOGUE & STOCK',
       items: [
         { label: 'Products', path: '/admin/products', icon: Package },
+        { label: 'Bulk Product Upload', path: '/admin/products/bulk-upload', icon: FileSpreadsheet },
         { label: 'Inventory', path: '/admin/inventory', icon: Boxes },
       ],
     },
@@ -206,6 +208,7 @@ export function AdminLayout() {
   const currentPath = location.pathname;
   let pageTitle = 'Executive Dashboard';
   if (currentPath === '/admin/products') pageTitle = 'Product Catalogue';
+  else if (currentPath === '/admin/products/bulk-upload') pageTitle = 'Bulk Product Upload';
   else if (currentPath === '/admin/collections') pageTitle = 'Collection Architecture';
   else if (currentPath === '/admin/inventory') pageTitle = 'Stock & Inventory Control';
   else if (currentPath === '/admin/orders') pageTitle = 'Customer Order Stream';

@@ -91,7 +91,7 @@ export function FoodHero() {
                 to="/food/products"
                 className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full border-2 border-[#173B2A] text-[#173B2A] hover:bg-[#173B2A] hover:text-[#F8F6F0] text-xs font-mono font-semibold tracking-wider uppercase transition-all duration-200 active:scale-95 shadow-sm"
               >
-                <span>EXPLORE COLLECTION</span>
+                <span>SHOP PANTRY</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
@@ -100,7 +100,7 @@ export function FoodHero() {
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#FFFFFF] border border-[#E5E0D5] text-[#292820] hover:bg-[#F8F6F0] hover:border-[#173B2A]/30 text-xs font-mono font-medium tracking-wider uppercase transition-all"
               >
                 <Compass className="w-3.5 h-3.5 text-[#3F7B43]" />
-                <span>All Collections</span>
+                <span>Shop Collections</span>
               </Link>
             </div>
           </motion.div>
@@ -138,7 +138,7 @@ export function FoodHero() {
                   to="/food/products?category=soups"
                   className="text-xs text-[#F8F6F0] hover:underline flex items-center gap-1 font-mono font-semibold"
                 >
-                  <span>Explore</span>
+                  <span>View All</span>
                   <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>

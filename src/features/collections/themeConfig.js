@@ -42,12 +42,12 @@ export const COLLECTION_THEMES = {
     id: 'food',
     name: 'Wholesome Pantry',
     title: 'WHOLESOME PANTRY',
-    eyebrow: 'THE GOODNESS OF TRADITION',
-    subtitle: 'Traditional Blends & Mixes',
+    eyebrow: 'TRADITIONAL INDIAN FOOD MIXES',
+    subtitle: 'Traditional Indian Food Mixes',
     homePath: '/food',
     productsPath: '/food/products',
     heroImage: foodHero,
-    badge: 'Traditional Blends',
+    badge: 'Traditional Mixes',
 
     // Design Tokens
     palette: {
@@ -72,7 +72,7 @@ export const COLLECTION_THEMES = {
       announcementAccent: '#3F7B43',
     },
 
-    announcement: 'Traditional Stone-Ground Pantry • 100% Preservative-Free • Wholesome Grains',
+    announcement: 'Traditional Indian Food Mixes • 100% Preservative-Free • Wholesome Everyday Meals',
     conciergePhone: '+91 9940018593',
 
     // Standard Categories
@@ -87,21 +87,21 @@ export const COLLECTION_THEMES = {
       {
         id: 'soups',
         name: 'Soup Mixes',
-        tagline: 'Nourishing herbal and botanical vegetable broths',
+        tagline: 'Comforting herbal and vegetable soup mixes',
         path: '/food/products?category=soups',
         count: 20,
       },
       {
         id: 'millets',
         name: 'Millet Mixes',
-        tagline: 'Ancient indigenous grains and wholesome breakfast blends',
+        tagline: 'Nourishing millet blends and wholesome porridge mixes',
         path: '/food/products?category=millets',
         count: 10,
       },
       {
         id: 'podis',
         name: 'Rice Podis',
-        tagline: 'Traditional spiced aromatic lentils and roasted podis',
+        tagline: 'Traditional roasted lentil and spice podis for rice',
         path: '/food/products?category=podis',
         count: 25,
       },
@@ -109,13 +109,13 @@ export const COLLECTION_THEMES = {
 
     // Contact Information
     contact: {
-      heading: 'Wholesome Pantry Concierge & Orders Desk',
+      heading: 'Wholesome Pantry Customer Support & Orders',
       subheading:
-        'Have questions about traditional soup mixes, millet recipes, or rice podis? Connect with our team for telephone order assistance, bulk enquiries, and culinary recommendations.',
+        'Have questions about our soup mixes, millet mixes, or rice podis? Connect with our team for phone orders, bulk enquiries, and product recommendations.',
       phone1: '+91 9940018593',
       phone2: '+91 8056700646',
       email1: 'support@amoga.com',
-      email2: 'concierge@amoga.com',
+      email2: 'orders@amoga.com',
       hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
       provenanceTitle: 'Pantry Kitchen & Provenance',
       provenanceDesc: 'Traditional preparation hub sourcing indigenous South Indian grains & leaves.',
@@ -128,13 +128,13 @@ export const COLLECTION_THEMES = {
     id: 'sarees',
     name: 'Heritage Sarees',
     title: 'HERITAGE SAREES',
-    eyebrow: 'TIMELESS WEAVES',
-    tagline: 'Timeless Weaves',
-    subtitle: 'Timeless Weaves',
+    eyebrow: 'TRADITIONAL SILK SAREES',
+    tagline: 'Traditional Silk Sarees',
+    subtitle: 'Traditional Silk Sarees',
     homePath: '/sarees',
     productsPath: '/sarees/products',
     heroImage: sareesHero,
-    badge: 'Artisanal Handlooms',
+    badge: 'Traditional Handlooms',
 
     // Design Tokens (Burgundy & Antique Gold Luxury)
     palette: {
@@ -169,7 +169,7 @@ export const COLLECTION_THEMES = {
       noticeIcon: '#C5A46D',
     },
 
-    announcement: 'Heritage Handlooms • Authentic Silkmark Silks • Master Loom Craftsmanship',
+    announcement: 'Traditional Sarees • Certified Silkmark Pure Silk • Master Handloom Weaves',
     conciergePhone: '+91 9940018593',
 
     // Standard Categories
@@ -177,7 +177,7 @@ export const COLLECTION_THEMES = {
       {
         id: 'all',
         name: 'All Sarees',
-        tagline: 'The complete handloom and heritage curation',
+        tagline: 'The complete handloom and traditional saree collection',
         path: '/sarees/products',
         count: 12,
       },
@@ -206,13 +206,13 @@ export const COLLECTION_THEMES = {
 
     // Contact Information
     contact: {
-      heading: 'Heritage Sarees Bridal Concierge & Private Appointments',
+      heading: 'Heritage Sarees Customer Support & Orders',
       subheading:
-        'Connect with our master drape advisors for bespoke bridal trousseaus, heirloom silk authentication, and private salon appointments.',
+        'Connect with our saree advisors for wedding orders, silk authenticity, and order assistance.',
       phone1: '+91 9940018593',
       phone2: '+91 8056700646',
-      email1: 'concierge@amoga.com',
-      email2: 'support@amoga.com',
+      email1: 'support@amoga.com',
+      email2: 'orders@amoga.com',
       hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
       provenanceTitle: 'Master Weavers Atelier',
       provenanceDesc: 'Authentic temple Kanchipuram and Varanasi brocades preserved across generations.',
@@ -225,12 +225,13 @@ export const COLLECTION_THEMES = {
     id: 'tea',
     name: 'Wellness Tea',
     title: 'WELLNESS TEA',
-    eyebrow: 'BOTANICAL WELLNESS',
-    subtitle: 'Botanical Teas & Herbal Infusions',
+    eyebrow: 'HERBAL TEAS AND INFUSIONS',
+    tagline: 'Herbal Teas and Infusions',
+    subtitle: 'Herbal Teas and Infusions',
     homePath: '/tea',
     productsPath: '/tea/products',
     heroImage: teaHero,
-    badge: 'Botanical Rituals',
+    badge: 'Herbal Teas',
 
     // Design Tokens (Warm Botanical Yellow & Infusions)
     palette: {
@@ -256,7 +257,7 @@ export const COLLECTION_THEMES = {
       announcementAccent: '#B88E38',
     },
 
-    announcement: 'Single-Estate Botanicals • Handpicked Whole Blossoms • Zero Artificial Flavours',
+    announcement: 'Herbal Teas • Handpicked Whole Blossoms • Zero Artificial Flavours',
     conciergePhone: '+91 9940018593',
 
     // Standard Categories
@@ -264,7 +265,7 @@ export const COLLECTION_THEMES = {
       {
         id: 'all',
         name: 'All Teas',
-        tagline: 'Complete curation of artisanal botanical brews',
+        tagline: 'Complete range of herbal teas and infusions',
         path: '/tea/products',
         count: 5,
       },
@@ -278,7 +279,7 @@ export const COLLECTION_THEMES = {
       {
         id: 'leaf',
         name: 'Medicinal Leaf Brews',
-        tagline: 'Nutrient-rich drumstick and ancient botanical foliage',
+        tagline: 'Nutrient-rich drumstick and herbal tea foliage',
         path: '/tea/products?category=leaf',
         count: 1,
       },
@@ -293,13 +294,13 @@ export const COLLECTION_THEMES = {
 
     // Contact Information
     contact: {
-      heading: 'Wellness Tea Botanical Concierge & Orders',
+      heading: 'Wellness Tea Customer Support & Orders',
       subheading:
-        'Enquire about our single-estate botanical flower blossoms, wellness tisane formulations, or customized retail gifting collections.',
+        'Have questions about our herbal flower teas, herbal infusions, or gift packs? Connect with our team for orders and advice.',
       phone1: '+91 9940018593',
       phone2: '+91 8056700646',
       email1: 'support@amoga.com',
-      email2: 'concierge@amoga.com',
+      email2: 'orders@amoga.com',
       hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
       provenanceTitle: 'Botanical Tea Gardens',
       provenanceDesc: 'Sun-dried and shade-cured indigenous florals harvested with zero synthetic processing.',
@@ -312,13 +313,13 @@ export const COLLECTION_THEMES = {
     id: 'jewellery',
     name: 'Sterling Silver',
     title: 'STERLING SILVER',
-    eyebrow: 'MODERN HEIRLOOMS',
-    tagline: 'Modern Heirlooms',
-    subtitle: 'Modern Heirlooms',
+    eyebrow: 'SILVER JEWELLERY',
+    tagline: 'Silver Jewellery',
+    subtitle: 'Silver Jewellery',
     homePath: '/jewellery',
     productsPath: '/jewellery/products',
     heroImage: jewelleryHero,
-    badge: '925 Sterling Craft',
+    badge: '925 Sterling Silver',
 
     // Design Tokens (Refined Silver & Cool Neutral)
     palette: {
@@ -345,7 +346,7 @@ export const COLLECTION_THEMES = {
       announcementAccent: '#C6AD82',
     },
 
-    announcement: 'Solid 925 Sterling Silver • Hypoallergenic Finishing • Handcrafted Modern Heirlooms',
+    announcement: 'Solid 925 Sterling Silver • Everyday Wear & Gifting • Hallmarked Jewellery',
     conciergePhone: '+91 9940018593',
 
     // Standard Categories
@@ -353,7 +354,7 @@ export const COLLECTION_THEMES = {
       {
         id: 'all',
         name: 'All Jewellery',
-        tagline: 'Complete curation of modern and timeless silver heirlooms',
+        tagline: 'Complete collection of 925 sterling silver jewellery',
         path: '/jewellery/products',
         count: 10,
       },
@@ -374,7 +375,7 @@ export const COLLECTION_THEMES = {
       {
         id: 'earrings',
         name: 'Earrings',
-        tagline: 'Weightless micro-studs, drops, and hoops for everyday refinement',
+        tagline: 'Weightless micro-studs, drops, and hoops for everyday wear',
         path: '/jewellery/products?category=earrings',
         count: 2,
       },
@@ -388,7 +389,7 @@ export const COLLECTION_THEMES = {
       {
         id: 'traditional',
         name: 'Traditional Silver',
-        tagline: 'Heritage silver jewellery with regional motifs and antique finishes',
+        tagline: 'Traditional silver jewellery with regional motifs and antique finishes',
         path: '/jewellery/products?category=traditional',
         count: 1,
       },
@@ -396,13 +397,13 @@ export const COLLECTION_THEMES = {
 
     // Contact Information
     contact: {
-      heading: 'Silver Jewellery Atelier Concierge',
+      heading: 'Silver Jewellery Customer Support & Orders',
       subheading:
-        'Inquire about custom 925 sterling sizing, bespoke bridal heirloom commissions, gemstone certification, and private jewelry consultations.',
+        'Have questions about 925 sterling silver sizes, bridal jewellery, or custom gifting? Connect with our team for orders and advice.',
       phone1: '+91 9940018593',
       phone2: '+91 8056700646',
-      email1: 'concierge@amoga.com',
-      email2: 'support@amoga.com',
+      email1: 'support@amoga.com',
+      email2: 'orders@amoga.com',
       hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
       provenanceTitle: 'Silversmith Guild Atelier',
       provenanceDesc: 'Hallmarked 925 sterling silver cast and hand-polished by master artisans.',
@@ -416,11 +417,11 @@ export const COLLECTION_THEMES = {
     name: 'Gourmet Food',
     title: 'GOURMET FOOD',
     eyebrow: 'PURE ARTISANAL FLAVOUR',
-    subtitle: 'Gourmet Provisions & Botanical Harvests',
+    subtitle: 'Traditional Food Mixes & Provisions',
     homePath: '/food',
     productsPath: '/food/products',
     heroImage: foodHero,
-    badge: 'Artisanal Harvests',
+    badge: 'Traditional Harvests',
 
     palette: {
       bg: '#F3F0E7',
@@ -444,21 +445,21 @@ export const COLLECTION_THEMES = {
       announcementAccent: '#3F5A35',
     },
 
-    announcement: 'Estate Harvests • Slow-Crafted Quality • Certified Organic Ingredients',
+    announcement: 'Traditional Harvests • Handcrafted Quality • 100% Natural Ingredients',
     conciergePhone: '+91 9940018593',
     categories: [],
     contact: {
-      heading: 'Gourmet Provisions Concierge',
-      subheading: 'Enquiries for bespoke pantry curations and culinary gifting.',
+      heading: 'Food Customer Support & Orders',
+      subheading: 'Enquiries for pantry mixes, bulk orders, and gifting.',
       phone1: '+91 9940018593',
       phone2: '+91 8056700646',
       email1: 'support@amoga.com',
-      email2: 'concierge@amoga.com',
+      email2: 'orders@amoga.com',
       hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
-      provenanceTitle: 'Artisanal Pantry Hub',
+      provenanceTitle: 'Traditional Pantry Hub',
       provenanceDesc: 'Craft culinary traditions preserved across regional master growers.',
       provenanceLocation: 'Tamil Nadu & Kerala Agricultural Estates',
-      provenanceBadge: 'Pure Organic Heritage',
+      provenanceBadge: 'Pure Natural Quality',
     },
   },
 
@@ -466,12 +467,12 @@ export const COLLECTION_THEMES = {
     id: 'neutral',
     name: 'Amoga Unified Commerce',
     title: 'AMOGA COMMERCE',
-    eyebrow: 'UNIFIED LUXURY & HERITAGE',
-    subtitle: 'Curated Selections Across Amoga Houses',
+    eyebrow: 'UNIFIED QUALITY & HERITAGE',
+    subtitle: 'Curated Selections Across Amoga Collections',
     homePath: '/',
     productsPath: '/food/products',
     heroImage: foodHero,
-    badge: 'Unified Commerce',
+    badge: 'All Collections',
 
     palette: {
       bg: '#F4F2EC',
@@ -495,21 +496,21 @@ export const COLLECTION_THEMES = {
       announcementAccent: '#3F5A35',
     },
 
-    announcement: 'Slow Craft • Timeless Heritage • Transparent Quality Across All Amoga Houses',
+    announcement: 'Traditional Heritage • Transparent Quality Across All Amoga Collections',
     conciergePhone: '+91 9940018593',
     categories: [],
     contact: {
-      heading: 'Amoga Client Care & Concierge Desk',
-      subheading: 'Seamless order support, bespoke gifting advice, and concierge delivery management across all collections.',
+      heading: 'Amoga Customer Support Desk',
+      subheading: 'Order support, gifting advice, and delivery assistance across all collections.',
       phone1: '+91 9940018593',
       phone2: '+91 8056700646',
-      email1: 'concierge@amoga.com',
-      email2: 'support@amoga.com',
+      email1: 'support@amoga.com',
+      email2: 'orders@amoga.com',
       hours: 'Mon – Sat • 9:00 AM – 7:00 PM IST',
-      provenanceTitle: 'Amoga Master Curations',
-      provenanceDesc: 'Four artisanal disciplines united under certified provenance standards.',
-      provenanceLocation: 'Pan-India Atelier & Master Artisan Guilds',
-      provenanceBadge: 'Amoga Verified Artisanship',
+      provenanceTitle: 'Amoga Collections',
+      provenanceDesc: 'Four collections united under genuine provenance standards.',
+      provenanceLocation: 'Pan-India Delivery & Master Artisan Guilds',
+      provenanceBadge: 'Amoga Verified Quality',
     },
   },
 };
@@ -571,8 +572,8 @@ export function getCollectionTheme(collectionIdOrPath, directOverride = null) {
       id: cleanId,
       name: capName,
       title: capName.toUpperCase(),
-      eyebrow: 'AMOGA ATELIER',
-      subtitle: 'Curated Luxury Collection',
+      eyebrow: 'AMOGA COLLECTION',
+      subtitle: 'Curated Collection',
       homePath: `/${cleanId}`,
       productsPath: `/${cleanId}/products`,
       heroImage: foodHero,
@@ -603,15 +604,15 @@ export function getCollectionTheme(collectionIdOrPath, directOverride = null) {
       categories: [
         {
           id: 'all',
-          name: 'All Offerings',
-          tagline: 'Complete curated collection',
+          name: 'All Products',
+          tagline: 'Complete collection',
           path: `/${cleanId}/products`,
           count: 0,
         },
       ],
       contact: {
-        heading: `${capName} Concierge Desk`,
-        subheading: 'Enquiries, bespoke commissions, and telephone assistance.',
+        heading: `${capName} Customer Support`,
+        subheading: 'Enquiries, product assistance, and telephone support.',
         phone1: '+91 9940018593',
         phone2: '+91 8056700646',
         email1: 'support@amoga.com',

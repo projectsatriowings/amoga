@@ -72,10 +72,10 @@ export function GatekeeperHub() {
               id: dbCol.id,
               name: dbCol.name,
               title: (dbCol.heroHeading || dbCol.name || (staticMatch ? staticMatch.title : 'COLLECTION')).toUpperCase(),
-              tagline: dbCol.tagline || (staticMatch ? staticMatch.tagline : 'Curated Universe'),
-              eyebrow: (dbCol.tagline || (staticMatch ? staticMatch.eyebrow : 'THE GOODNESS OF TRADITION')).toUpperCase(),
+              tagline: dbCol.tagline || (staticMatch ? staticMatch.tagline : 'Traditional Indian Food Mixes'),
+              eyebrow: (dbCol.tagline || (staticMatch ? staticMatch.eyebrow : 'TRADITIONAL INDIAN FOOD MIXES')).toUpperCase(),
               subtitle: dbCol.tagline || (staticMatch ? staticMatch.subtitle : ''),
-              description: dbCol.description || (staticMatch ? staticMatch.description : 'Explore handcrafted artisanal curation.'),
+              description: dbCol.description || (staticMatch ? staticMatch.description : 'Explore our collections.'),
               accentColor: dbCol.accentColor || (staticMatch ? staticMatch.accentColor : '#722F37'),
               path: `/${dbCol.slug}`,
               productsPath: `/${dbCol.slug}/products`,
@@ -86,9 +86,9 @@ export function GatekeeperHub() {
               imageResponsive: resolvedResponsive,
               themeConfig: dbCol.themeConfig || null,
               number: String(idx + 1).padStart(2, '0'),
-              features: staticMatch?.features || ['Artisanal Heritage', 'Authentic Sourcing', 'Verified Catalogue'],
-              badge: staticMatch?.badge || 'Curated Collection',
-              ctaText: 'EXPLORE COLLECTION',
+              features: staticMatch?.features || ['Authentic Sourcing', 'Verified Catalogue'],
+              badge: staticMatch?.badge || 'Collection',
+              ctaText: staticMatch?.ctaText || 'Shop Collection',
             };
           });
 
@@ -217,7 +217,7 @@ export function GatekeeperHub() {
         {/* Ambient Tagline / Visual Context & Profile Menu */}
         <div className="flex items-center gap-2.5 sm:gap-3 pointer-events-auto">
           <span className="hidden sm:inline-block text-[11px] font-mono uppercase tracking-[0.2em] text-[#F4F4F2]/80 bg-black/35 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-            {liveCollections.length} Curated Universes
+            Shop Our Collections
           </span>
           <GlobalProfileMenu
             buttonStyle={{ color: '#F4F4F2' }}
@@ -280,7 +280,7 @@ export function GatekeeperHub() {
 
             {/* Transition Status Text */}
             <h2 className="text-sm sm:text-base font-light tracking-widest text-[#F4F4F2] uppercase font-sans">
-              Taking you to your collection...
+              Opening collection...
             </h2>
 
             {selectedTarget && (

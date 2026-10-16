@@ -197,7 +197,7 @@ export function SareesProductList() {
 
           <p className="text-xs sm:text-sm text-[#D4C2A7] max-w-2xl font-sans">
             {activeCategoryObj.tagline ||
-              'Explore our curated collection of verified heritage weaves and artisanal handlooms.'}
+              'Discover beautiful sarees with traditional designs, authentic zari work, and fine craftsmanship.'}
           </p>
         </div>
 
@@ -210,7 +210,7 @@ export function SareesProductList() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search by weave, fabric, or motif..."
+                placeholder="Search by saree name, fabric, or design..."
                 className="w-full pl-9 pr-8 py-2.5 rounded-lg text-xs bg-[#2C0E1A] border border-[#C5A46D]/30 focus:outline-none focus:border-[#C5A46D] text-[#F6EBD8] placeholder:text-[#F6EBD8]/40"
               />
               <Search className="w-4 h-4 text-[#C5A46D] absolute left-3 top-3 pointer-events-none" />

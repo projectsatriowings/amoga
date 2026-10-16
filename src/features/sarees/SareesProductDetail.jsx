@@ -103,7 +103,7 @@ export function SareesProductDetail() {
     if (res?.success) {
       setAddedNotice(true);
     } else {
-      setAddError('Could not add saree to bag. Please try again.');
+      setAddError('Could not add saree to cart. Please try again.');
     }
   };
 
@@ -235,7 +235,7 @@ export function SareesProductDetail() {
                 </span>
                 <span className="text-[#C5A46D]/40">&bull;</span>
                 <span className="text-xs font-mono text-[#D4C2A7]">
-                  {`SKU: ${product.id}`}
+                  {`Product Code: ${product.id}`}
                 </span>
               </div>
 
@@ -375,7 +375,7 @@ export function SareesProductDetail() {
                     className="flex-1 py-3.5 px-5 rounded-xl bg-[#451523] border border-[#C5A46D]/60 text-[#F6EBD8] font-medium text-xs uppercase tracking-wider hover:bg-[#5a1b2d] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] cursor-pointer"
                   >
                     <Bell className="w-4 h-4 text-[#C5A46D]" />
-                    <span>Notify Me When Available</span>
+                    <span>Notify Me When Back in Stock</span>
                   </button>
                 ) : (
                   <>
@@ -386,7 +386,7 @@ export function SareesProductDetail() {
                     >
                       <ShoppingBag className="w-4 h-4" />
                       <span>
-                        {addedNotice ? 'Added to Cart!' : 'Add Saree to Bag'}
+                        {addedNotice ? 'Added to Cart!' : 'Add to Cart'}
                       </span>
                     </button>
 
@@ -522,7 +522,7 @@ export function SareesProductDetail() {
                   <span>Complete Your Selection</span>
                 </div>
                 <h2 className="font-serif text-2xl sm:text-3xl text-[#F6EBD8] mt-1">
-                  Related Weaves in {product.categoryName}
+                  Related Sarees in {product.categoryName}
                 </h2>
               </div>
               <Link

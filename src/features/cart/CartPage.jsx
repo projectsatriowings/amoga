@@ -74,7 +74,7 @@ export const CartPage = () => {
             >
               <li>
                 <Link to="/" className="hover:opacity-80 transition-opacity">
-                  Portal
+                  Home
                 </Link>
               </li>
               <li>
@@ -85,7 +85,7 @@ export const CartPage = () => {
                 style={{ color: 'var(--collection-accent)' }}
                 aria-current="page"
               >
-                Shopping Bag
+                My Cart
               </li>
             </ol>
           </nav>
@@ -126,13 +126,13 @@ export const CartPage = () => {
               className="font-serif text-3xl sm:text-4xl lg:text-5xl"
               style={{ color: 'var(--collection-heading)' }}
             >
-              Your Shopping Bag
+              My Cart
             </h1>
             <p
               className="mt-2 text-sm sm:text-base font-sans max-w-2xl leading-relaxed"
               style={{ color: 'var(--collection-text-muted)' }}
             >
-              Select individual products for immediate checkout or keep unselected provisions saved for later.
+              Select items for checkout or keep them saved for later.
             </p>
           </div>
 
@@ -154,7 +154,7 @@ export const CartPage = () => {
                 className="text-xs uppercase tracking-wider hover:text-red-700 transition-colors underline underline-offset-4 cursor-pointer"
                 style={{ color: 'var(--collection-text-muted)' }}
               >
-                Clear Bag
+                Clear Cart
               </button>
             </div>
           )}
@@ -183,13 +183,13 @@ export const CartPage = () => {
               className="font-serif text-2xl sm:text-3xl mb-3"
               style={{ color: 'var(--collection-heading)' }}
             >
-              Your basket is currently empty
+              Your cart is empty
             </h2>
             <p
               className="text-sm sm:text-base mb-8 leading-relaxed max-w-md mx-auto"
               style={{ color: 'var(--collection-text-muted)' }}
             >
-              Discover something you'll love.
+              Add items to your cart to get started.
             </p>
 
             <div className="flex justify-center">
@@ -197,7 +197,7 @@ export const CartPage = () => {
                 to="/"
                 className="inline-flex items-center justify-center py-3.5 px-8 rounded-full bg-[#267D2A] text-white font-medium text-sm tracking-wide shadow-sm hover:bg-[#1E6622] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#267D2A] focus-visible:ring-offset-2 transition-all duration-200 motion-reduce:transition-none motion-reduce:transform-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none"
               >
-                Browse Products
+                Shop Our Collections
               </Link>
             </div>
           </motion.div>
@@ -370,7 +370,7 @@ export const CartPage = () => {
                               }}
                             >
                               <PackageCheck className="w-3.5 h-3.5" />
-                              <span>Move to Bag</span>
+                              <span>Move to Cart</span>
                             </button>
 
                             <button
@@ -395,7 +395,7 @@ export const CartPage = () => {
                 style={{ borderColor: 'var(--collection-border)' }}
               >
                 <span style={{ color: 'var(--collection-text-muted)' }}>
-                  Ready to discover more artisanal treasures?
+                  Explore our collections:
                 </span>
                 <div className="flex items-center gap-4 uppercase tracking-wider font-semibold">
                   <Link to="/food" className="hover:underline underline-offset-4" style={{ color: '#3F7B43' }}>

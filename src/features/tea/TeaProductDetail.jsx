@@ -128,7 +128,7 @@ export function TeaProductDetail() {
         setAddedSuccess(false);
       }, 3000);
     } else {
-      setAddError('Could not add brew to bag. Please try again.');
+      setAddError('Could not add tea to cart. Please try again.');
     }
   };
 
@@ -139,7 +139,7 @@ export function TeaProductDetail() {
       return;
     }
     if (!hasPrice) {
-      setAddError('This botanical brew is currently awaiting price confirmation.');
+      setAddError('This tea is currently awaiting price confirmation.');
       return;
     }
     if (availability.availableQuantity > 0 && quantity > availability.availableQuantity) {
@@ -347,7 +347,7 @@ export function TeaProductDetail() {
                   className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-amber-600 text-white text-xs font-semibold uppercase tracking-wider hover:bg-amber-700 transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   <Bell className="w-4 h-4 text-amber-100" />
-                  <span>Notify Me When Available</span>
+                  <span>Notify Me When Back in Stock</span>
                 </button>
               ) : hasPrice ? (
                 <>
@@ -379,14 +379,14 @@ export function TeaProductDetail() {
                       </button>
                     </div>
 
-                    {/* Add to Bag CTA */}
+                    {/* Add to Cart CTA */}
                     <button
                       type="button"
                       onClick={handleAddToCart}
                       className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-semibold uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
                     >
                       <ShoppingBag className="w-4 h-4" />
-                      <span>{addedSuccess ? 'Added to Bag!' : 'Add to Shopping Bag'}</span>
+                      <span>{addedSuccess ? 'Added to Cart!' : 'Add to Cart'}</span>
                     </button>
 
                     {/* Buy Now CTA */}

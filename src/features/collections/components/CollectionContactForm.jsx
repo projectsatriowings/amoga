@@ -32,7 +32,7 @@ export function CollectionContactForm({ theme, collectionId }) {
         return null;
       case 'phone':
         if (value.trim() && !PHONE_REGEX.test(value.replace(/[\s\-()]/g, ''))) {
-          return 'Please enter a valid phone number';
+          return 'Please enter a valid mobile number';
         }
         return null;
       case 'subject':
@@ -97,7 +97,7 @@ export function CollectionContactForm({ theme, collectionId }) {
 
       if (response.ok && data?.success) {
         setSubmissionSuccess({
-          message: data.message || 'Your inquiry has been successfully sent to our concierge desk.',
+          message: data.message || 'Your enquiry has been successfully sent to our customer support team.',
           reference: data.inquiryReference || `INQ-${Date.now().toString(36).toUpperCase()}`,
         });
         // Reset form inputs
@@ -119,7 +119,7 @@ export function CollectionContactForm({ theme, collectionId }) {
       } else {
         // Fallback for mock environments if endpoint is unavailable
         setSubmissionSuccess({
-          message: 'Thank you for reaching out. Your enquiry has been received by our concierge desk.',
+          message: 'Thank you for reaching out. Your enquiry has been received by our customer support team.',
           reference: `INQ-${Date.now().toString(36).toUpperCase()}`,
         });
         setFormData({
@@ -133,7 +133,7 @@ export function CollectionContactForm({ theme, collectionId }) {
       }
     } catch (err) {
       // Network failure
-      setServerError('Unable to connect to the concierge service. Please check your connection or contact us via telephone.');
+      setServerError('Unable to connect to customer support. Please check your internet connection or call us directly.');
     } finally {
       setIsSubmitting(false);
     }
@@ -305,14 +305,14 @@ export function CollectionContactForm({ theme, collectionId }) {
             )}
           </div>
 
-          {/* Field 3: Phone Number (Optional) */}
+          {/* Field 3: Mobile Number (Optional) */}
           <div>
             <label
               htmlFor="contact-phone"
               className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
               style={{ color: labelColor }}
             >
-              Phone Number <span className="text-xs opacity-75 font-normal lowercase">(optional)</span>
+              Mobile Number <span className="text-xs opacity-75 font-normal lowercase">(optional)</span>
             </label>
             <input
               id="contact-phone"

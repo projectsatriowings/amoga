@@ -127,7 +127,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
         >
           <span>{theme.announcement}</span>
           <span className="hidden sm:inline ml-3 opacity-80">
-            • Concierge: {theme.conciergePhone}
+            • Call Us: {theme.conciergePhone}
           </span>
         </div>
 
@@ -137,12 +137,12 @@ export function CollectionNavbar({ collectionId = 'food' }) {
             <div className="flex items-center gap-3 shrink-0 select-none">
               <Link
                 to="/"
-                title="Return to AMOGA Main Portal"
+                title="Return to Amoga Home"
                 className="flex items-center gap-3 group shrink-0"
               >
                 <img
                   src={amogaLogo}
-                  alt="AMOGA Main Portal"
+                  alt="Amoga"
                   className="h-10 sm:h-11 w-auto max-w-[145px] sm:max-w-[160px] object-contain transition-transform group-hover:scale-[1.02]"
                 />
               </Link>
@@ -229,7 +229,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                     : palette.headerText || palette.text || '#292820',
                 }}
               >
-                <span>Contact</span>
+                <span>Contact Us</span>
                 {isContactActive && (
                   <div
                     className="absolute bottom-0 left-3 right-3 h-0.5"
@@ -279,7 +279,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                 type="button"
                 onClick={openCart}
                 className="relative h-9 w-9 p-0 flex items-center justify-center rounded-full hover:bg-current/10 text-current transition-colors cursor-pointer shrink-0"
-                aria-label="View Shopping Cart"
+                aria-label="My Cart"
               >
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
@@ -457,11 +457,11 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                     borderColor: palette.border || '#E5E0D5',
                     color: palette.heading || '#173B2A',
                   }}
-                  aria-label="Open Shopping Bag"
+                  aria-label="My Cart"
                 >
                   <span className="flex items-center gap-2">
                     <ShoppingBag className="w-4 h-4" />
-                    <span>Shopping Bag</span>
+                    <span>My Cart</span>
                   </span>
                   {cartCount > 0 && (
                     <span
@@ -471,7 +471,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                           palette.accent || palette.accentGold || '#3F7B43',
                       }}
                     >
-                      {cartCount} items
+                      {cartCount} {cartCount === 1 ? 'item' : 'items'}
                     </span>
                   )}
                 </button>
@@ -489,13 +489,13 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                     fontWeight: isContactActive ? 700 : 500,
                   }}
                 >
-                  Contact
+                  Contact Us
                 </button>
 
                 {/* Account Services in Mobile Drawer */}
                 <div className="pt-2 border-t space-y-1 text-xs" style={{ borderColor: palette.border || '#E5E0D5' }}>
                   <div className="text-[10px] uppercase tracking-widest font-mono opacity-60 px-3 py-1">
-                    Patron Account
+                    My Account
                   </div>
                   {isAuthenticated ? (
                     <>
@@ -572,7 +572,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                     className="block py-2 text-xs font-mono"
                     style={{ color: palette.accent || palette.accentGold || '#3F7B43' }}
                   >
-                    &larr; Switch Collection (Gatekeeper)
+                    &larr; Shop Collections
                   </Link>
                 </div>
               </div>

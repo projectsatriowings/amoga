@@ -182,7 +182,7 @@ export function TeaProductCard({ product }) {
                   type="button"
                   onClick={handleActionClick}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200 active:scale-95 text-xs font-sans font-semibold uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer"
-                  aria-label={`Notify me when ${product.name} is available`}
+                  aria-label={`Notify me when ${product.name} is back in stock`}
                 >
                   <Bell className="w-3.5 h-3.5 text-rose-700" />
                   <span>Notify</span>
@@ -192,7 +192,7 @@ export function TeaProductCard({ product }) {
                   type="button"
                   onClick={handleActionClick}
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] hover:bg-[#8C6320] hover:text-white active:scale-95 text-xs font-sans font-semibold uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer"
-                  aria-label={`Add ${product.name} to bag`}
+                  aria-label={`Add ${product.name} to cart`}
                 >
                   <ShoppingBag className="w-3.5 h-3.5" />
                   <span>Add</span>

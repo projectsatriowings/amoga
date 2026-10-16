@@ -48,27 +48,27 @@ function buildMilestones(order, trackingEvents) {
     {
       key: 'CONFIRMED',
       title: 'Order Confirmed',
-      description: 'Payment authorized and verified at Amoga Atelier.',
+      description: 'Your order has been verified and confirmed.',
       time: findEventTime('CONFIRMED') || orderDate,
     },
     {
       key: 'PROCESSING',
-      title: 'Processing at Atelier',
-      description: 'Master artisans inspecting, packaging, and preparing for dispatch.',
+      title: 'Preparing Your Order',
+      description: 'Your items are being carefully inspected and packed.',
       time: findEventTime('PROCESSING'),
     },
     {
       key: 'DISPATCHED',
-      title: 'Shipped & In Transit',
+      title: 'Shipped',
       description: order.carrier
-        ? `Handed over to ${order.carrier}${order.trackingNumber ? ` (AWB: ${order.trackingNumber})` : ''}.`
-        : 'Dispatched with premium logistics partner.',
+        ? `Handed over to ${order.carrier}${order.trackingNumber ? ` (Tracking No: ${order.trackingNumber})` : ''}.`
+        : 'Shipped with our delivery partner.',
       time: findEventTime('DISPATCHED'),
     },
     {
       key: 'DELIVERED',
       title: 'Delivered',
-      description: 'Successfully delivered and signed for by recipient.',
+      description: 'Order successfully delivered to your address.',
       time: findEventTime('DELIVERED'),
     },
   ];

@@ -56,13 +56,13 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
             className="font-serif text-xl"
             style={{ color: 'var(--collection-heading)' }}
           >
-            Order Review
+            Your Order Summary
           </h2>
           <span
             className="text-[11px] font-mono"
             style={{ color: 'var(--collection-text-muted)' }}
           >
-            {isBuyNow ? 'Buy Now Direct Item' : 'Selected Line Items'}
+            {isBuyNow ? 'Buy Now Item' : 'Selected Items'}
           </span>
         </div>
         <span
@@ -160,7 +160,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
         <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 text-xs flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
           <p className="leading-snug">
-            {stockIssues.length} item(s) exceed available stock. Please return to your shopping bag to adjust quantities before placing order.
+            {stockIssues.length} item(s) exceed available stock. Please return to your cart to adjust quantities before placing order.
           </p>
         </div>
       )}
@@ -174,7 +174,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
         }}
       >
         <div className="flex justify-between items-baseline">
-          <span style={{ color: 'var(--collection-text-muted)' }}>Items Subtotal</span>
+          <span style={{ color: 'var(--collection-text-muted)' }}>Subtotal</span>
           <span
             className="font-semibold tabular-nums text-sm font-sans"
             style={{ color: 'var(--collection-text)' }}
@@ -183,16 +183,16 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
           </span>
         </div>
         <div className="flex justify-between items-baseline text-[11px]">
-          <span style={{ color: 'var(--collection-text-muted)' }}>Standard Delivery</span>
+          <span style={{ color: 'var(--collection-text-muted)' }}>Delivery Charges</span>
           <span
             className="italic font-medium"
             style={{ color: 'var(--collection-accent)' }}
           >
-            Complimentary
+            Free Delivery
           </span>
         </div>
         <div className="flex justify-between items-baseline text-[11px]">
-          <span style={{ color: 'var(--collection-text-muted)' }}>Taxes & Duties</span>
+          <span style={{ color: 'var(--collection-text-muted)' }}>Taxes</span>
           <span className="italic" style={{ color: 'var(--collection-text-muted)' }}>Included</span>
         </div>
         <div
@@ -203,7 +203,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
             className="font-serif text-base"
             style={{ color: 'var(--collection-heading)' }}
           >
-            Payable Total
+            Total Amount
           </span>
           <span
             className="text-xl font-bold font-sans tabular-nums"
@@ -214,7 +214,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
         </div>
       </div>
 
-      {/* Return to Bag Link */}
+      {/* Return to Cart Link */}
       <div
         className="mt-5 pt-4 border-t text-center"
         style={{ borderColor: 'var(--collection-border)' }}
@@ -224,7 +224,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
           className="text-xs uppercase tracking-wider font-semibold hover:underline"
           style={{ color: 'var(--collection-accent)' }}
         >
-          &larr; Return to Shopping Bag
+          &larr; Back to Cart
         </Link>
       </div>
     </div>

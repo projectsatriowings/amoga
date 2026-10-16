@@ -83,15 +83,15 @@ export function CustomerAuthPage() {
             />
           </div>
           <span className="block text-[11px] font-mono uppercase tracking-widest text-[#8C6320] mb-1">
-            Amoga Client Concierge
+            Amoga Customer Account
           </span>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1F0811]">
-            {mode === 'login' ? 'Welcome Back' : 'Join Amoga Privilege'}
+            {mode === 'login' ? 'Welcome Back' : 'Create Your Account'}
           </h1>
           <p className="text-xs text-[#7A7167] mt-1.5 max-w-sm mx-auto">
             {mode === 'login'
-              ? 'Access your bespoke order history, track active shipments, and manage saved residences.'
-              : 'Create an artisanal client profile to save delivery addresses and track handloom creations.'}
+              ? 'Access your order history, track your orders, and manage saved delivery addresses.'
+              : 'Create an account to save delivery addresses and track your orders easily.'}
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export function CustomerAuthPage() {
                 : 'text-[#6B635A] hover:text-[#2C0E1A]'
             }`}
           >
-            Register Account
+            Create Account
           </button>
         </div>
 
@@ -149,7 +149,7 @@ export function CustomerAuthPage() {
                     required
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="client@luxury.amoga.com"
+                    placeholder="yourname@example.com"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs text-[#2C0E1A] placeholder-[#8A8177] focus:outline-none focus:ring-2 focus:ring-[#722F37] focus:border-transparent transition-all"
                   />
                 </div>
@@ -181,7 +181,7 @@ export function CustomerAuthPage() {
                   <span>Signing In...</span>
                 ) : (
                   <>
-                    <span>Sign In to Account</span>
+                    <span>Sign In</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
@@ -217,7 +217,7 @@ export function CustomerAuthPage() {
                     required
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
-                    placeholder="client@luxury.amoga.com"
+                    placeholder="yourname@example.com"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs text-[#2C0E1A] placeholder-[#8A8177] focus:outline-none focus:ring-2 focus:ring-[#722F37] focus:border-transparent transition-all"
                   />
                 </div>
@@ -225,7 +225,7 @@ export function CustomerAuthPage() {
 
               <div>
                 <label className="block text-xs font-medium text-[#4A423B] mb-1.5">
-                  Phone Number
+                  Mobile Number
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-[#8C6320] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -265,7 +265,7 @@ export function CustomerAuthPage() {
                   <span>Creating Account...</span>
                 ) : (
                   <>
-                    <span>Create Amoga Account</span>
+                    <span>Create Account</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
@@ -276,7 +276,7 @@ export function CustomerAuthPage() {
           {/* Quick Security Trust Pill */}
           <div className="mt-6 pt-5 border-t border-[#EAE3D5] flex items-center justify-center gap-2 text-[11px] text-[#7A7167]">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-            <span>Encrypted 256-bit Session &bull; Private Client Data</span>
+            <span>Secure & Encrypted &bull; Your Data is Safe</span>
           </div>
         </div>
 
@@ -287,7 +287,7 @@ export function CustomerAuthPage() {
             to="/track"
             className="text-[#722F37] font-semibold underline underline-offset-4 hover:text-[#5E2229]"
           >
-            Track your order with Order ID
+            Track your order with Order Number
           </Link>
         </div>
       </Container>

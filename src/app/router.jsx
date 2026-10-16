@@ -32,6 +32,7 @@ import { AdminLayout } from '../features/admin/components/AdminLayout';
 import { AdminLogin } from '../features/admin/pages/AdminLogin';
 import { AdminDashboard } from '../features/admin/pages/AdminDashboard';
 import { AdminProducts } from '../features/admin/pages/AdminProducts';
+import { AdminBulkUpload } from '../features/admin/pages/AdminBulkUpload';
 import { AdminProductForm } from '../features/admin/pages/AdminProductForm';
 import { AdminCollections } from '../features/admin/pages/AdminCollections';
 import { AdminInventory } from '../features/admin/pages/AdminInventory';
@@ -319,6 +320,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: 'products', element: <AdminProducts /> },
+      { path: 'products/bulk-upload', element: <AdminBulkUpload /> },
       { path: 'products/new', element: <AdminProductForm /> },
       { path: 'products/:id/edit', element: <AdminProductForm /> },
       {

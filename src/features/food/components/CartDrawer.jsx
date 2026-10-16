@@ -140,7 +140,7 @@ export function CartDrawer() {
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-[#287A25]" />
                 <h2 className="text-lg font-serif font-medium text-[#172B1C]">
-                  Your Cart ({totalCount})
+                  My Cart ({totalCount})
                 </h2>
               </div>
               <button
@@ -162,10 +162,10 @@ export function CartDrawer() {
                   </div>
                   <div className="space-y-1.5">
                     <h3 className="text-lg font-serif font-medium text-[#172B1C]">
-                      Your basket is currently empty
+                      Your cart is empty
                     </h3>
                     <p className="text-xs sm:text-sm text-[#405244] max-w-xs leading-relaxed">
-                      Discover something you'll love.
+                      Add items to your cart to get started.
                     </p>
                   </div>
                   <div className="w-full max-w-xs pt-2 flex flex-col items-center">
@@ -174,7 +174,7 @@ export function CartDrawer() {
                       onClick={closeCart}
                       className="w-full inline-flex items-center justify-center py-3 px-6 rounded-full bg-[#267D2A] text-white font-medium text-sm tracking-wide shadow-sm hover:bg-[#1E6622] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#267D2A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F1EDE4] transition-all duration-200 motion-reduce:transition-none motion-reduce:transform-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none"
                     >
-                      Browse Products
+                      Shop Our Collections
                     </Link>
                   </div>
                 </div>
@@ -251,18 +251,18 @@ export function CartDrawer() {
                             )}
                             {availability.isOutOfStock ? (
                               <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200 ml-1">
-                                Out of Stock
+                                Currently Out of Stock
                               </span>
                             ) : availability.isLowStock ? (
                               <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200 ml-1">
-                                {availability.availableQuantity} left
+                                Only {availability.availableQuantity} Left
                               </span>
                             ) : null}
                           </div>
 
                           {exceedsStock && (
                             <div className="text-[11px] text-rose-700 font-medium">
-                              Only {availability.availableQuantity} in stock
+                              Only {availability.availableQuantity} left in stock
                             </div>
                           )}
 
@@ -328,7 +328,7 @@ export function CartDrawer() {
                     <div className="p-3 rounded-lg bg-[#EAE6D9]/50 border border-[#287A25]/20 flex items-start gap-2.5 text-xs text-[#405244]">
                       <AlertCircle className="w-4 h-4 text-[#287A25] shrink-0 mt-0.5" />
                       <span>
-                        {unpricedItems.length} item(s) in your basket are currently awaiting catalogue price confirmation. Subtotal reflects only verified products.
+                        {unpricedItems.length} item(s) in your cart are currently awaiting price confirmation. Subtotal reflects only verified products.
                       </span>
                     </div>
                   )}
@@ -350,7 +350,7 @@ export function CartDrawer() {
               return (
                 <div className="p-5 border-t border-[#172B1C]/10 bg-white/70 backdrop-blur-md space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-black/70">Verified Subtotal</span>
+                    <span className="text-black/70">Subtotal</span>
                     <span className="font-sans font-semibold text-base text-[#172B1C] tabular-nums">
                       ₹{verifiedSubtotal.toLocaleString('en-IN')}
                     </span>
@@ -359,12 +359,12 @@ export function CartDrawer() {
                   {hasInventoryIssues && (
                     <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-start gap-2">
                       <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
-                      <span>Some items exceed available stock. Please view your full bag to adjust quantities before checkout.</span>
+                      <span>Some items exceed available stock. Please view your cart to adjust quantities before checkout.</span>
                     </div>
                   )}
 
                   <div className="text-[11px] text-[#557C36]">
-                    Taxes calculated at checkout. Free shipping available above ₹999.
+                    Taxes calculated at checkout. Free delivery on orders above ₹999.
                   </div>
 
                   <div className="flex flex-col gap-2 pt-1">
@@ -376,7 +376,7 @@ export function CartDrawer() {
                           collection="food"
                           className="w-full text-xs"
                         >
-                          View Full Bag
+                          View Cart
                         </Button>
                       </Link>
                       {hasInventoryIssues ? (
@@ -387,7 +387,7 @@ export function CartDrawer() {
                             collection="food"
                             className="w-full text-xs"
                           >
-                            Review Bag
+                            Review Cart
                           </Button>
                         </Link>
                       ) : (
@@ -398,7 +398,7 @@ export function CartDrawer() {
                             collection="food"
                             className="w-full text-xs"
                           >
-                            Proceed to Checkout
+                            Continue to Checkout
                           </Button>
                         </Link>
                       )}
@@ -408,7 +408,7 @@ export function CartDrawer() {
                       onClick={clearCart}
                       className="text-[11px] text-black/50 hover:text-red-600 transition-colors py-1 text-center font-mono cursor-pointer"
                     >
-                      Clear All Items
+                      Clear Cart
                     </button>
                   </div>
                 </div>

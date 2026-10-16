@@ -90,7 +90,7 @@ export const DemoOrderConfirmation = () => {
           <ol className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[var(--collection-text-muted)]">
             <li>
               <Link to="/" className="hover:text-[var(--collection-accent)] transition-colors">
-                Portal
+                Home
               </Link>
             </li>
             <li>
@@ -144,7 +144,7 @@ export const DemoOrderConfirmation = () => {
 
               <div className="mt-4 p-3 bg-[var(--collection-section-bg)] inline-block rounded-xl border border-[var(--collection-border)]">
                 <span className="text-xs text-[var(--collection-text-muted)] uppercase tracking-widest block font-medium">
-                  Authoritative Order Reference
+                  Order Number
                 </span>
                 <span className="font-mono text-base sm:text-lg font-bold text-[var(--collection-accent)]">
                   {orderId}
@@ -158,7 +158,7 @@ export const DemoOrderConfirmation = () => {
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-bold uppercase tracking-wider shadow-md transition-all hover:scale-105"
                 >
                   <Truck className="w-4 h-4 text-[#C5A46D]" />
-                  <span>Track Order Live</span>
+                  <span>Track Your Order</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
                 <Link
@@ -193,7 +193,7 @@ export const DemoOrderConfirmation = () => {
                 <div className="flex items-center gap-2 text-[var(--collection-accent)] pb-3 border-b border-[var(--collection-border)] mb-4">
                   <Truck className="w-4 h-4" />
                   <h2 className="font-serif text-base font-semibold text-[var(--collection-heading)]">
-                    Delivery Recipient Details
+                    Delivery Address
                   </h2>
                 </div>
 
@@ -226,7 +226,7 @@ export const DemoOrderConfirmation = () => {
                 <div className="flex items-center gap-2 text-[var(--collection-accent)] pb-3 border-b border-[var(--collection-border)] mb-4">
                   <Calendar className="w-4 h-4" />
                   <h2 className="font-serif text-base font-semibold text-[var(--collection-heading)]">
-                    Order & Payment Lifecycle
+                    Order Details
                   </h2>
                 </div>
 
@@ -267,7 +267,7 @@ export const DemoOrderConfirmation = () => {
                     </span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-[var(--collection-border)]">
-                    <span className="font-semibold text-[var(--collection-heading)]">Paid Total:</span>
+                    <span className="font-semibold text-[var(--collection-heading)]">Total Amount:</span>
                     <span className="font-sans text-base font-bold text-[var(--collection-accent)] tabular-nums">
                       {formatINR(activeOrder.totals?.totalAmount || activeOrder.totals?.subtotal)}
                     </span>

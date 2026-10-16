@@ -302,7 +302,7 @@ export function FoodProductDetail() {
                     leftIcon={<Bell className="w-5 h-5 text-amber-300" />}
                     className="flex-1 text-sm bg-[#2C1E11] hover:bg-[#402C1B]"
                   >
-                    Notify Me When Available
+                    Notify Me When Back in Stock
                   </Button>
                 ) : (
                   <>
@@ -314,7 +314,7 @@ export function FoodProductDetail() {
                       leftIcon={<ShoppingBag className="w-5 h-5" />}
                       className="flex-1 text-sm"
                     >
-                      {addedSuccess ? 'Added to Basket!' : 'Add to Cart'}
+                      {addedSuccess ? 'Added to Cart!' : 'Add to Cart'}
                     </Button>
 
                     <Button

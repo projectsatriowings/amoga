@@ -128,7 +128,7 @@ export function GlobalProfileMenu({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        aria-label={isAuthenticated ? `Customer Account: ${customer?.name || 'Patron'}` : 'Customer Account & Profile Menu'}
+        aria-label={isAuthenticated ? `Customer Account: ${customer?.name || 'Customer'}` : 'Customer Account & Profile Menu'}
         className={`relative p-2 rounded-full transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-offset-2 flex items-center justify-center text-current hover:bg-current/10 ${triggerClassName}`}
         style={buttonStyle}
       >
@@ -180,7 +180,7 @@ export function GlobalProfileMenu({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <p className="font-serif font-bold text-sm text-[#1F0811] truncate">
-                          {customer?.name || 'Valued Patron'}
+                          {customer?.name || 'Valued Customer'}
                         </p>
                         <ShieldCheck className="w-3.5 h-3.5 text-[#8C6320] shrink-0" />
                       </div>
@@ -282,7 +282,7 @@ export function GlobalProfileMenu({
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-[#1F0811] truncate">Track Order</p>
-                          <p className="text-[11px] text-[#7A7167] truncate">Live parcel & atelier status</p>
+                          <p className="text-[11px] text-[#7A7167] truncate">Live order & delivery status</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-[#C5A46D] opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
@@ -299,7 +299,7 @@ export function GlobalProfileMenu({
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-[#1F0811] truncate">Saved Addresses</p>
-                          <p className="text-[11px] text-[#7A7167] truncate">Delivery residences</p>
+                          <p className="text-[11px] text-[#7A7167] truncate">Delivery addresses</p>
                         </div>
                       </div>
                       {addresses?.length > 0 ? (
@@ -324,7 +324,7 @@ export function GlobalProfileMenu({
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-[#1F0811] truncate">Track Order</p>
-                          <p className="text-[11px] text-[#7A7167] truncate">Check status with reference ID</p>
+                          <p className="text-[11px] text-[#7A7167] truncate">Check status with order number</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-[#C5A46D] opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
@@ -359,8 +359,8 @@ export function GlobalProfileMenu({
                           <HelpCircle className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#1F0811] truncate">Need Help?</p>
-                          <p className="text-[11px] text-[#7A7167] truncate">Customer care & inquiries</p>
+                          <p className="font-semibold text-[#1F0811] truncate">Contact Us</p>
+                          <p className="text-[11px] text-[#7A7167] truncate">Customer support & enquiries</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-[#C5A46D] opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
