@@ -105,6 +105,16 @@ import {
   getPosSettingsEndpoint,
   updatePosSettingsEndpoint,
 } from '../controllers/adminPosController.js';
+import {
+  listLocationsEndpoint,
+  createLocationEndpoint,
+  getLocationInventoryEndpoint,
+  adjustStockEndpoint,
+  executeStockTransferEndpoint,
+  listTransfersEndpoint,
+  listMovementLogsEndpoint,
+  getInventoryReportEndpoint,
+} from '../controllers/stallInventoryController.js';
 
 const router = Router();
 
@@ -216,5 +226,15 @@ router.post('/pos/events', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), c
 router.put('/pos/events/:id', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), updateStallEventEndpoint);
 router.get('/pos/settings', requireAdminAuth(), getPosSettingsEndpoint);
 router.put('/pos/settings', requireAdminAuth(['SUPER_ADMIN']), updatePosSettingsEndpoint);
+
+// 13. Stall Management & Stock Locations
+router.get('/stall/locations', requireAdminAuth(), listLocationsEndpoint);
+router.post('/stall/locations', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), createLocationEndpoint);
+router.get('/stall/inventory', requireAdminAuth(), getLocationInventoryEndpoint);
+router.post('/stall/inventory/adjust', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), adjustStockEndpoint);
+router.post('/stall/transfers', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), executeStockTransferEndpoint);
+router.get('/stall/transfers', requireAdminAuth(), listTransfersEndpoint);
+router.get('/stall/movements', requireAdminAuth(), listMovementLogsEndpoint);
+router.get('/stall/reports', requireAdminAuth(['ORDER_MANAGER']), getInventoryReportEndpoint);
 
 export default router;

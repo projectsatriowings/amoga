@@ -10,6 +10,7 @@ import contactRoutes from './contactRoutes.js';
 import customerRoutes from './customerRoutes.js';
 import reviewsRoutes from './reviewsRoutes.js';
 import posPublicRoutes from './posPublicRoutes.js';
+import stallRoutes from './stallRoutes.js';
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.use('/orders', ordersRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/admin', adminRoutes);
 router.use('/pos', posPublicRoutes);
+router.use('/stall', stallRoutes);
 router.use('/contact', contactRoutes);
 router.use('/customer', customerRoutes);
 router.use('/reviews', reviewsRoutes);

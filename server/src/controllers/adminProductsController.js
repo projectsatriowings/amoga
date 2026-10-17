@@ -360,7 +360,7 @@ export async function createProduct(req, res) {
       }
 
       return product;
-    });
+    }, { timeout: 30000, maxWait: 15000 });
 
     const fullProduct = await prisma.product.findUnique({
       where: { id: createdProduct.id },
@@ -630,7 +630,7 @@ export async function updateProduct(req, res) {
       }
 
       return p;
-    });
+    }, { timeout: 30000, maxWait: 15000 });
 
     await logAdminAction({
       adminId: req.admin.id,

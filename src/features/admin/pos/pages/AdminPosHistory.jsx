@@ -392,12 +392,12 @@ export function AdminPosHistory() {
 
                       {/* WhatsApp Status */}
                       <td className="py-3 px-4">
-                        {sale.whatsAppStatus === 'SENT' ? (
+                        {(sale.whatsappDeliveryStatus === 'SENT' || sale.whatsAppStatus === 'SENT') ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                             <span>Sent</span>
                           </span>
-                        ) : sale.whatsAppStatus === 'FALLBACK_READY' ? (
+                        ) : (sale.whatsappDeliveryStatus === 'FALLBACK_READY' || sale.whatsAppStatus === 'FALLBACK_READY') ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                             <Share2 className="w-3 h-3 text-amber-600" />
                             <span>Direct</span>

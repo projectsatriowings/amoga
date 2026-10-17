@@ -27,11 +27,13 @@ import { prisma } from '../config/prisma.js';
 // 1. Search catalogue for POS Register
 export async function searchPosCatalogEndpoint(req, res, next) {
   try {
-    const { query = '', collectionId = 'all', inStockOnly } = req.query;
+    const { query = '', collectionId = 'all', inStockOnly, stockLocationId, stallEventId } = req.query;
     const products = await searchPosCatalog({
       query,
       collectionId,
       inStockOnly: inStockOnly === 'true',
+      stockLocationId: stockLocationId || null,
+      stallEventId: stallEventId || null,
     });
     return res.json({ success: true, products });
   } catch (error) {
@@ -81,6 +83,7 @@ export async function finalizePosSaleEndpoint(req, res, next) {
   try {
     const {
       stallEventId,
+      stockLocationId,
       customerName,
       customerPhone,
       customerEmail,
@@ -132,6 +135,7 @@ export async function finalizePosSaleEndpoint(req, res, next) {
 
     const { sale, isDuplicate } = await finalizePosSale({
       stallEventId: stallEventId || null,
+      stockLocationId: stockLocationId || null,
       staffId,
       staffEmail,
       staffName,
@@ -172,32 +176,51 @@ export async function finalizePosSaleEndpoint(req, res, next) {
         sellerTradeName: 'Amoga',
       });
 
-      // Update sale whatsappStatus in DB
+      // Update sale whatsappDeliveryStatus in DB
       if (whatsAppResult.success) {
         await prisma.posSale.update({
           where: { id: sale.id },
           data: {
-            whatsAppStatus: whatsAppResult.deliveryMode === 'MANUAL_FALLBACK' ? 'FALLBACK_READY' : 'SENT',
-            whatsAppSentAt: new Date(),
-            whatsAppMessageId: whatsAppResult.messageId || null,
+            whatsappDeliveryStatus: whatsAppResult.deliveryMode === 'MANUAL_FALLBACK' ? 'FALLBACK_READY' : 'SENT',
+            whatsappSentAt: new Date(),
+            whatsappMessageId: whatsAppResult.messageId || null,
+            whatsappError: null,
           },
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error('[POS WhatsApp Finalize Update Error]:', err.message);
+        });
       } else {
         await prisma.posSale.update({
           where: { id: sale.id },
           data: {
-            whatsAppStatus: 'FAILED',
-            whatsAppError: whatsAppResult.message || 'WhatsApp dispatch failed',
+            whatsappDeliveryStatus: 'FAILED',
+            whatsappError: whatsAppResult.message || whatsAppResult.error || 'WhatsApp dispatch failed',
           },
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error('[POS WhatsApp Finalize Update Error]:', err.message);
+        });
       }
     }
 
+    const deliveryStatus = whatsAppResult
+      ? (whatsAppResult.deliveryMode === 'MANUAL_FALLBACK' ? 'FALLBACK_READY' : (whatsAppResult.success ? 'SENT' : 'FAILED'))
+      : (sale.whatsappDeliveryStatus || 'NOT_REQUESTED');
+
     return res.status(201).json({
       success: true,
-      sale,
+      sale: {
+        ...sale,
+        whatsappDeliveryStatus: deliveryStatus,
+        whatsAppStatus: deliveryStatus,
+      },
       isDuplicate,
-      whatsAppResult,
+      whatsAppResult: whatsAppResult
+        ? {
+            ...whatsAppResult,
+            status: deliveryStatus,
+            deliveryStatus,
+          }
+        : null,
     });
   } catch (error) {
     next(error);
@@ -303,7 +326,7 @@ export async function refundPosSaleEndpoint(req, res, next) {
 // 8. Re-send or Generate WhatsApp Receipt
 export async function sendPosBillWhatsAppEndpoint(req, res, next) {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.body.id || req.body.saleId;
     const { phone, forceManual = false } = req.body;
 
     const sale = await getPosSale(id);
@@ -349,31 +372,40 @@ export async function sendPosBillWhatsAppEndpoint(req, res, next) {
       forceManual,
     });
 
-    // Update status in database
+    const deliveryStatus = whatsAppResult.success
+      ? (whatsAppResult.deliveryMode === 'MANUAL_FALLBACK' ? 'FALLBACK_READY' : 'SENT')
+      : 'FAILED';
+
+    // Update status in database using exact Prisma schema column names
     if (whatsAppResult.success) {
       await prisma.posSale.update({
         where: { id: sale.id },
         data: {
           customerPhone: phoneValidation.digits10,
-          whatsAppStatus: whatsAppResult.deliveryMode === 'MANUAL_FALLBACK' ? 'FALLBACK_READY' : 'SENT',
-          whatsAppSentAt: new Date(),
-          whatsAppMessageId: whatsAppResult.messageId || null,
-          whatsAppError: null,
+          whatsappDeliveryStatus: deliveryStatus,
+          whatsappSentAt: new Date(),
+          whatsappMessageId: whatsAppResult.messageId || null,
+          whatsappError: null,
         },
       });
     } else {
       await prisma.posSale.update({
         where: { id: sale.id },
         data: {
-          whatsAppStatus: 'FAILED',
-          whatsAppError: whatsAppResult.message || 'WhatsApp delivery failed',
+          customerPhone: phoneValidation.digits10,
+          whatsappDeliveryStatus: 'FAILED',
+          whatsappError: whatsAppResult.message || whatsAppResult.error || 'WhatsApp delivery failed',
         },
       });
     }
 
     return res.json({
       success: true,
-      whatsAppResult,
+      whatsAppResult: {
+        ...whatsAppResult,
+        status: deliveryStatus,
+        deliveryStatus,
+      },
     });
   } catch (error) {
     next(error);

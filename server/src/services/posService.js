@@ -108,7 +108,14 @@ export async function updatePosSettings(data, staffEmail, staffId = null, client
  * Searches product catalogue for quick POS billing:
  * By product name, SKU, variant SKU, sourceId, or barcode
  */
-export async function searchPosCatalog({ query = '', collectionId = null, inStockOnly = false, client = prisma }) {
+export async function searchPosCatalog({
+  query = '',
+  collectionId = null,
+  inStockOnly = false,
+  stockLocationId = null,
+  stallEventId = null,
+  client = prisma,
+}) {
   const clean = String(query).trim();
 
   const where = {
@@ -117,10 +124,6 @@ export async function searchPosCatalog({ query = '', collectionId = null, inStoc
 
   if (collectionId && collectionId !== 'all') {
     where.collectionId = collectionId;
-  }
-
-  if (inStockOnly) {
-    where.stockQuantity = { gt: 0 };
   }
 
   if (clean) {
@@ -143,9 +146,37 @@ export async function searchPosCatalog({ query = '', collectionId = null, inStoc
     ];
   }
 
+  // Resolve Stock Location if provided
+  let resolvedLocation = null;
+  const locationInventoriesMap = new Map();
+
+  if (stockLocationId || stallEventId) {
+    if (stockLocationId && stockLocationId !== 'all') {
+      resolvedLocation = await client.stockLocation.findUnique({
+        where: { id: stockLocationId },
+        select: { id: true, code: true, name: true, type: true },
+      });
+    } else if (stallEventId && stallEventId !== 'all') {
+      resolvedLocation = await client.stockLocation.findFirst({
+        where: { stallEventId },
+        select: { id: true, code: true, name: true, type: true },
+      });
+    }
+
+    if (resolvedLocation) {
+      const locInvs = await client.locationInventory.findMany({
+        where: { locationId: resolvedLocation.id },
+      });
+      for (const li of locInvs) {
+        const key = `${li.productId}_${li.variantId || 'base'}`;
+        locationInventoriesMap.set(key, li);
+      }
+    }
+  }
+
   const products = await client.product.findMany({
     where,
-    take: 40,
+    take: 60,
     orderBy: { name: 'asc' },
     include: {
       variants: {
@@ -173,16 +204,47 @@ export async function searchPosCatalog({ query = '', collectionId = null, inStoc
     },
   });
 
-  // Transform with live stock availability calculations
-  return products.map((p) => {
-    const pOnHand = Math.max(0, p.stockQuantity || 0);
-    const pReserved = Math.max(0, p.reservedQuantity || 0);
-    const pAvailable = Math.max(0, pOnHand - pReserved);
+  // Transform with live stock availability calculations (stall-isolated or warehouse)
+  let transformed = products.map((p) => {
+    let pOnHand = Math.max(0, p.stockQuantity || 0);
+    let pReserved = Math.max(0, p.reservedQuantity || 0);
+    let pAvailable = Math.max(0, pOnHand - pReserved);
+    let hasStallRecord = false;
+
+    if (resolvedLocation) {
+      const locInv = locationInventoriesMap.get(`${p.id}_base`);
+      if (locInv) {
+        pOnHand = Math.max(0, locInv.onHandQuantity);
+        pReserved = Math.max(0, locInv.reservedQuantity);
+        pAvailable = Math.max(0, pOnHand - pReserved);
+        hasStallRecord = true;
+      } else {
+        pOnHand = 0;
+        pReserved = 0;
+        pAvailable = 0;
+      }
+    }
 
     const variants = (p.variants || []).map((v) => {
-      const vOnHand = Math.max(0, v.stockQuantity || 0);
-      const vReserved = Math.max(0, v.reservedQuantity || 0);
-      const vAvailable = Math.max(0, vOnHand - vReserved);
+      let vOnHand = Math.max(0, v.stockQuantity || 0);
+      let vReserved = Math.max(0, v.reservedQuantity || 0);
+      let vAvailable = Math.max(0, vOnHand - vReserved);
+      let vHasStall = false;
+
+      if (resolvedLocation) {
+        const locInv = locationInventoriesMap.get(`${p.id}_${v.id}`);
+        if (locInv) {
+          vOnHand = Math.max(0, locInv.onHandQuantity);
+          vReserved = Math.max(0, locInv.reservedQuantity);
+          vAvailable = Math.max(0, vOnHand - vReserved);
+          vHasStall = true;
+        } else {
+          vOnHand = 0;
+          vReserved = 0;
+          vAvailable = 0;
+        }
+      }
+
       return {
         id: v.id,
         name: v.name,
@@ -191,13 +253,19 @@ export async function searchPosCatalog({ query = '', collectionId = null, inStoc
         onHandQuantity: vOnHand,
         reservedQuantity: vReserved,
         availableQuantity: vAvailable,
-        inStock: v.inStock && vAvailable > 0,
+        inStock: vAvailable > 0,
+        onlineStockQuantity: v.stockQuantity,
         hsnCode: v.hsnCode || p.hsnCode || '5007',
         gstRate: v.gstRate !== null ? Number(v.gstRate) : Number(p.gstRate || 5),
         isTaxInclusive: v.isTaxInclusive !== null ? Boolean(v.isTaxInclusive) : Boolean(p.isTaxInclusive),
         attributes: v.attributes,
+        hasStallAllocation: vHasStall,
       };
     });
+
+    const isAvailable = variants.length > 0
+      ? variants.some((v) => v.availableQuantity > 0)
+      : pAvailable > 0;
 
     return {
       id: p.id,
@@ -216,10 +284,19 @@ export async function searchPosCatalog({ query = '', collectionId = null, inStoc
       onHandQuantity: pOnHand,
       reservedQuantity: pReserved,
       availableQuantity: pAvailable,
-      inStock: p.inStock && pAvailable > 0,
+      inStock: isAvailable,
+      onlineStockQuantity: p.stockQuantity,
+      hasStallAllocation: hasStallRecord,
+      stockLocation: resolvedLocation || null,
       variants,
     };
   });
+
+  if (inStockOnly) {
+    transformed = transformed.filter((p) => p.inStock);
+  }
+
+  return transformed;
 }
 
 /**
@@ -367,6 +444,7 @@ export async function finalizePosSale({
   staffEmail,
   staffName = null,
   stallEventId = null,
+  stockLocationId = null,
   items = [],
   customerName = null,
   customerPhone = null,
@@ -396,6 +474,7 @@ export async function finalizePosSale({
       include: {
         items: true,
         stallEvent: true,
+        stockLocation: true,
         payments: true,
       },
     });
@@ -407,122 +486,183 @@ export async function finalizePosSale({
   // Execute entire sale and inventory deduction in an atomic transaction
   return await prisma.$transaction(
     async (tx) => {
-      // 1. Generate sequential bill number
-    const billNumber = await getNextPosBillNumber(null, tx);
+      // 1. Resolve Stock Location (Stall-isolated stock)
+      let resolvedLocationId = stockLocationId;
+      let resolvedLocation = null;
 
-    // 2. Validate and check stock for all items
-    const verifiedLines = [];
-    let grossSubtotalPaise = 0;
-    let totalPieces = 0;
-
-    for (const item of items) {
-      const qty = Math.max(1, Number(item.quantity) || 1);
-      totalPieces += qty;
-
-      if (item.variantId) {
-        const variant = await tx.productVariant.findUnique({
-          where: { id: item.variantId },
-          include: { product: true },
+      if (!resolvedLocationId && stallEventId) {
+        resolvedLocation = await tx.stockLocation.findFirst({
+          where: { stallEventId },
         });
+        if (resolvedLocation) resolvedLocationId = resolvedLocation.id;
+      } else if (resolvedLocationId) {
+        resolvedLocation = await tx.stockLocation.findUnique({
+          where: { id: resolvedLocationId },
+        });
+      }
 
-        if (!variant) {
-          const err = new Error(`Variant "${item.variantName || item.variantId}" not found in catalogue.`);
-          err.status = 404;
-          throw err;
+      if (!resolvedLocationId) {
+        const defaultStall = await tx.stockLocation.findFirst({
+          where: { type: 'STALL', isActive: true },
+        });
+        if (defaultStall) {
+          resolvedLocationId = defaultStall.id;
+          resolvedLocation = defaultStall;
         }
+      }
 
-        const available = Math.max(0, (variant.stockQuantity || 0) - (variant.reservedQuantity || 0));
-        if (qty > available) {
-          const err = new Error(
-            `Insufficient stock for "${variant.product.name} (${variant.name})". Requested: ${qty}, Available: ${available}.`
-          );
-          err.status = 422;
-          err.details = {
+      // 2. Generate sequential bill number
+      const billNumber = await getNextPosBillNumber(null, tx);
+
+      // 3. Validate and check stock for all items
+      const verifiedLines = [];
+      let grossSubtotalPaise = 0;
+      let totalPieces = 0;
+
+      for (const item of items) {
+        const qty = Math.max(1, Number(item.quantity) || 1);
+        totalPieces += qty;
+
+        if (item.variantId) {
+          const variant = await tx.productVariant.findUnique({
+            where: { id: item.variantId },
+            include: { product: true },
+          });
+
+          if (!variant) {
+            const err = new Error(`Variant "${item.variantName || item.variantId}" not found in catalogue.`);
+            err.status = 404;
+            throw err;
+          }
+
+          let available = Math.max(0, (variant.stockQuantity || 0) - (variant.reservedQuantity || 0));
+          let currentStock = variant.stockQuantity;
+          let stallInv = null;
+
+          if (resolvedLocationId) {
+            stallInv = await tx.locationInventory.findFirst({
+              where: {
+                locationId: resolvedLocationId,
+                productId: variant.productId,
+                variantId: variant.id,
+              },
+            });
+            available = stallInv ? Math.max(0, stallInv.onHandQuantity - stallInv.reservedQuantity) : 0;
+            currentStock = stallInv ? stallInv.onHandQuantity : 0;
+          }
+
+          if (qty > available) {
+            const locName = resolvedLocation?.name || 'Selected Location';
+            const err = new Error(
+              `Insufficient stall stock for "${variant.product.name} (${variant.name})" at ${locName}. Requested: ${qty}, Available: ${available}.`
+            );
+            err.status = 422;
+            err.details = {
+              productId: variant.productId,
+              variantId: variant.id,
+              productName: variant.product.name,
+              variantName: variant.name,
+              requested: qty,
+              available,
+              locationId: resolvedLocationId,
+            };
+            throw err;
+          }
+
+          const price = variant.price !== null ? Number(variant.price) : Number(variant.product.price || 0);
+          const unitPricePaise = Math.round(price * 100);
+          const lineTotalPaise = unitPricePaise * qty;
+          grossSubtotalPaise += lineTotalPaise;
+
+          verifiedLines.push({
             productId: variant.productId,
             variantId: variant.id,
+            collectionId: variant.product.collectionId,
             productName: variant.product.name,
             variantName: variant.name,
-            requested: qty,
-            available,
-          };
-          throw err;
-        }
+            sku: variant.sku || `${variant.product.sku || variant.product.sourceId}-${variant.name}`,
+            hsnCode: variant.hsnCode || variant.product.hsnCode || '5007',
+            gstRate: variant.gstRate !== null ? Number(variant.gstRate) : Number(variant.product.gstRate || 5),
+            isTaxInclusive: variant.isTaxInclusive !== null ? Boolean(variant.isTaxInclusive) : Boolean(variant.product.isTaxInclusive),
+            unitPrice: Number((unitPricePaise / 100).toFixed(2)),
+            quantity: qty,
+            lineTotal: Number((lineTotalPaise / 100).toFixed(2)),
+            currentStock,
+            stallInv,
+            isVariant: true,
+          });
+        } else if (item.productId) {
+          const product = await tx.product.findUnique({
+            where: { id: item.productId },
+          });
 
-        const price = variant.price !== null ? Number(variant.price) : Number(variant.product.price || 0);
-        const unitPricePaise = Math.round(price * 100);
-        const lineTotalPaise = unitPricePaise * qty;
-        grossSubtotalPaise += lineTotalPaise;
+          if (!product) {
+            const err = new Error(`Product "${item.productName || item.productId}" not found.`);
+            err.status = 404;
+            throw err;
+          }
 
-        verifiedLines.push({
-          productId: variant.productId,
-          variantId: variant.id,
-          collectionId: variant.product.collectionId,
-          productName: variant.product.name,
-          variantName: variant.name,
-          sku: variant.sku || `${variant.product.sku || variant.product.sourceId}-${variant.name}`,
-          hsnCode: variant.hsnCode || variant.product.hsnCode || '5007',
-          gstRate: variant.gstRate !== null ? Number(variant.gstRate) : Number(variant.product.gstRate || 5),
-          isTaxInclusive: variant.isTaxInclusive !== null ? Boolean(variant.isTaxInclusive) : Boolean(variant.product.isTaxInclusive),
-          unitPrice: Number((unitPricePaise / 100).toFixed(2)),
-          quantity: qty,
-          lineTotal: Number((lineTotalPaise / 100).toFixed(2)),
-          currentStock: variant.stockQuantity,
-          isVariant: true,
-        });
-      } else if (item.productId) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-        });
+          let available = Math.max(0, (product.stockQuantity || 0) - (product.reservedQuantity || 0));
+          let currentStock = product.stockQuantity;
+          let stallInv = null;
 
-        if (!product) {
-          const err = new Error(`Product "${item.productName || item.productId}" not found.`);
-          err.status = 404;
-          throw err;
-        }
+          if (resolvedLocationId) {
+            stallInv = await tx.locationInventory.findFirst({
+              where: {
+                locationId: resolvedLocationId,
+                productId: product.id,
+                variantId: null,
+              },
+            });
+            available = stallInv ? Math.max(0, stallInv.onHandQuantity - stallInv.reservedQuantity) : 0;
+            currentStock = stallInv ? stallInv.onHandQuantity : 0;
+          }
 
-        const available = Math.max(0, (product.stockQuantity || 0) - (product.reservedQuantity || 0));
-        if (qty > available) {
-          const err = new Error(
-            `Insufficient stock for "${product.name}". Requested: ${qty}, Available: ${available}.`
-          );
-          err.status = 422;
-          err.details = {
+          if (qty > available) {
+            const locName = resolvedLocation?.name || 'Selected Location';
+            const err = new Error(
+              `Insufficient stall stock for "${product.name}" at ${locName}. Requested: ${qty}, Available: ${available}.`
+            );
+            err.status = 422;
+            err.details = {
+              productId: product.id,
+              variantId: null,
+              productName: product.name,
+              requested: qty,
+              available,
+              locationId: resolvedLocationId,
+            };
+            throw err;
+          }
+
+          const price = product.price !== null ? Number(product.price) : 0;
+          const unitPricePaise = Math.round(price * 100);
+          const lineTotalPaise = unitPricePaise * qty;
+          grossSubtotalPaise += lineTotalPaise;
+
+          verifiedLines.push({
             productId: product.id,
             variantId: null,
+            collectionId: product.collectionId,
             productName: product.name,
-            requested: qty,
-            available,
-          };
+            variantName: null,
+            sku: product.sku || product.sourceId,
+            hsnCode: product.hsnCode || '5007',
+            gstRate: product.gstRate !== null ? Number(product.gstRate) : 5,
+            isTaxInclusive: product.isTaxInclusive !== null ? Boolean(product.isTaxInclusive) : true,
+            unitPrice: Number((unitPricePaise / 100).toFixed(2)),
+            quantity: qty,
+            lineTotal: Number((lineTotalPaise / 100).toFixed(2)),
+            currentStock,
+            stallInv,
+            isVariant: false,
+          });
+        } else {
+          const err = new Error('Each line item must have either a valid productId or variantId.');
+          err.status = 400;
           throw err;
         }
-
-        const price = product.price !== null ? Number(product.price) : 0;
-        const unitPricePaise = Math.round(price * 100);
-        const lineTotalPaise = unitPricePaise * qty;
-        grossSubtotalPaise += lineTotalPaise;
-
-        verifiedLines.push({
-          productId: product.id,
-          variantId: null,
-          collectionId: product.collectionId,
-          productName: product.name,
-          variantName: null,
-          sku: product.sku || product.sourceId,
-          hsnCode: product.hsnCode || '5007',
-          gstRate: product.gstRate !== null ? Number(product.gstRate) : 5,
-          isTaxInclusive: product.isTaxInclusive !== null ? Boolean(product.isTaxInclusive) : true,
-          unitPrice: Number((unitPricePaise / 100).toFixed(2)),
-          quantity: qty,
-          lineTotal: Number((lineTotalPaise / 100).toFixed(2)),
-          currentStock: product.stockQuantity,
-          isVariant: false,
-        });
-      } else {
-        const err = new Error('Each line item must have either a valid productId or variantId.');
-        err.status = 400;
-        throw err;
       }
-    }
 
     // 3. Financial calculations
     const grossSubtotalRupees = Number((grossSubtotalPaise / 100).toFixed(2));
@@ -572,6 +712,7 @@ export async function finalizePosSale({
         idempotencyKey: idempotencyKey || null,
         publicReceiptToken,
         stallEventId: stallEventId || null,
+        stockLocationId: resolvedLocationId || null,
         staffId: staffId || null,
         staffEmail: staffEmail || 'stall-staff@amoga.com',
         staffName: staffName || null,
@@ -639,57 +780,99 @@ export async function finalizePosSale({
         },
       });
 
-      // Deduct inventory atomically
-      if (line.isVariant && line.variantId) {
-        const newStock = Math.max(0, line.currentStock - line.quantity);
-        await tx.productVariant.update({
-          where: { id: line.variantId },
-          data: {
-            stockQuantity: newStock,
-            inStock: newStock > 0,
-          },
-        });
+      // Deduct inventory atomically from isolated stall stock location
+      if (resolvedLocationId) {
+        const prevStock = line.stallInv ? line.stallInv.onHandQuantity : line.currentStock;
+        const newStock = Math.max(0, prevStock - line.quantity);
 
-        await tx.inventoryLog.create({
-          data: {
-            productId: line.productId,
-            variantId: line.variantId,
-            previousStock: line.currentStock,
-            adjustedStock: newStock,
-            delta: -line.quantity,
-            reason: `Stall POS Sale ${billNumber}`,
-            adminEmail: staffEmail || 'stall-staff',
-            adminId: staffId || null,
-            orderId: posSale.id,
-            actor: `STAFF: ${staffEmail}`,
-            type: 'POS_SALE',
-          },
-        });
-      } else if (line.productId) {
-        const newStock = Math.max(0, line.currentStock - line.quantity);
-        await tx.product.update({
-          where: { id: line.productId },
-          data: {
-            stockQuantity: newStock,
-            inStock: newStock > 0,
-          },
-        });
+        if (line.stallInv) {
+          await tx.locationInventory.update({
+            where: { id: line.stallInv.id },
+            data: {
+              onHandQuantity: newStock,
+              lastMovementAt: new Date(),
+            },
+          });
+        } else {
+          await tx.locationInventory.create({
+            data: {
+              locationId: resolvedLocationId,
+              productId: line.productId,
+              variantId: line.variantId || null,
+              onHandQuantity: newStock,
+              lastMovementAt: new Date(),
+            },
+          });
+        }
 
-        await tx.inventoryLog.create({
+        await tx.locationMovementLog.create({
           data: {
+            locationId: resolvedLocationId,
             productId: line.productId,
-            variantId: null,
-            previousStock: line.currentStock,
-            adjustedStock: newStock,
+            variantId: line.variantId || null,
+            previousQuantity: prevStock,
+            newQuantity: newStock,
             delta: -line.quantity,
+            movementType: 'STALL_POS',
+            reference: billNumber,
+            actorEmail: staffEmail || 'stall-staff',
+            actorId: staffId || null,
             reason: `Stall POS Sale ${billNumber}`,
-            adminEmail: staffEmail || 'stall-staff',
-            adminId: staffId || null,
-            orderId: posSale.id,
-            actor: `STAFF: ${staffEmail}`,
-            type: 'POS_SALE',
           },
         });
+      } else {
+        // Fallback for unconfigured stock location
+        if (line.isVariant && line.variantId) {
+          const newStock = Math.max(0, line.currentStock - line.quantity);
+          await tx.productVariant.update({
+            where: { id: line.variantId },
+            data: {
+              stockQuantity: newStock,
+              inStock: newStock > 0,
+            },
+          });
+
+          await tx.inventoryLog.create({
+            data: {
+              productId: line.productId,
+              variantId: line.variantId,
+              previousStock: line.currentStock,
+              adjustedStock: newStock,
+              delta: -line.quantity,
+              reason: `Stall POS Sale ${billNumber}`,
+              adminEmail: staffEmail || 'stall-staff',
+              adminId: staffId || null,
+              orderId: posSale.id,
+              actor: `STAFF: ${staffEmail}`,
+              type: 'POS_SALE',
+            },
+          });
+        } else if (line.productId) {
+          const newStock = Math.max(0, line.currentStock - line.quantity);
+          await tx.product.update({
+            where: { id: line.productId },
+            data: {
+              stockQuantity: newStock,
+              inStock: newStock > 0,
+            },
+          });
+
+          await tx.inventoryLog.create({
+            data: {
+              productId: line.productId,
+              variantId: null,
+              previousStock: line.currentStock,
+              adjustedStock: newStock,
+              delta: -line.quantity,
+              reason: `Stall POS Sale ${billNumber}`,
+              adminEmail: staffEmail || 'stall-staff',
+              adminId: staffId || null,
+              orderId: posSale.id,
+              actor: `STAFF: ${staffEmail}`,
+              type: 'POS_SALE',
+            },
+          });
+        }
       }
     }
 
@@ -759,62 +942,108 @@ export async function cancelPosSale({ saleId, staffEmail, staffId = null, reason
     }
 
     // Restore stock for each item
-    for (const item of sale.items) {
-      if (item.variantId) {
-        const v = await tx.productVariant.findUnique({ where: { id: item.variantId } });
-        if (v) {
-          const restoredStock = v.stockQuantity + item.quantity;
-          await tx.productVariant.update({
-            where: { id: item.variantId },
-            data: {
-              stockQuantity: restoredStock,
-              inStock: true,
-            },
+    if (sale.stockLocationId) {
+      for (const item of sale.items) {
+        const inv = await tx.locationInventory.findFirst({
+          where: {
+            locationId: sale.stockLocationId,
+            productId: item.productId,
+            variantId: item.variantId || null,
+          },
+        });
+        const prevStock = inv ? inv.onHandQuantity : 0;
+        const restoredStock = prevStock + item.quantity;
+        if (inv) {
+          await tx.locationInventory.update({
+            where: { id: inv.id },
+            data: { onHandQuantity: restoredStock, lastMovementAt: new Date() },
           });
-
-          await tx.inventoryLog.create({
+        } else {
+          await tx.locationInventory.create({
             data: {
+              locationId: sale.stockLocationId,
               productId: item.productId,
-              variantId: item.variantId,
-              previousStock: v.stockQuantity,
-              adjustedStock: restoredStock,
-              delta: item.quantity,
-              reason: `Compensating restock: POS Bill ${sale.billNumber} cancelled (${reason})`,
-              adminEmail: staffEmail,
-              adminId: staffId,
-              orderId: sale.id,
-              actor: `STAFF: ${staffEmail}`,
-              type: 'POS_CANCEL',
+              variantId: item.variantId || null,
+              onHandQuantity: restoredStock,
+              lastMovementAt: new Date(),
             },
           });
         }
-      } else if (item.productId) {
-        const p = await tx.product.findUnique({ where: { id: item.productId } });
-        if (p) {
-          const restoredStock = p.stockQuantity + item.quantity;
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stockQuantity: restoredStock,
-              inStock: true,
-            },
-          });
+        await tx.locationMovementLog.create({
+          data: {
+            locationId: sale.stockLocationId,
+            productId: item.productId,
+            variantId: item.variantId || null,
+            previousQuantity: prevStock,
+            newQuantity: restoredStock,
+            delta: item.quantity,
+            movementType: 'RETURN',
+            reference: sale.billNumber,
+            actorEmail: staffEmail,
+            actorId: staffId,
+            reason: `Restock cancelled bill ${sale.billNumber}: ${reason}`,
+          },
+        });
+      }
+    } else {
+      // Legacy fallback
+      for (const item of sale.items) {
+        if (item.variantId) {
+          const v = await tx.productVariant.findUnique({ where: { id: item.variantId } });
+          if (v) {
+            const restoredStock = v.stockQuantity + item.quantity;
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                stockQuantity: restoredStock,
+                inStock: true,
+              },
+            });
 
-          await tx.inventoryLog.create({
-            data: {
-              productId: item.productId,
-              variantId: null,
-              previousStock: p.stockQuantity,
-              adjustedStock: restoredStock,
-              delta: item.quantity,
-              reason: `Compensating restock: POS Bill ${sale.billNumber} cancelled (${reason})`,
-              adminEmail: staffEmail,
-              adminId: staffId,
-              orderId: sale.id,
-              actor: `STAFF: ${staffEmail}`,
-              type: 'POS_CANCEL',
-            },
-          });
+            await tx.inventoryLog.create({
+              data: {
+                productId: item.productId,
+                variantId: item.variantId,
+                previousStock: v.stockQuantity,
+                adjustedStock: restoredStock,
+                delta: item.quantity,
+                reason: `Compensating restock: POS Bill ${sale.billNumber} cancelled (${reason})`,
+                adminEmail: staffEmail,
+                adminId: staffId,
+                orderId: sale.id,
+                actor: `STAFF: ${staffEmail}`,
+                type: 'POS_CANCEL',
+              },
+            });
+          }
+        } else if (item.productId) {
+          const p = await tx.product.findUnique({ where: { id: item.productId } });
+          if (p) {
+            const restoredStock = p.stockQuantity + item.quantity;
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stockQuantity: restoredStock,
+                inStock: true,
+              },
+            });
+
+            await tx.inventoryLog.create({
+              data: {
+                productId: item.productId,
+                variantId: null,
+                previousStock: p.stockQuantity,
+                adjustedStock: restoredStock,
+                delta: item.quantity,
+                reason: `Compensating restock: POS Bill ${sale.billNumber} cancelled (${reason})`,
+                adminEmail: staffEmail,
+                adminId: staffId,
+                orderId: sale.id,
+                actor: `STAFF: ${staffEmail}`,
+                type: 'POS_CANCEL',
+              },
+            });
+          }
         }
       }
     }
@@ -872,52 +1101,98 @@ export async function refundPosSale({
     const actualRefundAmount = refundAmount !== null ? Number(refundAmount) : Number(sale.totalAmount);
 
     if (restockItems) {
-      for (const item of sale.items) {
-        if (item.variantId) {
-          const v = await tx.productVariant.findUnique({ where: { id: item.variantId } });
-          if (v) {
-            const restored = v.stockQuantity + item.quantity;
-            await tx.productVariant.update({
-              where: { id: item.variantId },
-              data: { stockQuantity: restored, inStock: true },
+      if (sale.stockLocationId) {
+        for (const item of sale.items) {
+          const inv = await tx.locationInventory.findFirst({
+            where: {
+              locationId: sale.stockLocationId,
+              productId: item.productId,
+              variantId: item.variantId || null,
+            },
+          });
+          const prevStock = inv ? inv.onHandQuantity : 0;
+          const restoredStock = prevStock + item.quantity;
+          if (inv) {
+            await tx.locationInventory.update({
+              where: { id: inv.id },
+              data: { onHandQuantity: restoredStock, lastMovementAt: new Date() },
             });
-            await tx.inventoryLog.create({
+          } else {
+            await tx.locationInventory.create({
               data: {
+                locationId: sale.stockLocationId,
                 productId: item.productId,
-                variantId: item.variantId,
-                previousStock: v.stockQuantity,
-                adjustedStock: restored,
-                delta: item.quantity,
-                reason: `POS Bill ${sale.billNumber} refunded: ${reason}`,
-                adminEmail: staffEmail,
-                adminId: staffId,
-                orderId: sale.id,
-                type: 'POS_REFUND',
+                variantId: item.variantId || null,
+                onHandQuantity: restoredStock,
+                lastMovementAt: new Date(),
               },
             });
           }
-        } else if (item.productId) {
-          const p = await tx.product.findUnique({ where: { id: item.productId } });
-          if (p) {
-            const restored = p.stockQuantity + item.quantity;
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stockQuantity: restored, inStock: true },
-            });
-            await tx.inventoryLog.create({
-              data: {
-                productId: item.productId,
-                variantId: null,
-                previousStock: p.stockQuantity,
-                adjustedStock: restored,
-                delta: item.quantity,
-                reason: `POS Bill ${sale.billNumber} refunded: ${reason}`,
-                adminEmail: staffEmail,
-                adminId: staffId,
-                orderId: sale.id,
-                type: 'POS_REFUND',
-              },
-            });
+          await tx.locationMovementLog.create({
+            data: {
+              locationId: sale.stockLocationId,
+              productId: item.productId,
+              variantId: item.variantId || null,
+              previousQuantity: prevStock,
+              newQuantity: restoredStock,
+              delta: item.quantity,
+              movementType: 'RETURN',
+              reference: sale.billNumber,
+              actorEmail: staffEmail,
+              actorId: staffId,
+              reason: `Restock refunded bill ${sale.billNumber}: ${reason}`,
+            },
+          });
+        }
+      } else {
+        // Legacy fallback
+        for (const item of sale.items) {
+          if (item.variantId) {
+            const v = await tx.productVariant.findUnique({ where: { id: item.variantId } });
+            if (v) {
+              const restored = v.stockQuantity + item.quantity;
+              await tx.productVariant.update({
+                where: { id: item.variantId },
+                data: { stockQuantity: restored, inStock: true },
+              });
+              await tx.inventoryLog.create({
+                data: {
+                  productId: item.productId,
+                  variantId: item.variantId,
+                  previousStock: v.stockQuantity,
+                  adjustedStock: restored,
+                  delta: item.quantity,
+                  reason: `POS Bill ${sale.billNumber} refunded: ${reason}`,
+                  adminEmail: staffEmail,
+                  adminId: staffId,
+                  orderId: sale.id,
+                  type: 'POS_REFUND',
+                },
+              });
+            }
+          } else if (item.productId) {
+            const p = await tx.product.findUnique({ where: { id: item.productId } });
+            if (p) {
+              const restored = p.stockQuantity + item.quantity;
+              await tx.product.update({
+                where: { id: item.productId },
+                data: { stockQuantity: restored, inStock: true },
+              });
+              await tx.inventoryLog.create({
+                data: {
+                  productId: item.productId,
+                  variantId: null,
+                  previousStock: p.stockQuantity,
+                  adjustedStock: restored,
+                  delta: item.quantity,
+                  reason: `POS Bill ${sale.billNumber} refunded: ${reason}`,
+                  adminEmail: staffEmail,
+                  adminId: staffId,
+                  orderId: sale.id,
+                  type: 'POS_REFUND',
+                },
+              });
+            }
           }
         }
       }
@@ -1026,7 +1301,13 @@ export async function listPosSales({
   ]);
 
   return {
-    sales,
+    sales: sales.map((sale) => ({
+      ...sale,
+      whatsAppStatus: sale.whatsappDeliveryStatus,
+      whatsAppSentAt: sale.whatsappSentAt,
+      whatsAppMessageId: sale.whatsappMessageId,
+      whatsAppError: sale.whatsappError,
+    })),
     pagination: {
       totalCount,
       page: Number(page),
@@ -1064,6 +1345,10 @@ export async function getPosSale(identifier, client = prisma) {
 
   return {
     ...sale,
+    whatsAppStatus: sale.whatsappDeliveryStatus,
+    whatsAppSentAt: sale.whatsappSentAt,
+    whatsAppMessageId: sale.whatsappMessageId,
+    whatsAppError: sale.whatsappError,
     sellerDetails: {
       legalName: storeSettings?.sellerLegalName || 'Amoga Luxury Private Limited',
       tradeName: storeSettings?.sellerTradeName || 'Amoga',

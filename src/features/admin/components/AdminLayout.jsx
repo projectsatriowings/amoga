@@ -38,6 +38,8 @@ import {
   MapPin,
   TrendingUp,
   Sliders,
+  ArrowRightLeft,
+  Layers,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminCommandPalette } from './AdminCommandPalette';
@@ -163,13 +165,16 @@ export function AdminLayout() {
       ],
     },
     {
-      title: 'STALL BILLING / POS',
+      title: 'STALL MANAGEMENT & POS',
       items: [
-        { label: 'New Bill', path: '/admin/pos/new', icon: Store },
-        { label: 'Bill History', path: '/admin/pos/history', icon: Receipt },
-        { label: 'Stalls and Events', path: '/admin/pos/stalls', icon: MapPin },
-        { label: 'POS Sales Reports', path: '/admin/pos/reports', icon: TrendingUp },
-        { label: 'POS Settings and Permissions', path: '/admin/pos/settings', icon: Sliders },
+        { label: 'Stall Dashboard', path: '/admin/stall/dashboard', icon: LayoutDashboard },
+        { label: 'Dedicated POS Terminal', path: '/stall', icon: Store, target: '_blank', externalBadge: 'REGISTER' },
+        { label: 'Stall Inventory', path: '/admin/stall/inventory', icon: Layers },
+        { label: 'Stock Transfers', path: '/admin/stall/transfers', icon: ArrowRightLeft },
+        { label: 'Stalls & Events', path: '/admin/stall/events', icon: MapPin },
+        { label: 'Bills & Sales', path: '/admin/stall/bills', icon: Receipt },
+        { label: 'Stall Reports', path: '/admin/stall/reports', icon: TrendingUp },
+        { label: 'Stall Settings & Roles', path: '/admin/stall/settings', icon: Sliders },
       ],
     },
     {
@@ -236,11 +241,14 @@ export function AdminLayout() {
   else if (currentPath === '/admin/reports') pageTitle = 'Business Intelligence & Exports';
   else if (currentPath === '/admin/settings') pageTitle = 'Atelier Settings';
   else if (currentPath === '/admin/audit-logs') pageTitle = 'System Audit Trail';
+  else if (currentPath === '/admin/stall/dashboard') pageTitle = 'Stall Management — Dashboard';
+  else if (currentPath === '/admin/stall/inventory') pageTitle = 'Stall Management — Multi-Location Inventory';
+  else if (currentPath === '/admin/stall/transfers') pageTitle = 'Stall Management — Stock Transfers';
+  else if (currentPath === '/admin/stall/events' || currentPath === '/admin/pos/stalls') pageTitle = 'Stall Management — Stalls & Events';
+  else if (currentPath === '/admin/stall/bills' || currentPath === '/admin/pos/history') pageTitle = 'Stall Management — Bills & Sales';
+  else if (currentPath === '/admin/stall/reports' || currentPath === '/admin/pos/reports') pageTitle = 'Stall Management — Sales Reports';
+  else if (currentPath === '/admin/stall/settings' || currentPath === '/admin/pos/settings') pageTitle = 'Stall Management — Settings & Roles';
   else if (currentPath === '/admin/pos/new') pageTitle = 'Stall Billing / POS — New Bill';
-  else if (currentPath === '/admin/pos/history') pageTitle = 'Stall Billing / POS — Bill History';
-  else if (currentPath === '/admin/pos/stalls') pageTitle = 'Stall Billing / POS — Stalls & Events';
-  else if (currentPath === '/admin/pos/reports') pageTitle = 'Stall Billing / POS — Sales Reports';
-  else if (currentPath === '/admin/pos/settings') pageTitle = 'Stall Billing / POS — Settings';
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] flex text-[#292820] font-sans antialiased selection:bg-[#762F39] selection:text-white">
@@ -339,6 +347,8 @@ export function AdminLayout() {
                   <Link
                     key={item.path}
                     to={item.path}
+                    target={item.target}
+                    rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
                     title={isCollapsed ? item.label : undefined}
                     className={`relative flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-150 ${
                       isActive
@@ -360,6 +370,12 @@ export function AdminLayout() {
                     {!isCollapsed && item.devBadge && (
                       <span className="relative z-10 text-[8px] font-mono px-1 py-0.2 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded ml-auto">
                         {item.devBadge}
+                      </span>
+                    )}
+                    {!isCollapsed && item.externalBadge && (
+                      <span className="relative z-10 text-[8px] font-mono px-1.5 py-0.5 bg-[#762F39]/40 text-[#E8C29D] border border-[#762F39]/60 rounded ml-auto flex items-center gap-0.5">
+                        <ExternalLink className="w-2.5 h-2.5" />
+                        {item.externalBadge}
                       </span>
                     )}
                   </Link>
@@ -657,6 +673,8 @@ export function AdminLayout() {
                         <Link
                           key={item.path}
                           to={item.path}
+                          target={item.target}
+                          rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
                           onClick={() => setMobileMenuOpen(false)}
                           className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-lg ${
                             isActive
@@ -665,7 +683,12 @@ export function AdminLayout() {
                           }`}
                         >
                           <Icon className="w-4 h-4" />
-                          <span>{item.label}</span>
+                          <span className="flex-1 truncate">{item.label}</span>
+                          {item.externalBadge && (
+                            <span className="text-[8px] font-mono px-1.5 py-0.5 bg-[#762F39]/50 text-[#E8C29D] border border-[#762F39] rounded">
+                              {item.externalBadge}
+                            </span>
+                          )}
                         </Link>
                       );
                     })}

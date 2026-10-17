@@ -243,6 +243,7 @@ export async function sendPosBillWhatsApp({
         deliveryMode: 'API_ERROR_FALLBACK',
         error: data?.error?.message || 'Failed to dispatch via WhatsApp Cloud API',
         waLink,
+        actionUrl: waLink,
         messageText,
         recipientPhone: phoneValidation.formattedE164,
       };
@@ -265,6 +266,7 @@ export async function sendPosBillWhatsApp({
       deliveryMode: 'EXCEPTION_FALLBACK',
       error: err.message,
       waLink,
+      actionUrl: waLink,
       messageText,
       recipientPhone: phoneValidation.formattedE164,
     };

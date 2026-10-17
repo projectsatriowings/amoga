@@ -53,6 +53,10 @@ import { AdminPosHistory } from '../features/admin/pos/pages/AdminPosHistory';
 import { AdminPosStalls } from '../features/admin/pos/pages/AdminPosStalls';
 import { AdminPosReports } from '../features/admin/pos/pages/AdminPosReports';
 import { AdminPosSettings } from '../features/admin/pos/pages/AdminPosSettings';
+import { AdminStallDashboard } from '../features/admin/pos/pages/AdminStallDashboard';
+import { AdminStallInventory } from '../features/admin/pos/pages/AdminStallInventory';
+import { AdminStallTransfers } from '../features/admin/pos/pages/AdminStallTransfers';
+import { StallBillingPage } from '../features/stall/pages/StallBillingPage';
 import { PublicReceiptPage } from '../features/pos/pages/PublicReceiptPage';
 
 /**
@@ -353,12 +357,20 @@ export const router = createBrowserRouter([
       { path: 'reports', element: <AdminReports /> },
       { path: 'settings', element: <AdminSettings /> },
       { path: 'users', element: <Navigate to="/admin" replace /> },
-      { path: 'pos', element: <Navigate to="/admin/pos/new" replace /> },
+      { path: 'pos', element: <Navigate to="/admin/stall/dashboard" replace /> },
       { path: 'pos/new', element: <AdminPosNewBill /> },
       { path: 'pos/history', element: <AdminPosHistory /> },
       { path: 'pos/stalls', element: <AdminPosStalls /> },
       { path: 'pos/reports', element: <AdminPosReports /> },
       { path: 'pos/settings', element: <AdminPosSettings /> },
+      { path: 'stall', element: <Navigate to="/admin/stall/dashboard" replace /> },
+      { path: 'stall/dashboard', element: <AdminStallDashboard /> },
+      { path: 'stall/inventory', element: <AdminStallInventory /> },
+      { path: 'stall/transfers', element: <AdminStallTransfers /> },
+      { path: 'stall/events', element: <AdminPosStalls /> },
+      { path: 'stall/bills', element: <AdminPosHistory /> },
+      { path: 'stall/reports', element: <AdminPosReports /> },
+      { path: 'stall/settings', element: <AdminPosSettings /> },
       {
         path: 'audit-logs',
         element: (
@@ -399,6 +411,13 @@ export const router = createBrowserRouter([
         <DynamicStorefront />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
+  },
+
+  // Dedicated Stall Billing Application (Standalone POS Route)
+  {
+    path: '/stall',
+    element: <StallBillingPage />,
     errorElement: <RouteErrorBoundary />,
   },
 

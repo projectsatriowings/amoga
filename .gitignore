@@ -42,3 +42,4 @@ server/generated/
 *.njsproj
 *.sln
 *.sw?
+scratch/

@@ -28,11 +28,13 @@ async function handleResponse(res) {
 
 export const posApi = {
   // 1. Catalog Search
-  async searchCatalog({ query = '', collectionId = 'all', inStockOnly = false } = {}) {
+  async searchCatalog({ query = '', collectionId = 'all', inStockOnly = false, stockLocationId = null, stallEventId = null } = {}) {
     const params = new URLSearchParams();
     if (query) params.append('query', query);
     if (collectionId) params.append('collectionId', collectionId);
     if (inStockOnly) params.append('inStockOnly', 'true');
+    if (stockLocationId) params.append('stockLocationId', stockLocationId);
+    if (stallEventId) params.append('stallEventId', stallEventId);
 
     const res = await fetch(`/api/admin/pos/catalog?${params.toString()}`, {
       headers: getAuthHeaders(),
@@ -177,4 +179,98 @@ export const posApi = {
     const res = await fetch(`/api/pos/receipt/${encodeURIComponent(token)}`);
     return handleResponse(res);
   },
+
+  // 13. Stock Locations
+  async listLocations(params = {}) {
+    const query = new URLSearchParams();
+    if (params.type) query.append('type', params.type);
+    if (params.isActive !== undefined) query.append('isActive', params.isActive);
+    const res = await fetch(`/api/admin/stall/locations?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  async createLocation(payload) {
+    const res = await fetch('/api/admin/stall/locations', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+  },
+
+  // 14. Location Inventory
+  async getLocationInventory({ locationId, collectionId = 'all', query = '', stockStatus = 'all', page = 1, limit = 50 } = {}) {
+    const params = new URLSearchParams();
+    if (locationId) params.append('locationId', locationId);
+    if (collectionId) params.append('collectionId', collectionId);
+    if (query) params.append('query', query);
+    if (stockStatus) params.append('stockStatus', stockStatus);
+    params.append('page', String(page));
+    params.append('limit', String(limit));
+
+    const res = await fetch(`/api/admin/stall/inventory?${params.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // 15. Stock Adjustments
+  async adjustLocationStock(payload) {
+    const res = await fetch('/api/admin/stall/inventory/adjust', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+  },
+
+  // 16. Stock Transfers
+  async executeStockTransfer(payload) {
+    const res = await fetch('/api/admin/stall/transfers', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+  },
+
+  async listStockTransfers(params = {}) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '' && v !== 'all') {
+        query.append(k, v);
+      }
+    });
+    const res = await fetch(`/api/admin/stall/transfers?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // 17. Movement Logs Ledger
+  async listMovementLogs(params = {}) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '' && v !== 'all') {
+        query.append(k, v);
+      }
+    });
+    const res = await fetch(`/api/admin/stall/movements?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // 18. Stall Inventory Reports
+  async getStallInventoryReport(params = {}) {
+    const query = new URLSearchParams();
+    if (params.locationId) query.append('locationId', params.locationId);
+    const res = await fetch(`/api/admin/stall/reports?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
+

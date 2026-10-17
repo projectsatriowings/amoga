@@ -49,14 +49,24 @@ export const useAdminStore = create((set, get) => ({
     }
   },
 
-  login: async (email, password) => {
+  login: async (email, password, isRetry = false) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch('/api/admin/auth/login', {
+      let res = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
+
+      // If backend was starting up or proxy warming up, auto-retry once after 1.2s
+      if (!res.ok && (res.status === 502 || res.status === 503 || res.status === 504) && !isRetry) {
+        await new Promise((r) => setTimeout(r, 1200));
+        res = await fetch('/api/admin/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+      }
 
       let data = null;
       try {
@@ -67,7 +77,7 @@ export const useAdminStore = create((set, get) => ({
 
       if (!res.ok) {
         if (res.status === 502 || res.status === 503 || res.status === 504) {
-          throw new Error('Backend API server is offline or unreachable (502 Bad Gateway). Ensure the backend server is running on port 5001.');
+          throw new Error('Backend API server is offline or unreachable (502/503). Ensure the backend server is running on port 5001.');
         }
         throw new Error(data?.message || data?.error || `Login failed with HTTP status ${res.status}`);
       }
