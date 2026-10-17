@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { hashPassword, logAdminAction } from '../utils/adminAuth.js';
 import { validateGstin, validateHsnCode, validateGstRate, resolveGstStateCode } from '../services/taxService.js';
+import { DEFAULT_SHIPPING_BRACKETS, validateShippingBrackets } from '../services/shippingService.js';
 
 // Sensitive keys that must be redacted from audit log payloads
 const SENSITIVE_KEYS = new Set([
@@ -108,7 +109,16 @@ export async function getStoreSettings(req, res) {
         ? {
             ...settings,
             shippingStandardRate: Number(settings.shippingStandardRate),
-            freeShippingThreshold: Number(settings.freeShippingThreshold),
+            freeShippingThreshold: Number(settings.freeShippingThreshold ?? 2500),
+            shippingCarrierName: settings.shippingCarrierName || 'India Post',
+            shippingRulesEnabled: settings.shippingRulesEnabled !== false,
+            shippingThresholdOperator: settings.shippingThresholdOperator || 'GTE',
+            shippingBrackets: settings.shippingBrackets || DEFAULT_SHIPPING_BRACKETS,
+            shippingBeyondMaxRule: settings.shippingBeyondMaxRule || 'PER_PIECE',
+            shippingBeyondMaxBaseCharge: Number(settings.shippingBeyondMaxBaseCharge ?? 200),
+            shippingBeyondMaxChargePerPiece: Number(settings.shippingBeyondMaxChargePerPiece ?? 50),
+            shippingConfiguredBy: settings.shippingConfiguredBy || null,
+            shippingConfiguredAt: settings.shippingConfiguredAt || null,
             taxPercentage: Number(settings.taxPercentage),
             defaultGstRate: Number(settings.defaultGstRate || 5.0),
           }
@@ -118,7 +128,16 @@ export async function getStoreSettings(req, res) {
             contactEmail: 'support@amoga.com',
             contactPhone: '+91 98765 43210',
             shippingStandardRate: 0,
-            freeShippingThreshold: 2000,
+            freeShippingThreshold: 2500,
+            shippingCarrierName: 'India Post',
+            shippingRulesEnabled: true,
+            shippingThresholdOperator: 'GTE',
+            shippingBrackets: DEFAULT_SHIPPING_BRACKETS,
+            shippingBeyondMaxRule: 'PER_PIECE',
+            shippingBeyondMaxBaseCharge: 200,
+            shippingBeyondMaxChargePerPiece: 50,
+            shippingConfiguredBy: null,
+            shippingConfiguredAt: null,
             taxPercentage: 5,
             sellerLegalName: 'Amoga Luxury Private Limited',
             sellerTradeName: 'Amoga',
@@ -197,9 +216,69 @@ export async function updateStoreSettings(req, res) {
       defaultGstRate,
       defaultHsnCode,
       isTaxInclusiveDefault,
+      shippingCarrierName,
+      shippingRulesEnabled,
+      shippingThresholdOperator,
+      shippingBrackets,
+      shippingBeyondMaxRule,
+      shippingBeyondMaxBaseCharge,
+      shippingBeyondMaxChargePerPiece,
     } = req.body;
 
     // Strict Server-side Validation
+    if (shippingThresholdOperator !== undefined) {
+      const op = String(shippingThresholdOperator).toUpperCase();
+      if (!['GTE', 'GT'].includes(op)) {
+        return res.status(400).json({
+          error: 'INVALID_THRESHOLD_OPERATOR',
+          message: 'Free shipping threshold comparison operator must be GTE (>=) or GT (>)',
+        });
+      }
+    }
+
+    let parsedBrackets = undefined;
+    if (shippingBrackets !== undefined) {
+      const rawBrackets = typeof shippingBrackets === 'string' ? JSON.parse(shippingBrackets) : shippingBrackets;
+      const bracketCheck = validateShippingBrackets(rawBrackets);
+      if (!bracketCheck.isValid) {
+        return res.status(400).json({
+          error: 'INVALID_SHIPPING_BRACKETS',
+          message: bracketCheck.message,
+        });
+      }
+      parsedBrackets = bracketCheck.brackets;
+    }
+
+    if (shippingBeyondMaxRule !== undefined) {
+      const rule = String(shippingBeyondMaxRule).toUpperCase();
+      if (!['PER_PIECE', 'FLAT'].includes(rule)) {
+        return res.status(400).json({
+          error: 'INVALID_BEYOND_MAX_RULE',
+          message: 'Beyond-max quantity rule must be PER_PIECE or FLAT',
+        });
+      }
+    }
+
+    if (shippingBeyondMaxBaseCharge !== undefined) {
+      const val = Number(shippingBeyondMaxBaseCharge);
+      if (isNaN(val) || val < 0) {
+        return res.status(400).json({
+          error: 'INVALID_BASE_CHARGE',
+          message: 'Beyond-max base charge must be a non-negative number',
+        });
+      }
+    }
+
+    if (shippingBeyondMaxChargePerPiece !== undefined) {
+      const val = Number(shippingBeyondMaxChargePerPiece);
+      if (isNaN(val) || val < 0) {
+        return res.status(400).json({
+          error: 'INVALID_PER_PIECE_CHARGE',
+          message: 'Incremental charge per piece must be a non-negative number',
+        });
+      }
+    }
+
     if (storeName !== undefined && (!storeName.trim() || storeName.trim().length > 100)) {
       return res.status(400).json({
         error: 'INVALID_STORE_NAME',
@@ -326,6 +405,15 @@ export async function updateStoreSettings(req, res) {
         defaultGstRate: defaultGstRate !== undefined && defaultGstRate !== null ? Number(defaultGstRate) : undefined,
         defaultHsnCode: defaultHsnCode !== undefined ? defaultHsnCode.trim() : undefined,
         isTaxInclusiveDefault: isTaxInclusiveDefault !== undefined ? Boolean(isTaxInclusiveDefault) : undefined,
+        shippingCarrierName: shippingCarrierName !== undefined ? shippingCarrierName.trim() : undefined,
+        shippingRulesEnabled: shippingRulesEnabled !== undefined ? Boolean(shippingRulesEnabled) : undefined,
+        shippingThresholdOperator: shippingThresholdOperator !== undefined ? String(shippingThresholdOperator).toUpperCase() : undefined,
+        shippingBrackets: parsedBrackets !== undefined ? parsedBrackets : undefined,
+        shippingBeyondMaxRule: shippingBeyondMaxRule !== undefined ? String(shippingBeyondMaxRule).toUpperCase() : undefined,
+        shippingBeyondMaxBaseCharge: shippingBeyondMaxBaseCharge !== undefined ? Number(shippingBeyondMaxBaseCharge) : undefined,
+        shippingBeyondMaxChargePerPiece: shippingBeyondMaxChargePerPiece !== undefined ? Number(shippingBeyondMaxChargePerPiece) : undefined,
+        shippingConfiguredBy: req.admin?.email || 'admin@amoga.com',
+        shippingConfiguredAt: new Date(),
       },
       create: {
         id: 'default',
@@ -333,7 +421,16 @@ export async function updateStoreSettings(req, res) {
         contactEmail: contactEmail ? contactEmail.trim().toLowerCase() : 'support@amoga.com',
         contactPhone: contactPhone ? contactPhone.trim() : '+91 98765 43210',
         shippingStandardRate: Number(shippingStandardRate || 0),
-        freeShippingThreshold: Number(freeShippingThreshold || 2000),
+        freeShippingThreshold: Number(freeShippingThreshold ?? 2500),
+        shippingCarrierName: shippingCarrierName ? shippingCarrierName.trim() : 'India Post',
+        shippingRulesEnabled: shippingRulesEnabled !== undefined ? Boolean(shippingRulesEnabled) : true,
+        shippingThresholdOperator: shippingThresholdOperator ? String(shippingThresholdOperator).toUpperCase() : 'GTE',
+        shippingBrackets: parsedBrackets || DEFAULT_SHIPPING_BRACKETS,
+        shippingBeyondMaxRule: shippingBeyondMaxRule ? String(shippingBeyondMaxRule).toUpperCase() : 'PER_PIECE',
+        shippingBeyondMaxBaseCharge: Number(shippingBeyondMaxBaseCharge ?? 200),
+        shippingBeyondMaxChargePerPiece: Number(shippingBeyondMaxChargePerPiece ?? 50),
+        shippingConfiguredBy: req.admin?.email || 'admin@amoga.com',
+        shippingConfiguredAt: new Date(),
         taxPercentage: Number(taxPercentage || 5),
         enableOrderNotifications: Boolean(enableOrderNotifications ?? true),
         enableInventoryAlerts: Boolean(enableInventoryAlerts ?? true),
@@ -359,7 +456,14 @@ export async function updateStoreSettings(req, res) {
     const newValues = {
       ...updated,
       shippingStandardRate: Number(updated.shippingStandardRate),
-      freeShippingThreshold: Number(updated.freeShippingThreshold),
+      freeShippingThreshold: Number(updated.freeShippingThreshold ?? 2500),
+      shippingCarrierName: updated.shippingCarrierName || 'India Post',
+      shippingRulesEnabled: updated.shippingRulesEnabled !== false,
+      shippingThresholdOperator: updated.shippingThresholdOperator || 'GTE',
+      shippingBrackets: updated.shippingBrackets || DEFAULT_SHIPPING_BRACKETS,
+      shippingBeyondMaxRule: updated.shippingBeyondMaxRule || 'PER_PIECE',
+      shippingBeyondMaxBaseCharge: Number(updated.shippingBeyondMaxBaseCharge ?? 200),
+      shippingBeyondMaxChargePerPiece: Number(updated.shippingBeyondMaxChargePerPiece ?? 50),
       taxPercentage: Number(updated.taxPercentage),
       defaultGstRate: Number(updated.defaultGstRate || 5.0),
     };

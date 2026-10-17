@@ -2,8 +2,9 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, AlertCircle, Sparkles, CheckSquare, Square, AlertTriangle } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
-import { formatINR } from '../../../utils/pricing';
+import { formatINR, calculateGstInclusiveBreakdown, estimateIndiaPostShipping } from '../../../utils/pricing';
 import { resolveAvailability } from '../../../utils/inventory';
+import { Truck, Info } from 'lucide-react';
 
 export const CartSummary = () => {
   const navigate = useNavigate();
@@ -45,6 +46,32 @@ export const CartSummary = () => {
     }
   };
 
+  // Calculate itemized GST breakdown for selected items
+  const taxBreakdown = selectedItems.reduce(
+    (acc, item) => {
+      const unitPrice = item.price !== undefined ? item.price : item.product?.price || 0;
+      const qty = item.quantity || 1;
+      const lineTotal = unitPrice * qty;
+      const rate = Number(item.gstRate || item.product?.gstRate || 5);
+      const breakdown = calculateGstInclusiveBreakdown(lineTotal, rate);
+      acc.taxableValue += breakdown.taxableValue;
+      acc.includedGst += breakdown.includedGst;
+      return acc;
+    },
+    { taxableValue: 0, includedGst: 0 }
+  );
+
+  // Authoritative India Post shipping estimate
+  const shippingEst = estimateIndiaPostShipping({
+    itemCount: selectedQtyTotal,
+    subtotal: selectedSubtotal,
+  });
+
+  const estimatedShippingCharge = isSelectionEmpty ? 0 : shippingEst.amount;
+  const isComplimentaryShipping = isSelectionEmpty || shippingEst.isFree;
+  const finalPayableTotal = Math.max(0, selectedSubtotal + estimatedShippingCharge);
+  const remainingForFreeShipping = Math.max(0, 2500 - selectedSubtotal);
+
   return (
     <div
       className="rounded-2xl p-6 lg:p-8 border shadow-sm sticky top-28 transition-colors duration-200"
@@ -73,6 +100,30 @@ export const CartSummary = () => {
         </span>
       </div>
 
+      {/* Free Delivery Threshold Banner */}
+      {!isSelectionEmpty && (
+        <div
+          className={`mb-6 p-3 rounded-xl border text-xs flex items-center gap-2.5 transition-all ${
+            isComplimentaryShipping
+              ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+              : 'bg-[#FDFBF7] border-[#EAE4D9] text-[#4A423B]'
+          }`}
+        >
+          <Truck className={`w-4 h-4 shrink-0 ${isComplimentaryShipping ? 'text-emerald-600' : 'text-[#8C7A6B]'}`} />
+          <div className="flex-1">
+            {isComplimentaryShipping ? (
+              <p className="font-semibold text-emerald-800">
+                Unlocked: Free India Post Delivery!
+              </p>
+            ) : (
+              <p className="leading-tight">
+                Add <span className="font-semibold text-[var(--collection-accent)]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</span> more to qualify for <span className="font-semibold">Free India Post Delivery</span> (Orders ≥ ₹2,500)
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Pricing Breakdown */}
       <div
         className="space-y-4 text-sm pb-6 border-b"
@@ -80,7 +131,7 @@ export const CartSummary = () => {
       >
         <div className="flex justify-between items-baseline">
           <span style={{ color: 'var(--collection-text-muted)' }}>
-            Selected Items ({selectedQtyTotal} {selectedQtyTotal === 1 ? 'unit' : 'units'})
+            Product Subtotal ({selectedQtyTotal} {selectedQtyTotal === 1 ? 'unit' : 'units'})
           </span>
           <span
             className="font-sans text-lg font-semibold tabular-nums"
@@ -90,19 +141,48 @@ export const CartSummary = () => {
           </span>
         </div>
 
+        {/* India Post Delivery Charges */}
         <div className="flex justify-between items-start text-xs" style={{ color: 'var(--collection-text-muted)' }}>
-          <span>Delivery Charges</span>
+          <div>
+            <span className="font-medium">India Post Shipping</span>
+            {!isSelectionEmpty && (
+              <span className="block text-[10px] text-stone-500 mt-0.5">
+                {isComplimentaryShipping
+                  ? 'Complimentary (Subtotal ≥ ₹2,500)'
+                  : selectedQtyTotal <= 2
+                  ? '1–2 pieces bracket (₹100)'
+                  : selectedQtyTotal === 3
+                  ? '3 pieces bracket (₹150)'
+                  : selectedQtyTotal === 4
+                  ? '4 pieces bracket (₹200)'
+                  : `5+ pieces bracket (₹200 + ${selectedQtyTotal - 4} × ₹50)`}
+              </span>
+            )}
+          </div>
           <span
-            className="text-right italic font-medium"
-            style={{ color: 'var(--collection-accent)' }}
+            className="text-right font-semibold tabular-nums"
+            style={{ color: isComplimentaryShipping ? '#059669' : 'var(--collection-text)' }}
           >
-            Free Delivery
+            {isComplimentaryShipping ? 'FREE' : formatINR(estimatedShippingCharge)}
           </span>
         </div>
 
-        <div className="flex justify-between items-start text-xs" style={{ color: 'var(--collection-text-muted)' }}>
-          <span>Applicable Taxes & Duties</span>
-          <span className="text-right italic">Included in displayed prices</span>
+        {/* GST Inclusive Notice and Exact Breakdown */}
+        <div className="pt-2 border-t border-dashed" style={{ borderColor: 'var(--collection-border)' }}>
+          <div className="flex justify-between items-start text-xs" style={{ color: 'var(--collection-text-muted)' }}>
+            <span className="flex items-center gap-1">
+              <span>Included GST</span>
+              <span className="text-[10px] text-stone-500 font-normal">(Included in price)</span>
+            </span>
+            <span className="text-right font-medium tabular-nums" style={{ color: 'var(--collection-text)' }}>
+              {isSelectionEmpty ? '₹0.00' : `₹${taxBreakdown.includedGst.toFixed(2)}`}
+            </span>
+          </div>
+          {!isSelectionEmpty && taxBreakdown.taxableValue > 0 && (
+            <p className="text-[10px] text-stone-500 text-right mt-0.5">
+              Taxable Value: ₹{taxBreakdown.taxableValue.toFixed(2)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -159,7 +239,7 @@ export const CartSummary = () => {
           className="font-sans text-3xl font-bold tabular-nums"
           style={{ color: 'var(--collection-accent)' }}
         >
-          {formatINR(selectedSubtotal)}
+          {formatINR(finalPayableTotal)}
         </span>
       </div>
 

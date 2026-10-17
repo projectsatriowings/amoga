@@ -85,6 +85,7 @@ model Product {
   inventoryAlerts       InventoryAlert[]
   notificationJobs      RestockNotificationJob[]
   reviews               Review[]
+  posSaleItems          PosSaleItem[]
 
   @@unique([collectionId, slug])
   @@index([collectionId])
@@ -124,6 +125,7 @@ model ProductVariant {
   restockSubscriptions  RestockSubscription[]
   inventoryAlerts       InventoryAlert[]
   notificationJobs      RestockNotificationJob[]
+  posSaleItems          PosSaleItem[]
 
   @@index([productId])
   @@map("product_variants")
@@ -210,6 +212,8 @@ model Order {
   carrier               String?
   trackingNumber        String?
   trackingUrl           String?
+  shippingSnapshot      Json?
+  pricingSnapshot       Json?
 
   // Customer relation
   customerId            String?
@@ -381,6 +385,7 @@ model OrderItem {
   cessRate      Decimal?        @db.Decimal(5, 2)
   cessAmount    Decimal?        @db.Decimal(10, 2)
   totalTax      Decimal?        @db.Decimal(10, 2)
+  pricingSnapshot Json?
 
   order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product       Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
@@ -413,6 +418,7 @@ model AdminUser {
   auditLogs         AuditLog[]
   inventoryLogs     InventoryLog[]
   assignedInquiries CustomerInquiry[]
+  posSales          PosSale[]
 
   @@map("admin_users")
 }
@@ -529,7 +535,16 @@ model StoreSetting {
   contactEmail             String         @default("support@amoga.com")
   contactPhone             String         @default("+91 98765 43210")
   shippingStandardRate     Decimal        @default(0.00) @db.Decimal(10, 2)
-  freeShippingThreshold    Decimal        @default(2000.00) @db.Decimal(10, 2)
+  freeShippingThreshold    Decimal        @default(2500.00) @db.Decimal(10, 2)
+  shippingCarrierName      String?        @default("India Post")
+  shippingRulesEnabled     Boolean        @default(true)
+  shippingThresholdOperator String        @default("GTE") // "GTE" (>=) or "GT" (>)
+  shippingBrackets         Json?          // Array of { minQty: number, maxQty: number, charge: number }
+  shippingBeyondMaxRule    String         @default("PER_PIECE") // "PER_PIECE" or "FLAT"
+  shippingBeyondMaxBaseCharge Decimal     @default(200.00) @db.Decimal(10, 2)
+  shippingBeyondMaxChargePerPiece Decimal @default(50.00) @db.Decimal(10, 2)
+  shippingConfiguredBy     String?
+  shippingConfiguredAt     DateTime?
   taxPercentage            Decimal        @default(5.00) @db.Decimal(5, 2)
   enableOrderNotifications Boolean        @default(true)
   enableInventoryAlerts    Boolean        @default(true)
@@ -726,5 +741,168 @@ model GstRateMaster {
   @@index([hsnCode])
   @@index([status])
   @@map("gst_rate_master")
+}
+
+// ================= STALL BILLING & POS MODELS =================
+
+model StallEvent {
+  id                 String     @id @default(uuid())
+  code               String     @unique // e.g. "EVENT-2026-001"
+  name               String
+  venue              String
+  address            String?
+  city               String?
+  state              String?
+  stateCode          String?    @default("33") // Place of supply state code
+  startDate          DateTime
+  endDate            DateTime
+  status             String     @default("ACTIVE") // ACTIVE | UPCOMING | COMPLETED | ARCHIVED
+  openingCashBalance Decimal    @default(0.00) @db.Decimal(10, 2)
+  assignedStaffIds   Json?      // Array of admin user IDs or emails
+  notes              String?    @db.Text
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  posSales           PosSale[]
+
+  @@index([status])
+  @@index([startDate, endDate])
+  @@map("stall_events")
+}
+
+model PosSale {
+  id                         String              @id @default(uuid())
+  billNumber                 String              @unique // e.g. "AMOGA-POS-2026-0001"
+  idempotencyKey             String?             @unique
+  publicReceiptToken         String              @unique // Secure unguessable token
+  stallEventId               String?
+  staffId                    String?
+  staffEmail                 String
+  staffName                  String?
+  customerName               String?
+  customerPhone              String?
+  customerEmail              String?
+  customerGstin              String?
+  status                     String              @default("COMPLETED") // COMPLETED | CANCELLED | REFUNDED | PARTIALLY_PAID
+  paymentStatus              String              @default("PAID") // PAID | PARTIALLY_PAID | PENDING | REFUNDED | FAILED
+  paymentMethod              String              @default("CASH") // CASH | UPI | CARD | SPLIT | OTHER
+  paymentReference           String?
+  amountPaid                 Decimal             @db.Decimal(10, 2)
+  changeDue                  Decimal             @default(0.00) @db.Decimal(10, 2)
+  subtotal                   Decimal             @db.Decimal(10, 2) // Gross inclusive subtotal
+  discountAmount             Decimal             @default(0.00) @db.Decimal(10, 2)
+  discountReason             String?
+  discountApprovedBy         String?
+  taxableAmount              Decimal             @db.Decimal(10, 2)
+  cgstAmount                 Decimal             @default(0.00) @db.Decimal(10, 2)
+  sgstAmount                 Decimal             @default(0.00) @db.Decimal(10, 2)
+  igstAmount                 Decimal             @default(0.00) @db.Decimal(10, 2)
+  totalTaxAmount             Decimal             @db.Decimal(10, 2)
+  totalAmount                Decimal             @db.Decimal(10, 2)
+  totalItemsCount            Int                 @default(0)
+  taxSnapshot                Json?
+  pricingSnapshot            Json?
+  whatsappDeliveryStatus     String              @default("NOT_REQUESTED") // NOT_REQUESTED | PENDING | SENT | FAILED | MANUAL_OPENED
+  whatsappMessageId          String?
+  whatsappSentAt             DateTime?
+  whatsappError              String?
+  whatsappOptOutTextIncluded Boolean             @default(true)
+  notes                      String?             @db.Text
+  cancelledAt                DateTime?
+  cancelledReason            String?             @db.Text
+  refundedAmount             Decimal?            @default(0.00) @db.Decimal(10, 2)
+  refundedAt                 DateTime?
+  refundReason               String?             @db.Text
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+
+  stallEvent                 StallEvent?         @relation(fields: [stallEventId], references: [id], onDelete: SetNull)
+  staff                      AdminUser?          @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  items                      PosSaleItem[]
+  payments                   PosPaymentRecord[]
+
+  @@index([billNumber])
+  @@index([stallEventId])
+  @@index([staffEmail])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@index([customerPhone])
+  @@map("pos_sales")
+}
+
+model PosSaleItem {
+  id              String          @id @default(uuid())
+  posSaleId       String
+  productId       String?
+  variantId       String?
+  collectionId    String
+  productName     String
+  variantName     String?
+  sku             String?
+  hsnCode         String?
+  gstRate         Decimal         @db.Decimal(5, 2)
+  isTaxInclusive  Boolean         @default(true)
+  unitPrice       Decimal         @db.Decimal(10, 2)
+  quantity        Int
+  lineDiscount    Decimal         @default(0.00) @db.Decimal(10, 2)
+  lineTotal       Decimal         @db.Decimal(10, 2)
+  taxableAmount   Decimal         @db.Decimal(10, 2)
+  cgstAmount      Decimal         @default(0.00) @db.Decimal(10, 2)
+  sgstAmount      Decimal         @default(0.00) @db.Decimal(10, 2)
+  igstAmount      Decimal         @default(0.00) @db.Decimal(10, 2)
+  totalTax        Decimal         @db.Decimal(10, 2)
+  pricingSnapshot Json?
+  createdAt       DateTime        @default(now())
+
+  posSale         PosSale         @relation(fields: [posSaleId], references: [id], onDelete: Cascade)
+  product         Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant         ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([posSaleId])
+  @@index([productId])
+  @@map("pos_sale_items")
+}
+
+model PosPaymentRecord {
+  id            String   @id @default(uuid())
+  posSaleId     String
+  paymentMethod String   // CASH | UPI | CARD | OTHER
+  amount        Decimal  @db.Decimal(10, 2)
+  amountPaise   Int
+  reference     String?
+  status        String   @default("SUCCEEDED")
+  createdAt     DateTime @default(now())
+
+  posSale       PosSale  @relation(fields: [posSaleId], references: [id], onDelete: Cascade)
+
+  @@index([posSaleId])
+  @@map("pos_payment_records")
+}
+
+model PosSequence {
+  prefix     String   @id
+  lastNumber Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@map("pos_sequences")
+}
+
+model PosSetting {
+  id                                String   @id @default("default")
+  defaultStallId                    String?
+  enableBarcodeScanner              Boolean  @default(true)
+  enableThermalPrint                Boolean  @default(true)
+  receiptPrinterWidth               String   @default("80mm") // 80mm | 58mm | standard
+  enableWhatsAppReceipt             Boolean  @default(true)
+  whatsAppChannel                   String   @default("MANUAL") // MANUAL | CLOUD_API
+  whatsAppPhoneNumberId             String?
+  whatsAppTemplateName              String?  @default("amoga_pos_bill")
+  maxDiscountPercentWithoutApproval Decimal  @default(15.00) @db.Decimal(5, 2)
+  requireCustomerPhone              Boolean  @default(false)
+  posPrefix                         String   @default("AMOGA-POS-2026/")
+  updatedAt                         DateTime @default(now()) @updatedAt
+
+  @@map("pos_settings")
 }
 

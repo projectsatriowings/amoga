@@ -242,20 +242,25 @@ export function TeaProductDetail() {
               {/* Pricing Display */}
               <div className="pt-2 border-t border-[#B88E38]/20 space-y-2">
                 {hasPrice ? (
-                  <div className="flex flex-wrap items-baseline gap-3">
-                    <span className="text-3xl font-sans font-bold text-[#2C1E11] tabular-nums font-numeric">
-                      ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
-                    </span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-[#7D5C3F] line-through font-sans tabular-nums font-numeric">
-                        ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-baseline gap-3">
+                      <span className="text-3xl font-sans font-bold text-[#2C1E11] tabular-nums font-numeric">
+                        ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                       </span>
-                    )}
-                    {product.packSize && (
-                      <span className="text-xs font-sans font-medium text-[#8C6320] bg-white/80 px-2.5 py-0.5 rounded-full border border-[#B88E38]/25 tabular-nums font-numeric">
-                        {product.packSize}
-                      </span>
-                    )}
+                      {product.originalPrice && (
+                        <span className="text-sm text-[#7D5C3F] line-through font-sans tabular-nums font-numeric">
+                          ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
+                        </span>
+                      )}
+                      {product.packSize && (
+                        <span className="text-xs font-sans font-medium text-[#8C6320] bg-white/80 px-2.5 py-0.5 rounded-full border border-[#B88E38]/25 tabular-nums font-numeric">
+                          {product.packSize}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-[#8C6320] font-medium">
+                      Inclusive of GST • India Post delivery calculated at checkout
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-1">

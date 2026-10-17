@@ -118,3 +118,118 @@ export function validateCartForCheckout(items = []) {
     errors,
   };
 }
+
+/**
+ * Calculates taxable value and included GST from a GST-inclusive selling price
+ * Formula: Taxable value = inclusive price / (1 + GST rate / 100)
+ *          Included GST = inclusive price - taxable value
+ * @param {number} inclusivePrice 
+ * @param {number} gstRate (e.g. 5 for 5%)
+ * @returns {{ inclusivePrice: number, gstRate: number, taxableValue: number, includedGst: number, cgst: number, sgst: number, igst: number }}
+ */
+export function calculateGstInclusiveBreakdown(inclusivePrice = 0, gstRate = 5) {
+  const price = Number(inclusivePrice) || 0;
+  const rate = Number(gstRate) || 0;
+
+  if (price <= 0 || rate <= 0) {
+    return {
+      inclusivePrice: price,
+      gstRate: rate,
+      taxableValue: price,
+      includedGst: 0,
+      cgst: 0,
+      sgst: 0,
+      igst: 0,
+    };
+  }
+
+  // Exact 2-decimal rounded calculation
+  const taxableValue = Math.round((price / (1 + rate / 100)) * 100) / 100;
+  const includedGst = Math.round((price - taxableValue) * 100) / 100;
+  const halfGst = Math.round((includedGst / 2) * 100) / 100;
+  const remainingHalfGst = Math.round((includedGst - halfGst) * 100) / 100;
+
+  return {
+    inclusivePrice: price,
+    gstRate: rate,
+    taxableValue,
+    includedGst,
+    cgst: halfGst,
+    sgst: remainingHalfGst,
+    igst: includedGst,
+  };
+}
+
+/**
+ * Client-side estimate for India Post shipping charges
+ * Default rules:
+ * - 1-2 pcs: ₹100
+ * - 3 pcs: ₹150
+ * - 4 pcs: ₹200
+ * - 5+ pcs: ₹200 + (pcs - 4) * ₹50
+ * - Discounted product subtotal >= ₹2,500: Free Shipping
+ */
+export function estimateIndiaPostShipping({
+  itemCount = 0,
+  subtotal = 0,
+  discount = 0,
+  freeShippingThreshold = 2500,
+  thresholdOperator = 'GTE',
+  brackets = null,
+  beyondMaxBaseCharge = 200,
+  beyondMaxChargePerPiece = 50,
+}) {
+  const count = Number(itemCount) || 0;
+  const netSubtotal = Math.max(0, (Number(subtotal) || 0) - (Number(discount) || 0));
+
+  if (count === 0) {
+    return { amount: 0, isFree: true, ruleApplied: 'EMPTY' };
+  }
+
+  const isFree = thresholdOperator === 'GT'
+    ? netSubtotal > freeShippingThreshold
+    : netSubtotal >= freeShippingThreshold;
+
+  if (isFree) {
+    return {
+      amount: 0,
+      isFree: true,
+      ruleApplied: 'FREE_SHIPPING_THRESHOLD',
+      threshold: freeShippingThreshold,
+    };
+  }
+
+  const defaultBrackets = [
+    { minQty: 1, maxQty: 2, charge: 100 },
+    { minQty: 3, maxQty: 3, charge: 150 },
+    { minQty: 4, maxQty: 4, charge: 200 },
+  ];
+
+  const activeBrackets = Array.isArray(brackets) && brackets.length > 0 ? brackets : defaultBrackets;
+  const matched = activeBrackets.find((b) => count >= Number(b.minQty) && count <= Number(b.maxQty));
+
+  if (matched) {
+    return {
+      amount: Number(matched.charge),
+      isFree: Number(matched.charge) === 0,
+      ruleApplied: 'QUANTITY_BRACKET',
+      bracket: matched,
+    };
+  }
+
+  // Beyond max: base charge + incremental per piece
+  const maxBracket = activeBrackets[activeBrackets.length - 1];
+  const maxQty = maxBracket ? Number(maxBracket.maxQty) : 4;
+  const base = Number(beyondMaxBaseCharge || 200);
+  const perPiece = Number(beyondMaxChargePerPiece || 50);
+  const extra = Math.max(0, count - maxQty) * perPiece;
+  const total = base + extra;
+
+  return {
+    amount: total,
+    isFree: false,
+    ruleApplied: 'BEYOND_MAX_INCREMENTAL',
+    extraPieces: count - maxQty,
+  };
+}
+

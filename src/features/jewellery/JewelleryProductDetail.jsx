@@ -313,13 +313,13 @@ export function JewelleryProductDetail() {
                       ₹{product.price.toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs font-mono text-[#B9B8B5]">
-                      Approved Price &bull; Taxes Included
+                      Inclusive of GST • India Post delivery calculated at checkout
                     </span>
                   </div>
                 ) : (
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#343238] border border-[#B9B8B5]/25 text-[#B9B8B5] text-xs font-mono">
                     <Info className="w-4 h-4 shrink-0" />
-                    <span>Price pending client catalogue approval</span>
+                    <span>Price to be confirmed • Inquire with concierge</span>
                   </div>
                 )}
 

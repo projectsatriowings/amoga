@@ -48,6 +48,12 @@ import { AdminCustomerInquiries } from '../features/admin/pages/AdminCustomerInq
 import { AdminReviews } from '../features/admin/pages/AdminReviews';
 import { AdminTaxRates } from '../features/admin/pages/AdminTaxRates';
 import { DeveloperOnlyRoute } from '../features/admin/components/DeveloperOnlyRoute';
+import { AdminPosNewBill } from '../features/admin/pos/pages/AdminPosNewBill';
+import { AdminPosHistory } from '../features/admin/pos/pages/AdminPosHistory';
+import { AdminPosStalls } from '../features/admin/pos/pages/AdminPosStalls';
+import { AdminPosReports } from '../features/admin/pos/pages/AdminPosReports';
+import { AdminPosSettings } from '../features/admin/pos/pages/AdminPosSettings';
+import { PublicReceiptPage } from '../features/pos/pages/PublicReceiptPage';
 
 /**
  * React Router Configuration for Amoga E-Commerce Storefront & Admin Atelier
@@ -347,6 +353,12 @@ export const router = createBrowserRouter([
       { path: 'reports', element: <AdminReports /> },
       { path: 'settings', element: <AdminSettings /> },
       { path: 'users', element: <Navigate to="/admin" replace /> },
+      { path: 'pos', element: <Navigate to="/admin/pos/new" replace /> },
+      { path: 'pos/new', element: <AdminPosNewBill /> },
+      { path: 'pos/history', element: <AdminPosHistory /> },
+      { path: 'pos/stalls', element: <AdminPosStalls /> },
+      { path: 'pos/reports', element: <AdminPosReports /> },
+      { path: 'pos/settings', element: <AdminPosSettings /> },
       {
         path: 'audit-logs',
         element: (
@@ -387,6 +399,13 @@ export const router = createBrowserRouter([
         <DynamicStorefront />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
+  },
+
+  // Customer Digital WhatsApp Tax Invoice Receipt
+  {
+    path: '/receipt/:token',
+    element: <PublicReceiptPage />,
     errorElement: <RouteErrorBoundary />,
   },
 

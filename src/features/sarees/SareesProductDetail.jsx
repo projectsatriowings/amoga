@@ -275,13 +275,13 @@ export function SareesProductDetail() {
                       ₹{product.price.toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs font-mono text-[#C5A46D]">
-                      Verified Catalogue Price (All Taxes Included)
+                      Inclusive of GST • India Post delivery calculated at checkout
                     </span>
                   </div>
                 ) : (
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#451523] border border-[#C5A46D]/30 text-[#C5A46D] text-xs font-mono">
                     <Info className="w-4 h-4 shrink-0" />
-                    <span>Price pending client catalogue approval</span>
+                    <span>Price to be confirmed • Inquire with concierge</span>
                   </div>
                 )}
               </div>

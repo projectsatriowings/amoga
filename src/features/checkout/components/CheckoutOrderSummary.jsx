@@ -174,7 +174,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
         }}
       >
         <div className="flex justify-between items-baseline">
-          <span style={{ color: 'var(--collection-text-muted)' }}>Subtotal</span>
+          <span style={{ color: 'var(--collection-text-muted)' }}>Product Subtotal</span>
           <span
             className="font-semibold tabular-nums text-sm font-sans"
             style={{ color: 'var(--collection-text)' }}
@@ -183,33 +183,45 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
           </span>
         </div>
         <div className="flex justify-between items-baseline text-[11px]">
-          <span style={{ color: 'var(--collection-text-muted)' }}>Delivery Charges</span>
+          <div>
+            <span style={{ color: 'var(--collection-text-muted)' }}>India Post Delivery</span>
+            <span className="block text-[10px] text-stone-500">
+              {subtotal >= 2500 ? 'Free Shipping (Orders ≥ ₹2,500)' : `${payableItemsCount} ${payableItemsCount === 1 ? 'piece' : 'pieces'} standard parcel`}
+            </span>
+          </div>
           <span
-            className="italic font-medium"
-            style={{ color: 'var(--collection-accent)' }}
+            className="font-semibold tabular-nums"
+            style={{ color: subtotal >= 2500 ? '#059669' : 'var(--collection-text)' }}
           >
-            Free Delivery
+            {subtotal >= 2500 ? 'FREE' : formatINR(payableItemsCount <= 2 ? 100 : payableItemsCount === 3 ? 150 : payableItemsCount === 4 ? 200 : 200 + (payableItemsCount - 4) * 50)}
           </span>
         </div>
         <div className="flex justify-between items-baseline text-[11px]">
-          <span style={{ color: 'var(--collection-text-muted)' }}>Taxes</span>
-          <span className="italic" style={{ color: 'var(--collection-text-muted)' }}>Included</span>
+          <span style={{ color: 'var(--collection-text-muted)' }}>Included GST (5%)</span>
+          <span className="tabular-nums font-medium" style={{ color: 'var(--collection-text)' }}>
+            ₹{((subtotal * 0.05) / 1.05).toFixed(2)} (Taxable: ₹{(subtotal / 1.05).toFixed(2)})
+          </span>
         </div>
         <div
           className="pt-3 border-t flex justify-between items-baseline text-sm font-semibold"
           style={{ borderColor: 'var(--collection-border)' }}
         >
-          <span
-            className="font-serif text-base"
-            style={{ color: 'var(--collection-heading)' }}
-          >
-            Total Amount
-          </span>
+          <div>
+            <span
+              className="font-serif text-base block"
+              style={{ color: 'var(--collection-heading)' }}
+            >
+              Total Amount
+            </span>
+            <span className="text-[10px] font-normal" style={{ color: 'var(--collection-text-muted)' }}>
+              Inclusive of GST & shipping
+            </span>
+          </div>
           <span
             className="text-xl font-bold font-sans tabular-nums"
             style={{ color: 'var(--collection-accent)' }}
           >
-            {formatINR(subtotal)}
+            {formatINR(subtotal + (subtotal >= 2500 ? 0 : (payableItemsCount <= 2 ? 100 : payableItemsCount === 3 ? 150 : payableItemsCount === 4 ? 200 : 200 + (payableItemsCount - 4) * 50)))}
           </span>
         </div>
       </div>

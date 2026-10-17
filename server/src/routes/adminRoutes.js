@@ -89,6 +89,22 @@ import {
   deactivateRateMasterEndpoint,
   verifyProductTaxEndpoint,
 } from '../controllers/adminTaxController.js';
+import {
+  searchPosCatalogEndpoint,
+  calculatePosBillEndpoint,
+  finalizePosSaleEndpoint,
+  listPosSalesEndpoint,
+  getPosSaleEndpoint,
+  cancelPosSaleEndpoint,
+  refundPosSaleEndpoint,
+  sendPosBillWhatsAppEndpoint,
+  getPosSalesReportEndpoint,
+  listStallEventsEndpoint,
+  createStallEventEndpoint,
+  updateStallEventEndpoint,
+  getPosSettingsEndpoint,
+  updatePosSettingsEndpoint,
+} from '../controllers/adminPosController.js';
 
 const router = Router();
 
@@ -184,5 +200,21 @@ router.post('/users', requireAdminAuth(['SUPER_ADMIN']), createAdminUser);
 router.patch('/users/:id/toggle', requireAdminAuth(['SUPER_ADMIN']), toggleAdminUser);
 router.get('/audit-logs', requireAdminAuth(['SUPER_ADMIN']), listAuditLogs);
 router.get('/audit-logs/:id', requireAdminAuth(['SUPER_ADMIN']), getAuditLogById);
+
+// 12. Stall Billing & Point of Sale (POS)
+router.get('/pos/catalog', requireAdminAuth(), searchPosCatalogEndpoint);
+router.post('/pos/calculate', requireAdminAuth(), calculatePosBillEndpoint);
+router.post('/pos/sales', requireAdminAuth(), finalizePosSaleEndpoint);
+router.get('/pos/sales', requireAdminAuth(), listPosSalesEndpoint);
+router.get('/pos/sales/:id', requireAdminAuth(), getPosSaleEndpoint);
+router.post('/pos/sales/:id/cancel', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), cancelPosSaleEndpoint);
+router.post('/pos/sales/:id/refund', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), refundPosSaleEndpoint);
+router.post('/pos/sales/:id/whatsapp', requireAdminAuth(), sendPosBillWhatsAppEndpoint);
+router.get('/pos/reports', requireAdminAuth(['ORDER_MANAGER']), getPosSalesReportEndpoint);
+router.get('/pos/events', requireAdminAuth(), listStallEventsEndpoint);
+router.post('/pos/events', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), createStallEventEndpoint);
+router.put('/pos/events/:id', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), updateStallEventEndpoint);
+router.get('/pos/settings', requireAdminAuth(), getPosSettingsEndpoint);
+router.put('/pos/settings', requireAdminAuth(['SUPER_ADMIN']), updatePosSettingsEndpoint);
 
 export default router;

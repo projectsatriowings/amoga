@@ -33,6 +33,11 @@ import {
   Terminal,
   FileSpreadsheet,
   ShieldCheck,
+  Store,
+  Receipt,
+  MapPin,
+  TrendingUp,
+  Sliders,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminCommandPalette } from './AdminCommandPalette';
@@ -158,6 +163,16 @@ export function AdminLayout() {
       ],
     },
     {
+      title: 'STALL BILLING / POS',
+      items: [
+        { label: 'New Bill', path: '/admin/pos/new', icon: Store },
+        { label: 'Bill History', path: '/admin/pos/history', icon: Receipt },
+        { label: 'Stalls and Events', path: '/admin/pos/stalls', icon: MapPin },
+        { label: 'POS Sales Reports', path: '/admin/pos/reports', icon: TrendingUp },
+        { label: 'POS Settings and Permissions', path: '/admin/pos/settings', icon: Sliders },
+      ],
+    },
+    {
       title: 'CONTENT & MARKETING',
       items: [
         { label: 'Promotions', path: '/admin/promotions', icon: Sparkles },
@@ -221,6 +236,11 @@ export function AdminLayout() {
   else if (currentPath === '/admin/reports') pageTitle = 'Business Intelligence & Exports';
   else if (currentPath === '/admin/settings') pageTitle = 'Atelier Settings';
   else if (currentPath === '/admin/audit-logs') pageTitle = 'System Audit Trail';
+  else if (currentPath === '/admin/pos/new') pageTitle = 'Stall Billing / POS — New Bill';
+  else if (currentPath === '/admin/pos/history') pageTitle = 'Stall Billing / POS — Bill History';
+  else if (currentPath === '/admin/pos/stalls') pageTitle = 'Stall Billing / POS — Stalls & Events';
+  else if (currentPath === '/admin/pos/reports') pageTitle = 'Stall Billing / POS — Sales Reports';
+  else if (currentPath === '/admin/pos/settings') pageTitle = 'Stall Billing / POS — Settings';
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] flex text-[#292820] font-sans antialiased selection:bg-[#762F39] selection:text-white">

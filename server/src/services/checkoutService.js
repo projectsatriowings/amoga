@@ -8,6 +8,7 @@ import {
 import { reserveStock, releaseExpiredReservations } from './inventoryService.js';
 import { calculateOrderTaxes, validateGstin, round2 } from './taxService.js';
 import { allocateInvoiceNumber } from './invoiceService.js';
+import { calculateShipping, validateIndianPincode } from './shippingService.js';
 
 let cachedStoreSettings = null;
 let lastSettingsFetch = 0;
@@ -253,28 +254,20 @@ export async function resolveAndValidateCart(cartItems = []) {
 
   const subtotalRupees = Number((subtotalPaise / 100).toFixed(2));
 
-  let shippingAmount = 0;
-  let isComplimentary = true;
-  let freeShippingThreshold = 2000;
-  let shippingStandardRate = 0;
-  let taxPercentage = 5;
+  const storeSettings = await getCachedStoreSettings();
+  const shippingResult = calculateShipping({
+    items: lines,
+    subtotalRupees,
+    discountRupees: 0,
+    storeSettings: storeSettings || {},
+  });
 
-  try {
-    const storeSettings = await prisma.storeSetting.findUnique({
-      where: { id: 'default' },
-    });
-    if (storeSettings) {
-      freeShippingThreshold = Number(storeSettings.freeShippingThreshold || 2000);
-      shippingStandardRate = Number(storeSettings.shippingStandardRate || 0);
-      taxPercentage = Number(storeSettings.taxPercentage || 5);
-      if (subtotalRupees < freeShippingThreshold) {
-        shippingAmount = shippingStandardRate;
-        isComplimentary = shippingStandardRate === 0;
-      }
-    }
-  } catch {
-    // Non-blocking fallback
-  }
+  const taxCalculation = calculateOrderTaxes({
+    items: lines,
+    sellerSettings: storeSettings || {},
+    destination: {},
+    discountRupees: 0,
+  });
 
   return {
     isValid: errors.length === 0 && lines.length > 0,
@@ -283,12 +276,21 @@ export async function resolveAndValidateCart(cartItems = []) {
     subtotal: subtotalRupees,
     subtotalPaise,
     shipping: {
-      amount: shippingAmount,
-      isComplimentary,
-      freeShippingThreshold,
-      standardRate: shippingStandardRate,
+      carrier: shippingResult.carrier,
+      amount: shippingResult.amount,
+      amountPaise: shippingResult.amountPaise,
+      isComplimentary: shippingResult.isComplimentary,
+      freeShippingThreshold: shippingResult.freeShippingThreshold,
+      thresholdOperator: shippingResult.thresholdOperator,
+      isThresholdMet: shippingResult.isThresholdMet,
+      ruleApplied: shippingResult.ruleApplied,
+      eligibleItemsCount: shippingResult.eligibleItemsCount,
+      bracket: shippingResult.bracket,
+      calculationDetails: shippingResult.calculationDetails,
+      snapshot: shippingResult.snapshot,
     },
-    taxPercentage,
+    taxBreakdown: taxCalculation.taxSnapshot?.summary || taxCalculation,
+    taxPercentage: storeSettings?.defaultGstRate ? Number(storeSettings.defaultGstRate) : 5,
     totalCount,
     payableCount,
   };
@@ -508,23 +510,30 @@ export async function createOrder({
   const guestAccessToken = generateGuestAccessToken();
   const guestAccessTokenHash = hashGuestAccessToken(guestAccessToken);
 
-  // Authoritative financial totals in exact integer paise incorporating store shipping & tax settings
-  let shippingPaise = 0;
-
-  if (storeSettings) {
-    const freeThresholdPaise = Math.round(Number(storeSettings.freeShippingThreshold || 2000) * 100);
-    const standardRatePaise = Math.round(Number(storeSettings.shippingStandardRate || 0) * 100);
-
-    // If discounted subtotal is below free shipping threshold, charge standard shipping
-    const netSubtotalPaise = Math.max(0, validation.subtotalPaise - discountPaise);
-    if (netSubtotalPaise < freeThresholdPaise) {
-      shippingPaise = standardRatePaise;
+  // Validate destination postal code format for delivery serviceability
+  if (customer.pincode) {
+    const pinCheck = validateIndianPincode(customer.pincode);
+    if (!pinCheck.isValid) {
+      const err = new Error(pinCheck.message);
+      err.status = 400;
+      err.details = [pinCheck.message];
+      throw err;
     }
   }
 
   const subtotalRupees = validation.subtotal;
-  const shippingAmountRupees = Number((shippingPaise / 100).toFixed(2));
   const discountAmountRupees = Number((discountPaise / 100).toFixed(2));
+
+  // Authoritative India Post shipping calculation incorporating brackets, threshold and operator
+  const shippingCalculation = calculateShipping({
+    items: validation.lines,
+    subtotalRupees: validation.subtotal,
+    discountRupees: discountAmountRupees,
+    storeSettings: storeSettings || {},
+    pincode: customer.pincode,
+  });
+
+  const shippingAmountRupees = shippingCalculation.amount;
 
   // Authoritative GST calculation across all items respecting intra/inter-state and inclusive/exclusive pricing
   const taxCalculation = calculateOrderTaxes({
@@ -573,7 +582,19 @@ export async function createOrder({
         status: 'PENDING_CONFIRMATION',
         currency: 'INR',
         subtotal: subtotalRupees,
+        carrier: shippingCalculation.carrier || 'India Post',
         shippingAmount: shippingAmountRupees,
+        shippingSnapshot: shippingCalculation.snapshot,
+        pricingSnapshot: {
+          subtotal: subtotalRupees,
+          discountAmount: discountAmountRupees,
+          taxableAmount: taxCalculation.taxableAmount,
+          taxAmount: taxAmountRupees,
+          shippingAmount: shippingAmountRupees,
+          totalAmount: totalAmountRupees,
+          isTaxInclusive: true,
+          carrier: shippingCalculation.carrier || 'India Post',
+        },
         taxAmount: taxAmountRupees,
         discountAmount: discountAmountRupees,
         totalAmount: totalAmountRupees,
@@ -632,6 +653,23 @@ export async function createOrder({
               cessRate: taxLine.cessRate,
               cessAmount: taxLine.cessAmount,
               totalTax: taxLine.totalTax,
+              pricingSnapshot: {
+                unitPrice: origLine.unitPrice,
+                quantity: origLine.quantity,
+                lineTotal: origLine.lineTotal,
+                taxableAmount: taxLine.taxableAmount,
+                gstRate: taxLine.gstRate,
+                cgstRate: taxLine.cgstRate,
+                cgstAmount: taxLine.cgstAmount,
+                sgstRate: taxLine.sgstRate,
+                sgstAmount: taxLine.sgstAmount,
+                igstRate: taxLine.igstRate,
+                igstAmount: taxLine.igstAmount,
+                cessRate: taxLine.cessRate,
+                cessAmount: taxLine.cessAmount,
+                totalTax: taxLine.totalTax,
+                isTaxInclusive: taxLine.isTaxInclusive,
+              },
             };
           }),
         },

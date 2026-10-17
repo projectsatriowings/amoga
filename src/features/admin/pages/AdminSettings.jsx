@@ -1,5 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Save, ShieldCheck, CheckCircle2, AlertCircle, RefreshCw, Layers, Building, Receipt, FileText } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Save,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Layers,
+  Building,
+  Receipt,
+  FileText,
+  Truck,
+  Package,
+  Calculator,
+  Plus,
+  Trash2,
+  Check,
+  Percent,
+} from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { SystemHealthCard } from '../components/SystemHealthCard';
 import { BackButton } from '../../../components/ui/BackButton';
@@ -13,6 +30,12 @@ export function AdminSettings() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
 
+  // Live simulation states
+  const [simPieces, setSimPieces] = useState(3);
+  const [simSubtotal, setSimSubtotal] = useState(1800);
+  const [simPrice, setSimPrice] = useState(1000);
+  const [simGstRate, setSimGstRate] = useState(5);
+
   const fetchSettings = async () => {
     setLoading(true);
     setMessage(null);
@@ -22,6 +45,9 @@ export function AdminSettings() {
       if (!res.ok) throw new Error(json.message || 'Failed to load store settings');
       setSettings(json.settings);
       setHealth(json.health);
+      if (json.settings?.taxPercentage) {
+        setSimGstRate(Number(json.settings.taxPercentage));
+      }
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
     } finally {
@@ -48,6 +74,121 @@ export function AdminSettings() {
     fetchSettings();
   }, []);
 
+  const handleBracketChange = (index, field, value) => {
+    const updated = [...(settings?.shippingBrackets || [])];
+    const num = Number(value);
+    const item = { ...updated[index], [field]: num };
+    if (field === 'minPieces' || field === 'minQty') {
+      item.minPieces = num;
+      item.minQty = num;
+    }
+    if (field === 'maxPieces' || field === 'maxQty') {
+      item.maxPieces = num;
+      item.maxQty = num;
+    }
+    updated[index] = item;
+    setSettings({ ...settings, shippingBrackets: updated });
+  };
+
+  const handleAddBracket = () => {
+    const existing = settings?.shippingBrackets || [];
+    const lastBracket = existing[existing.length - 1];
+    const nextMin = lastBracket ? Number(lastBracket.maxPieces) + 1 : 1;
+    const nextMax = nextMin;
+    const nextCharge = lastBracket ? Number(lastBracket.charge) + 50 : 100;
+    setSettings({
+      ...settings,
+      shippingBrackets: [...existing, { minPieces: nextMin, maxPieces: nextMax, charge: nextCharge }],
+    });
+  };
+
+  const handleRemoveBracket = (index) => {
+    const updated = [...(settings?.shippingBrackets || [])].filter((_, idx) => idx !== index);
+    setSettings({ ...settings, shippingBrackets: updated });
+  };
+
+  const handleResetBrackets = () => {
+    setSettings({
+      ...settings,
+      shippingCarrierName: 'India Post',
+      shippingRulesEnabled: true,
+      shippingThresholdOperator: 'GTE',
+      freeShippingThreshold: 2500,
+      shippingBeyondMaxRule: 'PER_PIECE',
+      shippingBeyondMaxBaseCharge: 200,
+      shippingBeyondMaxChargePerPiece: 50,
+      shippingBrackets: [
+        { minPieces: 1, maxPieces: 2, charge: 100 },
+        { minPieces: 3, maxPieces: 3, charge: 150 },
+        { minPieces: 4, maxPieces: 4, charge: 200 },
+      ],
+    });
+  };
+
+  const simulatedShipping = useMemo(() => {
+    const pieces = Number(simPieces) || 0;
+    const subtotal = Number(simSubtotal) || 0;
+    const threshold = Number(settings?.freeShippingThreshold ?? 2500);
+    const operator = settings?.shippingThresholdOperator || 'GTE';
+    const isFree = operator === 'GT' ? subtotal > threshold : subtotal >= threshold;
+
+    if (isFree && subtotal > 0) {
+      return {
+        charge: 0,
+        isFree: true,
+        reason: `Complimentary: Subtotal ₹${subtotal.toLocaleString('en-IN')} is ${operator === 'GT' ? '>' : '≥'} ₹${threshold.toLocaleString('en-IN')}`,
+      };
+    }
+    if (pieces <= 0) {
+      return { charge: 0, isFree: false, reason: 'Cart is empty' };
+    }
+    if (!settings?.shippingRulesEnabled) {
+      const std = Number(settings?.shippingStandardRate ?? 100);
+      return { charge: std, isFree: false, reason: `Flat standard shipping: ₹${std}` };
+    }
+    const brackets = settings?.shippingBrackets || [
+      { minPieces: 1, maxPieces: 2, charge: 100 },
+      { minPieces: 3, maxPieces: 3, charge: 150 },
+      { minPieces: 4, maxPieces: 4, charge: 200 },
+    ];
+    const matched = brackets.find((b) => pieces >= b.minPieces && pieces <= b.maxPieces);
+    if (matched) {
+      return {
+        charge: matched.charge,
+        isFree: false,
+        reason: `${settings?.shippingCarrierName || 'India Post'} parcel bracket: ${matched.minPieces}–${matched.maxPieces} pcs = ₹${matched.charge}`,
+      };
+    }
+    const sorted = [...brackets].sort((a, b) => b.maxPieces - a.maxPieces);
+    const maxBracket = sorted[0];
+    const maxLimit = maxBracket ? maxBracket.maxPieces : 4;
+    if (pieces > maxLimit) {
+      const base = Number(settings?.shippingBeyondMaxBaseCharge ?? 200);
+      const perPiece = Number(settings?.shippingBeyondMaxChargePerPiece ?? 50);
+      const extra = pieces - maxLimit;
+      const total = base + extra * perPiece;
+      return {
+        charge: total,
+        isFree: false,
+        reason: `${settings?.shippingCarrierName || 'India Post'} parcel beyond max: Base ₹${base} (${maxLimit} pcs) + ${extra} × ₹${perPiece}/pc = ₹${total}`,
+      };
+    }
+    return { charge: Number(settings?.shippingStandardRate ?? 100), isFree: false, reason: 'Standard fallback' };
+  }, [simPieces, simSubtotal, settings]);
+
+  const simulatedTax = useMemo(() => {
+    const price = Number(simPrice) || 0;
+    const rate = Number(simGstRate) || 0;
+    if (price <= 0 || rate <= 0) {
+      return { taxable: price, gst: 0, cgst: 0, sgst: 0, igst: 0 };
+    }
+    const taxable = Math.round((price / (1 + rate / 100)) * 100) / 100;
+    const gst = Math.round((price - taxable) * 100) / 100;
+    const half = Math.round((gst / 2) * 100) / 100;
+    const remaining = Math.round((gst - half) * 100) / 100;
+    return { taxable, gst, cgst: half, sgst: remaining, igst: gst };
+  }, [simPrice, simGstRate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!settings) return;
@@ -71,6 +212,19 @@ export function AdminSettings() {
       setMessage({ type: 'error', text: 'Shipping values must be non-negative amounts' });
       setSubmitting(false);
       return;
+    }
+
+    if (settings.shippingRulesEnabled && Array.isArray(settings.shippingBrackets)) {
+      for (const b of settings.shippingBrackets) {
+        if (Number(b.minPieces) < 1 || Number(b.maxPieces) < Number(b.minPieces) || Number(b.charge) < 0) {
+          setMessage({
+            type: 'error',
+            text: `Invalid shipping bracket: min ${b.minPieces}, max ${b.maxPieces}, fee ₹${b.charge}. Min must be >= 1, max >= min, and fee >= 0.`,
+          });
+          setSubmitting(false);
+          return;
+        }
+      }
     }
 
     try {
@@ -208,13 +362,58 @@ export function AdminSettings() {
           </div>
         </div>
 
-        {/* Shipping & Taxation Rules */}
-        <div className="bg-[#FBF9F5] p-6 rounded-2xl border border-[#E5E0D5] space-y-4">
-          <h2 className="font-serif text-base font-bold text-[#1A1817] border-b border-[#EAE4D9] pb-2">
-            Shipping & Taxation Rules
-          </h2>
+        {/* India Post Shipping Configuration */}
+        <div className="bg-[#FBF9F5] p-6 rounded-2xl border border-[#E5E0D5] space-y-6">
+          <div className="border-b border-[#EAE4D9] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="font-serif text-base font-bold text-[#1A1817] flex items-center gap-2">
+                <Truck className="w-4 h-4 text-[#722F37]" />
+                <span>India Post Parcel & Shipping Rules</span>
+              </h2>
+              <p className="text-[11px] text-[#7A7167] mt-0.5">
+                Configurable quantity-based piece brackets, free-delivery threshold, beyond-bracket incremental rates, and postal serviceability.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="inline-flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-[#D5CEC2] shadow-2xs">
+                <input
+                  type="checkbox"
+                  disabled={!isSuperAdmin}
+                  checked={Boolean(settings?.shippingRulesEnabled ?? true)}
+                  onChange={(e) => setSettings({ ...settings, shippingRulesEnabled: e.target.checked })}
+                  className="rounded border-[#D5CEC2] text-[#722F37] focus:ring-[#722F37]"
+                />
+                <span className="text-xs font-semibold text-[#1A1817]">Enable India Post Rules</span>
+              </label>
+              <button
+                type="button"
+                disabled={!isSuperAdmin}
+                onClick={handleResetBrackets}
+                className="px-2.5 py-1.5 text-[11px] font-medium text-[#722F37] bg-white border border-[#D5CEC2] hover:bg-[#FAF8F5] rounded-lg transition-colors cursor-pointer"
+                title="Reset to default India Post rates (1-2: ₹100, 3: ₹150, 4: ₹200, 5+: +₹50/pc, Free >= ₹2,500)"
+              >
+                Reset Defaults
+              </button>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          {/* Carrier Name, Threshold and Operator */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Logistics Carrier Name *
+              </label>
+              <input
+                type="text"
+                required
+                disabled={!isSuperAdmin}
+                value={settings?.shippingCarrierName || 'India Post'}
+                onChange={(e) => setSettings({ ...settings, shippingCarrierName: e.target.value })}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Displayed on cart, checkout & invoices.</p>
+            </div>
+
             <div>
               <label className="block font-semibold text-[#4A423B] uppercase mb-1">
                 Free Shipping Threshold (₹) *
@@ -224,32 +423,297 @@ export function AdminSettings() {
                 required
                 min="0"
                 disabled={!isSuperAdmin}
-                value={settings?.freeShippingThreshold ?? 2000}
+                value={settings?.freeShippingThreshold ?? 2500}
                 onChange={(e) => setSettings({ ...settings, freeShippingThreshold: Number(e.target.value) })}
                 className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
               />
-              <p className="text-[10px] text-[#7A7167] mt-1">Orders at or above this qualify for complimentary delivery.</p>
+              <p className="text-[10px] text-[#7A7167] mt-1">Evaluated on discounted product subtotal.</p>
             </div>
 
             <div>
               <label className="block font-semibold text-[#4A423B] uppercase mb-1">
-                Standard Shipping Fee (₹) *
+                Threshold Operator *
+              </label>
+              <select
+                disabled={!isSuperAdmin}
+                value={settings?.shippingThresholdOperator || 'GTE'}
+                onChange={(e) => setSettings({ ...settings, shippingThresholdOperator: e.target.value })}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817] font-medium"
+              >
+                <option value="GTE">At or above (≥ ₹{settings?.freeShippingThreshold ?? 2500})</option>
+                <option value="GT">Strictly greater than (&gt; ₹{settings?.freeShippingThreshold ?? 2500})</option>
+              </select>
+              <p className="text-[10px] text-[#7A7167] mt-1">Comparison rule for free delivery.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Fallback Standard Fee (₹) *
               </label>
               <input
                 type="number"
                 required
                 min="0"
                 disabled={!isSuperAdmin}
-                value={settings?.shippingStandardRate ?? 0}
+                value={settings?.shippingStandardRate ?? 100}
                 onChange={(e) => setSettings({ ...settings, shippingStandardRate: Number(e.target.value) })}
                 className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
               />
-              <p className="text-[10px] text-[#7A7167] mt-1">Applied when cart is below free threshold.</p>
+              <p className="text-[10px] text-[#7A7167] mt-1">Fallback if bracket rules disabled.</p>
+            </div>
+          </div>
+
+          {/* India Post Piece Brackets Table */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-[#1A1817] uppercase flex items-center gap-1.5">
+                  <Package className="w-3.5 h-3.5 text-[#722F37]" />
+                  <span>Configurable Quantity Brackets (India Post Standard Parcels)</span>
+                </h3>
+                <p className="text-[10px] text-[#7A7167]">
+                  Define the shipping fee based on total cart physical pieces.
+                </p>
+              </div>
+              {isSuperAdmin && (
+                <button
+                  type="button"
+                  onClick={handleAddBracket}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#722F37] bg-white border border-[#D5CEC2] hover:bg-[#FAF8F5] rounded-lg transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Bracket</span>
+                </button>
+              )}
             </div>
 
+            <div className="overflow-x-auto rounded-xl border border-[#E5E0D5] bg-white">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[#F6F3EC] text-[#4A423B] font-semibold uppercase text-[10px] tracking-wider border-b border-[#E5E0D5]">
+                  <tr>
+                    <th className="py-2.5 px-4">Bracket Range</th>
+                    <th className="py-2.5 px-4">Min Pieces</th>
+                    <th className="py-2.5 px-4">Max Pieces</th>
+                    <th className="py-2.5 px-4">Shipping Fee (₹)</th>
+                    {isSuperAdmin && <th className="py-2.5 px-4 text-right">Action</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#EAE4D9]">
+                  {(settings?.shippingBrackets || [
+                    { minPieces: 1, maxPieces: 2, charge: 100 },
+                    { minPieces: 3, maxPieces: 3, charge: 150 },
+                    { minPieces: 4, maxPieces: 4, charge: 200 },
+                  ]).map((bracket, idx) => (
+                    <tr key={idx} className="hover:bg-[#FCFAF7] transition-colors">
+                      <td className="py-2.5 px-4 font-medium text-[#1A1817]">
+                        {(bracket.minPieces ?? bracket.minQty) === (bracket.maxPieces ?? bracket.maxQty)
+                          ? `${bracket.minPieces ?? bracket.minQty} piece`
+                          : `${bracket.minPieces ?? bracket.minQty} – ${bracket.maxPieces ?? bracket.maxQty} pieces`}
+                      </td>
+                      <td className="py-2.5 px-4">
+                        <input
+                          type="number"
+                          min="1"
+                          disabled={!isSuperAdmin}
+                          value={bracket.minPieces ?? bracket.minQty ?? 1}
+                          onChange={(e) => handleBracketChange(idx, 'minPieces', e.target.value)}
+                          className="w-20 px-2 py-1 bg-white border border-[#D5CEC2] rounded font-mono text-center disabled:bg-stone-50"
+                        />
+                      </td>
+                      <td className="py-2.5 px-4">
+                        <input
+                          type="number"
+                          min={bracket.minPieces ?? bracket.minQty ?? 1}
+                          disabled={!isSuperAdmin}
+                          value={bracket.maxPieces ?? bracket.maxQty ?? 1}
+                          onChange={(e) => handleBracketChange(idx, 'maxPieces', e.target.value)}
+                          className="w-20 px-2 py-1 bg-white border border-[#D5CEC2] rounded font-mono text-center disabled:bg-stone-50"
+                        />
+                      </td>
+                      <td className="py-2.5 px-4">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[#7A7167]">₹</span>
+                          <input
+                            type="number"
+                            min="0"
+                            disabled={!isSuperAdmin}
+                            value={bracket.charge}
+                            onChange={(e) => handleBracketChange(idx, 'charge', e.target.value)}
+                            className="w-24 px-2 py-1 bg-white border border-[#D5CEC2] rounded font-mono text-left font-bold text-[#722F37] disabled:bg-stone-50"
+                          />
+                        </div>
+                      </td>
+                      {isSuperAdmin && (
+                        <td className="py-2.5 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBracket(idx)}
+                            className="p-1 text-[#A89F93] hover:text-rose-600 rounded hover:bg-rose-50 transition-colors"
+                            title="Remove bracket"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 5+ Pieces Rule (Beyond Max Bracket) */}
+          <div className="p-4 bg-white rounded-xl border border-[#E5E0D5] space-y-3">
+            <div className="border-b border-[#F0ECE1] pb-2">
+              <h3 className="text-xs font-bold text-[#1A1817] uppercase flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-[#722F37]" />
+                <span>Orders With 5 or More Pieces (Beyond Highest Bracket)</span>
+              </h3>
+              <p className="text-[10px] text-[#7A7167]">
+                Configured formula for carts exceeding 4 pieces (e.g. 5 pcs = ₹250, 6 pcs = ₹300).
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                  Calculation Model *
+                </label>
+                <select
+                  disabled={!isSuperAdmin}
+                  value={settings?.shippingBeyondMaxRule || 'PER_PIECE'}
+                  onChange={(e) => setSettings({ ...settings, shippingBeyondMaxRule: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+                >
+                  <option value="PER_PIECE">Incremental per piece (Base + ₹/piece)</option>
+                  <option value="FLAT">Flat surcharge</option>
+                </select>
+                <p className="text-[10px] text-[#7A7167] mt-1">Model applied when cart piece count &gt; 4.</p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                  Base 4-Piece Charge (₹) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  disabled={!isSuperAdmin}
+                  value={settings?.shippingBeyondMaxBaseCharge ?? 200}
+                  onChange={(e) => setSettings({ ...settings, shippingBeyondMaxBaseCharge: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+                />
+                <p className="text-[10px] text-[#7A7167] mt-1">Rate up to 4 pieces.</p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                  Additional Fee Per Extra Piece (₹) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  disabled={!isSuperAdmin}
+                  value={settings?.shippingBeyondMaxChargePerPiece ?? 50}
+                  onChange={(e) => setSettings({ ...settings, shippingBeyondMaxChargePerPiece: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+                />
+                <p className="text-[10px] text-[#7A7167] mt-1">E.g. +₹50 per piece for pieces 5, 6, 7...</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Live Shipping Rate Simulator */}
+          <div className="p-4 bg-[#F2EDE4]/60 rounded-xl border border-[#D8D0C3] space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-[#1A1817] uppercase flex items-center gap-1.5">
+                <Calculator className="w-3.5 h-3.5 text-[#722F37]" />
+                <span>Live India Post Shipping Simulator</span>
+              </h3>
+              <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-white text-[#722F37] border border-[#D5CEC2]">
+                Instant Rule Verifier
+              </span>
+            </div>
+            <p className="text-[11px] text-[#5A5249]">
+              Test cart piece counts and discounted subtotals against currently configured brackets in real time:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#4A423B] mb-1">Simulate Cart Pieces</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={simPieces}
+                  onChange={(e) => setSimPieces(Math.max(1, Number(e.target.value)))}
+                  className="w-full px-3 py-1.5 bg-white border border-[#D5CEC2] rounded font-mono text-center font-bold text-[#1A1817]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#4A423B] mb-1">Simulate Subtotal (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={simSubtotal}
+                  onChange={(e) => setSimSubtotal(Math.max(0, Number(e.target.value)))}
+                  className="w-full px-3 py-1.5 bg-white border border-[#D5CEC2] rounded font-mono text-center font-bold text-[#1A1817]"
+                />
+              </div>
+
+              <div className="sm:col-span-2 bg-white p-3 rounded-lg border border-[#D5CEC2] flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-[#7A7167]">Calculated India Post Charge</div>
+                  <div className="text-sm font-bold text-[#1A1817] flex items-center gap-2 mt-0.5">
+                    {simulatedShipping.isFree ? (
+                      <span className="text-emerald-700 font-extrabold flex items-center gap-1">
+                        <CheckCircle2 className="w-4 h-4" /> Free Delivery (₹0)
+                      </span>
+                    ) : (
+                      <span className="text-[#722F37] font-extrabold text-base">
+                        ₹{simulatedShipping.charge.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-[#7A7167] mt-0.5">{simulatedShipping.reason}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Audit trail / Last changed info */}
+          {settings?.shippingConfiguredAt && (
+            <div className="text-[10px] text-[#7A7167] flex items-center justify-between pt-1 border-t border-[#EAE4D9]">
+              <span>
+                Last configured by: <strong className="font-mono text-[#4A423B]">{settings.shippingConfiguredBy || 'Admin'}</strong>
+              </span>
+              <span>Updated: {new Date(settings.shippingConfiguredAt).toLocaleString('en-IN')}</span>
+            </div>
+          )}
+        </div>
+
+        {/* GST-Inclusive Pricing & Taxation Engine */}
+        <div className="bg-[#FBF9F5] p-6 rounded-2xl border border-[#E5E0D5] space-y-6">
+          <div className="border-b border-[#EAE4D9] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="font-serif text-base font-bold text-[#1A1817] flex items-center gap-2">
+                <Percent className="w-4 h-4 text-[#722F37]" />
+                <span>GST-Inclusive Product Pricing Engine</span>
+              </h2>
+              <p className="text-[11px] text-[#7A7167] mt-0.5">
+                Statutory single-rate inclusive pricing: <code className="bg-stone-100 px-1 py-0.5 rounded font-mono text-[10px]">Taxable = Price / (1 + Rate / 100)</code>. Tax is never added twice.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium">
+              100% Tax Inclusive
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div>
               <label className="block font-semibold text-[#4A423B] uppercase mb-1">
-                Tax / GST Rate (%) *
+                Default Store Tax / GST Rate (%) *
               </label>
               <input
                 type="number"
@@ -259,14 +723,98 @@ export function AdminSettings() {
                 step="0.01"
                 disabled={!isSuperAdmin}
                 value={settings?.taxPercentage ?? 5}
-                onChange={(e) => setSettings({ ...settings, taxPercentage: Number(e.target.value) })}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setSettings({ ...settings, taxPercentage: val });
+                  setSimGstRate(val);
+                }}
                 className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
               />
-              <p className="text-[10px] text-[#7A7167] mt-1">Inclusive GST applied across craft products.</p>
+              <p className="text-[10px] text-[#7A7167] mt-1">Fallback rate when product doesn't define custom rate.</p>
+            </div>
+
+            <div className="sm:col-span-2 flex flex-col justify-center">
+              <div className="bg-white p-3 rounded-xl border border-[#E5E0D5] text-[11px] text-[#4A423B] space-y-1">
+                <div className="font-semibold text-[#1A1817] flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  Statutory Rule: Prices Displayed to Customers Include GST
+                </div>
+                <p className="text-[#7A7167]">
+                  The displayed catalog price is the total customer payable amount. The checkout and invoice show the taxable value and included tax breakdown without adding any tax surcharge.
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="pt-2 flex flex-wrap gap-6 text-xs">
+          {/* Interactive Live GST-Inclusive Simulator */}
+          <div className="p-4 bg-[#F2EDE4]/60 rounded-xl border border-[#D8D0C3] space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-[#1A1817] uppercase flex items-center gap-1.5">
+                <Calculator className="w-3.5 h-3.5 text-[#722F37]" />
+                <span>Live GST-Inclusive Tax Simulator</span>
+              </h3>
+              <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-white text-[#722F37] border border-[#D5CEC2]">
+                Reverse Tax Math
+              </span>
+            </div>
+            <p className="text-[11px] text-[#5A5249]">
+              Verify how an inclusive selling price decomposes into taxable value and statutory tax components:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#4A423B] mb-1">Customer Price (₹)</label>
+                <input
+                  type="number"
+                  min="1"
+                  step="10"
+                  value={simPrice}
+                  onChange={(e) => setSimPrice(Math.max(1, Number(e.target.value)))}
+                  className="w-full px-3 py-1.5 bg-white border border-[#D5CEC2] rounded font-mono text-center font-bold text-[#1A1817]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-[#4A423B] mb-1">GST Rate (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={simGstRate}
+                  onChange={(e) => setSimGstRate(Math.max(0, Number(e.target.value)))}
+                  className="w-full px-3 py-1.5 bg-white border border-[#D5CEC2] rounded font-mono text-center font-bold text-[#1A1817]"
+                />
+              </div>
+
+              <div className="bg-white p-2.5 rounded-lg border border-[#D5CEC2]">
+                <div className="text-[10px] uppercase font-bold text-[#7A7167]">Taxable Base</div>
+                <div className="text-sm font-bold text-[#1A1817] font-mono mt-0.5">
+                  ₹{simulatedTax.taxable.toFixed(2)}
+                </div>
+                <div className="text-[9px] text-[#7A7167]">{simPrice} / (1 + {simGstRate}%)</div>
+              </div>
+
+              <div className="bg-white p-2.5 rounded-lg border border-[#D5CEC2]">
+                <div className="text-[10px] uppercase font-bold text-[#7A7167]">Included GST</div>
+                <div className="text-sm font-bold text-[#722F37] font-mono mt-0.5">
+                  ₹{simulatedTax.gst.toFixed(2)}
+                </div>
+                <div className="text-[9px] text-[#7A7167]">Price − Taxable Base</div>
+              </div>
+
+              <div className="bg-white p-2.5 rounded-lg border border-[#D5CEC2]">
+                <div className="text-[10px] uppercase font-bold text-[#7A7167]">Breakdown</div>
+                <div className="text-[11px] text-[#1A1817] font-mono mt-0.5">
+                  <div>CGST: ₹{simulatedTax.cgst.toFixed(2)}</div>
+                  <div>SGST: ₹{simulatedTax.sgst.toFixed(2)}</div>
+                </div>
+                <div className="text-[9px] text-[#7A7167]">or IGST: ₹{simulatedTax.igst.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-1 flex flex-wrap gap-6 text-xs">
             <label className="inline-flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"

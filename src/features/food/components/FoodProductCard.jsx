@@ -150,15 +150,18 @@ export function FoodProductCard({ product }) {
           {/* Price & Add to Cart / Notify Footer */}
           <div className="pt-3 border-t border-[#E5E0D5] flex items-center justify-between gap-2">
             {hasPrice ? (
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-base font-sans font-semibold text-[#292820] tabular-nums">
-                  ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
-                </span>
-                {product.originalPrice && (
-                  <span className="text-xs text-[#A89F93] line-through tabular-nums">
-                    ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-base font-sans font-semibold text-[#292820] tabular-nums">
+                    ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                   </span>
-                )}
+                  {product.originalPrice && (
+                    <span className="text-xs text-[#A89F93] line-through tabular-nums">
+                      ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[9px] text-[#746F63] block">Incl. GST</span>
               </div>
             ) : (
               <span className="text-[11px] font-mono font-medium text-[#746F63] bg-[#F8F6F0] px-2 py-0.5 rounded border border-[#E5E0D5]">

@@ -230,8 +230,8 @@ export function FoodProductDetail() {
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-[#557C36]">
-                    Inclusive of all local taxes. Free shipping over ₹999.
+                  <div className="text-[11px] text-[#557C36] font-medium">
+                    Inclusive of GST • India Post delivery calculated at checkout
                   </div>
                 </div>
               ) : (
@@ -240,7 +240,7 @@ export function FoodProductDetail() {
                     Price to be confirmed
                   </span>
                   <div className="text-[11px] text-[#405244]">
-                    Retail pack pricing awaiting final catalogue sign-off. Add to basket to reserve.
+                    Artisanal batch pricing being finalized. Inquire with concierge.
                   </div>
                 </div>
               )}

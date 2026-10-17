@@ -326,8 +326,13 @@ export function calculateOrderTaxes({
         // Intra-State: 50% CGST + 50% SGST
         cgstRate = round2(gstRate / 2);
         sgstRate = round2(gstRate / 2);
-        cgstAmount = round2(taxableValue * (cgstRate / 100));
-        sgstAmount = round2(taxableValue * (sgstRate / 100));
+        if (isTaxInclusive) {
+          cgstAmount = round2(lineTotalTax / 2);
+          sgstAmount = round2(lineTotalTax - cgstAmount);
+        } else {
+          cgstAmount = round2(taxableValue * (cgstRate / 100));
+          sgstAmount = round2(taxableValue * (sgstRate / 100));
+        }
       }
 
       if (cessRate > 0) {

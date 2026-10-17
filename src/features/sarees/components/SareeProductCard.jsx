@@ -173,8 +173,11 @@ export function SareeProductCard({ product }) {
           <div className="pt-2 border-t border-[#C5A46D]/15 flex items-center justify-between gap-2">
             <div>
               {hasPrice ? (
-                <div className="text-base font-sans font-bold text-[#F6EBD8] tabular-nums">
-                  ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
+                <div>
+                  <div className="text-base font-sans font-bold text-[#F6EBD8] tabular-nums">
+                    ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
+                  </div>
+                  <span className="text-[9px] text-[#C5A46D] block">Incl. GST</span>
                 </div>
               ) : (
                 <span className="text-[10px] font-mono text-[#C5A46D] bg-[#451523] px-2 py-0.5 rounded border border-[#C5A46D]/20">

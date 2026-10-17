@@ -98,9 +98,17 @@ export const OrderReviewPage = () => {
 
   // Authoritative server shipping from store settings
   const [serverShipping, setServerShipping] = useState({
+    carrier: 'India Post',
     amount: 0,
     isComplimentary: true,
-    freeShippingThreshold: 2000,
+    freeShippingThreshold: 2500,
+    thresholdOperator: 'GTE',
+    taxBreakdown: null,
+    totalTaxAmount: 0,
+    taxableAmount: 0,
+    cgstAmount: 0,
+    sgstAmount: 0,
+    igstAmount: 0,
   });
 
   useEffect(() => {
@@ -110,9 +118,17 @@ export const OrderReviewPage = () => {
         .then((res) => {
           if (isMounted && res?.totals) {
             setServerShipping({
+              carrier: res.totals.shippingCarrier || res.shipping?.carrier || 'India Post',
               amount: res.totals.shippingAmount || 0,
               isComplimentary: res.totals.isComplimentaryShipping ?? (res.totals.shippingAmount === 0),
-              freeShippingThreshold: res.totals.freeShippingThreshold || 2000,
+              freeShippingThreshold: res.totals.freeShippingThreshold || 2500,
+              thresholdOperator: res.totals.shippingThresholdOperator || 'GTE',
+              taxBreakdown: res.totals.taxBreakdown || res.taxBreakdown || null,
+              totalTaxAmount: res.totals.totalTaxAmount || 0,
+              taxableAmount: res.totals.taxableAmount || 0,
+              cgstAmount: res.totals.cgstAmount || 0,
+              sgstAmount: res.totals.sgstAmount || 0,
+              igstAmount: res.totals.igstAmount || 0,
             });
           }
         })
@@ -846,13 +862,46 @@ export const OrderReviewPage = () => {
                   </div>
                 )}
 
+                {/* India Post Delivery Charges */}
                 <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
-                  <span>Delivery Charges</span>
-                  <span className="italic text-[var(--collection-accent)]">Free Delivery</span>
+                  <div>
+                    <span>{serverShipping.carrier || 'India Post'} Shipping</span>
+                    <span className="block text-[10px] text-stone-500">
+                      {serverShipping.isComplimentary
+                        ? 'Complimentary (Order ≥ ₹2,500)'
+                        : `${totals.payableItemsCount} ${totals.payableItemsCount === 1 ? 'piece' : 'pieces'} standard parcel`}
+                    </span>
+                  </div>
+                  <span
+                    className="font-semibold tabular-nums"
+                    style={{ color: serverShipping.isComplimentary ? '#059669' : 'var(--collection-text)' }}
+                  >
+                    {serverShipping.isComplimentary ? 'FREE' : formatINR(shippingFee)}
+                  </span>
                 </div>
-                <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
-                  <span>Taxes</span>
-                  <span className="italic">Included</span>
+
+                {/* Included GST Breakdown */}
+                <div className="pt-2 border-t border-dashed border-[var(--collection-border)]">
+                  <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
+                    <span>
+                      Included GST <span className="text-[10px] text-stone-500">(Included in price)</span>
+                    </span>
+                    <span className="font-medium tabular-nums text-[var(--collection-text)]">
+                      {serverShipping.totalTaxAmount > 0
+                        ? `₹${Number(serverShipping.totalTaxAmount).toFixed(2)}`
+                        : `₹${((totals.subtotal * 0.05) / 1.05).toFixed(2)}`}
+                    </span>
+                  </div>
+                  {serverShipping.taxableAmount > 0 && (
+                    <div className="flex justify-between items-baseline text-[10px] text-stone-500 mt-0.5">
+                      <span>Taxable Value: ₹{Number(serverShipping.taxableAmount).toFixed(2)}</span>
+                      <span>
+                        {serverShipping.igstAmount > 0
+                          ? `IGST: ₹${Number(serverShipping.igstAmount).toFixed(2)}`
+                          : `CGST: ₹${Number(serverShipping.cgstAmount || 0).toFixed(2)} + SGST: ₹${Number(serverShipping.sgstAmount || 0).toFixed(2)}`}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Promo Code Input / Active Badge */}
