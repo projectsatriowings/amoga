@@ -2,6 +2,7 @@ import { app } from './app.js';
 import { env } from './config/env.js';
 import { checkDatabaseHealth, prisma } from './config/prisma.js';
 
+// Server instance entry point
 async function startServer() {
   console.log('--- STARTING AMOGA E-COMMERCE SERVER ---');
   console.log(`Environment: ${env.NODE_ENV}`);
