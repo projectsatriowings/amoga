@@ -5,9 +5,11 @@ import { useStore } from '../../../store/useStore';
 import { formatINR, calculateGstInclusiveBreakdown, estimateIndiaPostShipping } from '../../../utils/pricing';
 import { resolveAvailability } from '../../../utils/inventory';
 import { Truck, Info } from 'lucide-react';
+import { useShippingConfig } from '../../../hooks/useShippingConfig';
 
 export const CartSummary = () => {
   const navigate = useNavigate();
+  const { freeShippingThreshold, shippingThresholdOperator } = useShippingConfig();
   const getSelectedItems = useStore((state) => state.getSelectedItems);
   const getSelectedTotals = useStore((state) => state.getSelectedTotals);
   const cartState = useStore((state) => state.cart);
@@ -65,12 +67,14 @@ export const CartSummary = () => {
   const shippingEst = estimateIndiaPostShipping({
     itemCount: selectedQtyTotal,
     subtotal: selectedSubtotal,
+    freeShippingThreshold,
+    thresholdOperator: shippingThresholdOperator,
   });
 
   const estimatedShippingCharge = isSelectionEmpty ? 0 : shippingEst.amount;
   const isComplimentaryShipping = isSelectionEmpty || shippingEst.isFree;
   const finalPayableTotal = Math.max(0, selectedSubtotal + estimatedShippingCharge);
-  const remainingForFreeShipping = Math.max(0, 2500 - selectedSubtotal);
+  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - selectedSubtotal);
 
   return (
     <div
@@ -117,7 +121,7 @@ export const CartSummary = () => {
               </p>
             ) : (
               <p className="leading-tight">
-                Add <span className="font-semibold text-[var(--collection-accent)]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</span> more to qualify for <span className="font-semibold">Free India Post Delivery</span> (Orders ≥ ₹2,500)
+                Add <span className="font-semibold text-[var(--collection-accent)]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</span> more to qualify for <span className="font-semibold">Free India Post Delivery</span> (Orders {shippingThresholdOperator === 'GT' ? '>' : '≥'} ₹{freeShippingThreshold.toLocaleString('en-IN')})
               </p>
             )}
           </div>
@@ -148,7 +152,7 @@ export const CartSummary = () => {
             {!isSelectionEmpty && (
               <span className="block text-[10px] text-stone-500 mt-0.5">
                 {isComplimentaryShipping
-                  ? 'Complimentary (Subtotal ≥ ₹2,500)'
+                  ? `Complimentary (Subtotal ${shippingThresholdOperator === 'GT' ? '>' : '≥'} ₹${freeShippingThreshold.toLocaleString('en-IN')})`
                   : selectedQtyTotal <= 2
                   ? '1–2 pieces bracket (₹100)'
                   : selectedQtyTotal === 3

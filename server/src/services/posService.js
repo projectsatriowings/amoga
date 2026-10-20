@@ -1498,20 +1498,106 @@ export async function getPosSalesReport({
 /**
  * Stall Events CRUD
  */
-export async function listStallEvents({ status = 'all', client = prisma }) {
+export async function autoInitializeStallLocationInventory(locationId, client = prisma) {
+  try {
+    const products = await client.product.findMany({
+      where: { isActive: true },
+      include: { variants: true },
+    });
+
+    const existingInvs = await client.locationInventory.findMany({
+      where: { locationId },
+      select: { productId: true, variantId: true },
+    });
+
+    const existingSet = new Set(
+      existingInvs.map((inv) => `${inv.productId}_${inv.variantId || 'null'}`)
+    );
+
+    const toCreate = [];
+    for (const p of products) {
+      if (p.variants && p.variants.length > 0) {
+        for (const v of p.variants) {
+          const key = `${p.id}_${v.id}`;
+          if (!existingSet.has(key)) {
+            toCreate.push({
+              locationId,
+              productId: p.id,
+              variantId: v.id,
+              onHandQuantity: 0,
+              reservedQuantity: 0,
+              reorderThreshold: 5,
+              lastMovementAt: new Date(),
+            });
+          }
+        }
+      } else {
+        const key = `${p.id}_null`;
+        if (!existingSet.has(key)) {
+          toCreate.push({
+            locationId,
+            productId: p.id,
+            variantId: null,
+            onHandQuantity: 0,
+            reservedQuantity: 0,
+            reorderThreshold: 5,
+            lastMovementAt: new Date(),
+          });
+        }
+      }
+    }
+
+    if (toCreate.length > 0) {
+      await client.locationInventory.createMany({
+        data: toCreate,
+        skipDuplicates: true,
+      });
+    }
+  } catch (err) {
+    console.error('[autoInitializeStallLocationInventory Error]:', err.message);
+  }
+}
+
+export async function listStallEvents({ status = 'all', client = prisma } = {}) {
   const where = {};
   if (status && status !== 'all') {
     where.status = status;
   }
-  return await client.stallEvent.findMany({
-    where,
-    orderBy: { startDate: 'desc' },
-    include: {
-      _count: {
-        select: { posSales: true },
+
+  const [events, posSettings] = await Promise.all([
+    client.stallEvent.findMany({
+      where,
+      orderBy: { startDate: 'desc' },
+      include: {
+        stockLocation: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            type: true,
+            isActive: true,
+            _count: {
+              select: {
+                inventories: true,
+                posSales: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: { posSales: true },
+        },
       },
-    },
-  });
+    }),
+    client.posSetting.findFirst().catch(() => null),
+  ]);
+
+  const defaultStallId = posSettings?.defaultStallId || null;
+
+  return events.map((ev) => ({
+    ...ev,
+    isDefaultStall: ev.id === defaultStallId,
+  }));
 }
 
 export async function createStallEvent(data, staffEmail, staffId = null, client = prisma) {
@@ -1522,18 +1608,54 @@ export async function createStallEvent(data, staffEmail, staffId = null, client 
       code,
       name: data.name.trim(),
       venue: data.venue.trim(),
-      address: data.address || null,
-      city: data.city || 'Chennai',
-      state: data.state || 'Tamil Nadu',
-      stateCode: data.stateCode || '33',
+      address: data.address ? data.address.trim() : null,
+      city: data.city ? data.city.trim() : 'Chennai',
+      state: data.state ? data.state.trim() : 'Tamil Nadu',
+      stateCode: data.stateCode ? data.stateCode.trim() : '33',
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
       status: data.status || 'ACTIVE',
       openingCashBalance: data.openingCashBalance !== undefined ? Number(data.openingCashBalance) : 0.0,
       assignedStaffIds: data.assignedStaffIds || [],
-      notes: data.notes || null,
+      notes: data.notes ? data.notes.trim() : null,
     },
   });
+
+  // Automatically create or link the matching StockLocation for multi-location inventory & transfers
+  const locCode = event.code.startsWith('STALL-') ? event.code : `STALL-${event.code}`;
+  const stockLocation = await client.stockLocation.upsert({
+    where: { code: locCode },
+    update: {
+      stallEventId: event.id,
+      name: `${event.name} Inventory`,
+      city: event.city || 'Chennai',
+      state: event.state || 'Tamil Nadu',
+      address: event.address || null,
+      isActive: event.status === 'ACTIVE',
+    },
+    create: {
+      code: locCode,
+      name: `${event.name} Inventory`,
+      type: 'STALL',
+      stallEventId: event.id,
+      city: event.city || 'Chennai',
+      state: event.state || 'Tamil Nadu',
+      address: event.address || null,
+      isActive: event.status === 'ACTIVE',
+    },
+  });
+
+  // If requested or if set as default, update POS settings default stall
+  if (data.isDefault || data.setAsDefault) {
+    await client.posSetting.updateMany({
+      data: { defaultStallId: event.id },
+    });
+  }
+
+  // Auto-initialize catalog products in LocationInventory for this stall
+  if (data.autoInitInventory !== false && stockLocation) {
+    await autoInitializeStallLocationInventory(stockLocation.id, client);
+  }
 
   await client.auditLog.create({
     data: {
@@ -1543,38 +1665,110 @@ export async function createStallEvent(data, staffEmail, staffId = null, client 
       entityType: 'StallEvent',
       entityId: event.id,
       status: 'SUCCESS',
-      details: { name: event.name, code: event.code, venue: event.venue },
+      details: { name: event.name, code: event.code, venue: event.venue, stockLocationId: stockLocation.id },
     },
   });
 
-  return event;
+  return {
+    ...event,
+    stockLocation,
+    isDefaultStall: Boolean(data.isDefault || data.setAsDefault),
+  };
 }
 
 export async function updateStallEvent(id, data, staffEmail, staffId = null, client = prisma) {
-  const current = await client.stallEvent.findUnique({ where: { id } });
+  const current = await client.stallEvent.findUnique({
+    where: { id },
+    include: { stockLocation: true },
+  });
   if (!current) {
     const err = new Error('Stall/Event not found.');
     err.status = 404;
     throw err;
   }
 
+  const newCode = data.code ? data.code.trim().toUpperCase() : current.code;
+
   const updated = await client.stallEvent.update({
     where: { id },
     data: {
+      code: newCode,
       name: data.name !== undefined ? data.name.trim() : current.name,
       venue: data.venue !== undefined ? data.venue.trim() : current.venue,
-      address: data.address !== undefined ? data.address : current.address,
-      city: data.city !== undefined ? data.city : current.city,
-      state: data.state !== undefined ? data.state : current.state,
-      stateCode: data.stateCode !== undefined ? data.stateCode : current.stateCode,
+      address: data.address !== undefined ? (data.address ? data.address.trim() : null) : current.address,
+      city: data.city !== undefined ? (data.city ? data.city.trim() : null) : current.city,
+      state: data.state !== undefined ? (data.state ? data.state.trim() : null) : current.state,
+      stateCode: data.stateCode !== undefined ? (data.stateCode ? data.stateCode.trim() : '33') : current.stateCode,
       startDate: data.startDate ? new Date(data.startDate) : current.startDate,
       endDate: data.endDate ? new Date(data.endDate) : current.endDate,
       status: data.status || current.status,
       openingCashBalance: data.openingCashBalance !== undefined ? Number(data.openingCashBalance) : current.openingCashBalance,
       assignedStaffIds: data.assignedStaffIds !== undefined ? data.assignedStaffIds : current.assignedStaffIds,
-      notes: data.notes !== undefined ? data.notes : current.notes,
+      notes: data.notes !== undefined ? (data.notes ? data.notes.trim() : null) : current.notes,
     },
   });
+
+  // Synchronize or create the corresponding StockLocation
+  const locCode = updated.code.startsWith('STALL-') ? updated.code : `STALL-${updated.code}`;
+  let stockLocation = null;
+  if (current.stockLocation) {
+    stockLocation = await client.stockLocation.update({
+      where: { id: current.stockLocation.id },
+      data: {
+        code: locCode,
+        name: `${updated.name} Inventory`,
+        city: updated.city || 'Chennai',
+        state: updated.state || 'Tamil Nadu',
+        address: updated.address || null,
+        isActive: updated.status === 'ACTIVE',
+      },
+    });
+  } else {
+    stockLocation = await client.stockLocation.upsert({
+      where: { code: locCode },
+      update: {
+        stallEventId: updated.id,
+        name: `${updated.name} Inventory`,
+        city: updated.city || 'Chennai',
+        state: updated.state || 'Tamil Nadu',
+        address: updated.address || null,
+        isActive: updated.status === 'ACTIVE',
+      },
+      create: {
+        code: locCode,
+        name: `${updated.name} Inventory`,
+        type: 'STALL',
+        stallEventId: updated.id,
+        city: updated.city || 'Chennai',
+        state: updated.state || 'Tamil Nadu',
+        address: updated.address || null,
+        isActive: updated.status === 'ACTIVE',
+      },
+    });
+  }
+
+  // If default stall status was updated
+  if (data.isDefault !== undefined || data.setAsDefault !== undefined) {
+    const makeDefault = Boolean(data.isDefault ?? data.setAsDefault);
+    if (makeDefault) {
+      await client.posSetting.updateMany({
+        data: { defaultStallId: id },
+      });
+    } else {
+      const posSetting = await client.posSetting.findFirst();
+      if (posSetting?.defaultStallId === id) {
+        await client.posSetting.update({
+          where: { id: posSetting.id },
+          data: { defaultStallId: null },
+        });
+      }
+    }
+  }
+
+  // Ensure LocationInventory exists for all active catalogue items
+  if (stockLocation) {
+    await autoInitializeStallLocationInventory(stockLocation.id, client);
+  }
 
   await client.auditLog.create({
     data: {
@@ -1584,9 +1778,111 @@ export async function updateStallEvent(id, data, staffEmail, staffId = null, cli
       entityType: 'StallEvent',
       entityId: id,
       status: 'SUCCESS',
-      details: { previous: current, updated },
+      details: { previous: current, updated, stockLocationId: stockLocation?.id },
     },
   });
 
-  return updated;
+  return {
+    ...updated,
+    stockLocation,
+  };
 }
+
+export async function deleteStallEvent(id, staffEmail, staffId = null, client = prisma) {
+  const current = await client.stallEvent.findUnique({
+    where: { id },
+    include: {
+      _count: { select: { posSales: true } },
+      stockLocation: {
+        include: {
+          _count: { select: { posSales: true, transfersFrom: true, transfersTo: true } },
+        },
+      },
+    },
+  });
+
+  if (!current) {
+    const err = new Error('Stall/Event not found.');
+    err.status = 404;
+    throw err;
+  }
+
+  const salesCount = current._count?.posSales || 0;
+  const transfersCount = (current.stockLocation?._count?.transfersFrom || 0) + (current.stockLocation?._count?.transfersTo || 0);
+
+  if (salesCount > 0 || transfersCount > 0) {
+    // Has fiscal records: soft-archive for audit and compliance safety
+    const archived = await client.stallEvent.update({
+      where: { id },
+      data: { status: 'ARCHIVED' },
+    });
+    if (current.stockLocation) {
+      await client.stockLocation.update({
+        where: { id: current.stockLocation.id },
+        data: { isActive: false },
+      });
+    }
+
+    const posSetting = await client.posSetting.findFirst();
+    if (posSetting?.defaultStallId === id) {
+      await client.posSetting.update({
+        where: { id: posSetting.id },
+        data: { defaultStallId: null },
+      });
+    }
+
+    await client.auditLog.create({
+      data: {
+        adminEmail: staffEmail,
+        adminId: staffId,
+        action: 'STALL_EVENT_ARCHIVE',
+        entityType: 'StallEvent',
+        entityId: id,
+        status: 'SUCCESS',
+        details: { reason: 'Has financial bills/transfers records, archived instead of hard-deleted.' },
+      },
+    });
+
+    return {
+      success: true,
+      archived: true,
+      message: `Stall "${current.name}" has ${salesCount} bill(s) and has been moved to ARCHIVED.`,
+    };
+  }
+
+  // No sales/transfers: clean up location inventories, stock location, and stall event
+  if (current.stockLocation) {
+    await client.locationMovementLog.deleteMany({ where: { locationId: current.stockLocation.id } }).catch(() => {});
+    await client.locationInventory.deleteMany({ where: { locationId: current.stockLocation.id } }).catch(() => {});
+    await client.stockLocation.delete({ where: { id: current.stockLocation.id } }).catch(() => {});
+  }
+
+  const posSetting = await client.posSetting.findFirst();
+  if (posSetting?.defaultStallId === id) {
+    await client.posSetting.update({
+      where: { id: posSetting.id },
+      data: { defaultStallId: null },
+    });
+  }
+
+  await client.stallEvent.delete({ where: { id } });
+
+  await client.auditLog.create({
+    data: {
+      adminEmail: staffEmail,
+      adminId: staffId,
+      action: 'STALL_EVENT_DELETE',
+      entityType: 'StallEvent',
+      entityId: id,
+      status: 'SUCCESS',
+      details: { name: current.name, code: current.code },
+    },
+  });
+
+  return {
+    success: true,
+    deleted: true,
+    message: `Stall "${current.name}" deleted successfully.`,
+  };
+}
+

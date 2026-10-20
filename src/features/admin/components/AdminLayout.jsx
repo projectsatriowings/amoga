@@ -180,7 +180,6 @@ export function AdminLayout() {
     {
       title: 'CONTENT & MARKETING',
       items: [
-        { label: 'Promotions', path: '/admin/promotions', icon: Sparkles },
         { label: 'Reports & Export', path: '/admin/reports', icon: BarChart3 },
       ],
     },
@@ -237,7 +236,6 @@ export function AdminLayout() {
   else if (currentPath === '/admin/orders') pageTitle = 'Customer Order Stream';
   else if (currentPath === '/admin/payments') pageTitle = 'Payment Reconciliation';
   else if (currentPath === '/admin/customers') pageTitle = 'Customer Profiles';
-  else if (currentPath === '/admin/promotions') pageTitle = 'Coupons & Promotions';
   else if (currentPath === '/admin/reports') pageTitle = 'Business Intelligence & Exports';
   else if (currentPath === '/admin/settings') pageTitle = 'Atelier Settings';
   else if (currentPath === '/admin/audit-logs') pageTitle = 'System Audit Trail';

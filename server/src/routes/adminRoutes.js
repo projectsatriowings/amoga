@@ -53,13 +53,6 @@ import {
   listCustomers,
   getCustomerByEmail,
 } from '../controllers/adminCustomersController.js';
-import {
-  listCoupons,
-  createCoupon,
-  updateCoupon,
-  toggleCoupon,
-  deleteCoupon,
-} from '../controllers/adminCouponsController.js';
 import { uploadImage } from '../controllers/adminUploadController.js';
 import {
   getSalesReport,
@@ -102,6 +95,8 @@ import {
   listStallEventsEndpoint,
   createStallEventEndpoint,
   updateStallEventEndpoint,
+  deleteStallEventEndpoint,
+  setDefaultStallEndpoint,
   getPosSettingsEndpoint,
   updatePosSettingsEndpoint,
 } from '../controllers/adminPosController.js';
@@ -191,13 +186,6 @@ router.patch('/inquiries/:id/status', requireAdminAuth(['ORDER_MANAGER', 'CONTEN
 router.patch('/inquiries/:id/notes', requireAdminAuth(['ORDER_MANAGER', 'CONTENT_MANAGER']), updateInquiryNotes);
 router.patch('/inquiries/:id/assign', requireAdminAuth(['ORDER_MANAGER', 'CONTENT_MANAGER']), assignInquiry);
 
-// 8. Promotions & Coupons (Content Manager & Super Admin)
-router.get('/coupons', requireAdminAuth(), listCoupons);
-router.post('/coupons', requireAdminAuth(['CONTENT_MANAGER']), createCoupon);
-router.put('/coupons/:id', requireAdminAuth(['CONTENT_MANAGER']), updateCoupon);
-router.patch('/coupons/:id/toggle', requireAdminAuth(['CONTENT_MANAGER']), toggleCoupon);
-router.delete('/coupons/:id', requireAdminAuth(['CONTENT_MANAGER']), deleteCoupon);
-
 // 10. Reports & Exports (Super Admin, Order Manager)
 router.get('/reports/sales', requireAdminAuth(['ORDER_MANAGER']), getSalesReport);
 router.get('/reports/export', requireAdminAuth(['ORDER_MANAGER']), exportCsv);
@@ -212,29 +200,31 @@ router.get('/audit-logs', requireAdminAuth(['SUPER_ADMIN']), listAuditLogs);
 router.get('/audit-logs/:id', requireAdminAuth(['SUPER_ADMIN']), getAuditLogById);
 
 // 12. Stall Billing & Point of Sale (POS)
-router.get('/pos/catalog', requireAdminAuth(), searchPosCatalogEndpoint);
-router.post('/pos/calculate', requireAdminAuth(), calculatePosBillEndpoint);
-router.post('/pos/sales', requireAdminAuth(), finalizePosSaleEndpoint);
-router.get('/pos/sales', requireAdminAuth(), listPosSalesEndpoint);
-router.get('/pos/sales/:id', requireAdminAuth(), getPosSaleEndpoint);
+router.get('/pos/catalog', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), searchPosCatalogEndpoint);
+router.post('/pos/calculate', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), calculatePosBillEndpoint);
+router.post('/pos/sales', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), finalizePosSaleEndpoint);
+router.get('/pos/sales', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), listPosSalesEndpoint);
+router.get('/pos/sales/:id', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), getPosSaleEndpoint);
 router.post('/pos/sales/:id/cancel', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), cancelPosSaleEndpoint);
 router.post('/pos/sales/:id/refund', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), refundPosSaleEndpoint);
-router.post('/pos/sales/:id/whatsapp', requireAdminAuth(), sendPosBillWhatsAppEndpoint);
-router.get('/pos/reports', requireAdminAuth(['ORDER_MANAGER']), getPosSalesReportEndpoint);
-router.get('/pos/events', requireAdminAuth(), listStallEventsEndpoint);
+router.post('/pos/sales/:id/whatsapp', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), sendPosBillWhatsAppEndpoint);
+router.get('/pos/reports', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), getPosSalesReportEndpoint);
+router.get('/pos/events', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), listStallEventsEndpoint);
 router.post('/pos/events', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), createStallEventEndpoint);
 router.put('/pos/events/:id', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), updateStallEventEndpoint);
-router.get('/pos/settings', requireAdminAuth(), getPosSettingsEndpoint);
+router.delete('/pos/events/:id', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), deleteStallEventEndpoint);
+router.post('/pos/events/:id/set-default', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), setDefaultStallEndpoint);
+router.get('/pos/settings', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), getPosSettingsEndpoint);
 router.put('/pos/settings', requireAdminAuth(['SUPER_ADMIN']), updatePosSettingsEndpoint);
 
 // 13. Stall Management & Stock Locations
-router.get('/stall/locations', requireAdminAuth(), listLocationsEndpoint);
+router.get('/stall/locations', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), listLocationsEndpoint);
 router.post('/stall/locations', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), createLocationEndpoint);
-router.get('/stall/inventory', requireAdminAuth(), getLocationInventoryEndpoint);
-router.post('/stall/inventory/adjust', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), adjustStockEndpoint);
-router.post('/stall/transfers', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), executeStockTransferEndpoint);
-router.get('/stall/transfers', requireAdminAuth(), listTransfersEndpoint);
-router.get('/stall/movements', requireAdminAuth(), listMovementLogsEndpoint);
-router.get('/stall/reports', requireAdminAuth(['ORDER_MANAGER']), getInventoryReportEndpoint);
+router.get('/stall/inventory', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), getLocationInventoryEndpoint);
+router.post('/stall/inventory/adjust', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), adjustStockEndpoint);
+router.post('/stall/transfers', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), executeStockTransferEndpoint);
+router.get('/stall/transfers', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), listTransfersEndpoint);
+router.get('/stall/movements', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), listMovementLogsEndpoint);
+router.get('/stall/reports', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), getInventoryReportEndpoint);
 
 export default router;

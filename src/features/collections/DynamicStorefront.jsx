@@ -25,6 +25,16 @@ export function DynamicStorefront() {
       setLoading(true);
       setError(null);
       try {
+        if (
+          collectionSlug === 'robots.txt' ||
+          collectionSlug === 'sitemap.xml' ||
+          collectionSlug.endsWith('.txt') ||
+          collectionSlug.endsWith('.xml')
+        ) {
+          window.location.replace(`/${collectionSlug}`);
+          return;
+        }
+
         // 1. Fetch collection details
         const colRes = await fetch('/api/collections');
         const colJson = await colRes.json();

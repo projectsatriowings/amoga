@@ -31,7 +31,7 @@ export function SareesProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const staticProduct = getSareeBySlug(slug);
-  const { product: apiProduct } = useProductDetail('sarees', slug, staticProduct);
+  const { product: apiProduct, isLoading } = useProductDetail('sarees', slug, staticProduct);
   const product = apiProduct || staticProduct;
 
   useEffect(() => {
@@ -55,6 +55,16 @@ export function SareesProductDetail() {
     null;
 
   const availability = resolveAvailability(product, selectedVariant);
+
+  // While loading from API for newly created or dynamic products, render skeleton/loader instead of premature not-found
+  if (isLoading && !product) {
+    return (
+      <div className="bg-[#2C0E1A] text-[#F6EBD8] min-h-[70vh] flex flex-col items-center justify-center py-16">
+        <div className="w-10 h-10 border-3 border-[#C5A46D] border-t-transparent rounded-full animate-spin mb-4" />
+        <span className="text-xs uppercase font-mono tracking-widest text-[#C5A46D]">Loading Handloom Archive...</span>
+      </div>
+    );
+  }
 
   // Graceful 404 / Not Found state for unknown slug
   if (!product) {

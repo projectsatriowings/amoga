@@ -2,9 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Container } from '../../components/ui/Container';
 import { BackButton } from '../../components/ui/BackButton';
-import { Truck, ShieldCheck, Clock, MapPin, PackageCheck, HelpCircle } from 'lucide-react';
+import { Truck, ShieldCheck, Clock, MapPin, PackageCheck, HelpCircle, Info } from 'lucide-react';
+import { useShippingConfig } from '../../hooks/useShippingConfig';
 
 export function ShippingPolicyPage() {
+  const { freeShippingThreshold, shippingThresholdOperator, businessApprovalPending } = useShippingConfig();
+  const operatorText = shippingThresholdOperator === 'GT' ? 'above' : 'of or above';
+  const formattedThreshold = `₹${freeShippingThreshold.toLocaleString('en-IN')}`;
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-[#292820] pt-6 pb-20">
       <Container>
@@ -40,7 +44,7 @@ export function ShippingPolicyPage() {
             </div>
             <h2 className="font-serif text-lg font-semibold text-[#1A1817]">Free Delivery</h2>
             <p className="text-xs text-[#656056] leading-relaxed">
-              All orders across all four storefronts with a total value of ₹2,000 or above qualify for free delivery across India.
+              All orders across all four storefronts with a total value {operatorText} {formattedThreshold} qualify for free delivery across India.
             </p>
           </div>
 
@@ -123,8 +127,16 @@ export function ShippingPolicyPage() {
               <span>3. Delivery Charges</span>
             </h2>
             <p className="text-xs sm:text-sm text-[#4A423B] leading-relaxed">
-              Orders below ₹2,000 carry a delivery charge of ₹99 to cover secure packaging and shipping. Orders of ₹2,000 or more receive free delivery applied automatically at checkout.
+              Standard orders below {formattedThreshold} are calculated according to courier weight and piece brackets (or flat standard shipping). Orders {operatorText} {formattedThreshold} receive complimentary delivery applied automatically at checkout.
             </p>
+            {businessApprovalPending && (
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+                <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                <span>
+                  Authoritative store shipping policy threshold: <strong>{formattedThreshold}</strong> ({shippingThresholdOperator === 'GT' ? 'Greater Than' : 'Greater Than or Equal'}). Business owner sign-off on final promotion threshold is pending review.
+                </span>
+              </div>
+            )}
           </section>
 
           <section className="space-y-3 border-t border-[#E5E0D5] pt-6">

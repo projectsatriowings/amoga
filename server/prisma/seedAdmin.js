@@ -69,33 +69,6 @@ async function seedAdmin() {
   });
   console.log(`✓ Store settings initialized: ${settings.storeName}`);
 
-  // 3. Default Coupons
-  const existingCoupons = await prisma.coupon.count();
-  if (existingCoupons === 0) {
-    await prisma.coupon.createMany({
-      data: [
-        {
-          code: 'WELCOME10',
-          discountType: 'PERCENTAGE',
-          discountValue: 10.0,
-          minOrderAmount: 1000.0,
-          maxDiscountAmount: 500.0,
-          usageLimit: 500,
-          isActive: true,
-        },
-        {
-          code: 'FESTIVE500',
-          discountType: 'FIXED',
-          discountValue: 500.0,
-          minOrderAmount: 4000.0,
-          usageLimit: 200,
-          isActive: true,
-        },
-      ],
-    });
-    console.log('✓ Initial promotional coupons seeded');
-  }
-
   console.log('--- ADMIN SEED COMPLETE ---');
 }
 

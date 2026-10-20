@@ -43,7 +43,7 @@ export async function validateCheckoutCart(req, res, next) {
         shippingAmount,
         shippingCarrier: result.shipping?.carrier || 'India Post',
         isComplimentaryShipping: isComplimentary,
-        freeShippingThreshold: result.shipping?.freeShippingThreshold ?? 2500,
+        freeShippingThreshold: result.shipping?.freeShippingThreshold ?? 2000,
         shippingThresholdOperator: result.shipping?.thresholdOperator || 'GTE',
         taxPercentage: result.taxPercentage ?? 5,
         totalTaxAmount: result.taxBreakdown?.totalTaxAmount || 0,
@@ -55,6 +55,35 @@ export async function validateCheckoutCart(req, res, next) {
         totalAmount,
         payableCount: result.payableCount,
         totalCount: result.totalCount,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPublicShippingConfig(req, res, next) {
+  try {
+    const { prisma } = await import('../config/prisma.js');
+    const settings = await prisma.storeSetting.findUnique({
+      where: { id: 'default' },
+    });
+
+    const freeShippingThreshold = Number(settings?.freeShippingThreshold ?? 2000);
+    const shippingThresholdOperator = settings?.shippingThresholdOperator || 'GTE';
+    const shippingCarrierName = settings?.shippingCarrierName || 'India Post';
+    const shippingStandardRate = Number(settings?.shippingStandardRate || 0);
+
+    return res.status(200).json({
+      success: true,
+      config: {
+        freeShippingThreshold,
+        shippingThresholdOperator,
+        shippingCarrierName,
+        shippingStandardRate,
+        businessApprovalPending: true,
+        status: 'PENDING_BUSINESS_CONFIRMATION',
+        notes: 'Authoritative configuration loaded from StoreSetting database table. Final threshold pending business owner confirmation.',
       },
     });
   } catch (error) {

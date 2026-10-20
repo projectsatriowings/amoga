@@ -27,6 +27,8 @@ import {
   Lock,
   Mail,
   ShieldAlert,
+  ArrowLeftRight,
+  Truck,
 } from 'lucide-react';
 import { StallPosLayout } from '../layouts/StallPosLayout';
 import { useAdminStore } from '../../admin/store/useAdminStore';
@@ -43,24 +45,34 @@ const COLLECTIONS = [
 ];
 
 export function StallBillingPage() {
-  const { admin, isAuthenticated, login, isLoading: authLoading, error: authError } = useAdminStore();
+  const { admin, isAuthenticated, login, logout, isLoading: authLoading, error: authError } = useAdminStore();
 
   // Auth form state for in-place login
-  const [loginEmail, setLoginEmail] = useState('admin@amoga.com');
-  const [loginPassword, setLoginPassword] = useState('Admin@Amoga2026!');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
 
   // Locations state
   const [locations, setLocations] = useState([]);
   const [activeLocation, setActiveLocation] = useState(null);
   const [loadingLocations, setLoadingLocations] = useState(true);
+  const [locationsError, setLocationsError] = useState('');
 
   // Search & Catalog State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('all');
   const [products, setProducts] = useState([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState('');
   const [barcodeMode, setBarcodeMode] = useState(false);
   const barcodeInputRef = useRef(null);
+
+  // Quick Stock Transfer Modal State
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferProductId, setTransferProductId] = useState('');
+  const [transferVariantId, setTransferVariantId] = useState('');
+  const [transferQuantity, setTransferQuantity] = useState(10);
+  const [transferReason, setTransferReason] = useState('Stall stock allocation');
+  const [isTransferring, setIsTransferring] = useState(false);
 
   // Cart & Customer State
   const [cart, setCart] = useState([]);
@@ -92,24 +104,34 @@ export function StallBillingPage() {
   const [successToast, setSuccessToast] = useState('');
 
   // Load locations on mount
-  useEffect(() => {
-    async function fetchLocations() {
-      if (!isAuthenticated) return;
-      setLoadingLocations(true);
-      try {
-        const res = await posApi.listLocations();
-        if (res?.locations && res.locations.length > 0) {
-          setLocations(res.locations);
-          // Prefer stall locations first
-          const stallLoc = res.locations.find((l) => l.type === 'STALL') || res.locations[0];
-          setActiveLocation(stallLoc);
-        }
-      } catch (err) {
-        console.error('Failed to load stock locations:', err);
-      } finally {
-        setLoadingLocations(false);
+  const fetchLocations = async () => {
+    if (!isAuthenticated) return;
+    setLoadingLocations(true);
+    setLocationsError('');
+    try {
+      const res = await posApi.listLocations();
+      if (res?.locations && res.locations.length > 0) {
+        setLocations(res.locations);
+        // Prefer stall locations first
+        const stallLoc = res.locations.find((l) => l.type === 'STALL') || res.locations[0];
+        setActiveLocation(stallLoc);
+      } else {
+        setLocationsError('No active stock locations configured in database.');
       }
+    } catch (err) {
+      console.error('Failed to load stock locations:', err);
+      if (err.status === 401) {
+        logout();
+        window.location.href = '/admin/login?redirect=/stall';
+        return;
+      }
+      setLocationsError(err.message || 'Failed to connect to stock locations service.');
+    } finally {
+      setLoadingLocations(false);
     }
+  };
+
+  useEffect(() => {
     fetchLocations();
   }, [isAuthenticated]);
 
@@ -117,6 +139,7 @@ export function StallBillingPage() {
   const fetchProducts = async (q = searchQuery, col = selectedCollection, locId = activeLocation?.id) => {
     if (!isAuthenticated) return;
     setCatalogLoading(true);
+    setCatalogError('');
     try {
       const res = await posApi.searchCatalog({
         query: q,
@@ -126,9 +149,17 @@ export function StallBillingPage() {
       });
       if (res?.products) {
         setProducts(res.products);
+      } else {
+        setProducts([]);
       }
     } catch (err) {
       console.error('Failed to search catalog:', err);
+      if (err.status === 401) {
+        logout();
+        window.location.href = '/admin/login?redirect=/stall';
+        return;
+      }
+      setCatalogError(err.message || 'Unable to retrieve stall catalog from server.');
     } finally {
       setCatalogLoading(false);
     }
@@ -141,6 +172,56 @@ export function StallBillingPage() {
     }, 250);
     return () => clearTimeout(timer);
   }, [searchQuery, selectedCollection, activeLocation]);
+
+  // Execute Stock Transfer to active stall
+  const handleExecuteTransfer = async (e) => {
+    e.preventDefault();
+    if (!activeLocation) {
+      setErrorMessage('Please select an active stall location first.');
+      return;
+    }
+    const warehouse = locations.find((l) => l.code === 'MAIN-WAREHOUSE' || l.type === 'WAREHOUSE') || locations.find((l) => l.id !== activeLocation.id);
+    if (!warehouse) {
+      setErrorMessage('Central warehouse location not found.');
+      return;
+    }
+    if (!transferProductId) {
+      setErrorMessage('Please select a product to transfer.');
+      return;
+    }
+    const qty = parseInt(transferQuantity, 10);
+    if (isNaN(qty) || qty <= 0) {
+      setErrorMessage('Transfer quantity must be at least 1.');
+      return;
+    }
+
+    setIsTransferring(true);
+    setErrorMessage('');
+    try {
+      await posApi.executeStockTransfer({
+        sourceLocationId: warehouse.id,
+        destinationLocationId: activeLocation.id,
+        items: [{
+          productId: transferProductId,
+          variantId: transferVariantId || null,
+          quantity: qty,
+        }],
+        reason: transferReason || 'Stall stock allocation',
+      });
+      setSuccessToast(`Transferred ${qty} units from ${warehouse.name} to ${activeLocation.name}`);
+      setShowTransferModal(false);
+      setTransferProductId('');
+      setTransferVariantId('');
+      // Refresh products immediately to update stall balance
+      await fetchProducts(searchQuery, selectedCollection, activeLocation.id);
+      setTimeout(() => setSuccessToast(''), 3000);
+    } catch (err) {
+      console.error('Stock transfer error:', err);
+      setErrorMessage(err.message || 'Failed to complete stock transfer.');
+    } finally {
+      setIsTransferring(false);
+    }
+  };
 
   // Recalculate bill taxes when cart, location, or discounts change
   useEffect(() => {
@@ -459,17 +540,6 @@ export function StallBillingPage() {
                 </>
               )}
             </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setLoginEmail('admin@amoga.com');
-                setLoginPassword('Admin@Amoga2026!');
-              }}
-              className="w-full text-center text-xs text-stone-500 hover:text-stone-800 underline cursor-pointer pt-1"
-            >
-              Fill Super Admin Credentials
-            </button>
           </form>
         </div>
       </div>
@@ -552,11 +622,22 @@ export function StallBillingPage() {
                 <span className="hidden sm:inline">{barcodeMode ? 'Scanner ON' : 'Scanner'}</span>
               </button>
 
+              {/* Transfer Stock Button */}
+              <button
+                type="button"
+                onClick={() => setShowTransferModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 bg-[#762F39]/10 hover:bg-[#762F39]/20 text-[#762F39] border border-[#762F39]/30 rounded-lg text-xs font-semibold transition-colors shrink-0 cursor-pointer"
+                title="Transfer stock from Central Warehouse to Stall"
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Transfer Stock</span>
+              </button>
+
               {/* Refresh Catalog */}
               <button
                 type="button"
                 onClick={() => fetchProducts(searchQuery, selectedCollection, activeLocation?.id)}
-                className="p-2 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg text-stone-600 transition-colors shrink-0"
+                className="p-2 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg text-stone-600 transition-colors shrink-0 cursor-pointer"
                 title="Refresh Stall Stock"
               >
                 <RefreshCw className={`w-4 h-4 ${catalogLoading ? 'animate-spin' : ''}`} />
@@ -581,6 +662,40 @@ export function StallBillingPage() {
               ))}
             </div>
           </div>
+
+          {/* Actionable Error State for Stock Location failure */}
+          {locationsError && (
+            <div className="m-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{locationsError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={fetchLocations}
+                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[11px] font-medium shrink-0 cursor-pointer"
+              >
+                Retry Locations
+              </button>
+            </div>
+          )}
+
+          {/* Actionable Error State for Catalog failure */}
+          {catalogError && (
+            <div className="m-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{catalogError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => fetchProducts(searchQuery, selectedCollection, activeLocation?.id)}
+                className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[11px] font-medium shrink-0 cursor-pointer"
+              >
+                Retry Catalog
+              </button>
+            </div>
+          )}
 
           {/* Products Grid */}
           <div className="flex-1 overflow-y-auto p-3 sm:p-4">
@@ -660,10 +775,18 @@ export function StallBillingPage() {
 
                         <div className="mt-2 pt-2 border-t border-stone-100 flex items-center justify-between">
                           <div>
-                            <span className="text-xs sm:text-sm font-semibold text-stone-900 block">
-                              ₹{product.price?.toLocaleString('en-IN')}
-                            </span>
-                            <span className="text-[9px] text-stone-400 font-mono">MRP Incl. Tax</span>
+                            {product.price !== null && product.price !== undefined && Number(product.price) > 0 ? (
+                              <>
+                                <span className="text-xs sm:text-sm font-semibold text-stone-900 block">
+                                  ₹{Number(product.price).toLocaleString('en-IN')}
+                                </span>
+                                <span className="text-[9px] text-stone-400 font-mono">MRP Incl. Tax</span>
+                              </>
+                            ) : (
+                              <span className="text-[10px] font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 block">
+                                Price to be confirmed
+                              </span>
+                            )}
                           </div>
 
                           {/* Add button or variant selector */}
@@ -681,27 +804,47 @@ export function StallBillingPage() {
                                 <option value="" disabled>
                                   + Variant
                                 </option>
-                                {product.variants.map((v) => (
-                                  <option key={v.id} value={v.id} disabled={v.availableQuantity <= 0}>
-                                    {v.name} (₹{v.price}) {v.availableQuantity <= 0 ? '— Out' : `— Stock: ${v.availableQuantity}`}
-                                  </option>
-                                ))}
+                                {product.variants.map((v) => {
+                                  const vHasPrice = v.price !== null && v.price !== undefined && Number(v.price) > 0;
+                                  const vOutOfStock = (v.availableQuantity ?? 0) <= 0;
+                                  return (
+                                    <option key={v.id} value={v.id} disabled={vOutOfStock || !vHasPrice}>
+                                      {v.name} ({vHasPrice ? `₹${v.price}` : 'Unpriced'}) {vOutOfStock ? '— Out of Stock' : `— Stock: ${v.availableQuantity}`}
+                                    </option>
+                                  );
+                                })}
                               </select>
                             </div>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleAddToCart(product)}
-                              disabled={isOutOfStock}
-                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                                isOutOfStock
-                                  ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                                  : 'bg-[#762F39] hover:bg-[#5E252D] text-white shadow-xs'
-                              }`}
-                              title="Add to Current Bill"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              {isOutOfStock && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTransferProductId(product.id);
+                                    setShowTransferModal(true);
+                                  }}
+                                  className="px-1.5 py-1 rounded bg-stone-100 hover:bg-stone-200 text-[#762F39] text-[10px] font-mono flex items-center gap-1 border border-stone-200 cursor-pointer"
+                                  title="Transfer stock from warehouse to stall"
+                                >
+                                  <ArrowLeftRight className="w-3 h-3" />
+                                  <span>Transfer</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleAddToCart(product)}
+                                disabled={isOutOfStock || product.price === null || product.price === undefined || Number(product.price) <= 0}
+                                className={`p-1.5 rounded-lg transition-colors ${
+                                  isOutOfStock || product.price === null || product.price === undefined || Number(product.price) <= 0
+                                    ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                                    : 'bg-[#762F39] hover:bg-[#5E252D] text-white shadow-xs cursor-pointer'
+                                }`}
+                                title={isOutOfStock ? 'Item out of stock at this stall' : 'Add to Current Bill'}
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1035,6 +1178,148 @@ export function StallBillingPage() {
             return await posApi.sendWhatsApp(id, phone);
           }}
         />
+      )}
+
+      {/* Quick Stock Transfer Modal */}
+      {showTransferModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div className="p-4 bg-stone-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ArrowLeftRight className="w-5 h-5 text-amber-400" />
+                <h3 className="font-serif text-base font-semibold">Stock Transfer to Stall</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTransferModal(false);
+                  setTransferProductId('');
+                  setTransferVariantId('');
+                }}
+                className="text-stone-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleExecuteTransfer} className="p-5 space-y-4">
+              <div className="text-xs text-stone-600 bg-stone-50 p-3 rounded-lg border border-stone-200 space-y-1">
+                <div>
+                  <span className="font-semibold text-stone-700">Source:</span> Central Warehouse (MAIN-WAREHOUSE)
+                </div>
+                <div>
+                  <span className="font-semibold text-stone-700">Destination Stall:</span> {activeLocation?.name || 'Selected Stall'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">
+                  Product
+                </label>
+                <select
+                  value={transferProductId}
+                  onChange={(e) => {
+                    setTransferProductId(e.target.value);
+                    setTransferVariantId('');
+                  }}
+                  required
+                  className="w-full text-xs sm:text-sm border border-stone-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#762F39] focus:outline-none"
+                >
+                  <option value="">-- Choose Product to Allocate --</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.sku || p.collectionId}) — Stall: {p.availableQuantity ?? 0}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* If chosen product has variants, allow selecting variant */}
+              {(() => {
+                const selectedProd = products.find((p) => p.id === transferProductId);
+                if (!selectedProd?.variants || selectedProd.variants.length === 0) return null;
+                return (
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">
+                      Variant (Optional)
+                    </label>
+                    <select
+                      value={transferVariantId}
+                      onChange={(e) => setTransferVariantId(e.target.value)}
+                      className="w-full text-xs sm:text-sm border border-stone-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#762F39] focus:outline-none"
+                    >
+                      <option value="">Base Product / No Variant</option>
+                      {selectedProd.variants.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} ({v.sku}) — Stall: {v.availableQuantity ?? 0}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">
+                  Transfer Quantity
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={transferQuantity}
+                  onChange={(e) => setTransferQuantity(e.target.value)}
+                  required
+                  className="w-full text-xs sm:text-sm border border-stone-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#762F39] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">
+                  Transfer Reason
+                </label>
+                <input
+                  type="text"
+                  value={transferReason}
+                  onChange={(e) => setTransferReason(e.target.value)}
+                  placeholder="e.g. Stall morning stock replenishment"
+                  className="w-full text-xs sm:text-sm border border-stone-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#762F39] focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTransferModal(false);
+                    setTransferProductId('');
+                    setTransferVariantId('');
+                  }}
+                  className="px-4 py-2 border border-stone-300 rounded-lg text-xs font-medium text-stone-700 hover:bg-stone-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isTransferring || !transferProductId}
+                  className="px-5 py-2 bg-[#762F39] hover:bg-[#5E252D] text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isTransferring ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Transferring...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="w-4 h-4" />
+                      <span>Confirm Stock Transfer</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </StallPosLayout>
   );

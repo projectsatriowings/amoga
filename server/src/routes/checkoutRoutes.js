@@ -1,10 +1,9 @@
 import { Router } from 'express';
-import { validateCheckoutCart } from '../controllers/checkoutController.js';
-import { validateCheckoutCoupon } from '../controllers/adminCouponsController.js';
+import { validateCheckoutCart, getPublicShippingConfig } from '../controllers/checkoutController.js';
 import { cartValidationRateLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
+router.get('/shipping-config', getPublicShippingConfig);
 router.post('/validate', cartValidationRateLimiter, validateCheckoutCart);
-router.post('/apply-coupon', cartValidationRateLimiter, validateCheckoutCoupon);
 
 export default router;

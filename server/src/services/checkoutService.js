@@ -300,7 +300,6 @@ export async function createOrder({
   items,
   customer,
   idempotencyKey = null,
-  couponCode = null,
   isDemo = false,
   customerId = null,
   paymentMethod = 'online',
@@ -381,15 +380,11 @@ export async function createOrder({
     }
   }
 
-  // 2. Concurrently fetch cart validation, coupon, store settings, and customer record
+  // 2. Concurrently fetch cart validation, store settings, and customer record
   const customerEmailClean = (customer?.email || '').trim().toLowerCase();
-  const cleanCode = (couponCode && typeof couponCode === 'string' && couponCode.trim())
-    ? couponCode.trim().toUpperCase()
-    : null;
 
-  const [validation, coupon, storeSettings, existingCust] = await Promise.all([
+  const [validation, storeSettings, existingCust] = await Promise.all([
     resolveAndValidateCart(items),
-    cleanCode ? prisma.coupon.findUnique({ where: { code: cleanCode } }) : Promise.resolve(null),
     getCachedStoreSettings(),
     (!customerId && customerEmailClean)
       ? prisma.customer.findUnique({ where: { email: customerEmailClean } }).catch(() => null)
@@ -403,94 +398,8 @@ export async function createOrder({
     throw error;
   }
 
-  // 3. Authoritative Coupon Validation & Discount Calculation
-  let appliedCoupon = null;
+  // 3. Discount Calculation
   let discountPaise = 0;
-
-  if (cleanCode) {
-    if (!coupon || !coupon.isActive) {
-      const err = new Error(`Promotional coupon "${cleanCode}" is invalid or inactive`);
-      err.status = 422;
-      err.details = [err.message];
-      throw err;
-    }
-
-    const now = new Date();
-    if (coupon.startsAt && now < new Date(coupon.startsAt)) {
-      const err = new Error(`Promotional coupon "${cleanCode}" is not yet active`);
-      err.status = 422;
-      err.details = [err.message];
-      throw err;
-    }
-
-    if (coupon.expiresAt && now > new Date(coupon.expiresAt)) {
-      const err = new Error(`Promotional coupon "${cleanCode}" has expired`);
-      err.status = 422;
-      err.details = [err.message];
-      throw err;
-    }
-
-    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-      const err = new Error(`Promotional coupon "${cleanCode}" has reached its maximum global usage cap`);
-      err.status = 422;
-      err.details = [err.message];
-      throw err;
-    }
-
-    if (coupon.minOrderAmount) {
-      const minOrderPaise = Math.round(Number(coupon.minOrderAmount) * 100);
-      if (validation.subtotalPaise < minOrderPaise) {
-        const err = new Error(
-          `Minimum order subtotal of ₹${Number(coupon.minOrderAmount).toLocaleString()} required for coupon "${cleanCode}"`
-        );
-        err.status = 422;
-        err.details = [err.message];
-        throw err;
-      }
-    }
-
-    // Applicable collections check
-    let eligibleSubtotalPaise = validation.subtotalPaise;
-    let applicableCollections = [];
-    if (coupon.applicableCollections) {
-      try {
-        applicableCollections = Array.isArray(coupon.applicableCollections)
-          ? coupon.applicableCollections
-          : JSON.parse(coupon.applicableCollections);
-      } catch {
-        applicableCollections = [];
-      }
-    }
-
-    if (applicableCollections.length > 0) {
-      const eligibleLines = validation.lines.filter((l) =>
-        applicableCollections.includes(l.collectionId)
-      );
-      if (eligibleLines.length === 0) {
-        const err = new Error(
-          `Coupon "${cleanCode}" is exclusively valid for items in: ${applicableCollections.join(', ')}`
-        );
-        err.status = 422;
-        err.details = [err.message];
-        throw err;
-      }
-      eligibleSubtotalPaise = eligibleLines.reduce((acc, l) => acc + l.lineTotalPaise, 0);
-    }
-
-    if (coupon.discountType === 'PERCENTAGE') {
-      discountPaise = Math.floor((eligibleSubtotalPaise * Number(coupon.discountValue)) / 100);
-      if (coupon.maxDiscountAmount) {
-        const maxPaise = Math.round(Number(coupon.maxDiscountAmount) * 100);
-        if (discountPaise > maxPaise) discountPaise = maxPaise;
-      }
-    } else {
-      discountPaise = Math.round(Number(coupon.discountValue) * 100);
-    }
-
-    // Cap at order subtotal paise so total is never negative
-    discountPaise = Math.min(validation.subtotalPaise, Math.max(0, discountPaise));
-    appliedCoupon = coupon;
-  }
 
   // 4. Validate B2B Customer GSTIN if provided
   let validatedCustomerGstin = null;
@@ -560,13 +469,6 @@ export async function createOrder({
 
   // 6. Atomic database transaction
   const createdOrder = await prisma.$transaction(async (tx) => {
-    // Atomically increment coupon usage count if applied
-    if (appliedCoupon) {
-      await tx.coupon.update({
-        where: { id: appliedCoupon.id },
-        data: { usedCount: { increment: 1 } },
-      });
-    }
 
     // Allocate sequential GST Tax Invoice Number
     const invoiceNumber = await allocateInvoiceNumber(tx);
@@ -738,7 +640,6 @@ export async function createOrder({
     paymentStatus: createdOrder.paymentStatus,
     paymentMethod,
     currency: createdOrder.currency,
-    appliedCoupon: appliedCoupon ? appliedCoupon.code : null,
     invoiceNumber: createdOrder.invoiceNumber,
     invoiceDate: createdOrder.invoiceDate,
     totals: {

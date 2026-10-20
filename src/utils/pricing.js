@@ -173,7 +173,7 @@ export function estimateIndiaPostShipping({
   itemCount = 0,
   subtotal = 0,
   discount = 0,
-  freeShippingThreshold = 2500,
+  freeShippingThreshold = 2000,
   thresholdOperator = 'GTE',
   brackets = null,
   beyondMaxBaseCharge = 200,

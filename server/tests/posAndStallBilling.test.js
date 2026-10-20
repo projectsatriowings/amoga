@@ -574,4 +574,23 @@ describe('Stall Billing / Point of Sale (POS) Module Suite', () => {
       assert.ok(report.collectionBreakdown);
     });
   });
+
+  after(async () => {
+    try {
+      if (testProduct) {
+        await prisma.posSaleItem.deleteMany({ where: { productId: testProduct.id } });
+        await prisma.locationMovementLog.deleteMany({ where: { productId: testProduct.id } });
+        await prisma.locationInventory.deleteMany({ where: { productId: testProduct.id } });
+        await prisma.productVariant.deleteMany({ where: { productId: testProduct.id } });
+        await prisma.product.delete({ where: { id: testProduct.id } }).catch(() => {});
+      }
+      if (testEvent) {
+        await prisma.posSale.deleteMany({ where: { stallEventId: testEvent.id } });
+        await prisma.stockLocation.deleteMany({ where: { stallEventId: testEvent.id } });
+        await prisma.stallEvent.delete({ where: { id: testEvent.id } }).catch(() => {});
+      }
+    } catch (err) {
+      console.warn('POS test cleanup notice:', err.message);
+    }
+  });
 });

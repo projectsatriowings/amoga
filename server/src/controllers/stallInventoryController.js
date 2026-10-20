@@ -57,7 +57,7 @@ export async function getLocationInventoryEndpoint(req, res, next) {
       page,
       limit,
     });
-    return res.json({ success: true, ...data });
+    return res.json({ success: true, inventory: data.items, ...data });
   } catch (error) {
     next(error);
   }
@@ -65,11 +65,30 @@ export async function getLocationInventoryEndpoint(req, res, next) {
 
 export async function adjustStockEndpoint(req, res, next) {
   try {
-    const { locationId, productId, variantId, newQuantity, reason } = req.body;
-    if (!locationId || !productId || newQuantity === undefined) {
+    const locationId = req.body.locationId || req.body.stockLocationId;
+    const { productId, variantId, reason } = req.body;
+    let newQuantity = req.body.newQuantity;
+
+    if (!locationId || !productId) {
       return res.status(400).json({
         success: false,
-        message: 'locationId, productId, and newQuantity are required.',
+        message: 'locationId and productId are required.',
+      });
+    }
+
+    if (newQuantity === undefined && req.body.quantityChange !== undefined) {
+      const { prisma } = await import('../config/prisma.js');
+      const inv = await prisma.locationInventory.findFirst({
+        where: { locationId, productId, variantId: variantId || null },
+      });
+      const currentQty = inv ? inv.onHandQuantity : 0;
+      newQuantity = Math.max(0, currentQty + Number(req.body.quantityChange));
+    }
+
+    if (newQuantity === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'newQuantity or quantityChange is required.',
       });
     }
 
@@ -91,11 +110,13 @@ export async function adjustStockEndpoint(req, res, next) {
 
 export async function executeStockTransferEndpoint(req, res, next) {
   try {
-    const { sourceLocationId, destinationLocationId, items, reason, notes } = req.body;
+    const sourceLocationId = req.body.sourceLocationId || req.body.fromLocationId;
+    const destinationLocationId = req.body.destinationLocationId || req.body.toLocationId;
+    const { items, reason, notes } = req.body;
     if (!sourceLocationId || !destinationLocationId || !items || !items.length) {
       return res.status(400).json({
         success: false,
-        message: 'sourceLocationId, destinationLocationId, and items are required.',
+        message: 'sourceLocationId (or fromLocationId), destinationLocationId (or toLocationId), and items are required.',
       });
     }
 

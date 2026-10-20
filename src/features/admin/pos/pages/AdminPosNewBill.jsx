@@ -99,7 +99,10 @@ export function AdminPosNewBill() {
 
         if (evRes?.events && evRes.events.length > 0) {
           setEvents(evRes.events);
-          setSelectedEventId(evRes.events[0].id);
+          const defaultEvent = settRes?.settings?.defaultStallId
+            ? evRes.events.find((e) => e.id === settRes.settings.defaultStallId)
+            : null;
+          setSelectedEventId(defaultEvent ? defaultEvent.id : evRes.events[0].id);
         }
       } catch (err) {
         console.error('Failed to load POS settings or events:', err);
@@ -305,8 +308,10 @@ export function AdminPosNewBill() {
 
     try {
       const idempotencyKey = `POS-WEB-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const currentEvent = events.find((e) => e.id === selectedEventId);
       const payload = {
         stallEventId: selectedEventId || null,
+        stockLocationId: currentEvent?.stockLocation?.id || null,
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         items: cart.map((c) => ({

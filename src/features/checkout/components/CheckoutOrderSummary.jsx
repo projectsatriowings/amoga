@@ -4,8 +4,10 @@ import { useStore } from '../../../store/useStore';
 import { formatINR } from '../../../utils/pricing';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { resolveAvailability } from '../../../utils/inventory';
+import { useShippingConfig } from '../../../hooks/useShippingConfig';
 
 export const CheckoutOrderSummary = ({ compact = false }) => {
+  const { freeShippingThreshold, shippingThresholdOperator } = useShippingConfig();
   const getCheckoutItems = useStore((state) => state.getCheckoutItems);
   const getCheckoutTotals = useStore((state) => state.getCheckoutTotals);
   const checkoutContext = useStore((state) => state.checkoutContext);
@@ -14,6 +16,9 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
   const { subtotal, payableItemsCount, hasUnpricedItems, unpricedCount } = getCheckoutTotals();
 
   const isBuyNow = checkoutContext?.type === 'buy_now';
+  const isFreeShipping = shippingThresholdOperator === 'GT' ? subtotal > freeShippingThreshold : subtotal >= freeShippingThreshold;
+  const standardShipping = payableItemsCount <= 2 ? 100 : payableItemsCount === 3 ? 150 : payableItemsCount === 4 ? 200 : 200 + (payableItemsCount - 4) * 50;
+  const shippingAmount = isFreeShipping ? 0 : standardShipping;
 
   const stockIssues = checkoutItems.filter((item) => {
     const product = item.product || item;
@@ -186,14 +191,16 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
           <div>
             <span style={{ color: 'var(--collection-text-muted)' }}>India Post Delivery</span>
             <span className="block text-[10px] text-stone-500">
-              {subtotal >= 2500 ? 'Free Shipping (Orders ≥ ₹2,500)' : `${payableItemsCount} ${payableItemsCount === 1 ? 'piece' : 'pieces'} standard parcel`}
+              {isFreeShipping
+                ? `Free Shipping (Orders ${shippingThresholdOperator === 'GT' ? '>' : '≥'} ₹${freeShippingThreshold.toLocaleString('en-IN')})`
+                : `${payableItemsCount} ${payableItemsCount === 1 ? 'piece' : 'pieces'} standard parcel`}
             </span>
           </div>
           <span
             className="font-semibold tabular-nums"
-            style={{ color: subtotal >= 2500 ? '#059669' : 'var(--collection-text)' }}
+            style={{ color: isFreeShipping ? '#059669' : 'var(--collection-text)' }}
           >
-            {subtotal >= 2500 ? 'FREE' : formatINR(payableItemsCount <= 2 ? 100 : payableItemsCount === 3 ? 150 : payableItemsCount === 4 ? 200 : 200 + (payableItemsCount - 4) * 50)}
+            {isFreeShipping ? 'FREE' : formatINR(shippingAmount)}
           </span>
         </div>
         <div className="flex justify-between items-baseline text-[11px]">
@@ -221,7 +228,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
             className="text-xl font-bold font-sans tabular-nums"
             style={{ color: 'var(--collection-accent)' }}
           >
-            {formatINR(subtotal + (subtotal >= 2500 ? 0 : (payableItemsCount <= 2 ? 100 : payableItemsCount === 3 ? 150 : payableItemsCount === 4 ? 200 : 200 + (payableItemsCount - 4) * 50)))}
+            {formatINR(subtotal + shippingAmount)}
           </span>
         </div>
       </div>

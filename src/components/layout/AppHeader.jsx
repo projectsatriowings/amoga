@@ -8,11 +8,13 @@ import { Container } from '../ui/Container';
 import { useStore } from '../../store/useStore';
 import { useCustomerStore } from '../../features/account/store/useCustomerStore';
 import { GlobalProfileMenu } from './GlobalProfileMenu';
+import { useShippingConfig } from '../../hooks/useShippingConfig';
 
 export function AppHeader({ activeCollection }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { cart, wishlist, openCart, openWishlist } = useStore();
+  const { freeShippingThreshold, shippingThresholdOperator } = useShippingConfig();
 
   const { customer, isAuthenticated, logout } = useCustomerStore();
 
@@ -61,7 +63,9 @@ export function AppHeader({ activeCollection }) {
           borderColor: 'rgba(255, 255, 255, 0.1)',
         }}
       >
-        <span>Free Pan-India Delivery on Orders Above ₹999</span>
+        <span>
+          Free Pan-India Delivery on Orders {shippingThresholdOperator === 'GT' ? 'Above' : 'At or Above'} ₹{Number(freeShippingThreshold).toLocaleString('en-IN')}
+        </span>
         <span className="hidden sm:inline ml-3 opacity-80">
           • Call Us: +91 9940018593
         </span>

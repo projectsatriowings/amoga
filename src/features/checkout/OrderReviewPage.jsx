@@ -7,7 +7,6 @@ import {
   createPaymentOrderApi,
   verifyPaymentApi,
   testSimulatePaymentApi,
-  applyCouponApi,
   validateCartApi,
 } from '../../services/checkoutApi';
 import {
@@ -21,7 +20,6 @@ import {
   Lock,
   RefreshCw,
   X,
-  Tag,
 } from 'lucide-react';
 import { BackButton } from '../../components/ui/BackButton';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
@@ -90,18 +88,12 @@ export const OrderReviewPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('online');
 
-  // Coupon state
-  const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [couponLoading, setCouponLoading] = useState(false);
-  const [couponError, setCouponError] = useState(null);
-
   // Authoritative server shipping from store settings
   const [serverShipping, setServerShipping] = useState({
     carrier: 'India Post',
     amount: 0,
     isComplimentary: true,
-    freeShippingThreshold: 2500,
+    freeShippingThreshold: 2000,
     thresholdOperator: 'GTE',
     taxBreakdown: null,
     totalTaxAmount: 0,
@@ -121,7 +113,7 @@ export const OrderReviewPage = () => {
               carrier: res.totals.shippingCarrier || res.shipping?.carrier || 'India Post',
               amount: res.totals.shippingAmount || 0,
               isComplimentary: res.totals.isComplimentaryShipping ?? (res.totals.shippingAmount === 0),
-              freeShippingThreshold: res.totals.freeShippingThreshold || 2500,
+              freeShippingThreshold: res.totals.freeShippingThreshold || 2000,
               thresholdOperator: res.totals.shippingThresholdOperator || 'GTE',
               taxBreakdown: res.totals.taxBreakdown || res.taxBreakdown || null,
               totalTaxAmount: res.totals.totalTaxAmount || 0,
@@ -139,38 +131,8 @@ export const OrderReviewPage = () => {
     };
   }, [itemsKey]);
 
-  const discountAmount = appliedCoupon?.discountAmount || 0;
   const shippingFee = serverShipping.isComplimentary ? 0 : serverShipping.amount;
-  const finalPayableTotal = Math.max(0, (totals.subtotal || 0) - discountAmount + shippingFee);
-
-  const handleApplyCoupon = async (e) => {
-    if (e) e.preventDefault();
-    if (!couponInput.trim()) return;
-    setCouponLoading(true);
-    setCouponError(null);
-    try {
-      const res = await applyCouponApi({
-        code: couponInput.trim(),
-        subtotal: totals.subtotal,
-        items: checkoutItems,
-      });
-      if (res && res.valid) {
-        setAppliedCoupon(res);
-        setCouponInput('');
-      } else {
-        setCouponError(res?.message || 'Invalid promotion code');
-      }
-    } catch (err) {
-      setCouponError(err.message || 'Failed to apply coupon');
-    } finally {
-      setCouponLoading(false);
-    }
-  };
-
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-    setCouponError(null);
-  };
+  const finalPayableTotal = Math.max(0, (totals.subtotal || 0) + shippingFee);
 
   // Payment Modal States
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -216,12 +178,11 @@ export const OrderReviewPage = () => {
     const idempotencyKey = generateIdempotencyKey();
 
     try {
-      // 3. Submit or resume order in PostgreSQL backend with applied coupon
+      // 3. Submit or resume order in PostgreSQL backend
       const orderResult = await createOrderApi({
         items: checkoutItems,
         customer: customerDetails,
         idempotencyKey,
-        couponCode: appliedCoupon?.code,
         paymentMethod,
       });
 
@@ -852,16 +813,6 @@ export const OrderReviewPage = () => {
                   </span>
                 </div>
 
-                {appliedCoupon && (
-                  <div className="flex justify-between items-baseline text-emerald-700 font-medium">
-                    <span className="flex items-center gap-1.5">
-                      <Tag className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Promotional Discount ({appliedCoupon.code})</span>
-                    </span>
-                    <span className="tabular-nums font-semibold">- {formatINR(discountAmount)}</span>
-                  </div>
-                )}
-
                 {/* India Post Delivery Charges */}
                 <div className="flex justify-between items-baseline text-[var(--collection-text-muted)]">
                   <div>
@@ -901,62 +852,6 @@ export const OrderReviewPage = () => {
                           : `CGST: ₹${Number(serverShipping.cgstAmount || 0).toFixed(2)} + SGST: ₹${Number(serverShipping.sgstAmount || 0).toFixed(2)}`}
                       </span>
                     </div>
-                  )}
-                </div>
-
-                {/* Promo Code Input / Active Badge */}
-                <div className="pt-3 border-t border-[var(--collection-border)]">
-                  <label className="block text-[11px] font-semibold text-[var(--collection-heading)] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-[var(--collection-accent)]" />
-                    <span>Have a Promo Code?</span>
-                  </label>
-                  {appliedCoupon ? (
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
-                      <div>
-                        <div className="font-mono font-bold tracking-wider">{appliedCoupon.code}</div>
-                        <div className="text-[10px] text-emerald-700">
-                          {appliedCoupon.message || `Saved ₹${appliedCoupon.discountAmount}`}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleRemoveCoupon}
-                        className="text-[11px] text-rose-600 hover:text-rose-800 font-semibold uppercase tracking-wider px-2 py-1 rounded hover:bg-rose-50 transition-colors"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleApplyCoupon} className="space-y-1.5">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="e.g. WELCOME10"
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          className="checkout-input flex-1 px-3 py-2 text-xs font-mono uppercase rounded-xl border focus:outline-none focus:ring-2 focus:ring-[var(--collection-focus-ring)]"
-                          style={{
-                            backgroundColor: 'var(--collection-input-bg)',
-                            borderColor: 'var(--collection-input-border, var(--collection-border))',
-                            color: 'var(--collection-input-text, #292820)',
-                          }}
-                        />
-                        <button
-                          type="submit"
-                          disabled={couponLoading || !couponInput.trim()}
-                          className="px-4 py-2 text-xs font-semibold rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
-                          style={{
-                            backgroundColor: 'var(--collection-button-bg, var(--collection-accent))',
-                            color: 'var(--collection-button-text, #FFFFFF)',
-                          }}
-                        >
-                          {couponLoading ? 'Checking...' : 'Apply'}
-                        </button>
-                      </div>
-                      {couponError && (
-                        <p className="text-[11px] text-rose-600 leading-tight">{couponError}</p>
-                      )}
-                    </form>
                   )}
                 </div>
 

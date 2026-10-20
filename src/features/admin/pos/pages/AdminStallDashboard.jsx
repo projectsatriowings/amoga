@@ -144,11 +144,11 @@ export function AdminStallDashboard() {
             <span className="text-xs uppercase font-mono tracking-wider">Gross Stall Sales</span>
             <TrendingUp className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="font-serif text-2xl font-bold text-stone-900">
+          <div className="font-sans text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight tabular-nums">
             ₹{summary.totalGrossAmount?.toLocaleString('en-IN') || '0'}
           </div>
           <div className="mt-2 text-[11px] text-stone-500 flex items-center justify-between">
-            <span>Discounts: -₹{summary.totalDiscountAmount?.toLocaleString('en-IN') || '0'}</span>
+            <span className="tabular-nums">Discounts: -₹{summary.totalDiscountAmount?.toLocaleString('en-IN') || '0'}</span>
             <span className="text-emerald-700 font-medium">GST-Inclusive</span>
           </div>
         </div>
@@ -159,11 +159,11 @@ export function AdminStallDashboard() {
             <span className="text-xs uppercase font-mono tracking-wider">Finalized Bills</span>
             <Receipt className="w-4 h-4 text-[#762F39]" />
           </div>
-          <div className="font-serif text-2xl font-bold text-stone-900">
+          <div className="font-sans text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight tabular-nums">
             {summary.totalFinalizedSales || 0}
           </div>
           <div className="mt-2 text-[11px] text-stone-500 flex items-center justify-between">
-            <span>Avg Bill: ₹{Math.round(summary.averageBillValue || 0)}</span>
+            <span className="tabular-nums">Avg Bill: ₹{Math.round(summary.averageBillValue || 0)}</span>
             <span className="text-stone-400 font-mono">100% Tax Compliant</span>
           </div>
         </div>
@@ -174,11 +174,11 @@ export function AdminStallDashboard() {
             <span className="text-xs uppercase font-mono tracking-wider">Net Sales (Post-Refunds)</span>
             <ArrowUpRight className="w-4 h-4 text-[#8C6320]" />
           </div>
-          <div className="font-serif text-2xl font-bold text-[#762F39]">
+          <div className="font-sans text-2xl sm:text-3xl font-bold text-[#762F39] tracking-tight tabular-nums">
             ₹{summary.totalNetAmount?.toLocaleString('en-IN') || '0'}
           </div>
           <div className="mt-2 text-[11px] text-stone-500 flex items-center justify-between">
-            <span>Refunded: ₹{summary.totalRefundedAmount?.toLocaleString('en-IN') || '0'}</span>
+            <span className="tabular-nums">Refunded: ₹{summary.totalRefundedAmount?.toLocaleString('en-IN') || '0'}</span>
             <span className="text-stone-400">({summary.totalRefundedSales || 0} bills)</span>
           </div>
         </div>
@@ -189,11 +189,11 @@ export function AdminStallDashboard() {
             <span className="text-xs uppercase font-mono tracking-wider">GST Audit Total</span>
             <ShoppingBag className="w-4 h-4 text-[#3F5A35]" />
           </div>
-          <div className="font-serif text-2xl font-bold text-stone-900">
+          <div className="font-sans text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight tabular-nums">
             ₹{summary.totalGstCollected?.toLocaleString('en-IN') || '0'}
           </div>
           <div className="mt-2 text-[11px] text-stone-500 flex items-center justify-between">
-            <span>Taxable: ₹{summary.totalTaxableAmount?.toLocaleString('en-IN') || '0'}</span>
+            <span className="tabular-nums">Taxable: ₹{summary.totalTaxableAmount?.toLocaleString('en-IN') || '0'}</span>
             <span className="text-[#3F5A35] font-medium">HSN Verified</span>
           </div>
         </div>

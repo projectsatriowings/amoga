@@ -15,7 +15,7 @@ export async function getSalesReport(req, res) {
       }
     }
 
-    const [metrics, orders, orderItems, coupons, collections] = await Promise.all([
+    const [metrics, orders, orderItems, collections] = await Promise.all([
       getSalesReportMetrics({ startDate, endDate }),
       prisma.order.findMany({
         where,
@@ -43,9 +43,6 @@ export async function getSalesReport(req, res) {
             },
           },
         },
-      }),
-      prisma.coupon.findMany({
-        orderBy: { usedCount: 'desc' },
       }),
       prisma.collection.findMany({
         include: { _count: { select: { products: true } } },
@@ -116,17 +113,7 @@ export async function getSalesReport(req, res) {
     }));
 
     // Promotion Usage stats
-    const promotionUsage = coupons.map((c) => ({
-      id: c.id,
-      code: c.code,
-      name: c.name || c.code,
-      discountType: c.discountType,
-      discountValue: Number(c.discountValue),
-      usedCount: c.usedCount,
-      usageLimit: c.usageLimit,
-      isActive: c.isActive,
-      expiresAt: c.expiresAt,
-    }));
+    const promotionUsage = [];
 
     return res.status(200).json({
       success: true,
@@ -295,46 +282,9 @@ export async function exportCsv(req, res) {
       return res.status(200).send(csvContent);
     }
 
-    if (type === 'promotions' || type === 'coupons') {
-      const coupons = await prisma.coupon.findMany({
-        orderBy: { createdAt: 'desc' },
-      });
-
-      const headers = [
-        'Coupon Code',
-        'Promotion Name',
-        'Discount Type',
-        'Discount Value',
-        'Min Order (INR)',
-        'Max Discount (INR)',
-        'Usage Count',
-        'Usage Limit',
-        'Active Status',
-        'Expires At',
-      ];
-
-      const rows = coupons.map((c) => [
-        escapeCsvField(c.code),
-        escapeCsvField(c.name || ''),
-        escapeCsvField(c.discountType),
-        escapeCsvField(Number(c.discountValue)),
-        escapeCsvField(c.minOrderAmount ? Number(c.minOrderAmount) : 'None'),
-        escapeCsvField(c.maxDiscountAmount ? Number(c.maxDiscountAmount) : 'None'),
-        escapeCsvField(c.usedCount),
-        escapeCsvField(c.usageLimit || 'Unlimited'),
-        escapeCsvField(c.isActive ? 'ACTIVE' : 'INACTIVE'),
-        escapeCsvField(c.expiresAt ? c.expiresAt.toISOString().split('T')[0] : 'None'),
-      ]);
-
-      const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
-      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="amoga-promotions-${new Date().toISOString().split('T')[0]}.csv"`);
-      return res.status(200).send(csvContent);
-    }
-
     return res.status(400).json({
       error: 'INVALID_TYPE',
-      message: 'Supported export types: orders, inventory, collections, promotions',
+      message: 'Supported export types: orders, inventory, collections',
     });
   } catch (err) {
     console.error('[ADMIN EXPORT CSV ERROR]:', err);

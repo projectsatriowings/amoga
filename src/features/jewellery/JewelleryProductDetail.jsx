@@ -31,7 +31,7 @@ export function JewelleryProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const staticProduct = getJewelleryBySlug(slug);
-  const { product: apiProduct } = useProductDetail('jewellery', slug, staticProduct);
+  const { product: apiProduct, isLoading } = useProductDetail('jewellery', slug, staticProduct);
   const product = apiProduct || staticProduct;
 
   useEffect(() => {
@@ -58,6 +58,16 @@ export function JewelleryProductDetail() {
   ) || null;
 
   const availability = resolveAvailability(product, matchedVariant);
+
+  // While loading from API for newly created or dynamic products, render skeleton/loader instead of premature not-found
+  if (isLoading && !product) {
+    return (
+      <div className="bg-[#242326] text-[#F7F3EB] min-h-[70vh] flex flex-col items-center justify-center py-16">
+        <div className="w-10 h-10 border-3 border-[#B9B8B5] border-t-transparent rounded-full animate-spin mb-4" />
+        <span className="text-xs uppercase font-mono tracking-widest text-[#B9B8B5]">Loading Silver Atelier Piece...</span>
+      </div>
+    );
+  }
 
   // Graceful 404 / Not Found state for unknown slug
   if (!product) {

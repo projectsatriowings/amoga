@@ -5,7 +5,6 @@ import {
   Layers,
   ShoppingBag,
   TrendingUp,
-  Tag,
   CheckCircle2,
   Clock,
   Truck,
@@ -86,7 +85,6 @@ export function AdminReports() {
   const summary = reportData?.summary || {};
   const ordersByStatus = reportData?.ordersByStatus || {};
   const salesByCollection = reportData?.salesByCollection || [];
-  const promotionUsage = reportData?.promotionUsage || [];
 
   const statusIcons = {
     PENDING_PAYMENT: { label: 'Pending Payment', icon: Clock, color: 'text-amber-700 bg-amber-50 border-amber-200' },
@@ -301,71 +299,6 @@ export function AdminReports() {
                         </td>
                         <td className="px-5 py-3 text-right font-sans tabular-nums font-semibold text-[#722F37]">
                           ₹{col.grossSales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Promotion Usage Breakdown Table */}
-          <div className="bg-[#FBF9F5] rounded-lg border border-[#E5E0D5] overflow-hidden">
-            <div className="p-4 bg-[#F5F2EB] border-b border-[#E5E0D5]">
-              <h2 className="font-serif text-sm font-bold text-[#1A1817] flex items-center gap-2">
-                <Tag className="w-4 h-4 text-[#8C6320]" />
-                <span>Promotional Coupons & Redemptions</span>
-              </h2>
-              <p className="text-[11px] text-[#7A7167]">
-                Real-time usage caps, redemptions, and active promotion status
-              </p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#332D28]">
-                <thead className="bg-[#F5F2EB]/60 text-[10px] font-mono uppercase tracking-wider text-[#7A7167] border-b border-[#E5E0D5]">
-                  <tr>
-                    <th className="px-5 py-3">Code & Name</th>
-                    <th className="px-5 py-3">Benefit</th>
-                    <th className="px-5 py-3">Redemptions</th>
-                    <th className="px-5 py-3">Usage Cap</th>
-                    <th className="px-5 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#EAE4D9]">
-                  {promotionUsage.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-5 py-6 text-center text-[#7A7167]">
-                        No promotional coupons registered.
-                      </td>
-                    </tr>
-                  ) : (
-                    promotionUsage.map((p) => (
-                      <tr key={p.id} className="hover:bg-[#F5F2EB]/50 transition-colors">
-                        <td className="px-5 py-3">
-                          <span className="font-mono font-bold text-[#1A1817]">{p.code}</span>
-                          {p.name && <span className="text-[10px] text-[#7A7167] block">{p.name}</span>}
-                        </td>
-                        <td className="px-5 py-3 font-semibold text-[#722F37]">
-                          {p.discountType === 'PERCENTAGE' ? `${p.discountValue}% OFF` : `₹${p.discountValue} FLAT`}
-                        </td>
-                        <td className="px-5 py-3 font-sans tabular-nums font-medium text-[#1A1817]">
-                          {p.usedCount}
-                        </td>
-                        <td className="px-5 py-3 font-sans tabular-nums text-[#5C544C]">
-                          {p.usageLimit ? `${p.usageLimit} max` : 'Unlimited'}
-                        </td>
-                        <td className="px-5 py-3">
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-mono ${
-                              p.isActive
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                : 'bg-stone-200 text-stone-700'
-                            }`}
-                          >
-                            {p.isActive ? 'Active' : 'Disabled'}
-                          </span>
                         </td>
                       </tr>
                     ))

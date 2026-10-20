@@ -34,6 +34,5 @@ export const createOrderBodySchema = z.object({
   items: z.array(cartItemSchema).min(1, 'Order must contain at least one item'),
   customer: customerDetailsSchema,
   idempotencyKey: z.string().max(100).optional().nullable(),
-  couponCode: z.string().trim().max(50).optional().nullable(),
   paymentMethod: z.enum(['online', 'cod']).optional().default('online'),
 });

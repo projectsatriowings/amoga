@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { isDarkColor } from '../themeConfig';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^(?:\+?\d{1,3})?[6-9]\d{9}$|^\+?\d{7,15}$/;
@@ -143,23 +144,60 @@ export function CollectionContactForm({ theme, collectionId }) {
     setSubmissionSuccess(null);
   };
 
-  const isDark = palette.bg === '#2C0E1A' || palette.cardBg === '#35121F' || palette.heading === '#F6EBD8' || collectionId === 'sarees';
-  const labelColor = palette.heading || (isDark ? '#F6EBD8' : '#173B2A');
-  const inputTextColor = palette.inputText || (isDark ? '#1F0811' : '#292820');
+  const isFormDark =
+    isDarkColor(palette.bg) ||
+    isDarkColor(palette.sectionBg) ||
+    isDarkColor(palette.cardBg) ||
+    collectionId === 'sarees' ||
+    collectionId === 'heritage-sarees' ||
+    collectionId === 'jewellery' ||
+    collectionId === 'silver-jewellery';
+
+  const formBg = isFormDark
+    ? (palette.cardBg && isDarkColor(palette.cardBg) ? palette.cardBg : (collectionId === 'sarees' ? '#35121F' : '#343238'))
+    : (palette.cardBg && !isDarkColor(palette.cardBg) ? palette.cardBg : '#FFFFFF');
+
+  const isFormBgDark = isDarkColor(formBg);
+
+  const formBorder = isFormBgDark
+    ? 'rgba(255, 255, 255, 0.14)'
+    : (palette.border || '#E5E0D5');
+
+  const labelColor = isFormBgDark
+    ? (palette.heading && !isDarkColor(palette.heading) ? palette.heading : '#F7F3EB')
+    : (palette.heading && isDarkColor(palette.heading) ? palette.heading : '#18181B');
+
+  const formMutedColor = isFormBgDark
+    ? (palette.mutedText && !isDarkColor(palette.mutedText) ? palette.mutedText : '#D1D5DB')
+    : (palette.mutedText && isDarkColor(palette.mutedText) ? palette.mutedText : '#65675A');
+
+  const accentColor = isFormBgDark
+    ? (palette.accentGold || (!isDarkColor(palette.accent) ? palette.accent : '#D4AF37') || '#C5A46D')
+    : (isDarkColor(palette.accent) ? palette.accent : '#2F6334');
+
   const inputBgColor = palette.inputBg || '#FFFFFF';
-  const inputBorderColor = palette.inputBorder || (isDark ? '#C5A46D' : '#E5E0D5');
-  const accentColor = palette.accentGold || palette.accent || (isDark ? '#C5A46D' : '#3F7B43');
+  const isInputDark = isDarkColor(inputBgColor);
+  const inputTextColor = isInputDark
+    ? (palette.inputText && !isDarkColor(palette.inputText) ? palette.inputText : '#F7F3EB')
+    : (palette.inputText && isDarkColor(palette.inputText) ? palette.inputText : '#18181B');
+
+  const inputBorderColor = isFormBgDark
+    ? 'rgba(255, 255, 255, 0.22)'
+    : (palette.inputBorder || '#D6D9DC');
+
+  const buttonBg = palette.buttonBg || (isFormBgDark ? (palette.accentGold || '#C5A46D') : (palette.accent || '#173B2A'));
+  const buttonTextColor = isDarkColor(buttonBg) ? '#FFFFFF' : '#111215';
 
   return (
     <div
       className="p-6 sm:p-8 rounded-2xl border shadow-sm transition-colors relative"
       style={{
-        backgroundColor: palette.cardBg || (isDark ? '#35121F' : '#FFFFFF'),
-        borderColor: palette.border || (isDark ? 'rgba(197, 164, 109, 0.35)' : '#E5E0D5'),
-        color: palette.text || (isDark ? '#F6EBD8' : '#292820'),
+        backgroundColor: formBg,
+        borderColor: formBorder,
+        color: isFormBgDark ? '#E4E4E7' : '#292820',
       }}
     >
-      {/* Decorative Collection Accent Bar (Antique gold for Sarees, forest/botanical green for pantry/tea) */}
+      {/* Decorative Collection Accent Bar */}
       <div
         className="w-10 h-1 rounded-full mb-4"
         style={{
@@ -174,7 +212,7 @@ export function CollectionContactForm({ theme, collectionId }) {
         >
           Send an Inquiry
         </h3>
-        <p className="text-xs sm:text-sm mt-1" style={{ color: palette.mutedText || (isDark ? '#D8C6AD' : '#666') }}>
+        <p className="text-xs sm:text-sm mt-1" style={{ color: formMutedColor }}>
           Fill in your details below and our team will get back to you promptly.
         </p>
       </div>
@@ -185,19 +223,18 @@ export function CollectionContactForm({ theme, collectionId }) {
           aria-live="polite"
           className="p-5 rounded-xl border mb-6 flex items-start gap-3 transition-all"
           style={{
-            backgroundColor: palette.accentLight || (isDark ? 'rgba(197, 164, 109, 0.15)' : 'rgba(63, 123, 67, 0.1)'),
-            borderColor: accentColor,
-            color: labelColor,
+            backgroundColor: isFormBgDark ? 'rgba(34, 197, 94, 0.14)' : 'rgba(34, 197, 94, 0.1)',
+            borderColor: isFormBgDark ? 'rgba(74, 222, 128, 0.45)' : '#86EFAC',
+            color: isFormBgDark ? '#F0FDF4' : '#14532D',
           }}
         >
           <CheckCircle2
-            className="w-5 h-5 shrink-0 mt-0.5"
-            style={{ color: accentColor }}
+            className="w-5 h-5 shrink-0 mt-0.5 text-green-500"
           />
           <div className="flex-1 text-xs space-y-1">
             <div className="font-semibold text-sm">Inquiry Submitted Successfully</div>
-            <p className="leading-relaxed">{submissionSuccess.message}</p>
-            <div className="font-mono text-[11px] opacity-80 pt-1">
+            <p className="leading-relaxed opacity-95">{submissionSuccess.message}</p>
+            <div className="font-mono text-[11px] opacity-90 pt-1">
               Reference: <span className="font-semibold">{submissionSuccess.reference}</span>
             </div>
             <button
@@ -215,9 +252,13 @@ export function CollectionContactForm({ theme, collectionId }) {
         <div
           role="alert"
           aria-live="polite"
-          className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs mb-6 flex items-start gap-2.5"
+          className={`p-4 rounded-xl border text-xs mb-6 flex items-start gap-2.5 ${
+            isFormBgDark
+              ? 'bg-red-950/40 border-red-500/40 text-red-200'
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}
         >
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
           <span>{serverError}</span>
         </div>
       )}
@@ -246,7 +287,7 @@ export function CollectionContactForm({ theme, collectionId }) {
               if (!errors.fullName) e.currentTarget.style.borderColor = inputBorderColor;
             }}
             placeholder="e.g. Radhika Menon"
-            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium"
+            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium placeholder:text-stone-400"
             style={{
               backgroundColor: inputBgColor,
               borderColor: errors.fullName ? '#EF4444' : inputBorderColor,
@@ -288,7 +329,7 @@ export function CollectionContactForm({ theme, collectionId }) {
                 if (!errors.email) e.currentTarget.style.borderColor = inputBorderColor;
               }}
               placeholder="e.g. radhika@example.com"
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium placeholder:text-stone-400"
               style={{
                 backgroundColor: inputBgColor,
                 borderColor: errors.email ? '#EF4444' : inputBorderColor,
@@ -327,7 +368,7 @@ export function CollectionContactForm({ theme, collectionId }) {
                 if (!errors.phone) e.currentTarget.style.borderColor = inputBorderColor;
               }}
               placeholder="e.g. +91 9940018593"
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium"
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium placeholder:text-stone-400"
               style={{
                 backgroundColor: inputBgColor,
                 borderColor: errors.phone ? '#EF4444' : inputBorderColor,
@@ -368,7 +409,7 @@ export function CollectionContactForm({ theme, collectionId }) {
               if (!errors.subject) e.currentTarget.style.borderColor = inputBorderColor;
             }}
             placeholder="e.g. Order Inquiry / Private Appointment"
-            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium"
+            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 font-medium placeholder:text-stone-400"
             style={{
               backgroundColor: inputBgColor,
               borderColor: errors.subject ? '#EF4444' : inputBorderColor,
@@ -408,7 +449,7 @@ export function CollectionContactForm({ theme, collectionId }) {
               if (!errors.message) e.currentTarget.style.borderColor = inputBorderColor;
             }}
             placeholder="Please detail your request or question..."
-            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 resize-none font-medium"
+            className="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border transition-colors outline-none focus:ring-2 resize-none font-medium placeholder:text-stone-400"
             style={{
               backgroundColor: inputBgColor,
               borderColor: errors.message ? '#EF4444' : inputBorderColor,
@@ -432,14 +473,16 @@ export function CollectionContactForm({ theme, collectionId }) {
             disabled={isSubmitting}
             className="w-full py-3.5 px-5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-[0.99]"
             style={{
-              backgroundColor: accentColor,
-              color: palette.buttonText || (isDark ? '#2C0E1A' : '#FFFFFF'),
+              backgroundColor: buttonBg,
+              color: buttonTextColor,
             }}
             onMouseEnter={(e) => {
               if (palette.accentHover) e.currentTarget.style.backgroundColor = palette.accentHover;
+              else e.currentTarget.style.filter = 'brightness(1.1)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = accentColor;
+              e.currentTarget.style.backgroundColor = buttonBg;
+              e.currentTarget.style.filter = 'none';
             }}
           >
             {isSubmitting ? (

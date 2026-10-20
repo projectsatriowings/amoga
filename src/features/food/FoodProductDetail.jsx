@@ -30,7 +30,7 @@ export function FoodProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const staticProduct = getProductBySlug(slug);
-  const { product: apiProduct } = useProductDetail('food', slug, staticProduct);
+  const { product: apiProduct, isLoading } = useProductDetail('food', slug, staticProduct);
   const product = apiProduct || staticProduct;
 
   useEffect(() => {
@@ -45,7 +45,17 @@ export function FoodProductDetail() {
 
   const availability = resolveAvailability(product);
 
-  // If unknown slug, display graceful not-found state
+  // While loading from API for newly created or dynamic products, render skeleton/loader instead of premature not-found
+  if (isLoading && !product) {
+    return (
+      <div className="bg-[#F1EDE4] text-[#172B1C] min-h-[70vh] flex flex-col items-center justify-center py-16">
+        <div className="w-10 h-10 border-3 border-[#287A25] border-t-transparent rounded-full animate-spin mb-4" />
+        <span className="text-xs uppercase font-mono tracking-widest text-[#287A25]">Loading Pantry Item...</span>
+      </div>
+    );
+  }
+
+  // If unknown slug after fetch completes, display graceful not-found state
   if (!product) {
     return (
       <div className="bg-[#F1EDE4] text-[#172B1C] min-h-[70vh] flex items-center justify-center py-16">

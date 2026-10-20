@@ -40,7 +40,6 @@ import { AdminOrders } from '../features/admin/pages/AdminOrders';
 import { AdminOrderDetail } from '../features/admin/pages/AdminOrderDetail';
 import { AdminPayments } from '../features/admin/pages/AdminPayments';
 import { AdminCustomers } from '../features/admin/pages/AdminCustomers';
-import { AdminPromotions } from '../features/admin/pages/AdminPromotions';
 import { AdminReports } from '../features/admin/pages/AdminReports';
 import { AdminSettings } from '../features/admin/pages/AdminSettings';
 import { AdminAuditLogs } from '../features/admin/pages/AdminAuditLogs';
@@ -57,6 +56,7 @@ import { AdminStallDashboard } from '../features/admin/pos/pages/AdminStallDashb
 import { AdminStallInventory } from '../features/admin/pos/pages/AdminStallInventory';
 import { AdminStallTransfers } from '../features/admin/pos/pages/AdminStallTransfers';
 import { StallBillingPage } from '../features/stall/pages/StallBillingPage';
+import { StallRouteGuard } from '../features/stall/components/StallRouteGuard';
 import { PublicReceiptPage } from '../features/pos/pages/PublicReceiptPage';
 
 /**
@@ -353,7 +353,7 @@ export const router = createBrowserRouter([
       { path: 'customers', element: <AdminCustomers /> },
       { path: 'customer-inquiries', element: <AdminCustomerInquiries /> },
       { path: 'reviews', element: <AdminReviews /> },
-      { path: 'promotions', element: <AdminPromotions /> },
+      { path: 'promotions', element: <Navigate to="/admin" replace /> },
       { path: 'reports', element: <AdminReports /> },
       { path: 'settings', element: <AdminSettings /> },
       { path: 'users', element: <Navigate to="/admin" replace /> },
@@ -417,7 +417,11 @@ export const router = createBrowserRouter([
   // Dedicated Stall Billing Application (Standalone POS Route)
   {
     path: '/stall',
-    element: <StallBillingPage />,
+    element: (
+      <StallRouteGuard>
+        <StallBillingPage />
+      </StallRouteGuard>
+    ),
     errorElement: <RouteErrorBoundary />,
   },
 

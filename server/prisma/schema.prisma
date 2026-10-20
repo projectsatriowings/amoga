@@ -513,28 +513,6 @@ model InventoryLog {
   @@map("inventory_logs")
 }
 
-model Coupon {
-  id                    String        @id @default(uuid())
-  code                  String        @unique
-  name                  String?
-  description           String?
-  discountType          String        // 'PERCENTAGE' | 'FIXED'
-  discountValue         Decimal       @db.Decimal(10, 2)
-  minOrderAmount        Decimal?      @db.Decimal(10, 2)
-  maxDiscountAmount     Decimal?      @db.Decimal(10, 2)
-  usageLimit            Int?
-  usedCount             Int           @default(0)
-  isActive              Boolean       @default(true)
-  startsAt              DateTime?
-  expiresAt             DateTime?
-  applicableCollections Json?         // Array of collection IDs, e.g. ["food", "tea"], or null for storewide
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-
-  @@index([code])
-  @@map("coupons")
-}
-
 model StoreSetting {
   id                       String         @id @default("default")
   storeName                String         @default("Amoga Luxury")

@@ -14,8 +14,11 @@ import { listLocationsEndpoint } from '../controllers/stallInventoryController.j
 
 const router = Router();
 
-// Staff authentication required for all Stall POS operations
-router.use(requireAdminAuth());
+// Staff authentication and role authorization required for all Stall POS operations
+// SUPER_ADMIN, ORDER_MANAGER, and CATALOGUE_MANAGER are authorized for POS operations
+// CONTENT_MANAGER is strictly forbidden
+const POS_ALLOWED_ROLES = ['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER'];
+router.use(requireAdminAuth(POS_ALLOWED_ROLES));
 
 // Active locations for stall selector
 router.get('/locations', listLocationsEndpoint);

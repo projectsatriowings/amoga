@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   ArrowRightLeft,
   ArrowRight,
@@ -18,6 +19,10 @@ import { useAdminStore } from '../../store/useAdminStore';
 
 export function AdminStallTransfers() {
   const { admin } = useAdminStore();
+  const [searchParams] = useSearchParams();
+  const urlToLocationId = searchParams.get('toLocationId');
+  const urlFromLocationId = searchParams.get('fromLocationId');
+
   const [locations, setLocations] = useState([]);
   const [transfers, setTransfers] = useState([]);
   const [isLoadingTransfers, setIsLoadingTransfers] = useState(true);
@@ -51,10 +56,17 @@ export function AdminStallTransfers() {
 
       if (locsRes?.locations) {
         setLocations(locsRes.locations);
-        const wh = locsRes.locations.find((l) => l.type === 'WAREHOUSE') || locsRes.locations[0];
-        const stall = locsRes.locations.find((l) => l.type === 'STALL') || locsRes.locations[1];
+        const wh =
+          (urlFromLocationId && locsRes.locations.find((l) => l.id === urlFromLocationId)) ||
+          locsRes.locations.find((l) => l.type === 'WAREHOUSE') ||
+          locsRes.locations[0];
+        const stall =
+          (urlToLocationId && locsRes.locations.find((l) => l.id === urlToLocationId)) ||
+          locsRes.locations.find((l) => l.type === 'STALL') ||
+          locsRes.locations[1];
         if (wh) setFromLocationId(wh.id);
         if (stall) setToLocationId(stall.id);
+        if (urlToLocationId) setIsModalOpen(true);
       }
       if (transRes?.transfers) {
         setTransfers(transRes.transfers);
@@ -78,8 +90,8 @@ export function AdminStallTransfers() {
       setIsLoadingSourceStock(true);
       try {
         const res = await posApi.getLocationInventory(fromLocationId);
-        if (res?.inventory) {
-          setSourceInventory(res.inventory);
+        if (res?.inventory || res?.items) {
+          setSourceInventory(res.inventory || res.items);
         }
       } catch (err) {
         console.error('Failed to fetch source inventory:', err);
@@ -315,13 +327,13 @@ export function AdminStallTransfers() {
                         })}
                       </td>
                       <td className="py-3 px-3 font-medium text-stone-800">
-                        {t.fromLocation?.name || 'Warehouse'}
+                        {t.sourceLocation?.name || t.fromLocation?.name || 'Central Warehouse'}
                       </td>
                       <td className="py-3 px-3 font-medium text-[#762F39]">
-                        {t.toLocation?.name || 'Stall'}
+                        {t.destinationLocation?.name || t.toLocation?.name || 'Stall'}
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span className="px-2 py-0.5 rounded-full bg-stone-100 font-mono text-[11px] font-bold text-stone-800">
+                        <span className="px-2 py-0.5 rounded-full bg-stone-100 font-sans tabular-nums text-[11px] font-bold text-stone-800">
                           {totalUnits} units ({t.items?.length || 0} SKUs)
                         </span>
                       </td>
@@ -337,10 +349,10 @@ export function AdminStallTransfers() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-stone-600 truncate max-w-[200px]">
-                        {t.notes || 'Routine stall replenishment'}
+                        {t.notes || t.reason || 'Stall stock replenishment'}
                       </td>
                       <td className="py-3 px-3 font-mono text-[11px] text-stone-500">
-                        {t.creator?.name || 'Admin'}
+                        {t.initiatedByEmail || t.creator?.name || 'Admin'}
                       </td>
                     </tr>
                   );
@@ -457,7 +469,7 @@ export function AdminStallTransfers() {
                               value={inv.id}
                               disabled={inv.availableQuantity <= 0}
                             >
-                              {inv.product?.name} {inv.variant?.name ? `(${inv.variant.name})` : ''} — Stock: {inv.availableQuantity}
+                              {inv.displayName || inv.productName || inv.product?.name} — Available: {inv.availableQuantity}
                             </option>
                           ))}
                         </select>

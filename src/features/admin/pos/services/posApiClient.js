@@ -157,6 +157,22 @@ export const posApi = {
     return handleResponse(res);
   },
 
+  async deleteEvent(id) {
+    const res = await fetch(`/api/admin/pos/events/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  async setDefaultStall(id) {
+    const res = await fetch(`/api/admin/pos/events/${encodeURIComponent(id)}/set-default`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
   // 11. POS Settings
   async getSettings() {
     const res = await fetch('/api/admin/pos/settings', {
@@ -201,12 +217,19 @@ export const posApi = {
   },
 
   // 14. Location Inventory
-  async getLocationInventory({ locationId, collectionId = 'all', query = '', stockStatus = 'all', page = 1, limit = 50 } = {}) {
+  async getLocationInventory(locationIdOrOpts = {}, maybeOpts = {}) {
+    let opts = {};
+    if (typeof locationIdOrOpts === 'string') {
+      opts = { locationId: locationIdOrOpts, ...maybeOpts };
+    } else if (typeof locationIdOrOpts === 'object' && locationIdOrOpts !== null) {
+      opts = { ...locationIdOrOpts };
+    }
+    const { locationId, collectionId = 'all', query = '', stockStatus = 'all', page = 1, limit = 50 } = opts;
     const params = new URLSearchParams();
     if (locationId) params.append('locationId', locationId);
-    if (collectionId) params.append('collectionId', collectionId);
+    if (collectionId && collectionId !== 'all') params.append('collectionId', collectionId);
     if (query) params.append('query', query);
-    if (stockStatus) params.append('stockStatus', stockStatus);
+    if (stockStatus && stockStatus !== 'all') params.append('stockStatus', stockStatus);
     params.append('page', String(page));
     params.append('limit', String(limit));
 
@@ -226,14 +249,29 @@ export const posApi = {
     return handleResponse(res);
   },
 
+  async adjustStock(payload) {
+    return this.adjustLocationStock(payload);
+  },
+
   // 16. Stock Transfers
-  async executeStockTransfer(payload) {
+  async executeStockTransfer(payload = {}) {
+    const body = {
+      sourceLocationId: payload.sourceLocationId || payload.fromLocationId,
+      destinationLocationId: payload.destinationLocationId || payload.toLocationId,
+      items: payload.items,
+      reason: payload.reason,
+      notes: payload.notes,
+    };
     const res = await fetch('/api/admin/stall/transfers', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     return handleResponse(res);
+  },
+
+  async createStockTransfer(payload) {
+    return this.executeStockTransfer(payload);
   },
 
   async listStockTransfers(params = {}) {
@@ -247,6 +285,10 @@ export const posApi = {
       headers: getAuthHeaders(),
     });
     return handleResponse(res);
+  },
+
+  async listTransfers(params = {}) {
+    return this.listStockTransfers(params);
   },
 
   // 17. Movement Logs Ledger

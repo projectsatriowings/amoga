@@ -300,7 +300,6 @@ export function AdminAuditLogs() {
             <option value="Product">Products</option>
             <option value="Collection">Collections</option>
             <option value="Order">Orders</option>
-            <option value="Coupon">Promotional Coupons</option>
             <option value="StoreSetting">Store Settings</option>
             <option value="AdminUser">Staff Users</option>
             <option value="CustomerInquiry">Customer Inquiries</option>

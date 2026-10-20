@@ -24,31 +24,10 @@ export async function validateCartApi(cartItems) {
   return result;
 }
 
-export async function applyCouponApi({ code, subtotal, items = [] }) {
-  const formattedItems = items.map((item) => ({
-    productId: item.productId || item.product?.id || item.id,
-    collectionId: item.collectionId || item.product?.collection || item.collection,
-    price: item.price !== undefined ? item.price : item.product?.price,
-    quantity: item.quantity,
-  }));
-
-  const result = await request('/checkout/apply-coupon', {
-    method: 'POST',
-    timeout: 30000,
-    body: JSON.stringify({
-      code,
-      subtotal,
-      items: formattedItems,
-    }),
-  });
-
-  return result;
-}
-
 /**
  * Creates a persistent database order
  */
-export async function createOrderApi({ items: rawItems, customer, idempotencyKey = null, isDemo = false, couponCode = null, paymentMethod = 'online' }) {
+export async function createOrderApi({ items: rawItems, customer, idempotencyKey = null, isDemo = false, paymentMethod = 'online' }) {
   const items = Array.isArray(rawItems) ? rawItems : (rawItems?.items || []);
   const formattedItems = items.map((item) => ({
     productId: item.productId || item.product?.id || item.id,
@@ -76,7 +55,6 @@ export async function createOrderApi({ items: rawItems, customer, idempotencyKey
       customer: sanitizedCustomer,
       idempotencyKey,
       isDemo,
-      couponCode: couponCode ? couponCode.trim().toUpperCase() : undefined,
       paymentMethod,
     }),
   });
@@ -182,5 +160,13 @@ export async function fetchPaymentStatusApi(paymentReference, guestAccessToken) 
   });
 
   return result.data;
+}
+
+/**
+ * Retrieves authoritative public shipping configuration from StoreSetting
+ */
+export async function getShippingConfigApi() {
+  const result = await request('/checkout/shipping-config', { method: 'GET' });
+  return result?.config || result;
 }
 

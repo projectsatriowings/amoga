@@ -4,19 +4,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ensure Indian Rupee symbol U+20B9 always renders with a clean, crisp glyph even inside serif containers */
+/* Professional Numerical Font for all numbers and currency across the entire application */
 @font-face {
   font-family: 'Playfair Display';
-  src: local('Inter'), local('Segoe UI'), local('Roboto'), local('sans-serif');
-  unicode-range: U+20B9;
+  src: local('Inter'), local('Plus Jakarta Sans'), local('Segoe UI'), local('Roboto'), sans-serif;
+  unicode-range: U+0030-0039, U+20B9, U+0024, U+00A3, U+20AC, U+00A5, U+0025, U+002B, U+2212;
 }
 
 @font-face {
   font-family: 'Cormorant Garamond';
-  src: local('Inter'), local('Segoe UI'), local('Roboto'), local('sans-serif');
-  unicode-range: U+20B9;
+  src: local('Inter'), local('Plus Jakarta Sans'), local('Segoe UI'), local('Roboto'), sans-serif;
+  unicode-range: U+0030-0039, U+20B9, U+0024, U+00A3, U+20AC, U+00A5, U+0025, U+002B, U+2212;
 }
-
 
 @layer base {
   *, ::before, ::after {
@@ -37,6 +36,8 @@
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-family-body);
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
     transition: background-color var(--duration-normal) var(--ease-smooth),
                 color var(--duration-normal) var(--ease-smooth);
     min-height: 100vh;

@@ -10,6 +10,7 @@ import {
   listStallEvents,
   createStallEvent,
   updateStallEvent,
+  deleteStallEvent,
   getPosSettings,
   updatePosSettings,
 } from '../services/posService.js';
@@ -464,6 +465,28 @@ export async function updateStallEventEndpoint(req, res, next) {
     const { id } = req.params;
     const event = await updateStallEvent(id, req.body, req.admin.email, req.admin.id);
     return res.json({ success: true, event });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteStallEventEndpoint(req, res, next) {
+  try {
+    const { id } = req.params;
+    const result = await deleteStallEvent(id, req.admin.email, req.admin.id);
+    return res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function setDefaultStallEndpoint(req, res, next) {
+  try {
+    const { id } = req.params;
+    await prisma.posSetting.updateMany({
+      data: { defaultStallId: id },
+    });
+    return res.json({ success: true, message: 'Default POS stall register updated successfully.', defaultStallId: id });
   } catch (error) {
     next(error);
   }

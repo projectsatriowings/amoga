@@ -6,10 +6,12 @@ import { X, Trash2, Plus, Minus, ShoppingBag, AlertCircle, AlertTriangle } from 
 import { useStore } from '../../../store/useStore';
 import { Button } from '../../../components/ui/Button';
 import { resolveAvailability } from '../../../utils/inventory';
+import { useShippingConfig } from '../../../hooks/useShippingConfig';
 
 export function CartDrawer() {
   const { cart, closeCart, updateQuantity, removeFromCart, clearCart } = useStore();
   const { items, isOpen } = cart;
+  const { freeShippingThreshold, shippingThresholdOperator } = useShippingConfig();
 
   const savedScrollY = useRef(0);
   const lastFocusedElement = useRef(null);
@@ -364,7 +366,7 @@ export function CartDrawer() {
                   )}
 
                   <div className="text-[11px] text-[#557C36]">
-                    Taxes calculated at checkout. Free delivery on orders above ₹999.
+                    Taxes calculated at checkout. Free delivery on orders {shippingThresholdOperator === 'GT' ? 'above' : 'at or above'} ₹{Number(freeShippingThreshold).toLocaleString('en-IN')}.
                   </div>
 
                   <div className="flex flex-col gap-2 pt-1">

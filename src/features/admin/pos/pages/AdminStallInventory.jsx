@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Layers,
   Search,
@@ -30,7 +31,9 @@ export function AdminStallInventory() {
   const { admin } = useAdminStore();
   const [activeTab, setActiveTab] = useState('balances'); // 'balances' | 'movements'
 
-  // Location filter
+  // Location filter & query param sync
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlLocationId = searchParams.get('locationId');
   const [locations, setLocations] = useState([]);
   const [selectedLocationId, setSelectedLocationId] = useState('');
 
@@ -67,7 +70,9 @@ export function AdminStallInventory() {
         const res = await posApi.listLocations();
         if (res?.locations) {
           setLocations(res.locations);
-          if (res.locations.length > 0 && !selectedLocationId) {
+          if (urlLocationId && res.locations.some((l) => l.id === urlLocationId)) {
+            setSelectedLocationId(urlLocationId);
+          } else if (res.locations.length > 0 && !selectedLocationId) {
             // Default to first stall or first location
             const stall = res.locations.find((l) => l.type === 'STALL') || res.locations[0];
             setSelectedLocationId(stall.id);
@@ -78,7 +83,7 @@ export function AdminStallInventory() {
       }
     }
     loadLocations();
-  }, []);
+  }, [urlLocationId]);
 
   // Fetch balances for selected location
   const fetchBalances = async () => {
@@ -90,8 +95,8 @@ export function AdminStallInventory() {
         query: searchQuery || undefined,
         stockStatus: stockStatusFilter !== 'all' ? stockStatusFilter : undefined,
       });
-      if (res?.inventory) {
-        setBalances(res.inventory);
+      if (res?.inventory || res?.items) {
+        setBalances(res.inventory || res.items);
       }
     } catch (err) {
       console.error('Failed to load inventory balances:', err);
@@ -219,7 +224,10 @@ export function AdminStallInventory() {
             <MapPin className="w-4 h-4 text-[#762F39]" />
             <select
               value={selectedLocationId}
-              onChange={(e) => setSelectedLocationId(e.target.value)}
+              onChange={(e) => {
+                setSelectedLocationId(e.target.value);
+                setSearchParams({ locationId: e.target.value }, { replace: true });
+              }}
               className="bg-transparent text-xs font-medium text-stone-800 focus:outline-none cursor-pointer"
             >
               {locations.map((loc) => (
@@ -264,10 +272,10 @@ export function AdminStallInventory() {
           </div>
 
           <div className="text-right">
-            <span className="text-stone-500 font-mono text-[11px] block">
+            <span className="text-stone-500 text-[11px] block">
               Total Tracked SKUs at this location:
             </span>
-            <span className="font-bold text-stone-800 text-sm font-mono">
+            <span className="font-bold text-stone-800 text-sm tabular-nums">
               {displayedBalances.length} products
             </span>
           </div>
@@ -376,17 +384,18 @@ export function AdminStallInventory() {
                   <tbody className="divide-y divide-stone-100 font-sans">
                     {displayedBalances.map((item) => {
                       const avail = item.availableQuantity;
-                      const isLow = avail > 0 && avail <= item.lowStockThreshold;
+                      const threshold = item.reorderThreshold !== undefined ? item.reorderThreshold : (item.lowStockThreshold ?? 5);
+                      const isLow = avail > 0 && avail <= threshold;
                       const isOut = avail <= 0;
 
                       return (
                         <tr key={item.id} className="hover:bg-stone-50/60 transition-colors">
                           <td className="py-3 px-4 font-medium text-stone-900">
                             <span className="block truncate max-w-[220px]">
-                              {item.product?.name || 'Amoga Product'}
+                              {item.product?.name || item.productName || 'Amoga Product'}
                             </span>
                             <span className="text-[10px] text-stone-400 font-mono">
-                              ID: {item.productId.slice(0, 10)}...
+                              ID: {(item.productId || '').slice(0, 10)}...
                             </span>
                           </td>
                           <td className="py-3 px-3">
@@ -400,19 +409,19 @@ export function AdminStallInventory() {
                             )}
                           </td>
                           <td className="py-3 px-3 text-stone-600 capitalize">
-                            {item.product?.collectionId || 'Pantry'}
+                            {item.product?.collectionId || item.collectionId || 'Pantry'}
                           </td>
-                          <td className="py-3 px-3 text-right font-mono text-stone-700">
+                          <td className="py-3 px-3 text-right font-medium tabular-nums text-stone-700">
                             {item.onHandQuantity}
                           </td>
-                          <td className="py-3 px-3 text-right font-mono text-stone-400">
+                          <td className="py-3 px-3 text-right font-medium tabular-nums text-stone-400">
                             {item.reservedQuantity || 0}
                           </td>
-                          <td className="py-3 px-3 text-right font-mono font-bold text-stone-900">
+                          <td className="py-3 px-3 text-right font-bold tabular-nums text-stone-900">
                             {item.availableQuantity}
                           </td>
-                          <td className="py-3 px-3 text-right font-mono text-stone-500">
-                            {item.lowStockThreshold}
+                          <td className="py-3 px-3 text-right font-medium tabular-nums text-stone-500">
+                            {threshold}
                           </td>
                           <td className="py-3 px-3 text-center">
                             <span

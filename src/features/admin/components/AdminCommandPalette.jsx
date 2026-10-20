@@ -111,13 +111,6 @@ export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
       shortcut: 'G Q',
     },
     {
-      id: 'promotions',
-      title: 'Promotional Coupons & Rules',
-      category: 'Content & Marketing',
-      path: '/admin/promotions',
-      icon: Sparkles,
-    },
-    {
       id: 'reports',
       title: 'Business Analytics & Data Export',
       category: 'Content & Marketing',

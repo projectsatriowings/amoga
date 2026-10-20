@@ -311,7 +311,7 @@ describe('Amoga Admin API Integration & RBAC Security Suite', () => {
     }
   });
 
-  it('10. Promotional Coupons: Checkout apply-coupon endpoint calculates authoritative discount', async () => {
+  it('10. Promotional Coupons: Checkout apply-coupon endpoint is decommissioned and returns 404', async () => {
     const res = await fetch(`${baseUrl}/api/checkout/apply-coupon`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -321,12 +321,7 @@ describe('Amoga Admin API Integration & RBAC Security Suite', () => {
       }),
     });
 
-    assert.equal(res.status, 200);
-    const body = await res.json();
-    assert.equal(body.valid, true);
-    assert.equal(body.code, 'WELCOME10');
-    // 10% of 3000 is 300 (which is <= maxDiscount 500)
-    assert.equal(body.discountAmount, 300);
+    assert.equal(res.status, 404);
   });
 
   it('12. Audit Logs: Important admin operations append to audit trail', async () => {

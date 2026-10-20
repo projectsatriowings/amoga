@@ -241,7 +241,12 @@ export async function getProductBySlug(req, res, next) {
 
     const product = await prisma.product.findFirst({
       where: {
-        collectionId: collection.toLowerCase(),
+        collection: {
+          OR: [
+            { id: collection.toLowerCase() },
+            { slug: collection.toLowerCase() },
+          ],
+        },
         slug: slug.toLowerCase(),
         isActive: true,
       },

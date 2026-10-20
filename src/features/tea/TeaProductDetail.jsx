@@ -30,7 +30,7 @@ export function TeaProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const staticProduct = getTeaProductBySlug(slug);
-  const { product: apiProduct } = useProductDetail('tea', slug, staticProduct);
+  const { product: apiProduct, isLoading } = useProductDetail('tea', slug, staticProduct);
 
   // Always reset scroll to top on mount or when navigating to another brew
   useEffect(() => {
@@ -68,6 +68,16 @@ export function TeaProductDetail() {
   const [showRestockModal, setShowRestockModal] = useState(false);
 
   const availability = resolveAvailability(product);
+
+  // While loading from API for newly created or dynamic products, render skeleton/loader instead of premature not-found
+  if (isLoading && !product) {
+    return (
+      <div className="bg-[#FAF1BB] text-[#2C1E11] min-h-[70vh] flex flex-col items-center justify-center py-16">
+        <div className="w-10 h-10 border-3 border-[#8C6320] border-t-transparent rounded-full animate-spin mb-4" />
+        <span className="text-xs uppercase font-mono tracking-widest text-[#8C6320]">Brewing Tea Details...</span>
+      </div>
+    );
+  }
 
   // If unknown slug, display graceful not-found state
   if (!product) {
