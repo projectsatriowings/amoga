@@ -23,7 +23,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5001',
+        target: 'http://127.0.0.1:5016',
         changeOrigin: true,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, res) => {
@@ -43,7 +43,7 @@ export default defineConfig({
         },
       },
       '/uploads': {
-        target: 'http://127.0.0.1:5001',
+        target: 'http://127.0.0.1:5016',
         changeOrigin: true,
       },
     },

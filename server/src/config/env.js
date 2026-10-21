@@ -61,7 +61,7 @@ if (paymentProvider === 'razorpay') {
 
 export const env = {
   DATABASE_URL: process.env.DATABASE_URL,
-  PORT: parseInt(process.env.PORT || '5001', 10),
+  PORT: parseInt(process.env.PORT || '5016', 10),
   NODE_ENV: nodeEnv,
   FRONTEND_ORIGIN: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
   GUEST_ORDER_TOKEN_SECRET: guestSecret,
