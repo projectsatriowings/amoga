@@ -518,7 +518,9 @@ export async function listAdminUsers(req, res) {
         email: true,
         name: true,
         role: true,
+        assignedLocationIds: true,
         isActive: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -539,7 +541,7 @@ export async function listAdminUsers(req, res) {
 
 export async function createAdminUser(req, res) {
   try {
-    const { email, name, password, role } = req.body;
+    const { email, name, password, role, assignedLocationIds } = req.body;
 
     if (!email || !name || !password || !role) {
       return res.status(400).json({
@@ -560,7 +562,14 @@ export async function createAdminUser(req, res) {
       });
     }
 
-    const validRoles = ['SUPER_ADMIN', 'CATALOGUE_MANAGER', 'ORDER_MANAGER', 'CONTENT_MANAGER'];
+    const validRoles = [
+      'SUPER_ADMIN',
+      'CATALOGUE_MANAGER',
+      'ORDER_MANAGER',
+      'CONTENT_MANAGER',
+      'STALL_MANAGER',
+      'STALL_CASHIER',
+    ];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         error: 'INVALID_ROLE',
@@ -575,6 +584,7 @@ export async function createAdminUser(req, res) {
         name: name.trim(),
         passwordHash,
         role,
+        assignedLocationIds: Array.isArray(assignedLocationIds) ? assignedLocationIds : null,
         isActive: true,
       },
       select: {
@@ -582,6 +592,7 @@ export async function createAdminUser(req, res) {
         email: true,
         name: true,
         role: true,
+        assignedLocationIds: true,
         isActive: true,
         createdAt: true,
       },
@@ -594,7 +605,7 @@ export async function createAdminUser(req, res) {
       entityType: 'AdminUser',
       entityId: user.id,
       status: 'SUCCESS',
-      details: { email: user.email, role: user.role },
+      details: { email: user.email, role: user.role, assignedLocationIds: user.assignedLocationIds },
     });
 
     return res.status(201).json({
@@ -662,6 +673,80 @@ export async function toggleAdminUser(req, res) {
     return res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: 'Failed to toggle admin user status',
+    });
+  }
+}
+
+/**
+ * Super Admin initiates a password reset link for a stall manager or cashier
+ */
+export async function sendStaffResetLink(req, res) {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.adminUser.findUnique({
+      where: { id },
+      select: { id: true, email: true, name: true, role: true, isActive: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'NOT_FOUND',
+        message: 'Staff user account not found.',
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(400).json({
+        error: 'ACCOUNT_DEACTIVATED',
+        message: 'Cannot issue a password reset link for a deactivated staff account. Please reactivate the account first.',
+      });
+    }
+
+    const { createPasswordResetToken, sendPasswordResetEmail } = await import('../services/passwordResetService.js');
+
+    const tokenData = await createPasswordResetToken({
+      email: user.email,
+      accountType: 'STAFF',
+      adminUserId: user.id,
+      createdBy: req.admin.email,
+    });
+
+    const emailDelivery = await sendPasswordResetEmail({
+      email: user.email,
+      name: user.name,
+      resetUrl: tokenData.resetUrl,
+      accountType: 'STAFF',
+    });
+
+    await logAdminAction({
+      adminId: req.admin.id,
+      adminEmail: req.admin.email,
+      action: 'STAFF_PASSWORD_RESET_LINK_ISSUED',
+      entityType: 'AdminUser',
+      entityId: user.id,
+      status: 'SUCCESS',
+      details: {
+        targetEmail: user.email,
+        targetRole: user.role,
+        delivered: emailDelivery.delivered,
+        providerConfigured: emailDelivery.providerConfigured,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: emailDelivery.delivered
+        ? `Password reset link sent to ${user.email}.`
+        : `Password reset link created for ${user.email} (Email service: ${emailDelivery.message || 'Check server logs'}).`,
+      emailDelivery,
+      resetUrl: process.env.NODE_ENV !== 'production' ? tokenData.resetUrl : undefined,
+    });
+  } catch (err) {
+    console.error('[ADMIN SEND STAFF RESET LINK ERROR]:', err);
+    return res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to issue password reset link for staff user',
     });
   }
 }

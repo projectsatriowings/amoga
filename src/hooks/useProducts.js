@@ -70,6 +70,64 @@ function deduplicatedFetchProducts(params) {
   return promise;
 }
 
+// Client-side cache for instant zero-latency renders across page navigations & refreshes
+const clientProductsMemoryCache = new Map();
+
+function getCachedProducts(key) {
+  if (clientProductsMemoryCache.has(key)) {
+    return clientProductsMemoryCache.get(key);
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = sessionStorage.getItem(`amoga_cache_${key}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && Array.isArray(parsed.data)) {
+          clientProductsMemoryCache.set(key, parsed.data);
+          return parsed.data;
+        }
+      }
+    } catch {
+      // Non-blocking
+    }
+  }
+  return null;
+}
+
+function setCachedProducts(key, data) {
+  clientProductsMemoryCache.set(key, data);
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.setItem(
+        `amoga_cache_${key}`,
+        JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        })
+      );
+    } catch {
+      // Non-blocking
+    }
+  }
+}
+
+export function clearClientProductsCache() {
+  clientProductsMemoryCache.clear();
+  inFlightRequests.clear();
+  if (typeof window !== 'undefined') {
+    try {
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith('amoga_cache_')) {
+          sessionStorage.removeItem(key);
+        }
+      }
+    } catch {
+      // Non-blocking
+    }
+  }
+}
+
 // Global real-time catalogue synchronizer (SSE + Bounded Visibility Revalidation)
 let isSynchronizerInitialized = false;
 let lastKnownCatalogueVersion = Date.now();
@@ -188,6 +246,7 @@ function initCatalogueSynchronizer() {
  * @param {string} [collectionId] - Optional collection ID that was updated ('food', 'tea', 'sarees', 'jewellery', or 'all')
  */
 export function invalidateProductsCache(collectionId = null) {
+  clearClientProductsCache();
   const timestamp = Date.now();
   lastKnownCatalogueVersion = timestamp;
 
@@ -248,7 +307,6 @@ function mergeProductWithFallback(apiItem, fallbackItem) {
       : fallbackItem.details,
     badge: apiItem.badge || fallbackItem.badge,
     packSize: apiItem.packSize || fallbackItem.packSize,
-    originalPrice: apiItem.originalPrice || fallbackItem.originalPrice,
   };
 }
 
@@ -257,11 +315,36 @@ function mergeProductWithFallback(apiItem, fallbackItem) {
  * with explicit loading, error handling, live cross-session revalidation, and robust metadata preservation.
  */
 export function useProducts({ collection, category, q, sort, fallbackData = [] } = {}) {
-  const [products, setProducts] = useState(fallbackData);
-  const [isLoading, setIsLoading] = useState(true);
+  const cacheKey = `${collection || 'all'}:${category || 'all'}:${q || ''}:${sort || 'default'}`;
+
+  // Initialize immediately from client cache if available, preventing flash/delay of newly added products
+  const [products, setProducts] = useState(() => {
+    const cached = getCachedProducts(cacheKey);
+    return cached && cached.length > 0 ? cached : fallbackData;
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    const cached = getCachedProducts(cacheKey);
+    return !(cached && cached.length > 0);
+  });
   const [error, setError] = useState(null);
   const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
+
+  // Sync state if cacheKey changes
+  const prevKeyRef = useRef(cacheKey);
+  useEffect(() => {
+    if (prevKeyRef.current !== cacheKey) {
+      prevKeyRef.current = cacheKey;
+      const cached = getCachedProducts(cacheKey);
+      if (cached && cached.length > 0) {
+        setProducts(cached);
+        setIsLoading(false);
+      } else {
+        setProducts(fallbackData);
+        setIsLoading(true);
+      }
+    }
+  }, [cacheKey, fallbackData]);
 
   // Initialize global SSE and bounded visibility revalidator once
   useEffect(() => {
@@ -269,6 +352,7 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
   }, []);
 
   const refetch = useCallback(() => {
+    clearClientProductsCache();
     setRefreshToken((prev) => prev + 1);
   }, []);
 
@@ -286,6 +370,7 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
                 : null;
               return mergeProductWithFallback(apiItem, fallback);
             });
+            setCachedProducts(cacheKey, mergedList);
             setProducts(mergedList);
             setIsUsingFallback(false);
           } else {
@@ -299,8 +384,14 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
         if (isMounted) {
           console.warn(`[Amoga API] Could not load products for ${collection} from API:`, err.message);
           setError(err.message);
-          setProducts(fallbackData);
-          setIsUsingFallback(true);
+          const cached = getCachedProducts(cacheKey);
+          if (cached && cached.length > 0) {
+            setProducts(cached);
+            setIsUsingFallback(false);
+          } else {
+            setProducts(fallbackData);
+            setIsUsingFallback(true);
+          }
           setIsLoading(false);
         }
       });
@@ -308,7 +399,7 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
     return () => {
       isMounted = false;
     };
-  }, [collection, category, q, sort, fallbackData, refreshToken]);
+  }, [collection, category, q, sort, fallbackData, refreshToken, cacheKey]);
 
   // Live synchronization effect: listen for updates from admin actions, SSE, other tabs, and window focus
   useEffect(() => {

@@ -18,8 +18,11 @@ import { CartPage } from '../features/cart/CartPage';
 import { CheckoutPage } from '../features/checkout/CheckoutPage';
 import { OrderReviewPage } from '../features/checkout/OrderReviewPage';
 import { DemoOrderConfirmation } from '../features/checkout/DemoOrderConfirmation';
+import { RazorpayDemoPage } from '../features/checkout/RazorpayDemoPage';
 import { CustomerAccountPage } from '../features/account/pages/CustomerAccountPage';
 import { CustomerAuthPage } from '../features/account/pages/CustomerAuthPage';
+import { ResetPasswordPage } from '../features/account/pages/ResetPasswordPage';
+import { StallResetPasswordPage } from '../features/stall/pages/StallResetPasswordPage';
 import { OrderTrackingPage } from '../features/tracking/OrderTrackingPage';
 import { ShippingPolicyPage } from '../features/policies/ShippingPolicyPage';
 import { ReturnsCarePage } from '../features/policies/ReturnsCarePage';
@@ -56,6 +59,7 @@ import { AdminStallDashboard } from '../features/admin/pos/pages/AdminStallDashb
 import { AdminStallInventory } from '../features/admin/pos/pages/AdminStallInventory';
 import { AdminStallTransfers } from '../features/admin/pos/pages/AdminStallTransfers';
 import { StallBillingPage } from '../features/stall/pages/StallBillingPage';
+import { StallLoginPage } from '../features/stall/pages/StallLoginPage';
 import { StallRouteGuard } from '../features/stall/components/StallRouteGuard';
 import { PublicReceiptPage } from '../features/pos/pages/PublicReceiptPage';
 
@@ -233,6 +237,24 @@ export const router = createBrowserRouter([
     ),
     errorElement: <RouteErrorBoundary />,
   },
+  {
+    path: '/razorpay-checkout',
+    element: (
+      <AppShell>
+        <RazorpayDemoPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/test-razorpay',
+    element: (
+      <AppShell>
+        <RazorpayDemoPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
+  },
 
   // Customer Account & Profile Routes
   {
@@ -269,6 +291,19 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <Navigate to="/account/login?mode=register" replace />,
+  },
+  {
+    path: '/forgot-password',
+    element: <Navigate to="/account/login?mode=forgot" replace />,
+  },
+  {
+    path: '/reset-password',
+    element: (
+      <AppShell>
+        <ResetPasswordPage />
+      </AppShell>
+    ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/account/orders',
@@ -369,7 +404,7 @@ export const router = createBrowserRouter([
       { path: 'promotions', element: <Navigate to="/admin" replace /> },
       { path: 'reports', element: <AdminReports /> },
       { path: 'settings', element: <AdminSettings /> },
-      { path: 'users', element: <Navigate to="/admin" replace /> },
+      { path: 'users', element: <Navigate to="/admin/settings?tab=staff" replace /> },
       { path: 'pos', element: <Navigate to="/admin/stall/dashboard" replace /> },
       { path: 'pos/new', element: <AdminPosNewBill /> },
       { path: 'pos/history', element: <AdminPosHistory /> },
@@ -424,6 +459,20 @@ export const router = createBrowserRouter([
         <DynamicStorefront />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
+  },
+
+  // Dedicated Stall Staff Login Route
+  {
+    path: '/stall/login',
+    element: <StallLoginPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+
+  // Dedicated Stall Staff Reset Password Route
+  {
+    path: '/stall/reset-password',
+    element: <StallResetPasswordPage />,
     errorElement: <RouteErrorBoundary />,
   },
 

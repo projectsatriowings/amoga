@@ -234,11 +234,6 @@ export function FoodProductDetail() {
                     <span className="text-3xl font-sans font-bold text-[#172B1C] tabular-nums">
                       ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                     </span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-black/40 line-through font-sans tabular-nums">
-                        ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
-                      </span>
-                    )}
                   </div>
                   <div className="text-[11px] text-[#557C36] font-medium">
                     Inclusive of GST • India Post delivery calculated at checkout

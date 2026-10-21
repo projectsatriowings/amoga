@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, AlertCircle, Shield } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
+import { PasswordInput } from '../../../components/ui/PasswordInput';
 import amogaLogo from '../../../assets/images/amoga-logo.png';
 
 export function AdminLogin() {
@@ -72,16 +73,16 @@ export function AdminLogin() {
                 Master Password
               </label>
               <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#8C8377]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#8C8377] z-10">
                   <Lock className="h-4 w-4" />
                 </div>
-                <input
-                  type="password"
+                <PasswordInput
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#D5CEC2] rounded text-[#1A1817] focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37] outline-none transition-colors"
+                  autoComplete="current-password"
+                  className="block w-full pl-9 pr-10 py-2 text-sm bg-white border border-[#D5CEC2] rounded text-[#1A1817] focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37] outline-none transition-colors"
                 />
               </div>
             </div>

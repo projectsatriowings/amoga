@@ -155,11 +155,6 @@ export function TeaProductCard({ product }) {
                       ({product.packSize})
                     </span>
                   )}
-                  {product.originalPrice && (
-                    <span className="text-xs text-[#7D5C3F] line-through font-sans tabular-nums font-numeric">
-                      ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
-                    </span>
-                  )}
                   <span className="text-[9px] text-[#8C6320] block w-full">Incl. GST</span>
                 </div>
               ) : (

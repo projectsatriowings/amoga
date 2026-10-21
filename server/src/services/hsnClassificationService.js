@@ -49,6 +49,64 @@ export async function searchHsnCandidates({ query = '', limit = 20, collectionId
     rateMap.set(rm.hsnCode, rm);
   }
 
+  let collectionKeywords = [];
+  if (collectionId) {
+    try {
+      const col = await prisma.collection.findUnique({
+        where: { id: collectionId },
+        select: { title: true, slug: true },
+      });
+      if (col) {
+        if (col.title) collectionKeywords.push(col.title.toLowerCase());
+        if (col.slug) collectionKeywords.push(col.slug.toLowerCase().replace(/[-_]/g, ' '));
+      }
+    } catch {
+      // Ignore collection lookup failure
+    }
+  }
+
+  const TRADE_SYNONYMS = {
+    silk: ['5007', '50', 'fabrics', 'woven', 'silk'],
+    saree: ['5007', '5208', '5407', '5806', '5810', 'woven', 'fabrics', 'saree'],
+    sarees: ['5007', '5208', '5407', '5806', '5810', 'woven', 'fabrics', 'saree'],
+    zari: ['5806', '5803', '5810', 'narrow', 'embroidery'],
+    cotton: ['5208', '5209', '5210', '52', 'cotton', 'fabrics'],
+    artsilk: ['5407', '54', 'synthetic', 'fabrics', 'woven'],
+    pendant: ['7113', 'jewellery'],
+    pendants: ['7113', 'jewellery'],
+    ring: ['7113', 'jewellery'],
+    rings: ['7113', 'jewellery'],
+    jewellery: ['7113', 'jewellery'],
+    silver: ['7113', '7106', 'silver'],
+    gold: ['7113', '7108', 'gold'],
+    podi: ['2103', 'sauces', 'condiments', 'seasonings', 'powder'],
+    soup: ['2104', 'soups', 'broths'],
+    soups: ['2104', 'soups', 'broths'],
+    millet: ['1008', 'millet', 'cereals'],
+    millets: ['1008', 'millet', 'cereals'],
+    mix: ['2106', 'preparations', 'composite'],
+    mixes: ['2106', 'preparations', 'composite'],
+    tea: ['0902', 'tea'],
+    coffee: ['0901', 'coffee'],
+    spice: ['0910', '0904', 'spices'],
+    spices: ['0910', '0904', 'spices'],
+  };
+
+  // Helper to find matching rate in rateMap (exact -> 4-digit heading -> 2-digit chapter)
+  const findRateForCode = (codeStr) => {
+    const exact = rateMap.get(codeStr);
+    if (exact) return { rate: exact, isExact: true };
+    if (codeStr.length > 4) {
+      const parent4 = rateMap.get(codeStr.substring(0, 4));
+      if (parent4) return { rate: parent4, isExact: false, parentCode: codeStr.substring(0, 4) };
+    }
+    if (codeStr.length > 2) {
+      const parent2 = rateMap.get(codeStr.substring(0, 2));
+      if (parent2) return { rate: parent2, isExact: false, parentCode: codeStr.substring(0, 2) };
+    }
+    return null;
+  };
+
   // Load from memory cache for sub-millisecond response, or DB fallback
   const dataset = getCachedReferenceData();
   let matchedEntries = [];
@@ -76,25 +134,6 @@ export async function searchHsnCandidates({ query = '', limit = 20, collectionId
         let allTermsMatched = true;
         let anyTermMatched = false;
 
-const TRADE_SYNONYMS = {
-  saree: ['woven', 'fabrics', '5007', '5208'],
-  sarees: ['woven', 'fabrics', '5007', '5208'],
-  pendant: ['jewellery', '7113'],
-  pendants: ['jewellery', '7113'],
-  ring: ['jewellery', '7113'],
-  rings: ['jewellery', '7113'],
-  jewellery: ['jewellery', '7113'],
-  silver: ['silver', '7113'],
-  podi: ['sauces', 'condiments', 'seasonings', 'powder'],
-  soup: ['soups', 'broths', '2104'],
-  soups: ['soups', 'broths', '2104'],
-  millet: ['millet', '1008'],
-  millets: ['millet', '1008'],
-  mix: ['preparations', 'composite'],
-  mixes: ['preparations', 'composite'],
-  tea: ['tea', '0902'],
-};
-
         for (let i = 0; i < terms.length; i++) {
           const term = terms[i];
           const isPrimaryTerm = i === 0;
@@ -108,7 +147,7 @@ const TRADE_SYNONYMS = {
             anyTermMatched = true;
             score += Math.round(termWeight * 0.6);
           } else {
-            // Check synonyms or trade association
+            // Check trade synonyms
             const syns = TRADE_SYNONYMS[term] || [];
             let synMatched = false;
             for (const syn of syns) {
@@ -134,7 +173,30 @@ const TRADE_SYNONYMS = {
           score += 35;
           reasons.push(`Contains all keywords: "${cleanQuery}"`);
         } else if (anyTermMatched) {
-          reasons.push(`Matches keyword in reference description`);
+          reasons.push(`Matches keyword in description`);
+        }
+
+        // Check collection context boost
+        if (collectionKeywords.length > 0) {
+          for (const ck of collectionKeywords) {
+            if (itemDesc.includes(ck)) {
+              score += 45;
+              reasons.push(`Matches product category`);
+              break;
+            }
+          }
+        }
+      }
+
+      // Priority boost for items with approved rate in Rate Master
+      const rateMatch = findRateForCode(itemCode);
+      if (rateMatch) {
+        if (rateMatch.isExact) {
+          score += 100;
+          reasons.unshift(`Pre-approved GST rate (${rateMatch.rate.gstRate}%)`);
+        } else {
+          score += 60;
+          reasons.unshift(`Inherits ${rateMatch.rate.gstRate}% rate from HSN ${rateMatch.parentCode}`);
         }
       }
 
@@ -142,6 +204,7 @@ const TRADE_SYNONYMS = {
         matchedEntries.push({
           item,
           score,
+          rateMatch,
           reason: reasons.join('; ') || 'Text match',
         });
       }
@@ -155,14 +218,23 @@ const TRADE_SYNONYMS = {
       take: 50,
     });
 
-    matchedEntries = dbResults.map((r) => ({
-      item: r,
-      score: r.hsnCode === cleanQuery ? 100 : 50,
-      reason: isNumericQuery ? `HSN Code prefix ${cleanQuery}` : `Description matches "${cleanQuery}"`,
-    }));
+    matchedEntries = dbResults.map((r) => {
+      const itemCode = String(r.hsnCode);
+      const rateMatch = findRateForCode(itemCode);
+      let baseScore = r.hsnCode === cleanQuery ? 100 : 50;
+      if (rateMatch) {
+        baseScore += rateMatch.isExact ? 100 : 60;
+      }
+      return {
+        item: r,
+        score: baseScore,
+        rateMatch,
+        reason: isNumericQuery ? `HSN Code prefix ${cleanQuery}` : `Description matches "${cleanQuery}"`,
+      };
+    });
   }
 
-  // Sort by score descending, prefer 4-digit Heading or Chapter when scores tie
+  // Sort by score descending, prefer items with verified rates, prefer 4-digit Heading or Chapter on ties
   matchedEntries.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     const aLen = a.item.codeLength || a.item.hsnCode.length;
@@ -176,17 +248,10 @@ const TRADE_SYNONYMS = {
 
   const topCandidates = matchedEntries.slice(0, Math.min(limit, 50));
 
-  return topCandidates.map(({ item, score, reason }) => {
+  return topCandidates.map(({ item, score, reason, rateMatch }) => {
     const code = String(item.hsnCode);
-
-    // Cross-reference with verified rate master (exact match or parent 4-digit match)
-    const exactRate = rateMap.get(code);
-    let parentRate = null;
-    if (!exactRate && code.length > 4) {
-      parentRate = rateMap.get(code.substring(0, 4)) || rateMap.get(code.substring(0, 2));
-    }
-
-    const matchedRate = exactRate || parentRate;
+    const resolvedRate = rateMatch || findRateForCode(code);
+    const matchedRate = resolvedRate ? resolvedRate.rate : null;
 
     return {
       hsnCode: code,
@@ -206,7 +271,7 @@ const TRADE_SYNONYMS = {
         ? {
             id: matchedRate.id,
             hsnCode: matchedRate.hsnCode,
-            isExactMatch: Boolean(exactRate),
+            isExactMatch: Boolean(resolvedRate && resolvedRate.isExact),
             gstRate: Number(matchedRate.gstRate),
             taxTreatment: matchedRate.taxTreatment,
             cessRate: Number(matchedRate.cessRate || 0),

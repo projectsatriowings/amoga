@@ -7,17 +7,12 @@ import {
   AlertCircle,
   CheckCircle,
   Upload,
-  Image as ImageIcon,
-  Check,
   X,
   ChevronDown,
   ChevronUp,
-  Sparkles,
   Lock,
   Unlock,
   ShieldCheck,
-  Layers,
-  Info,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { HsnClassificationWidget } from '../components/HsnClassificationWidget';
@@ -95,20 +90,48 @@ const COLLECTION_SUBCATEGORIES = {
   ],
 };
 
-const CATEGORY_HSN_SUGGESTIONS = {
-  sarees: [
-    { code: '5007', label: 'Silk Sarees (5007)' },
-    { code: '5208', label: 'Cotton Weaves (5208)' },
-  ],
-  tea: [
-    { code: '0902', label: 'Teas & Herbal Brews (0902)' },
-    { code: '2106', label: 'Nutraceuticals (2106)' },
-  ],
-  soups: [{ code: '2104', label: 'Soup Mixes (2104)' }],
-  millets: [{ code: '1008', label: 'Millets (1008)' }],
-  podis: [{ code: '2103', label: 'Rice Podis & Seasonings (2103)' }],
-  spices: [{ code: '0910', label: 'Masalas & Spices (0910)' }],
-  jewellery: [{ code: '7113', label: 'Silver Jewellery (7113)' }],
+const CATEGORY_DEFAULT_TAX = {
+  soups: { hsnCode: '2104', gstRate: '18.00' },
+  millets: { hsnCode: '1008', gstRate: '5.00' },
+  podis: { hsnCode: '2103', gstRate: '12.00' },
+  spices: { hsnCode: '0910', gstRate: '5.00' },
+  tea: { hsnCode: '0902', gstRate: '5.00' },
+  sarees: { hsnCode: '5007', gstRate: '5.00' },
+  cotton: { hsnCode: '5208', gstRate: '5.00' },
+  jewellery: { hsnCode: '7113', gstRate: '3.00' },
+  rings: { hsnCode: '7113', gstRate: '3.00' },
+  necklaces: { hsnCode: '7113', gstRate: '3.00' },
+  earrings: { hsnCode: '7113', gstRate: '3.00' },
+  bracelets: { hsnCode: '7113', gstRate: '3.00' },
+  traditional: { hsnCode: '7113', gstRate: '3.00' },
+  food: { hsnCode: '2104', gstRate: '18.00' },
+};
+
+const COLLECTION_DEFAULT_SKU = {
+  food: 'AMOGA-SOUP001',
+  soups: 'AMOGA-SOUP001',
+  millets: 'AMOGA-MIL001',
+  podis: 'AMOGA-POD001',
+  spices: 'AMOGA-MAS001',
+  oils: 'AMOGA-OIL001',
+  snacks: 'AMOGA-SNK001',
+  superfoods: 'AMOGA-SPF001',
+  honey: 'AMOGA-HNY001',
+  tea: 'AMOGA-TEA001',
+  flower: 'AMOGA-TEA001',
+  leaf: 'AMOGA-TEA001',
+  herbal: 'AMOGA-TEA001',
+  sarees: 'AMOGA-SAR001',
+  silk: 'AMOGA-SAR001',
+  traditional: 'AMOGA-SAR001',
+  festive: 'AMOGA-SAR001',
+  wedding: 'AMOGA-SAR001',
+  contemporary: 'AMOGA-SAR001',
+  jewellery: 'AMOGA-SIL001',
+  rings: 'AMOGA-SIL001',
+  necklaces: 'AMOGA-SIL001',
+  earrings: 'AMOGA-SIL001',
+  bracelets: 'AMOGA-SIL001',
 };
 
 export function AdminProductForm() {
@@ -128,10 +151,13 @@ export function AdminProductForm() {
   // SKU state
   const [skuLoading, setSkuLoading] = useState(false);
   const [isSkuLocked, setIsSkuLocked] = useState(true);
+  const isSkuLockedRef = useRef(isSkuLocked);
+  useEffect(() => {
+    isSkuLockedRef.current = isSkuLocked;
+  }, [isSkuLocked]);
   const [skuValidationMsg, setSkuValidationMsg] = useState(null);
 
   // Section toggle state
-  const [showAdditionalSpecs, setShowAdditionalSpecs] = useState(false);
   const [showTaxSection, setShowTaxSection] = useState(true);
   const [hasVariants, setHasVariants] = useState(false);
 
@@ -152,7 +178,6 @@ export function AdminProductForm() {
 
     // Pricing & Inventory
     price: '',
-    originalPrice: '',
     stockQuantity: 25,
     lowStockThreshold: 5,
     inStock: true,
@@ -164,8 +189,8 @@ export function AdminProductForm() {
     specs: {},
 
     // Tax & Compliance (Assisted Classification via HSN_SAC.pdf reference & Rate Master)
-    hsnCode: '',
-    gstRate: '',
+    hsnCode: '2104',
+    gstRate: '18.00',
     isTaxInclusive: true,
     cessRate: '0.00',
     taxClassification: 'GOODS',
@@ -178,6 +203,32 @@ export function AdminProductForm() {
     // Variants
     variants: [],
   });
+
+  // Fetch SKU preview for collection/category
+  const fetchSkuPreview = async (colId, catId, force = false) => {
+    try {
+      setSkuLoading(true);
+      const res = await adminFetch(
+        `/api/admin/products/sku/generate?collectionId=${colId}&category=${encodeURIComponent(catId || '')}`
+      );
+      const data = await res.json();
+      if (res.ok && data.preview) {
+        setFormData((prev) => {
+          if (isSkuLockedRef.current || force || !prev.sku) {
+            return {
+              ...prev,
+              sku: data.preview,
+            };
+          }
+          return prev;
+        });
+      }
+    } catch {
+      // Non-blocking preview failure
+    } finally {
+      setSkuLoading(false);
+    }
+  };
 
   // Load collections and product data if editing
   useEffect(() => {
@@ -215,7 +266,6 @@ export function AdminProductForm() {
             gallery: Array.isArray(p.gallery) ? p.gallery : [],
             status: p.isActive ? 'active' : 'draft',
             price: p.price !== null && p.price !== undefined ? String(p.price) : '',
-            originalPrice: p.originalPrice !== null && p.originalPrice !== undefined ? String(p.originalPrice) : '',
             stockQuantity: p.stockQuantity ?? 25,
             lowStockThreshold: p.lowStockThreshold ?? 5,
             inStock: Boolean(p.inStock),
@@ -263,63 +313,60 @@ export function AdminProductForm() {
     loadInitialData();
   }, [id, isEditing]);
 
-  // Fetch SKU preview for collection/category
-  const fetchSkuPreview = async (colId, catId) => {
-    try {
-      setSkuLoading(true);
-      const res = await adminFetch(
-        `/api/admin/products/sku/generate?collectionId=${colId}&category=${encodeURIComponent(catId || '')}`
-      );
-      const data = await res.json();
-      if (res.ok && data.preview) {
-        setFormData((prev) => ({
-          ...prev,
-          sku: prev.sku || data.preview,
-        }));
-      }
-    } catch {
-      // Non-blocking preview failure
-    } finally {
-      setSkuLoading(false);
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFieldErrors((prev) => ({ ...prev, [name]: null }));
 
-    setFormData((prev) => {
-      const updated = {
+    if (name === 'collectionId') {
+      const available = COLLECTION_SUBCATEGORIES[value] || [];
+      const nextCat = available.length > 0 ? available[0].id : '';
+      const nextCatName = available.length > 0 ? available[0].name : '';
+      const immediateSku = COLLECTION_DEFAULT_SKU[nextCat] || COLLECTION_DEFAULT_SKU[value] || `AMOGA-${value.substring(0, 3).toUpperCase()}001`;
+      const defaultTax = CATEGORY_DEFAULT_TAX[nextCat] || CATEGORY_DEFAULT_TAX[value];
+
+      setFormData((prev) => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value,
-      };
+        collectionId: value,
+        category: nextCat,
+        categoryName: nextCatName,
+        sku: isSkuLockedRef.current ? immediateSku : prev.sku,
+        ...(defaultTax && (!prev.hsnCode || prev.taxVerificationStatus !== 'VERIFIED') ? {
+          hsnCode: defaultTax.hsnCode,
+          gstRate: defaultTax.gstRate,
+        } : {}),
+      }));
 
-      // Collection changes update categories & default HSN suggestions
-      if (name === 'collectionId') {
-        const available = COLLECTION_SUBCATEGORIES[value] || [];
-        const nextCat = available.length > 0 ? available[0].id : '';
-        const nextCatName = available.length > 0 ? available[0].name : '';
-        updated.category = nextCat;
-        updated.categoryName = nextCatName;
+      // Fetch fresh exact sequential SKU preview from server outside the state updater
+      fetchSkuPreview(value, nextCat, true);
+      return;
+    }
 
-        // Fetch fresh SKU preview for new collection
-        fetchSkuPreview(value, nextCat);
-      }
-
-      return updated;
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleSubcategoryChange = (e) => {
     const selectedId = e.target.value;
     const available = COLLECTION_SUBCATEGORIES[formData.collectionId] || [];
     const matched = available.find((sub) => sub.id === selectedId);
+    const immediateSku = COLLECTION_DEFAULT_SKU[selectedId] || COLLECTION_DEFAULT_SKU[formData.collectionId] || `AMOGA-${(formData.collectionId || 'PRD').substring(0, 3).toUpperCase()}001`;
+    const defaultTax = CATEGORY_DEFAULT_TAX[selectedId] || CATEGORY_DEFAULT_TAX[formData.collectionId];
+
     setFormData((prev) => ({
       ...prev,
       category: selectedId,
       categoryName: matched ? matched.name : selectedId,
+      sku: isSkuLockedRef.current ? immediateSku : prev.sku,
+      ...(defaultTax && (!prev.hsnCode || prev.taxVerificationStatus !== 'VERIFIED') ? {
+        hsnCode: defaultTax.hsnCode,
+        gstRate: defaultTax.gstRate,
+      } : {}),
     }));
-    fetchSkuPreview(formData.collectionId, selectedId);
+
+    // Fetch fresh exact sequential SKU preview from server outside the state updater
+    fetchSkuPreview(formData.collectionId, selectedId, true);
   };
 
   const handleSpecChange = (key, value) => {
@@ -475,7 +522,6 @@ export function AdminProductForm() {
         categoryName: formData.categoryName || formData.category,
         description: formData.description?.trim() || '',
         price: formData.price !== '' ? Number(formData.price) : null,
-        originalPrice: formData.originalPrice !== '' ? Number(formData.originalPrice) : null,
         stockQuantity: Number(formData.stockQuantity) || 0,
         lowStockThreshold: Number(formData.lowStockThreshold) || 5,
         inStock: Boolean(formData.inStock),
@@ -556,26 +602,13 @@ export function AdminProductForm() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
-      {/* Top Navigation & Status Badge */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Navigation */}
+      <div className="flex items-center justify-between">
         <BackButton
           collection="admin"
           fallbackTo="/admin/products"
           label="Back to Products"
         />
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${
-              formData.status === 'active'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : formData.status === 'archived'
-                ? 'bg-slate-100 text-slate-700 border-slate-300'
-                : 'bg-amber-50 text-amber-800 border-amber-200'
-            }`}
-          >
-            {formData.status === 'active' ? '● Active (Live on Store)' : formData.status === 'archived' ? '● Archived' : '○ Draft'}
-          </span>
-        </div>
       </div>
 
       {/* Header Banner */}
@@ -694,14 +727,20 @@ export function AdminProductForm() {
             </div>
 
             {/* SKU (Auto-generated by default, unlocked only on demand) */}
-            <div>
+            <div className="sm:col-span-2">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-[#4A423B]">
                   Product SKU
                 </label>
                 <button
                   type="button"
-                  onClick={() => setIsSkuLocked(!isSkuLocked)}
+                  onClick={() => {
+                    const nextLocked = !isSkuLocked;
+                    setIsSkuLocked(nextLocked);
+                    if (nextLocked) {
+                      fetchSkuPreview(formData.collectionId, formData.category, true);
+                    }
+                  }}
                   className="inline-flex items-center gap-1 text-[10px] text-[#722F37] hover:underline cursor-pointer"
                 >
                   {isSkuLocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
@@ -740,26 +779,6 @@ export function AdminProductForm() {
               )}
               <p className="text-[10px] text-[#8C8377] mt-0.5">
                 {isSkuLocked ? 'Generated automatically from category sequence.' : 'Enter custom alphanumeric SKU (3-40 chars).'}
-              </p>
-            </div>
-
-            {/* Status Selector */}
-            <div>
-              <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                Product Status
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
-              >
-                <option value="draft">Draft (Private, not purchasable)</option>
-                <option value="active">Active (Visible & Purchasable)</option>
-                <option value="archived">Archived (Retired from store)</option>
-              </select>
-              <p className="text-[10px] text-[#8C8377] mt-0.5">
-                Draft products can be saved without prices or tax details.
               </p>
             </div>
 
@@ -871,7 +890,7 @@ export function AdminProductForm() {
             B. Pricing & Inventory
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Selling Price */}
             <div>
               <label className="block text-xs font-semibold text-[#4A423B] mb-1">
@@ -892,26 +911,8 @@ export function AdminProductForm() {
               {fieldErrors.price ? (
                 <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.price}</p>
               ) : (
-                <p className="text-[10px] text-[#8C8377] mt-1">Retail selling price in INR</p>
+                <p className="text-[10px] text-[#8C8377] mt-1">Authoritative selling price in INR (Incl. GST)</p>
               )}
-            </div>
-
-            {/* Compare-at Price */}
-            <div>
-              <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                Compare-at Price (₹)
-              </label>
-              <input
-                type="number"
-                name="originalPrice"
-                min="0"
-                step="0.01"
-                value={formData.originalPrice}
-                onChange={handleInputChange}
-                placeholder="e.g. 2400"
-                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs font-mono text-[#1A1817] focus:border-[#722F37] outline-none"
-              />
-              <p className="text-[10px] text-[#8C8377] mt-1">Strikethrough MRP for discounts</p>
             </div>
 
             {/* Initial Stock Quantity */}
@@ -1255,44 +1256,6 @@ export function AdminProductForm() {
               </div>
             </div>
           )}
-
-          {/* Expandable Additional Details */}
-          <div className="pt-2 border-t border-[#EAE4D9]">
-            <button
-              type="button"
-              onClick={() => setShowAdditionalSpecs(!showAdditionalSpecs)}
-              className="inline-flex items-center gap-1.5 text-xs text-[#722F37] font-medium hover:underline cursor-pointer"
-            >
-              {showAdditionalSpecs ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              <span>{showAdditionalSpecs ? 'Hide Extra Details' : 'Show Additional Craft & Provenance Details'}</span>
-            </button>
-
-            {showAdditionalSpecs && (
-              <div className="mt-3 p-4 bg-white/70 rounded-lg border border-[#EAE4D9] grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-semibold text-[#4A423B] mb-1">Origin / Farm Source</label>
-                  <input
-                    type="text"
-                    value={formData.specs?.origin || ''}
-                    onChange={(e) => handleSpecChange('origin', e.target.value)}
-                    placeholder="e.g. Kanchipuram, Tamil Nadu / Pampore, Kashmir"
-                    className="w-full px-3 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-[#4A423B] mb-1">Certification / Mark</label>
-                  <input
-                    type="text"
-                    value={formData.specs?.authenticity || ''}
-                    onChange={(e) => handleSpecChange('authenticity', e.target.value)}
-                    placeholder="e.g. Silk Mark Certified, FSSAI Lic, BIS 925"
-                    className="w-full px-3 py-1.5 bg-white border border-[#D5CEC2] rounded text-xs"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* ================= SECTION D: TAX & COMPLIANCE ================= */}

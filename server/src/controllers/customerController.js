@@ -5,6 +5,13 @@ import {
   generateCustomerSessionToken,
   hashCustomerSessionToken,
 } from '../utils/customerAuth.js';
+import {
+  createPasswordResetToken,
+  sendPasswordResetEmail,
+  validatePasswordResetToken,
+  consumePasswordResetToken,
+  changePasswordSelfService,
+} from '../services/passwordResetService.js';
 
 const SESSION_DURATION_DAYS = 30;
 
@@ -175,10 +182,17 @@ export async function loginCustomer(req, res) {
       },
     });
 
+    // Record last login timestamp safely
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: { lastLoginAt: new Date() },
+    }).catch(() => {});
+
     return res.status(200).json({
       success: true,
       message: 'Signed in successfully',
       token: rawToken,
+      sessionToken: rawToken,
       customer: {
         id: customer.id,
         email: customer.email,
@@ -718,3 +732,148 @@ export async function getCustomerOrder(req, res) {
     });
   }
 }
+
+/**
+ * Step A & B — Request customer password reset link (anti-enumeration generic response)
+ */
+export async function forgotPasswordCustomer(req, res) {
+  try {
+    const { email } = req.body || {};
+
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_EMAIL',
+        message: 'A valid email address is required.',
+      });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const customer = await prisma.customer.findUnique({
+      where: { email: cleanEmail },
+      select: { id: true, email: true, name: true, isActive: true },
+    });
+
+    if (customer && customer.isActive) {
+      const tokenData = await createPasswordResetToken({
+        email: customer.email,
+        accountType: 'CUSTOMER',
+        customerId: customer.id,
+        createdBy: 'self',
+      });
+
+      await sendPasswordResetEmail({
+        email: customer.email,
+        name: customer.name,
+        resetUrl: tokenData.resetUrl,
+        accountType: 'CUSTOMER',
+      });
+    }
+
+    // Security Requirement: Constant generic message prevents account enumeration
+    return res.status(200).json({
+      success: true,
+      message: 'If an eligible account is registered with this email, password reset instructions will be sent.',
+    });
+  } catch (err) {
+    console.error('[CUSTOMER FORGOT PASSWORD ERROR]:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to process password reset request',
+    });
+  }
+}
+
+/**
+ * Step D — Verify customer reset token validity before showing form
+ */
+export async function verifyCustomerResetToken(req, res) {
+  try {
+    const { token } = req.query || {};
+    const result = await validatePasswordResetToken(token, 'CUSTOMER');
+
+    if (!result.valid) {
+      return res.status(400).json({
+        success: false,
+        valid: false,
+        error: result.error,
+        message: result.message,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      valid: true,
+      email: result.email,
+    });
+  } catch (err) {
+    console.error('[VERIFY CUSTOMER RESET TOKEN ERROR]:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to verify token',
+    });
+  }
+}
+
+/**
+ * Step D — Reset password with token, validation, session revocation
+ */
+export async function resetPasswordCustomer(req, res) {
+  try {
+    const { token, newPassword, confirmPassword } = req.body || {};
+
+    const result = await consumePasswordResetToken({
+      rawToken: token,
+      newPassword,
+      confirmPassword,
+      expectedAccountType: 'CUSTOMER',
+    });
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('[RESET CUSTOMER PASSWORD ERROR]:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to reset password',
+    });
+  }
+}
+
+/**
+ * Self-service password change for logged-in customer
+ */
+export async function changePasswordCustomer(req, res) {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body || {};
+
+    const result = await changePasswordSelfService({
+      userId: req.customerId,
+      accountType: 'CUSTOMER',
+      currentPassword,
+      newPassword,
+      confirmPassword,
+      currentSessionId: req.customerSessionId,
+    });
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('[CUSTOMER CHANGE PASSWORD ERROR]:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to change password',
+    });
+  }
+}
+

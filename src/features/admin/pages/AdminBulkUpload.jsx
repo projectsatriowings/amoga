@@ -24,7 +24,7 @@ export function AdminBulkUpload() {
   const { adminFetch } = useAdminStore();
 
   // Mode and Settings
-  const [importMode, setImportMode] = useState('CREATE_NEW'); // 'CREATE_NEW' | 'UPDATE_EXISTING' | 'INITIAL_INVENTORY'
+  const [importMode, setImportMode] = useState('CREATE_NEW'); // 'CREATE_NEW' | 'UPDATE_EXISTING'
   const [selectedCollection, setSelectedCollection] = useState('all');
 
   // File Upload State
@@ -400,32 +400,6 @@ export function AdminBulkUpload() {
                   <span className="text-xs font-bold text-[#1A1817] block">Update Existing Products</span>
                   <span className="text-[11px] text-[#7A7167] leading-relaxed block mt-0.5">
                     Matches records by Product Code (sourceId) and updates details, descriptions, specs, and variants.
-                  </span>
-                </div>
-              </label>
-
-              <label
-                className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                  importMode === 'INITIAL_INVENTORY'
-                    ? 'border-[#722F37] bg-[#722F37]/5 shadow-xs'
-                    : 'border-[#E5E0D5] hover:bg-[#FAF8F5]'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="importMode"
-                  value="INITIAL_INVENTORY"
-                  checked={importMode === 'INITIAL_INVENTORY'}
-                  onChange={() => {
-                    setImportMode('INITIAL_INVENTORY');
-                    setValidationResult(null);
-                  }}
-                  className="mt-0.5 text-[#722F37] focus:ring-[#722F37]"
-                />
-                <div>
-                  <span className="text-xs font-bold text-[#1A1817] block">Initial Inventory Import</span>
-                  <span className="text-[11px] text-[#7A7167] leading-relaxed block mt-0.5">
-                    Dedicated stock adjustments from Inventory sheet. Writes audit entries into the inventory ledger.
                   </span>
                 </div>
               </label>

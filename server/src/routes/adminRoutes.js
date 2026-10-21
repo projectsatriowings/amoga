@@ -64,6 +64,7 @@ import {
   listAdminUsers,
   createAdminUser,
   toggleAdminUser,
+  sendStaffResetLink,
   listAuditLogs,
   getAuditLogById,
 } from '../controllers/adminSettingsController.js';
@@ -103,6 +104,8 @@ import {
 import {
   listLocationsEndpoint,
   createLocationEndpoint,
+  updateLocationEndpoint,
+  toggleLocationActiveEndpoint,
   getLocationInventoryEndpoint,
   adjustStockEndpoint,
   executeStockTransferEndpoint,
@@ -196,6 +199,7 @@ router.put('/settings', requireAdminAuth(['SUPER_ADMIN']), updateStoreSettings);
 router.get('/users', requireAdminAuth(['SUPER_ADMIN']), listAdminUsers);
 router.post('/users', requireAdminAuth(['SUPER_ADMIN']), createAdminUser);
 router.patch('/users/:id/toggle', requireAdminAuth(['SUPER_ADMIN']), toggleAdminUser);
+router.post('/users/:id/send-reset-link', requireAdminAuth(['SUPER_ADMIN']), sendStaffResetLink);
 router.get('/audit-logs', requireAdminAuth(['SUPER_ADMIN']), listAuditLogs);
 router.get('/audit-logs/:id', requireAdminAuth(['SUPER_ADMIN']), getAuditLogById);
 
@@ -220,6 +224,8 @@ router.put('/pos/settings', requireAdminAuth(['SUPER_ADMIN']), updatePosSettings
 // 13. Stall Management & Stock Locations
 router.get('/stall/locations', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), listLocationsEndpoint);
 router.post('/stall/locations', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), createLocationEndpoint);
+router.put('/stall/locations/:id', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), updateLocationEndpoint);
+router.patch('/stall/locations/:id/toggle', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), toggleLocationActiveEndpoint);
 router.get('/stall/inventory', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), getLocationInventoryEndpoint);
 router.post('/stall/inventory/adjust', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), adjustStockEndpoint);
 router.post('/stall/transfers', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), executeStockTransferEndpoint);

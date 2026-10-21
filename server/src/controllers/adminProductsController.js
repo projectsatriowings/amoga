@@ -82,7 +82,7 @@ export async function listProducts(req, res) {
       data: products.map((p) => ({
         ...p,
         price: p.price ? Number(p.price) : null,
-        originalPrice: p.originalPrice ? Number(p.originalPrice) : null,
+        originalPrice: null,
         variants: p.variants.map((v) => ({
           ...v,
           price: v.price ? Number(v.price) : null,
@@ -131,7 +131,7 @@ export async function getProductById(req, res) {
       product: {
         ...product,
         price: product.price ? Number(product.price) : null,
-        originalPrice: product.originalPrice ? Number(product.originalPrice) : null,
+        originalPrice: null,
         variants: product.variants.map((v) => ({
           ...v,
           price: v.price ? Number(v.price) : null,
@@ -157,7 +157,6 @@ export async function createProduct(req, res) {
       category,
       categoryName,
       price,
-      originalPrice,
       image,
       gallery = [],
       stockQuantity = 50,
@@ -292,7 +291,7 @@ export async function createProduct(req, res) {
           category: category || collection.name,
           categoryName: categoryName || category || collection.name,
           price: numPrice,
-          originalPrice: originalPrice ? Number(originalPrice) : null,
+          originalPrice: null,
           image: image || '/placeholder-luxury.jpg',
           gallery: Array.isArray(gallery) ? gallery : [],
           packSize: packSize || null,
@@ -387,7 +386,7 @@ export async function createProduct(req, res) {
       product: {
         ...(fullProduct || createdProduct),
         price: (fullProduct || createdProduct).price ? Number((fullProduct || createdProduct).price) : null,
-        originalPrice: (fullProduct || createdProduct).originalPrice ? Number((fullProduct || createdProduct).originalPrice) : null,
+        originalPrice: null,
       },
     });
   } catch (err) {

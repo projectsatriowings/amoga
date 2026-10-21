@@ -391,11 +391,6 @@ export function DynamicStorefront() {
                           <span className="font-sans text-base font-bold text-[#1A1817] tabular-nums">
                             {p.price ? formatINR(Number(p.price)) : 'Enquire'}
                           </span>
-                          {p.originalPrice && Number(p.originalPrice) > Number(p.price) && (
-                            <span className="text-[10px] text-[#A8A096] line-through tabular-nums">
-                              {formatINR(Number(p.originalPrice))}
-                            </span>
-                          )}
                         </div>
 
                         <button

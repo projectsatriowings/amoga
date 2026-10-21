@@ -1,10 +1,13 @@
 import { useAdminStore } from '../../store/useAdminStore';
 
 function getAuthHeaders() {
-  const token = useAdminStore.getState().token || localStorage.getItem('amoga_admin_token');
+  const token =
+    localStorage.getItem('amoga_stall_token') ||
+    useAdminStore.getState().token ||
+    localStorage.getItem('amoga_admin_token');
   return {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}`, 'x-stall-token': token } : {}),
   };
 }
 
@@ -216,6 +219,23 @@ export const posApi = {
     return handleResponse(res);
   },
 
+  async updateLocation(id, payload) {
+    const res = await fetch(`/api/admin/stall/locations/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+  },
+
+  async toggleLocation(id) {
+    const res = await fetch(`/api/admin/stall/locations/${encodeURIComponent(id)}/toggle`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
   // 14. Location Inventory
   async getLocationInventory(locationIdOrOpts = {}, maybeOpts = {}) {
     let opts = {};
@@ -308,7 +328,8 @@ export const posApi = {
   // 18. Stall Inventory Reports
   async getStallInventoryReport(params = {}) {
     const query = new URLSearchParams();
-    if (params.locationId) query.append('locationId', params.locationId);
+    const locId = params.locationId || params.stockLocationId;
+    if (locId && locId !== 'all') query.append('locationId', locId);
     const res = await fetch(`/api/admin/stall/reports?${query.toString()}`, {
       headers: getAuthHeaders(),
     });

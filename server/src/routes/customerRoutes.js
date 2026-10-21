@@ -12,8 +12,13 @@ import {
   setDefaultAddress,
   listCustomerOrders,
   getCustomerOrder,
+  forgotPasswordCustomer,
+  verifyCustomerResetToken,
+  resetPasswordCustomer,
+  changePasswordCustomer,
 } from '../controllers/customerController.js';
 import { requireCustomerAuth } from '../middleware/customerAuth.js';
+import { passwordResetRateLimiter } from '../middleware/authRateLimiter.js';
 
 const router = Router();
 
@@ -21,10 +26,16 @@ const router = Router();
 router.post('/register', registerCustomer);
 router.post('/login', loginCustomer);
 
+// Password recovery endpoints (Strictly rate-limited)
+router.post('/forgot-password', passwordResetRateLimiter, forgotPasswordCustomer);
+router.get('/verify-reset-token', passwordResetRateLimiter, verifyCustomerResetToken);
+router.post('/reset-password', passwordResetRateLimiter, resetPasswordCustomer);
+
 // Protected customer session endpoints
 router.post('/logout', requireCustomerAuth, logoutCustomer);
 router.get('/me', requireCustomerAuth, getCustomerProfile);
 router.put('/profile', requireCustomerAuth, updateCustomerProfile);
+router.post('/change-password', requireCustomerAuth, changePasswordCustomer);
 
 // Address Management
 router.get('/addresses', requireCustomerAuth, listAddresses);

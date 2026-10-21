@@ -39,6 +39,14 @@ export async function loginAdmin(req, res) {
       });
     }
 
+    // Stall-only staff must use dedicated /stall/login
+    if (admin.role === 'STALL_MANAGER' || admin.role === 'STALL_CASHIER') {
+      return res.status(403).json({
+        error: 'STALL_STAFF_RESTRICTED',
+        message: 'Stall staff accounts must sign in via the dedicated Stall POS portal at /stall/login',
+      });
+    }
+
     const isMatch = verifyPassword(password, admin.passwordHash);
     if (!isMatch) {
       return res.status(401).json({

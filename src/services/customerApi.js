@@ -151,3 +151,42 @@ export async function trackOrderApi(orderReference, { email, phone, guestAccessT
     headers,
   });
 }
+
+/**
+ * Request password reset instructions
+ */
+export async function forgotPasswordCustomerApi(email) {
+  return await request('/customer/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+/**
+ * Verify customer password reset token
+ */
+export async function verifyCustomerResetTokenApi(token) {
+  return await request(`/customer/verify-reset-token?token=${encodeURIComponent(token)}`);
+}
+
+/**
+ * Execute password reset with secure single-use token
+ */
+export async function resetPasswordCustomerApi({ token, newPassword, confirmPassword }) {
+  return await request('/customer/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword, confirmPassword }),
+  });
+}
+
+/**
+ * Self-service password change for logged-in customer
+ */
+export async function changePasswordCustomerApi({ currentPassword, newPassword, confirmPassword }) {
+  return await request('/customer/change-password', {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+  });
+}
+

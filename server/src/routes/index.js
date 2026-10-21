@@ -11,8 +11,18 @@ import customerRoutes from './customerRoutes.js';
 import reviewsRoutes from './reviewsRoutes.js';
 import posPublicRoutes from './posPublicRoutes.js';
 import stallRoutes from './stallRoutes.js';
+import {
+  createStandardOrder,
+  verifyStandardPayment,
+} from '../controllers/razorpayStandardController.js';
+import { postWebhook } from '../controllers/paymentsController.js';
 
 const router = Router();
+
+// Razorpay Standard Checkout Endpoints
+router.post('/create-order', createStandardOrder);
+router.post('/verify-payment', verifyStandardPayment);
+router.post('/webhook', postWebhook);
 
 router.use('/health', healthRoutes);
 router.use('/collections', collectionsRoutes);

@@ -164,6 +164,8 @@ enum AdminRole {
   CATALOGUE_MANAGER
   ORDER_MANAGER
   CONTENT_MANAGER
+  STALL_MANAGER
+  STALL_CASHIER
 }
 
 model Order {
@@ -248,6 +250,7 @@ model Customer {
   phone                 String?
   passwordHash          String
   isActive              Boolean           @default(true)
+  lastLoginAt           DateTime?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
@@ -256,6 +259,7 @@ model Customer {
   orders                Order[]
   restockSubscriptions  RestockSubscription[]
   reviews               Review[]
+  passwordResetTokens   PasswordResetToken[]
 
   @@map("customers")
 }
@@ -416,7 +420,9 @@ model AdminUser {
   name              String
   passwordHash      String
   role              AdminRole         @default(CATALOGUE_MANAGER)
+  assignedLocationIds Json?           // Array of authorized StockLocation IDs
   isActive          Boolean           @default(true)
+  lastLoginAt       DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -425,6 +431,7 @@ model AdminUser {
   inventoryLogs     InventoryLog[]
   assignedInquiries CustomerInquiry[]
   posSales          PosSale[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("admin_users")
 }
@@ -1016,6 +1023,29 @@ model LocationMovementLog {
   @@index([reference])
   @@index([createdAt])
   @@map("location_movement_logs")
+}
+
+// ================= PASSWORD RESET TOKENS =================
+
+model PasswordResetToken {
+  id            String      @id @default(uuid())
+  tokenHash     String      @unique
+  accountType   String      // 'CUSTOMER' | 'STAFF'
+  email         String
+  customerId    String?
+  adminUserId   String?
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  createdBy     String?
+
+  customer      Customer?   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  adminUser     AdminUser?  @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([email, accountType])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 

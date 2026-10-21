@@ -155,11 +155,6 @@ export function FoodProductCard({ product }) {
                   <span className="text-base font-sans font-semibold text-[#292820] tabular-nums">
                     ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                   </span>
-                  {product.originalPrice && (
-                    <span className="text-xs text-[#A89F93] line-through tabular-nums">
-                      ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
-                    </span>
-                  )}
                 </div>
                 <span className="text-[9px] text-[#746F63] block">Incl. GST</span>
               </div>

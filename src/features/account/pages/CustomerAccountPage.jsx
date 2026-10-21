@@ -15,9 +15,12 @@ import {
   ExternalLink,
   Sparkles,
   ShieldCheck,
-  ChevronRight,
   Package,
+  KeyRound,
+  Lock,
 } from 'lucide-react';
+import { PasswordInput } from '../../../components/ui/PasswordInput';
+import { changePasswordCustomerApi } from '../../../services/customerApi';
 
 export function CustomerAccountPage() {
   const navigate = useNavigate();
@@ -45,6 +48,13 @@ export function CustomerAccountPage() {
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [profileMsg, setProfileMsg] = useState(null);
+
+  // Security / Password Change State
+  const [currPassword, setCurrPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwdMsg, setPwdMsg] = useState(null);
+  const [pwdLoading, setPwdLoading] = useState(false);
 
   // Address Modal / Form State
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -88,6 +98,43 @@ export function CustomerAccountPage() {
       setProfileMsg({ type: 'success', text: 'Profile details updated successfully.' });
     } else {
       setProfileMsg({ type: 'error', text: res.error || 'Failed to update profile.' });
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwdMsg(null);
+
+    if (newPassword.length < 6) {
+      setPwdMsg({ type: 'error', text: 'New password must be at least 6 characters.' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPwdMsg({ type: 'error', text: 'New password and confirmation do not match.' });
+      return;
+    }
+
+    setPwdLoading(true);
+    try {
+      const res = await changePasswordCustomerApi({
+        currentPassword: currPassword,
+        newPassword,
+        confirmPassword,
+      });
+
+      if (res.success) {
+        setPwdMsg({ type: 'success', text: 'Password successfully changed!' });
+        setCurrPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPwdMsg({ type: 'error', text: res.message || 'Failed to change password.' });
+      }
+    } catch (err) {
+      setPwdMsg({ type: 'error', text: err.message || 'Failed to change password.' });
+    } finally {
+      setPwdLoading(false);
     }
   };
 
@@ -656,12 +703,90 @@ export function CustomerAccountPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2.5 bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-semibold rounded-xl transition-all shadow"
+                  className="px-6 py-2.5 bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-semibold rounded-xl transition-all shadow cursor-pointer"
                 >
-                  Save Changes
+                  Save Profile Changes
                 </button>
               </div>
             </form>
+
+            {/* Change Password Sub-card */}
+            <div className="pt-6 border-t border-[#EAE4D9] space-y-4">
+              <div>
+                <h3 className="font-serif text-base font-bold text-[#1F0811] flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-[#8C6320]" />
+                  <span>Account Security & Password</span>
+                </h3>
+                <p className="text-xs text-[#7A7167] mt-0.5">
+                  Update your account password. Other active sessions will be revoked for security.
+                </p>
+              </div>
+
+              {pwdMsg && (
+                <div
+                  className={`p-3 rounded-xl text-xs ${
+                    pwdMsg.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  }`}
+                >
+                  {pwdMsg.text}
+                </div>
+              )}
+
+              <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-[#4A423B] font-medium mb-1.5">
+                    Current Password
+                  </label>
+                  <PasswordInput
+                    required
+                    value={currPassword}
+                    onChange={(e) => setCurrPassword(e.target.value)}
+                    placeholder="Enter your current password"
+                    className="px-3.5 py-2.5 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs text-[#1A1817] focus:outline-none focus:ring-2 focus:ring-[#722F37]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#4A423B] font-medium mb-1.5">
+                    New Password (min. 6 characters)
+                  </label>
+                  <PasswordInput
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new secure password"
+                    autoComplete="new-password"
+                    className="px-3.5 py-2.5 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs text-[#1A1817] focus:outline-none focus:ring-2 focus:ring-[#722F37]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#4A423B] font-medium mb-1.5">
+                    Confirm New Password
+                  </label>
+                  <PasswordInput
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    className="px-3.5 py-2.5 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs text-[#1A1817] focus:outline-none focus:ring-2 focus:ring-[#722F37]"
+                  />
+                </div>
+
+                <div className="pt-1">
+                  <button
+                    type="submit"
+                    disabled={pwdLoading}
+                    className="px-6 py-2.5 bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-semibold rounded-xl transition-all shadow cursor-pointer disabled:opacity-50"
+                  >
+                    {pwdLoading ? 'Updating Password...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </Container>

@@ -443,6 +443,7 @@ export async function finalizePosSale({
   staffId = null,
   staffEmail,
   staffName = null,
+  staffRole = null,
   stallEventId = null,
   stockLocationId = null,
   items = [],
@@ -508,6 +509,37 @@ export async function finalizePosSale({
         if (defaultStall) {
           resolvedLocationId = defaultStall.id;
           resolvedLocation = defaultStall;
+        }
+      }
+
+      // Enforce staff stall assignment for non-superadmin users
+      if (staffEmail && staffRole && staffRole !== 'SUPER_ADMIN') {
+        const emailLower = staffEmail.toLowerCase();
+        const allActiveEvents = await tx.stallEvent.findMany({
+          where: { status: 'ACTIVE' },
+          include: { stockLocation: true },
+        });
+
+        const staffAssignedEvents = allActiveEvents.filter((ev) => {
+          const list = Array.isArray(ev.assignedStaffIds)
+            ? ev.assignedStaffIds.map((s) => String(s).toLowerCase())
+            : [];
+          return list.includes(emailLower) || (staffId && list.includes(staffId));
+        });
+
+        if (staffAssignedEvents.length > 0) {
+          const authorizedLocationIds = staffAssignedEvents
+            .map((ev) => ev.stockLocation?.id)
+            .filter(Boolean);
+
+          if (resolvedLocationId && !authorizedLocationIds.includes(resolvedLocationId)) {
+            const assignedNames = staffAssignedEvents.map((e) => e.name).join(', ');
+            const err = new Error(
+              `Staff authorization restricted: You are assigned to "${assignedNames}" and cannot bill for this stall location.`
+            );
+            err.status = 403;
+            throw err;
+          }
         }
       }
 
@@ -1372,6 +1404,7 @@ export async function getPosSalesReport({
   startDate = null,
   endDate = null,
   stallEventId = null,
+  stockLocationId = null,
   staffId = null,
   paymentMethod = null,
   collectionId = null,
@@ -1383,6 +1416,9 @@ export async function getPosSalesReport({
 
   if (stallEventId && stallEventId !== 'all') {
     where.stallEventId = stallEventId;
+  }
+  if (stockLocationId && stockLocationId !== 'all') {
+    where.stockLocationId = stockLocationId;
   }
   if (staffId && staffId !== 'all') {
     where.staffId = staffId;
@@ -1407,6 +1443,7 @@ export async function getPosSalesReport({
     include: {
       items: true,
       stallEvent: { select: { id: true, name: true, venue: true } },
+      stockLocation: { select: { id: true, name: true, code: true, city: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -1432,7 +1469,7 @@ export async function getPosSalesReport({
     jewellery: { name: 'Silver Jewellery', units: 0, amount: 0 },
   };
 
-  const eventSalesMap = {};
+  const stallSalesMap = {};
 
   for (const s of sales) {
     const isRefunded = s.status === 'REFUNDED';
@@ -1456,13 +1493,19 @@ export async function getPosSalesReport({
     paymentBreakdown[method].count += 1;
     paymentBreakdown[method].amount += total;
 
-    // Event aggregation
-    const evName = s.stallEvent?.name || 'Walk-in / Direct Stall';
-    if (!eventSalesMap[evName]) {
-      eventSalesMap[evName] = { count: 0, amount: 0 };
+    // Stall location aggregation
+    const stallName = s.stockLocation?.name || s.stallEvent?.name || 'Walk-in / Direct Stall';
+    if (!stallSalesMap[stallName]) {
+      stallSalesMap[stallName] = {
+        name: stallName,
+        locationId: s.stockLocationId || s.stallEventId || null,
+        city: s.stockLocation?.city || null,
+        count: 0,
+        amount: 0,
+      };
     }
-    eventSalesMap[evName].count += 1;
-    eventSalesMap[evName].amount += total;
+    stallSalesMap[stallName].count += 1;
+    stallSalesMap[stallName].amount = Number((stallSalesMap[stallName].amount + total).toFixed(2));
 
     // Item-level breakdown
     for (const it of s.items) {
@@ -1491,7 +1534,8 @@ export async function getPosSalesReport({
     },
     paymentBreakdown,
     collectionBreakdown,
-    eventSales: Object.entries(eventSalesMap).map(([name, data]) => ({ name, ...data })),
+    eventSales: Object.values(stallSalesMap),
+    stallSales: Object.values(stallSalesMap),
   };
 }
 

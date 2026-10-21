@@ -76,8 +76,11 @@ export function AdminLayout() {
       navigate('/admin/login', { replace: true });
     } else {
       checkSession();
+      if (admin?.role === 'STALL_MANAGER' || admin?.role === 'STALL_CASHIER') {
+        navigate('/stall', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, checkSession]);
+  }, [isAuthenticated, admin?.role, navigate, checkSession]);
 
   // Global Ctrl+K / Cmd+K (Search) and Developer Mode shortcut listeners
   useEffect(() => {
@@ -168,13 +171,8 @@ export function AdminLayout() {
       title: 'STALL MANAGEMENT & POS',
       items: [
         { label: 'Stall Dashboard', path: '/admin/stall/dashboard', icon: LayoutDashboard },
-        { label: 'Dedicated POS Terminal', path: '/stall', icon: Store, target: '_blank', externalBadge: 'REGISTER' },
+        { label: 'Stall POS / Billing', path: '/stall', icon: Store, externalBadge: 'POS' },
         { label: 'Stall Inventory', path: '/admin/stall/inventory', icon: Layers },
-        { label: 'Stock Transfers', path: '/admin/stall/transfers', icon: ArrowRightLeft },
-        { label: 'Stalls & Events', path: '/admin/stall/events', icon: MapPin },
-        { label: 'Bills & Sales', path: '/admin/stall/bills', icon: Receipt },
-        { label: 'Stall Reports', path: '/admin/stall/reports', icon: TrendingUp },
-        { label: 'Stall Settings & Roles', path: '/admin/stall/settings', icon: Sliders },
       ],
     },
     {
@@ -187,6 +185,7 @@ export function AdminLayout() {
       title: 'SYSTEM & SETTINGS',
       items: [
         { label: 'Settings', path: '/admin/settings', icon: Settings },
+        { label: 'Staff & Roles', path: '/admin/settings?tab=staff', icon: Users },
       ],
     },
     ...(isDeveloperMode
@@ -336,10 +335,18 @@ export function AdminLayout() {
               )}
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive =
-                  item.path === '/admin'
-                    ? location.pathname === '/admin'
-                    : location.pathname.startsWith(item.path);
+                const isPathActive = (targetPath) => {
+                  if (targetPath === '/admin') return location.pathname === '/admin';
+                  if (targetPath.includes('?')) {
+                    const [base, query] = targetPath.split('?');
+                    return location.pathname === base && location.search === `?${query}`;
+                  }
+                  if (targetPath === '/admin/settings') {
+                    return location.pathname === '/admin/settings' && (!location.search || location.search === '?tab=general');
+                  }
+                  return location.pathname.startsWith(targetPath);
+                };
+                const isActive = isPathActive(item.path);
 
                 return (
                   <Link
@@ -663,10 +670,18 @@ export function AdminLayout() {
                     </p>
                     {group.items.map((item) => {
                       const Icon = item.icon;
-                      const isActive =
-                        item.path === '/admin'
-                          ? location.pathname === '/admin'
-                          : location.pathname.startsWith(item.path);
+                      const isPathActive = (targetPath) => {
+                        if (targetPath === '/admin') return location.pathname === '/admin';
+                        if (targetPath.includes('?')) {
+                          const [base, query] = targetPath.split('?');
+                          return location.pathname === base && location.search === `?${query}`;
+                        }
+                        if (targetPath === '/admin/settings') {
+                          return location.pathname === '/admin/settings' && (!location.search || location.search === '?tab=general');
+                        }
+                        return location.pathname.startsWith(targetPath);
+                      };
+                      const isActive = isPathActive(item.path);
                       return (
                         <Link
                           key={item.path}

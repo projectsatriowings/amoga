@@ -16,25 +16,23 @@ import {
   Smartphone,
   ChevronDown,
   Sparkles,
-  Layers,
   MapPin,
   User,
   ArrowRight,
   RefreshCw,
   Printer,
   X,
-  Sliders,
   Lock,
-  Mail,
-  ShieldAlert,
   ArrowLeftRight,
-  Truck,
+  Send,
+  Sliders,
+  HelpCircle,
 } from 'lucide-react';
 import { StallPosLayout } from '../layouts/StallPosLayout';
-import { useAdminStore } from '../../admin/store/useAdminStore';
-import { posApi } from '../../admin/pos/services/posApiClient';
+import { useStallAuthStore } from '../store/useStallAuthStore';
+import { stallApi } from '../services/stallApiClient';
 import { PosReceiptModal } from '../../admin/pos/components/PosReceiptModal';
-import amogaLogo from '../../../assets/images/amoga-logo.png';
+import { AdminPosHistory } from '../../admin/pos/pages/AdminPosHistory';
 
 const COLLECTIONS = [
   { id: 'all', label: 'All Items', color: 'bg-stone-800 text-white border-stone-800' },
@@ -44,12 +42,98 @@ const COLLECTIONS = [
   { id: 'jewellery', label: 'Silver Jewellery', color: 'bg-[#8C6320] text-white border-[#8C6320]' },
 ];
 
-export function StallBillingPage() {
-  const { admin, isAuthenticated, login, logout, isLoading: authLoading, error: authError } = useAdminStore();
+/**
+ * Collection-tailored artistic visual fallback
+ * Prevents identical generic placeholders from repeating across unrelated products
+ */
+function CollectionFallbackImage({ collectionId, name }) {
+  switch (collectionId) {
+    case 'food':
+      return (
+        <div className="w-full h-full bg-[#EFECE6] flex flex-col items-center justify-center p-3 text-[#3F5A35]">
+          <div className="w-9 h-9 rounded-full bg-[#3F5A35]/10 flex items-center justify-center mb-1">
+            <svg className="w-4 h-4 stroke-[1.75]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 2a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9s9-4.03 9-9A9 9 0 0 0 12 2Z" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+          </div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#3F5A35] font-semibold">Pantry</span>
+        </div>
+      );
+    case 'tea':
+      return (
+        <div className="w-full h-full bg-[#EAEFE9] flex flex-col items-center justify-center p-3 text-[#5C715E]">
+          <div className="w-9 h-9 rounded-full bg-[#5C715E]/10 flex items-center justify-center mb-1">
+            <svg className="w-4 h-4 stroke-[1.75]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+              <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+              <line x1="6" x2="6" y1="2" y2="4" />
+              <line x1="10" x2="10" y1="2" y2="4" />
+            </svg>
+          </div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#5C715E] font-semibold">Wellness Tea</span>
+        </div>
+      );
+    case 'sarees':
+      return (
+        <div className="w-full h-full bg-[#F5ECEE] flex flex-col items-center justify-center p-3 text-[#762F39]">
+          <div className="w-9 h-9 rounded-full bg-[#762F39]/10 flex items-center justify-center mb-1">
+            <svg className="w-4 h-4 stroke-[1.75]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect width="18" height="18" x="3" y="3" rx="2" />
+              <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+            </svg>
+          </div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#762F39] font-semibold">Heritage Saree</span>
+        </div>
+      );
+    case 'jewellery':
+      return (
+        <div className="w-full h-full bg-[#F7F3EA] flex flex-col items-center justify-center p-3 text-[#8C6320]">
+          <div className="w-9 h-9 rounded-full bg-[#8C6320]/10 flex items-center justify-center mb-1">
+            <svg className="w-4 h-4 stroke-[1.75]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M6 3h12l4 6-10 13L2 9Z" />
+              <path d="M11 3 8 9l4 13 4-13-3-6" />
+              <path d="M2 9h20" />
+            </svg>
+          </div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#8C6320] font-semibold">Silver Jewellery</span>
+        </div>
+      );
+    default:
+      return (
+        <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400">
+          <ShoppingBag className="w-6 h-6 stroke-[1.5]" />
+        </div>
+      );
+  }
+}
 
-  // Auth form state for in-place login
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+/**
+ * Resilient image thumbnail with error fallback
+ */
+function ProductThumbnail({ src, alt, collectionId }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError || src.includes('placeholder-luxury.jpg')) {
+    return <CollectionFallbackImage collectionId={collectionId} name={alt} />;
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setHasError(true)}
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      loading="lazy"
+    />
+  );
+}
+
+export function StallBillingPage() {
+  const { user } = useStallAuthStore();
+
+  // Tab State: 'billing' (POS Register) or 'history' (Bill History)
+  const [activeTab, setActiveTab] = useState('billing');
 
   // Locations state
   const [locations, setLocations] = useState([]);
@@ -66,7 +150,7 @@ export function StallBillingPage() {
   const [barcodeMode, setBarcodeMode] = useState(false);
   const barcodeInputRef = useRef(null);
 
-  // Quick Stock Transfer Modal State
+  // Quick Stock Transfer Modal State (Stall Manager & Super Admin only)
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferProductId, setTransferProductId] = useState('');
   const [transferVariantId, setTransferVariantId] = useState('');
@@ -89,42 +173,44 @@ export function StallBillingPage() {
   const [showDiscountModal, setShowDiscountModal] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState('CASH'); // 'CASH' | 'UPI' | 'CARD' | 'OTHER'
+  const [paymentStatus, setPaymentStatus] = useState('PAID'); // 'PAID' | 'PENDING'
   const [paymentReference, setPaymentReference] = useState('');
   const [amountReceived, setAmountReceived] = useState('');
 
   // Tax calculation state
   const [calculation, setCalculation] = useState(null);
-  const [isCalculating, setIsCalculating] = useState(false);
+  const [calcLoading, setCalcLoading] = useState(false);
 
-  // Finalize & Receipt State
+  // Finalize Sale & Receipt Modal State
   const [isFinalizing, setIsFinalizing] = useState(false);
-  const [finalizedSale, setFinalizedSale] = useState(null);
+  const [completedSale, setCompletedSale] = useState(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+
+  // Toast / feedback message
   const [errorMessage, setErrorMessage] = useState('');
   const [successToast, setSuccessToast] = useState('');
 
-  // Load locations on mount
+  const isManagerOrAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'STALL_MANAGER';
+
+  // 1. Fetch authorized stock locations
   const fetchLocations = async () => {
-    if (!isAuthenticated) return;
     setLoadingLocations(true);
     setLocationsError('');
     try {
-      const res = await posApi.listLocations();
+      const res = await stallApi.listLocations();
       if (res?.locations && res.locations.length > 0) {
         setLocations(res.locations);
-        // Prefer stall locations first
-        const stallLoc = res.locations.find((l) => l.type === 'STALL') || res.locations[0];
-        setActiveLocation(stallLoc);
+        // Default to first assigned location if activeLocation not set
+        setActiveLocation((prev) => {
+          if (prev && res.locations.some((l) => l.id === prev.id)) return prev;
+          return res.locations[0];
+        });
       } else {
-        setLocationsError('No active stock locations configured in database.');
+        setLocations([]);
+        setLocationsError('No active stall locations assigned to this staff account.');
       }
     } catch (err) {
-      console.error('Failed to load stock locations:', err);
-      if (err.status === 401) {
-        logout();
-        window.location.href = '/admin/login?redirect=/stall';
-        return;
-      }
+      console.error('Failed to load stall locations:', err);
       setLocationsError(err.message || 'Failed to connect to stock locations service.');
     } finally {
       setLoadingLocations(false);
@@ -133,18 +219,18 @@ export function StallBillingPage() {
 
   useEffect(() => {
     fetchLocations();
-  }, [isAuthenticated]);
+  }, []);
 
-  // Fetch catalog products scoped to active stock location
+  // 2. Fetch catalog products scoped to active stock location
   const fetchProducts = async (q = searchQuery, col = selectedCollection, locId = activeLocation?.id) => {
-    if (!isAuthenticated) return;
+    if (!locId) return;
     setCatalogLoading(true);
     setCatalogError('');
     try {
-      const res = await posApi.searchCatalog({
+      const res = await stallApi.searchCatalog({
         query: q,
         collectionId: col,
-        stockLocationId: locId || undefined,
+        stockLocationId: locId,
         inStockOnly: false,
       });
       if (res?.products) {
@@ -154,11 +240,6 @@ export function StallBillingPage() {
       }
     } catch (err) {
       console.error('Failed to search catalog:', err);
-      if (err.status === 401) {
-        logout();
-        window.location.href = '/admin/login?redirect=/stall';
-        return;
-      }
       setCatalogError(err.message || 'Unable to retrieve stall catalog from server.');
     } finally {
       setCatalogLoading(false);
@@ -198,353 +279,260 @@ export function StallBillingPage() {
     setIsTransferring(true);
     setErrorMessage('');
     try {
-      await posApi.executeStockTransfer({
+      await stallApi.transferStock({
         sourceLocationId: warehouse.id,
         destinationLocationId: activeLocation.id,
-        items: [{
-          productId: transferProductId,
-          variantId: transferVariantId || null,
-          quantity: qty,
-        }],
+        items: [
+          {
+            productId: transferProductId,
+            variantId: transferVariantId || null,
+            quantity: qty,
+          },
+        ],
         reason: transferReason || 'Stall stock allocation',
       });
-      setSuccessToast(`Transferred ${qty} units from ${warehouse.name} to ${activeLocation.name}`);
+
+      setSuccessToast(`Successfully transferred ${qty} unit(s) to ${activeLocation.name}`);
+      setTimeout(() => setSuccessToast(''), 3000);
       setShowTransferModal(false);
       setTransferProductId('');
       setTransferVariantId('');
-      // Refresh products immediately to update stall balance
-      await fetchProducts(searchQuery, selectedCollection, activeLocation.id);
-      setTimeout(() => setSuccessToast(''), 3000);
+      setTransferQuantity(10);
+      fetchProducts(searchQuery, selectedCollection, activeLocation.id);
     } catch (err) {
-      console.error('Stock transfer error:', err);
-      setErrorMessage(err.message || 'Failed to complete stock transfer.');
+      setErrorMessage(err.message || 'Stock transfer failed.');
     } finally {
       setIsTransferring(false);
     }
   };
 
-  // Recalculate bill taxes when cart, location, or discounts change
+  // 3. Cart Operations with strict available stock checks
+  const handleAddToCart = (product, variant = null) => {
+    const available = variant
+      ? (variant.availableQuantity ?? 0)
+      : (product.availableQuantity ?? 0);
+
+    if (available <= 0) {
+      setErrorMessage(`"${product.name}${variant ? ` (${variant.name})` : ''}" is currently out of stock at this stall.`);
+      setTimeout(() => setErrorMessage(''), 3500);
+      return;
+    }
+
+    const cartKey = variant ? `${product.id}_${variant.id}` : `${product.id}_base`;
+    const existingIndex = cart.findIndex((item) => item.cartKey === cartKey);
+
+    if (existingIndex >= 0) {
+      const currentQty = cart[existingIndex].quantity;
+      if (currentQty >= available) {
+        setErrorMessage(`Cannot exceed available stall inventory. Max available: ${available}.`);
+        setTimeout(() => setErrorMessage(''), 3500);
+        return;
+      }
+
+      const updated = [...cart];
+      updated[existingIndex].quantity += 1;
+      setCart(updated);
+    } else {
+      const unitPrice = variant
+        ? (variant.price !== null ? Number(variant.price) : Number(product.price || 0))
+        : (product.price !== null ? Number(product.price) : 0);
+
+      const newItem = {
+        cartKey,
+        productId: product.id,
+        variantId: variant ? variant.id : null,
+        productName: product.name,
+        variantName: variant ? variant.name : null,
+        sku: variant ? variant.sku : product.sku,
+        unitPrice,
+        quantity: 1,
+        availableStock: available,
+        hsnCode: variant ? (variant.hsnCode || product.hsnCode) : product.hsnCode,
+        gstRate: variant ? (variant.gstRate ?? product.gstRate ?? 5) : (product.gstRate ?? 5),
+        collectionId: product.collectionId,
+        image: product.image,
+      };
+
+      setCart([...cart, newItem]);
+    }
+
+    setSuccessToast(`Added ${product.name} to bill`);
+    setTimeout(() => setSuccessToast(''), 1500);
+  };
+
+  const handleUpdateQuantity = (cartKey, newQty) => {
+    const item = cart.find((i) => i.cartKey === cartKey);
+    if (!item) return;
+
+    if (newQty <= 0) {
+      handleRemoveItem(cartKey);
+      return;
+    }
+
+    if (newQty > item.availableStock) {
+      setErrorMessage(`Cannot add more than ${item.availableStock} available in this stall.`);
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    setCart(cart.map((i) => (i.cartKey === cartKey ? { ...i, quantity: newQty } : i)));
+  };
+
+  const handleRemoveItem = (cartKey) => {
+    setCart(cart.filter((item) => item.cartKey !== cartKey));
+  };
+
+  const handleClearCart = () => {
+    if (cart.length === 0) return;
+    if (window.confirm('Clear all items from the current bill?')) {
+      setCart([]);
+      setCalculation(null);
+      setDiscountValue('');
+      setDiscountReason('');
+      setCustomerName('');
+      setCustomerPhone('');
+      setPaymentReference('');
+      setAmountReceived('');
+    }
+  };
+
+  // 4. Barcode Enter handler
+  const handleBarcodeSubmit = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const code = searchQuery.trim().toLowerCase();
+      if (!code) return;
+
+      const exactMatch = products.find(
+        (p) =>
+          (p.sku && p.sku.toLowerCase() === code) ||
+          (p.sourceId && p.sourceId.toLowerCase() === code) ||
+          (p.variants && p.variants.some((v) => v.sku && v.sku.toLowerCase() === code))
+      );
+
+      if (exactMatch) {
+        const matchedVariant = exactMatch.variants?.find((v) => v.sku && v.sku.toLowerCase() === code);
+        handleAddToCart(exactMatch, matchedVariant || null);
+        setSearchQuery('');
+      } else {
+        setErrorMessage(`No product found matching barcode/SKU "${code}".`);
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    }
+  };
+
+  // 5. Pre-flight tax and discount calculation preview
   useEffect(() => {
     if (cart.length === 0) {
       setCalculation(null);
       return;
     }
 
-    async function recalc() {
-      setIsCalculating(true);
+    let isMounted = true;
+    const calcTimer = setTimeout(async () => {
+      setCalcLoading(true);
       try {
-        const payload = {
-          items: cart.map((c) => ({
-            productId: c.productId,
-            variantId: c.variantId || null,
-            productName: c.productName,
-            variantName: c.variantName || null,
-            quantity: c.quantity,
-            unitPrice: c.unitPrice,
-            gstRate: c.gstRate,
-            isTaxInclusive: c.isTaxInclusive,
-            collectionId: c.collectionId,
+        const res = await stallApi.calculateBill({
+          items: cart.map((i) => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            unitPrice: i.unitPrice,
+            quantity: i.quantity,
           })),
-          stockLocationId: activeLocation?.id || null,
+          stallEventId: activeLocation?.stallEventId || null,
           overallDiscountType: discountType,
-          overallDiscountValue: Number(discountValue) || 0,
-        };
+          overallDiscountValue: parseFloat(discountValue) || 0,
+        });
 
-        const res = await posApi.calculateBill(payload);
-        if (res?.calculation) {
+        if (res?.calculation && isMounted) {
           setCalculation(res.calculation);
         }
       } catch (err) {
         console.error('Calculation error:', err);
       } finally {
-        setIsCalculating(false);
+        if (isMounted) setCalcLoading(false);
       }
-    }
+    }, 200);
 
-    recalc();
-  }, [cart, activeLocation, discountType, discountValue]);
+    return () => {
+      isMounted = false;
+      clearTimeout(calcTimer);
+    };
+  }, [cart, discountType, discountValue, activeLocation]);
 
-  // Add to cart with local stall stock check
-  const handleAddToCart = (product, variant = null) => {
-    const itemKey = variant ? `v_${variant.id}` : `p_${product.id}`;
-    const maxStock = variant ? variant.availableQuantity : product.availableQuantity;
-
-    if (maxStock <= 0) {
-      setErrorMessage(`"${product.name}" has 0 stock at ${activeLocation?.name || 'this stall'}.`);
-      setTimeout(() => setErrorMessage(''), 3000);
-      return;
-    }
-
-    setCart((prev) => {
-      const existingIdx = prev.findIndex((i) => i.key === itemKey);
-      if (existingIdx >= 0) {
-        const existing = prev[existingIdx];
-        if (existing.quantity >= maxStock) {
-          setErrorMessage(`Cannot add more: only ${maxStock} in stall stock.`);
-          setTimeout(() => setErrorMessage(''), 3000);
-          return prev;
-        }
-        const updated = [...prev];
-        updated[existingIdx] = {
-          ...existing,
-          quantity: existing.quantity + 1,
-        };
-        return updated;
-      } else {
-        return [
-          ...prev,
-          {
-            key: itemKey,
-            productId: product.id,
-            variantId: variant ? variant.id : null,
-            productName: product.name,
-            variantName: variant ? variant.name : null,
-            sku: variant ? variant.sku : product.sku,
-            unitPrice: variant ? variant.price : product.price,
-            quantity: 1,
-            maxStock,
-            image: product.image,
-            collectionId: product.collectionId,
-            hsnCode: variant ? variant.hsnCode : product.hsnCode,
-            gstRate: variant ? variant.gstRate : product.gstRate,
-            isTaxInclusive: variant ? variant.isTaxInclusive : product.isTaxInclusive,
-          },
-        ];
-      }
-    });
-  };
-
-  const handleUpdateQty = (key, delta) => {
-    setCart((prev) => {
-      return prev
-        .map((item) => {
-          if (item.key === key) {
-            const newQty = item.quantity + delta;
-            if (newQty <= 0) return null;
-            if (newQty > item.maxStock) {
-              setErrorMessage(`Cannot exceed stall stock of ${item.maxStock}.`);
-              setTimeout(() => setErrorMessage(''), 3000);
-              return item;
-            }
-            return { ...item, quantity: newQty };
-          }
-          return item;
-        })
-        .filter(Boolean);
-    });
-  };
-
-  const handleRemoveFromCart = (key) => {
-    setCart((prev) => prev.filter((i) => i.key !== key));
-  };
-
-  // Barcode enter handler
-  const handleBarcodeSubmit = async (e) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      e.preventDefault();
-      const code = searchQuery.trim();
-      const matched = products.find(
-        (p) =>
-          p.sku?.toLowerCase() === code.toLowerCase() ||
-          p.sourceId?.toLowerCase() === code.toLowerCase() ||
-          p.variants?.some((v) => v.sku?.toLowerCase() === code.toLowerCase())
-      );
-
-      if (matched) {
-        const variantMatch = matched.variants?.find((v) => v.sku?.toLowerCase() === code.toLowerCase());
-        handleAddToCart(matched, variantMatch || (matched.variants?.length === 1 ? matched.variants[0] : null));
-        setSearchQuery('');
-        setSuccessToast(`Added: ${matched.name}`);
-        setTimeout(() => setSuccessToast(''), 2000);
-      } else {
-        setErrorMessage(`Barcode/SKU "${code}" not found.`);
-        setTimeout(() => setErrorMessage(''), 3000);
-      }
-    }
-  };
-
-  // Total payable
-  const finalPayable = calculation ? calculation.netPayableTotal || calculation.totalAmount : 0;
-
-  // Change due calculation
-  const receivedNum = Number(amountReceived) || 0;
-  const changeDue =
-    paymentMethod === 'CASH' && receivedNum > finalPayable
-      ? Number((receivedNum - finalPayable).toFixed(2))
-      : 0;
-
-  // Finalize Sale
+  // 6. Finalize Bill with atomic stall stock deduction
   const handleFinalizeBill = async () => {
     if (cart.length === 0) {
-      setErrorMessage('Please add items to cart before finalizing.');
-      setTimeout(() => setErrorMessage(''), 3000);
+      setErrorMessage('Please add items to bill before finalizing.');
       return;
     }
-
     if (!activeLocation) {
       setErrorMessage('Please select an active stall location.');
-      setTimeout(() => setErrorMessage(''), 3000);
       return;
-    }
-
-    if (sendWhatsApp && customerPhone) {
-      const clean = customerPhone.replace(/\D/g, '');
-      if (clean.length !== 10) {
-        setErrorMessage('Please enter a valid 10-digit Indian phone number for WhatsApp delivery.');
-        setTimeout(() => setErrorMessage(''), 3500);
-        return;
-      }
     }
 
     setIsFinalizing(true);
     setErrorMessage('');
-
     try {
-      const idempotencyKey = `STALL-${activeLocation.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       const payload = {
+        stallEventId: activeLocation.stallEventId || null,
         stockLocationId: activeLocation.id,
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
-        items: cart.map((c) => ({
-          productId: c.productId,
-          variantId: c.variantId || null,
-          productName: c.productName,
-          variantName: c.variantName || null,
-          quantity: c.quantity,
-          unitPrice: c.unitPrice,
-          gstRate: c.gstRate,
-          isTaxInclusive: c.isTaxInclusive,
+        items: cart.map((i) => ({
+          productId: i.productId,
+          variantId: i.variantId,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
         })),
         overallDiscountType: discountType,
-        overallDiscountValue: Number(discountValue) || 0,
+        overallDiscountValue: parseFloat(discountValue) || 0,
         discountReason: discountReason.trim() || null,
         paymentMethod,
-        paymentStatus: 'PAID',
-        amountReceived: paymentMethod === 'CASH' && receivedNum > 0 ? receivedNum : finalPayable,
+        paymentStatus,
         paymentReference: paymentReference.trim() || null,
+        amountReceived: amountReceived ? parseFloat(amountReceived) : null,
         notes: notes.trim() || null,
-        sendWhatsApp: Boolean(sendWhatsApp && customerPhone),
-        idempotencyKey,
+        sendWhatsApp,
       };
 
-      const res = await posApi.finalizeBill(payload);
-
+      const res = await stallApi.finalizeBill(payload);
       if (res?.sale) {
-        setFinalizedSale(res.sale);
+        setCompletedSale(res.sale);
         setShowReceiptModal(true);
 
-        // Reset cart for next customer
+        // Reset cart
         setCart([]);
+        setCalculation(null);
         setCustomerName('');
         setCustomerPhone('');
         setNotes('');
-        setDiscountValue('');
-        setDiscountReason('');
         setPaymentReference('');
         setAmountReceived('');
-        setCalculation(null);
+        setDiscountValue('');
+        setDiscountReason('');
         setMobileCartOpen(false);
-        setSuccessToast(`Bill ${res.sale.billNumber} finalized successfully!`);
-        setTimeout(() => setSuccessToast(''), 4000);
 
-        // Refresh stall stock for current view
+        // Refresh stall catalog to update remaining quantities
         fetchProducts(searchQuery, selectedCollection, activeLocation.id);
       }
     } catch (err) {
-      console.error('Finalize bill failed:', err);
-      setErrorMessage(err.response?.data?.error || err.message || 'Failed to finalize bill.');
+      console.error('Finalize bill error:', err);
+      setErrorMessage(err.message || 'Failed to finalize bill. Please check available stock.');
     } finally {
       setIsFinalizing(false);
     }
   };
 
-  // Staff in-place login submission
-  const handleInPlaceLogin = async (e) => {
-    e.preventDefault();
-    const result = await login(loginEmail, loginPassword);
-    if (!result?.success) {
-      setErrorMessage(result?.error || 'Authentication failed. Please verify credentials.');
-      setTimeout(() => setErrorMessage(''), 4000);
-    }
-  };
+  // Derive cart totals safely
+  const grossPaise = cart.reduce((acc, it) => acc + Math.round(it.unitPrice * 100) * it.quantity, 0);
+  const totalPayablePaise = calculation?.netPayablePaise ?? grossPaise;
+  const includedGstPaise = calculation?.totalTaxPaise ?? Math.round(grossPaise * 0.05);
+  const totalItemsCount = cart.reduce((acc, it) => acc + it.quantity, 0);
 
-  // Unauthenticated screen
-  if (!isAuthenticated || !admin) {
-    return (
-      <div className="min-h-screen bg-[#F4F1EA] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden">
-          <div className="bg-[#762F39] text-white p-6 text-center">
-            <img src={amogaLogo} alt="Amoga" className="h-10 w-auto mx-auto object-contain mb-2 brightness-200" />
-            <h2 className="font-serif text-2xl font-bold tracking-tight">AMOGA STALL POS</h2>
-            <p className="text-xs uppercase font-mono tracking-widest text-amber-200 mt-1">
-              Staff Authorization Required
-            </p>
-          </div>
-
-          <form onSubmit={handleInPlaceLogin} className="p-6 space-y-4">
-            {authError && (
-              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                <span>{authError}</span>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
-                Staff Email
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-2.5 text-stone-400" />
-                <input
-                  type="email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  required
-                  placeholder="admin@amoga.com"
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#762F39] focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3 top-2.5 text-stone-400" />
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                  placeholder="••••••••••••"
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-[#762F39] focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full py-2.5 bg-[#762F39] hover:bg-[#5E252D] text-white font-medium rounded-lg text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
-            >
-              {authLoading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Authorizing Staff...</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In & Open Register</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  // Diagnose zero stock across active stall
+  const totalAvailableAcrossCatalog = products.reduce((sum, p) => sum + (p.availableQuantity || 0), 0);
+  const isStallCompletelyUnstocked = !catalogLoading && products.length > 0 && totalAvailableAcrossCatalog === 0;
 
   return (
     <StallPosLayout
@@ -554,667 +542,683 @@ export function StallBillingPage() {
     >
       {/* Toast and Error Notifications */}
       {errorMessage && (
-        <div className="fixed top-16 right-4 z-50 bg-rose-600 text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 text-xs font-medium animate-bounce">
+        <div className="fixed top-14 right-4 z-50 bg-rose-600 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 text-xs font-medium animate-fadeIn">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMessage}</span>
-          <button onClick={() => setErrorMessage('')} className="ml-2 hover:opacity-80">
+          <button onClick={() => setErrorMessage('')} className="ml-2 hover:opacity-80 cursor-pointer">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {successToast && (
-        <div className="fixed top-16 right-4 z-50 bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 text-xs font-medium">
+        <div className="fixed top-14 right-4 z-50 bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 text-xs font-medium animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{successToast}</span>
         </div>
       )}
 
-      {/* Main Billing Split View */}
-      <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-53px)] overflow-hidden">
-        {/* LEFT COLUMN: Product Catalog & Search */}
-        <div className="flex-1 flex flex-col bg-[#F9F8F5] border-r border-stone-200 overflow-hidden">
-          {/* Search, Barcode & Filter Bar */}
-          <div className="p-3 bg-white border-b border-stone-200 space-y-2.5 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-stone-400" />
-                <input
-                  ref={barcodeInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={handleBarcodeSubmit}
-                  placeholder={barcodeMode ? 'Scan barcode or enter SKU and press Enter...' : 'Search by name, SKU, or tag...'}
-                  className={`w-full pl-9 pr-8 py-2 text-xs sm:text-sm border rounded-lg focus:outline-none transition-colors ${
+      {/* Top POS Action Toolbar */}
+      <div className="bg-white border-b border-stone-200 px-3 sm:px-4 py-2 flex items-center justify-between shrink-0 shadow-2xs">
+        <div className="flex items-center gap-1.5 bg-stone-100 p-1 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setActiveTab('billing')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+              activeTab === 'billing'
+                ? 'bg-white text-[#762F39] shadow-xs font-bold'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>POS Register</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('history')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+              activeTab === 'history'
+                ? 'bg-white text-[#762F39] shadow-xs font-bold'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            <span>Bill History</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {activeTab === 'billing' && isManagerOrAdmin && (
+            <button
+              type="button"
+              onClick={() => setShowTransferModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#762F39] bg-[#762F39]/10 hover:bg-[#762F39]/20 border border-[#762F39]/30 rounded-lg transition-colors cursor-pointer"
+              title="Allocate stock from warehouse into this stall"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Transfer Stock</span>
+            </button>
+          )}
+
+          <span className="text-[11px] font-mono text-stone-500 hidden md:inline">
+            Stall: <strong className="text-stone-800">{activeLocation?.name || 'Selected'}</strong>
+          </span>
+        </div>
+      </div>
+
+      {activeTab === 'billing' ? (
+        /* Main Billing Split View */
+        <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-97px)] overflow-hidden relative">
+          {/* LEFT COLUMN: Product Catalogue & Search */}
+          <div className="flex-1 flex flex-col bg-[#F9F8F5] border-r border-stone-200 overflow-hidden">
+            {/* Search, Barcode & Filter Bar */}
+            <div className="p-2.5 sm:p-3 bg-white border-b border-stone-200 space-y-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-stone-400" />
+                  <input
+                    ref={barcodeInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleBarcodeSubmit}
+                    placeholder={
+                      barcodeMode
+                        ? 'Scan barcode / SKU and press Enter...'
+                        : 'Search by product name, SKU, or tag...'
+                    }
+                    className={`w-full pl-9 pr-8 py-2 text-xs sm:text-sm border rounded-lg focus:outline-none transition-colors ${
+                      barcodeMode
+                        ? 'border-[#762F39] bg-rose-50/20 text-[#762F39] focus:ring-2 focus:ring-[#762F39]'
+                        : 'border-stone-300 bg-white focus:ring-2 focus:ring-[#3F5A35]'
+                    }`}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Barcode Scanner Toggle */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBarcodeMode(!barcodeMode);
+                    if (!barcodeMode && barcodeInputRef.current) {
+                      barcodeInputRef.current.focus();
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors shrink-0 cursor-pointer ${
                     barcodeMode
-                      ? 'border-[#762F39] bg-red-50/20 text-[#762F39] focus:ring-2 focus:ring-[#762F39]'
-                      : 'border-stone-300 bg-white focus:ring-2 focus:ring-[#3F5A35]'
+                      ? 'bg-[#762F39] text-white border-[#762F39]'
+                      : 'bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200'
                   }`}
-                />
-                {searchQuery && (
+                  title="Toggle Barcode Scanner Mode"
+                >
+                  <Barcode className="w-4 h-4" />
+                  <span className="hidden sm:inline">{barcodeMode ? 'Scanner ON' : 'Scanner'}</span>
+                </button>
+
+                {/* Refresh Catalog */}
+                <button
+                  type="button"
+                  onClick={() => fetchProducts(searchQuery, selectedCollection, activeLocation?.id)}
+                  className="p-2 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg text-stone-600 transition-colors shrink-0 cursor-pointer"
+                  title="Refresh Inventory"
+                >
+                  <RefreshCw className={`w-4 h-4 ${catalogLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              {/* Collection Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                {COLLECTIONS.map((c) => (
                   <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-600"
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCollection(c.id)}
+                    className={`px-3 py-1.2 rounded-full text-xs font-medium whitespace-nowrap transition-all border cursor-pointer ${
+                      selectedCollection === c.id
+                        ? `${c.color} shadow-xs font-bold`
+                        : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-100'
+                    }`}
                   >
-                    <X className="w-4 h-4" />
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Diagnostic Banner: When stall location has 0 stock allocated */}
+            {isStallCompletelyUnstocked && (
+              <div className="m-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
+                  <div>
+                    <h5 className="font-semibold text-amber-950">
+                      Zero stock allocated to {activeLocation?.name || 'this stall'}
+                    </h5>
+                    <p className="text-amber-800 text-[11px] mt-0.5 leading-relaxed">
+                      Products appear out of stock because this physical stall location has not yet received stock transfers from Central Warehouse.
+                    </p>
+                  </div>
+                </div>
+                {isManagerOrAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowTransferModal(true)}
+                    className="px-3 py-1.5 bg-[#762F39] hover:bg-[#5E252D] text-white rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer shadow-xs flex items-center gap-1.5"
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                    <span>Transfer Stock to Stall</span>
                   </button>
                 )}
               </div>
+            )}
 
-              {/* Barcode toggle button */}
-              <button
-                type="button"
-                onClick={() => {
-                  setBarcodeMode(!barcodeMode);
-                  if (!barcodeMode && barcodeInputRef.current) {
-                    barcodeInputRef.current.focus();
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors shrink-0 ${
-                  barcodeMode
-                    ? 'bg-[#762F39] text-white border-[#762F39]'
-                    : 'bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200'
-                }`}
-                title="Toggle Barcode Scanner Mode"
-              >
-                <Barcode className="w-4 h-4" />
-                <span className="hidden sm:inline">{barcodeMode ? 'Scanner ON' : 'Scanner'}</span>
-              </button>
-
-              {/* Transfer Stock Button */}
-              <button
-                type="button"
-                onClick={() => setShowTransferModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[#762F39]/10 hover:bg-[#762F39]/20 text-[#762F39] border border-[#762F39]/30 rounded-lg text-xs font-semibold transition-colors shrink-0 cursor-pointer"
-                title="Transfer stock from Central Warehouse to Stall"
-              >
-                <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Transfer Stock</span>
-              </button>
-
-              {/* Refresh Catalog */}
-              <button
-                type="button"
-                onClick={() => fetchProducts(searchQuery, selectedCollection, activeLocation?.id)}
-                className="p-2 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg text-stone-600 transition-colors shrink-0 cursor-pointer"
-                title="Refresh Stall Stock"
-              >
-                <RefreshCw className={`w-4 h-4 ${catalogLoading ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-
-            {/* Collection Tabs */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              {COLLECTIONS.map((c) => (
+            {/* Error notifications */}
+            {locationsError && (
+              <div className="m-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2">
+                <span>{locationsError}</span>
                 <button
-                  key={c.id}
                   type="button"
-                  onClick={() => setSelectedCollection(c.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
-                    selectedCollection === c.id
-                      ? `${c.color} shadow-xs`
-                      : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-100'
-                  }`}
+                  onClick={fetchLocations}
+                  className="px-2 py-1 bg-rose-600 text-white rounded text-[11px] font-medium"
                 >
-                  {c.label}
+                  Retry
                 </button>
-              ))}
+              </div>
+            )}
+
+            {/* Product Card Grid */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+              {catalogLoading ? (
+                <div className="h-64 flex flex-col items-center justify-center text-stone-500 gap-2">
+                  <RefreshCw className="w-6 h-6 animate-spin text-[#762F39]" />
+                  <span className="text-xs uppercase font-mono tracking-wider">Loading Stall Catalog...</span>
+                </div>
+              ) : products.length === 0 ? (
+                <div className="h-64 flex flex-col items-center justify-center text-stone-400 gap-2 text-center p-6">
+                  <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
+                  <p className="text-sm font-medium text-stone-600">No items found matching criteria.</p>
+                  <span className="text-xs text-stone-400">
+                    Try adjusting your search query or selecting another collection.
+                  </span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
+                  {products.map((product) => {
+                    const hasVariants = product.variants && product.variants.length > 0;
+                    const stallStock = product.availableQuantity ?? 0;
+                    const isOutOfStock = stallStock <= 0;
+                    const isLowStock = stallStock > 0 && stallStock <= 3;
+
+                    // Check if already in cart and whether max stock reached
+                    const baseCartItem = cart.find((it) => it.productId === product.id && !it.variantId);
+                    const isMaxAdded = !hasVariants && baseCartItem && baseCartItem.quantity >= stallStock;
+
+                    return (
+                      <div
+                        key={product.id}
+                        className={`bg-white rounded-xl border border-stone-200 shadow-2xs hover:shadow-md transition-all flex flex-col overflow-hidden relative group ${
+                          isOutOfStock ? 'opacity-70 bg-stone-50/50' : ''
+                        }`}
+                      >
+                        {/* Product Thumbnail with Graceful Collection Visual Fallback */}
+                        <div className="relative aspect-square bg-stone-100 overflow-hidden">
+                          <ProductThumbnail
+                            src={product.image}
+                            alt={product.name}
+                            collectionId={product.collectionId}
+                          />
+
+                          {/* Stall Stock Badge */}
+                          <div className="absolute top-2 left-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider shadow-xs ${
+                                isOutOfStock
+                                  ? 'bg-rose-600 text-white'
+                                  : isLowStock
+                                  ? 'bg-amber-600 text-white'
+                                  : 'bg-emerald-700 text-white'
+                              }`}
+                            >
+                              {isOutOfStock ? 'OUT OF STOCK' : `STALL: ${stallStock}`}
+                            </span>
+                          </div>
+
+                          {/* GST Included Badge */}
+                          <div className="absolute bottom-1.5 right-1.5">
+                            <span className="px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-mono backdrop-blur-xs">
+                              GST {product.gstRate || 5}% INCL.
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Product Details */}
+                        <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 block truncate">
+                              {product.sku || 'AMOGA'}
+                            </span>
+                            <h4
+                              className="font-medium text-xs sm:text-sm text-stone-900 line-clamp-2 leading-snug"
+                              title={product.name}
+                            >
+                              {product.name}
+                            </h4>
+                          </div>
+
+                          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between gap-1.5">
+                            <div>
+                              {product.price !== null && product.price !== undefined && Number(product.price) > 0 ? (
+                                <>
+                                  <span className="text-xs sm:text-sm font-bold text-stone-900 block leading-none">
+                                    ₹{Number(product.price).toLocaleString('en-IN')}
+                                  </span>
+                                  <span className="text-[9px] text-stone-600 font-mono">Incl. GST</span>
+                                </>
+                              ) : (
+                                <span className="text-[10px] font-mono text-amber-700 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 block">
+                                  Bespoke
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Add Button or Variant Selector */}
+                            {hasVariants ? (
+                              <div className="relative">
+                                <select
+                                  disabled={isOutOfStock}
+                                  onChange={(e) => {
+                                    const selectedV = product.variants.find((v) => v.id === e.target.value);
+                                    if (selectedV) handleAddToCart(product, selectedV);
+                                    e.target.value = '';
+                                  }}
+                                  defaultValue=""
+                                  className="text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 font-semibold text-stone-800 rounded-lg px-2 py-1.5 cursor-pointer focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <option value="" disabled>
+                                    + Variant
+                                  </option>
+                                  {product.variants.map((v) => {
+                                    const vStock = v.availableQuantity ?? 0;
+                                    return (
+                                      <option key={v.id} value={v.id} disabled={vStock <= 0}>
+                                        {v.name} ({vStock > 0 ? `₹${v.price} • ${vStock} left` : 'Out of stock'})
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={isOutOfStock || isMaxAdded}
+                                onClick={() => handleAddToCart(product)}
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                                  isOutOfStock
+                                    ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed'
+                                    : isMaxAdded
+                                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                    : 'bg-[#762F39] hover:bg-[#5E252D] text-white shadow-xs'
+                                }`}
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>{isOutOfStock ? 'Sold Out' : isMaxAdded ? 'Max Added' : 'Add'}</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Actionable Error State for Stock Location failure */}
-          {locationsError && (
-            <div className="m-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-3">
+          {/* RIGHT COLUMN: Compact, Sticky Retail Billing Panel */}
+          {/* On Mobile: Renders as full-featured Drawer; On Desktop: Side panel */}
+          <div
+            className={`lg:w-[410px] xl:w-[430px] shrink-0 bg-white border-l border-stone-200 flex flex-col h-full shadow-lg lg:shadow-none z-30 transition-transform duration-300 fixed lg:static inset-y-0 right-0 max-w-full ${
+              mobileCartOpen ? 'translate-x-0 w-full sm:w-[420px]' : 'translate-x-full lg:translate-x-0'
+            }`}
+          >
+            {/* Panel Header */}
+            <div className="p-3.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>{locationsError}</span>
+                <Receipt className="w-4 h-4 text-[#762F39]" />
+                <h3 className="font-serif text-sm font-bold text-stone-900">Current Register Bill</h3>
+                <span className="px-2 py-0.5 rounded-full bg-[#762F39]/10 text-[#762F39] text-[11px] font-mono font-bold">
+                  {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'}
+                </span>
               </div>
-              <button
-                type="button"
-                onClick={fetchLocations}
-                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[11px] font-medium shrink-0 cursor-pointer"
-              >
-                Retry Locations
-              </button>
-            </div>
-          )}
 
-          {/* Actionable Error State for Catalog failure */}
-          {catalogError && (
-            <div className="m-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>{catalogError}</span>
+                {cart.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearCart}
+                    className="text-[11px] font-medium text-rose-700 hover:text-rose-800 hover:underline cursor-pointer"
+                  >
+                    Clear Bill
+                  </button>
+                )}
+                {/* Close Drawer button for mobile */}
+                <button
+                  type="button"
+                  onClick={() => setMobileCartOpen(false)}
+                  className="lg:hidden p-1.5 rounded-lg hover:bg-stone-200 text-stone-500"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => fetchProducts(searchQuery, selectedCollection, activeLocation?.id)}
-                className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[11px] font-medium shrink-0 cursor-pointer"
-              >
-                Retry Catalog
-              </button>
             </div>
-          )}
 
-          {/* Products Grid */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-            {catalogLoading ? (
-              <div className="h-64 flex flex-col items-center justify-center text-stone-500 gap-2">
-                <RefreshCw className="w-6 h-6 animate-spin text-[#762F39]" />
-                <span className="text-xs uppercase font-mono tracking-wider">Loading Stall Catalog...</span>
-              </div>
-            ) : products.length === 0 ? (
-              <div className="h-64 flex flex-col items-center justify-center text-stone-400 gap-2">
-                <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
-                <p className="text-sm">No items found matching criteria.</p>
-                <span className="text-xs text-stone-400">Try adjusting your search query or collection filter.</span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
-                {products.map((product) => {
-                  const hasVariants = product.variants && product.variants.length > 0;
-                  const stallStock = product.availableQuantity ?? 0;
-                  const isOutOfStock = stallStock <= 0;
+            {/* Cart Items List */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {cart.length === 0 ? (
+                /* Compact Empty Cart State (Zero wasted whitespace) */
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-stone-400 space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-400">
+                    <ShoppingBag className="w-6 h-6 stroke-[1.5]" />
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-stone-700 text-sm">Register Bill is Empty</h5>
+                    <p className="text-xs text-stone-500 mt-1 max-w-[240px]">
+                      Select items from the catalog or toggle barcode mode to scan items into the bill.
+                    </p>
+                  </div>
+                  <div className="text-[11px] text-stone-600 bg-stone-50 border border-stone-200 rounded-lg p-2 font-mono flex items-center gap-1.5">
+                    <HelpCircle className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                    <span>Tip: Enter customer WhatsApp for digital receipt</span>
+                  </div>
+                </div>
+              ) : (
+                cart.map((item) => {
+                  const linePaise = Math.round(item.unitPrice * 100) * item.quantity;
+                  const isMax = item.quantity >= item.availableStock;
 
                   return (
                     <div
-                      key={product.id}
-                      className={`bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition-shadow flex flex-col overflow-hidden relative group ${
-                        isOutOfStock ? 'opacity-65' : ''
-                      }`}
+                      key={item.cartKey}
+                      className="p-2.5 rounded-xl border border-stone-200 bg-white hover:border-stone-300 transition-colors shadow-2xs space-y-2"
                     >
-                      {/* Product Thumbnail & Collection Badge */}
-                      <div className="relative aspect-square bg-stone-100 overflow-hidden">
-                        {product.image ? (
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-stone-300">
-                            <ShoppingBag className="w-8 h-8" />
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-xs text-stone-900 truncate">
+                            {item.productName}
+                          </h5>
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-stone-500 font-mono">
+                            {item.variantName && (
+                              <span className="px-1.5 py-0.2 bg-stone-100 rounded text-stone-700 font-semibold">
+                                {item.variantName}
+                              </span>
+                            )}
+                            <span className="truncate">{item.sku}</span>
                           </div>
-                        )}
-
-                        {/* Stock Tag on Stall */}
-                        <div className="absolute top-1.5 left-1.5">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold tracking-wider ${
-                              isOutOfStock
-                                ? 'bg-rose-600 text-white'
-                                : stallStock <= 3
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-emerald-600 text-white'
-                            }`}
-                          >
-                            {isOutOfStock ? 'OUT OF STOCK' : `STALL: ${stallStock}`}
-                          </span>
                         </div>
 
-                        {/* GST Inclusive Badge */}
-                        <div className="absolute bottom-1.5 right-1.5">
-                          <span className="px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-mono backdrop-blur-xs">
-                            GST {product.gstRate || 0}% INCL.
+                        <div className="text-right shrink-0">
+                          <span className="font-bold text-xs text-stone-900 block">
+                            ₹{(linePaise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-[10px] text-stone-600 font-mono">
+                            ₹{item.unitPrice} ea
                           </span>
                         </div>
                       </div>
 
-                      {/* Product Details */}
-                      <div className="p-2.5 flex-1 flex flex-col justify-between">
-                        <div>
-                          <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 block truncate">
-                            {product.sku || 'AMOGA'}
+                      {/* Quantity & Actions Control */}
+                      <div className="flex items-center justify-between pt-1 border-t border-stone-100">
+                        <div className="flex items-center gap-1.5 bg-stone-100 rounded-lg p-0.5 border border-stone-200">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateQuantity(item.cartKey, item.quantity - 1)}
+                            className="w-6 h-6 rounded bg-white hover:bg-stone-200 flex items-center justify-center text-stone-700 shadow-2xs cursor-pointer"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-6 text-center text-xs font-bold font-mono text-stone-900">
+                            {item.quantity}
                           </span>
-                          <h4 className="font-medium text-xs sm:text-sm text-stone-800 line-clamp-2 leading-tight">
-                            {product.name}
-                          </h4>
+                          <button
+                            type="button"
+                            disabled={isMax}
+                            onClick={() => handleUpdateQuantity(item.cartKey, item.quantity + 1)}
+                            className={`w-6 h-6 rounded bg-white flex items-center justify-center shadow-2xs cursor-pointer ${
+                              isMax ? 'opacity-40 cursor-not-allowed' : 'hover:bg-stone-200 text-stone-700'
+                            }`}
+                            title={isMax ? `Stall stock limit reached (${item.availableStock})` : 'Add one'}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
                         </div>
 
-                        <div className="mt-2 pt-2 border-t border-stone-100 flex items-center justify-between">
-                          <div>
-                            {product.price !== null && product.price !== undefined && Number(product.price) > 0 ? (
-                              <>
-                                <span className="text-xs sm:text-sm font-semibold text-stone-900 block">
-                                  ₹{Number(product.price).toLocaleString('en-IN')}
-                                </span>
-                                <span className="text-[9px] text-stone-400 font-mono">MRP Incl. Tax</span>
-                              </>
-                            ) : (
-                              <span className="text-[10px] font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 block">
-                                Price to be confirmed
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Add button or variant selector */}
-                          {hasVariants ? (
-                            <div className="relative">
-                              <select
-                                onChange={(e) => {
-                                  const selectedV = product.variants.find((v) => v.id === e.target.value);
-                                  if (selectedV) handleAddToCart(product, selectedV);
-                                  e.target.value = '';
-                                }}
-                                defaultValue=""
-                                className="text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 font-medium text-stone-800 rounded px-2 py-1 cursor-pointer focus:outline-none"
-                              >
-                                <option value="" disabled>
-                                  + Variant
-                                </option>
-                                {product.variants.map((v) => {
-                                  const vHasPrice = v.price !== null && v.price !== undefined && Number(v.price) > 0;
-                                  const vOutOfStock = (v.availableQuantity ?? 0) <= 0;
-                                  return (
-                                    <option key={v.id} value={v.id} disabled={vOutOfStock || !vHasPrice}>
-                                      {v.name} ({vHasPrice ? `₹${v.price}` : 'Unpriced'}) {vOutOfStock ? '— Out of Stock' : `— Stock: ${v.availableQuantity}`}
-                                    </option>
-                                  );
-                                })}
-                              </select>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1.5">
-                              {isOutOfStock && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setTransferProductId(product.id);
-                                    setShowTransferModal(true);
-                                  }}
-                                  className="px-1.5 py-1 rounded bg-stone-100 hover:bg-stone-200 text-[#762F39] text-[10px] font-mono flex items-center gap-1 border border-stone-200 cursor-pointer"
-                                  title="Transfer stock from warehouse to stall"
-                                >
-                                  <ArrowLeftRight className="w-3 h-3" />
-                                  <span>Transfer</span>
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => handleAddToCart(product)}
-                                disabled={isOutOfStock || product.price === null || product.price === undefined || Number(product.price) <= 0}
-                                className={`p-1.5 rounded-lg transition-colors ${
-                                  isOutOfStock || product.price === null || product.price === undefined || Number(product.price) <= 0
-                                    ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                                    : 'bg-[#762F39] hover:bg-[#5E252D] text-white shadow-xs cursor-pointer'
-                                }`}
-                                title={isOutOfStock ? 'Item out of stock at this stall' : 'Add to Current Bill'}
-                              >
-                                <Plus className="w-4 h-4" />
-                              </button>
-                            </div>
+                        <div className="flex items-center gap-2">
+                          {isMax && (
+                            <span className="text-[10px] text-amber-700 font-mono font-medium">
+                              Max {item.availableStock}
+                            </span>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(item.cartKey)}
+                            className="p-1 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
+                            title="Remove item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     </div>
                   );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Current Bill & Checkout Panel */}
-        <div className="w-full lg:w-[420px] xl:w-[460px] bg-white flex flex-col h-full border-t lg:border-t-0 shadow-lg z-20 overflow-hidden">
-          {/* Bill Header */}
-          <div className="p-3 bg-stone-50 border-b border-stone-200 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-[#762F39]" />
-              <span className="font-serif font-bold text-sm text-stone-800">CURRENT BILL</span>
-              <span className="px-1.5 py-0.5 bg-stone-200 text-stone-700 rounded-full text-[11px] font-mono">
-                {cart.reduce((sum, item) => sum + item.quantity, 0)} items
-              </span>
-            </div>
-
-            {cart.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setCart([])}
-                className="text-xs text-rose-600 hover:text-rose-800 hover:underline flex items-center gap-1 font-medium"
-              >
-                <Trash2 className="w-3 h-3" />
-                Clear
-              </button>
-            )}
-          </div>
-
-          {/* Customer Input Strip */}
-          <div className="p-3 bg-stone-50/50 border-b border-stone-200 grid grid-cols-2 gap-2 shrink-0">
-            <div>
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-stone-500 mb-0.5">
-                Customer Name
-              </label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Walk-in Customer"
-                className="w-full px-2.5 py-1.5 text-xs border border-stone-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#762F39]"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-stone-500 mb-0.5">
-                Mobile (WhatsApp)
-              </label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  maxLength={10}
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
-                  placeholder="9876543210"
-                  className="w-full px-2.5 py-1.5 text-xs border border-stone-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#762F39]"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-stone-400 py-12">
-                <ShoppingBag className="w-10 h-10 stroke-[1.2] mb-2 text-stone-300" />
-                <p className="text-xs font-medium text-stone-500">Cart is empty</p>
-                <span className="text-[11px] text-stone-400 text-center max-w-[200px] mt-0.5">
-                  Click or scan any product from the catalog to start billing.
-                </span>
-              </div>
-            ) : (
-              cart.map((item) => (
-                <div
-                  key={item.key}
-                  className="p-2.5 bg-stone-50 rounded-xl border border-stone-200 flex items-center justify-between gap-2 text-xs"
-                >
-                  <div className="flex-1 min-w-0">
-                    <h5 className="font-medium text-stone-800 truncate leading-snug">{item.productName}</h5>
-                    {item.variantName && (
-                      <span className="inline-block px-1.5 py-0.2 text-[10px] font-mono bg-stone-200 text-stone-700 rounded mr-1">
-                        {item.variantName}
-                      </span>
-                    )}
-                    <span className="text-[11px] text-stone-500 font-mono">
-                      ₹{item.unitPrice} × {item.quantity} = ₹{(item.unitPrice * item.quantity).toFixed(2)}
-                    </span>
-                  </div>
-
-                  {/* Quantity Stepper */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateQty(item.key, -1)}
-                      className="w-6 h-6 rounded-md bg-white border border-stone-300 flex items-center justify-center hover:bg-stone-100 text-stone-700 cursor-pointer"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="w-6 text-center font-bold font-mono text-stone-900">{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateQty(item.key, 1)}
-                      className="w-6 h-6 rounded-md bg-white border border-stone-300 flex items-center justify-center hover:bg-stone-100 text-stone-700 cursor-pointer"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFromCart(item.key)}
-                      className="w-6 h-6 rounded-md text-rose-500 hover:bg-rose-50 flex items-center justify-center ml-1 cursor-pointer"
-                      title="Remove item"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Payment & Tax Calculation Footer */}
-          {cart.length > 0 && (
-            <div className="bg-stone-50 border-t border-stone-200 p-3 space-y-2.5 shrink-0">
-              {/* Payment Method Selector */}
-              <div>
-                <label className="block text-[10px] uppercase font-mono tracking-wider text-stone-500 mb-1">
-                  Tender / Payment Mode
-                </label>
-                <div className="grid grid-cols-4 gap-1">
-                  {[
-                    { id: 'CASH', label: 'Cash', icon: Banknote },
-                    { id: 'UPI', label: 'UPI / QR', icon: Smartphone },
-                    { id: 'CARD', label: 'Card / POS', icon: CreditCard },
-                    { id: 'OTHER', label: 'Other', icon: Sliders },
-                  ].map((pm) => {
-                    const Icon = pm.icon;
-                    return (
-                      <button
-                        key={pm.id}
-                        type="button"
-                        onClick={() => setPaymentMethod(pm.id)}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-medium border flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                          paymentMethod === pm.id
-                            ? 'bg-[#762F39] text-white border-[#762F39] shadow-xs'
-                            : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-100'
-                        }`}
-                      >
-                        <Icon className="w-3 h-3" />
-                        <span>{pm.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Cash Quick Tender & Change Calculator */}
-              {paymentMethod === 'CASH' && (
-                <div className="p-2 bg-emerald-50/60 border border-emerald-200 rounded-lg space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-emerald-900 font-medium">Cash Tendered:</span>
-                    <input
-                      type="number"
-                      value={amountReceived}
-                      onChange={(e) => setAmountReceived(e.target.value)}
-                      placeholder={`₹${finalPayable}`}
-                      className="w-24 px-2 py-1 text-right font-mono font-bold text-xs bg-white border border-emerald-300 rounded focus:outline-none"
-                    />
-                  </div>
-                  {/* Quick Cash Buttons */}
-                  <div className="flex items-center gap-1 justify-end">
-                    {[100, 500, 1000, 2000].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setAmountReceived(amt)}
-                        className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 text-[10px] font-mono hover:bg-emerald-200 cursor-pointer"
-                      >
-                        +₹{amt}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setAmountReceived(finalPayable)}
-                      className="px-1.5 py-0.5 rounded bg-emerald-700 text-white text-[10px] font-mono hover:bg-emerald-800 cursor-pointer"
-                    >
-                      Exact
-                    </button>
-                  </div>
-                  {changeDue > 0 && (
-                    <div className="flex items-center justify-between pt-1 border-t border-emerald-200 font-mono text-xs">
-                      <span className="text-emerald-800 font-bold">Change Due:</span>
-                      <span className="text-emerald-900 font-bold text-sm">₹{changeDue.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
+                })
               )}
+            </div>
 
-              {/* Reference ID input for UPI / Card */}
-              {(paymentMethod === 'UPI' || paymentMethod === 'CARD' || paymentMethod === 'OTHER') && (
-                <div>
+            {/* Bottom Section: Customer, Payment & Final Calculation */}
+            {cart.length > 0 && (
+              <div className="p-3 bg-stone-50 border-t border-stone-200 space-y-2.5 shrink-0 text-xs">
+                {/* Customer Details */}
+                <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
-                    value={paymentReference}
-                    onChange={(e) => setPaymentReference(e.target.value)}
-                    placeholder={paymentMethod === 'UPI' ? 'UPI UTR / Reference No.' : 'Card Auth / Slip Ref'}
-                    className="w-full px-2.5 py-1 text-xs border border-stone-300 rounded bg-white focus:outline-none"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Customer Name (opt)"
+                    className="px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs focus:ring-1 focus:ring-[#762F39] focus:outline-none"
                   />
-                </div>
-              )}
-
-              {/* Tax & Total Summary Breakdown */}
-              <div className="bg-white p-2.5 rounded-lg border border-stone-200 text-xs space-y-1 font-mono">
-                <div className="flex justify-between text-stone-500 text-[11px]">
-                  <span>Taxable Value (Pre-GST):</span>
-                  <span>₹{calculation ? calculation.taxableSubtotal?.toFixed(2) : '0.00'}</span>
-                </div>
-                <div className="flex justify-between text-stone-500 text-[11px]">
-                  <span>GST Breakdown (Inclusive):</span>
-                  <span>
-                    CGST ₹{calculation ? calculation.cgstTotal?.toFixed(2) : '0.00'} + SGST ₹
-                    {calculation ? calculation.sgstTotal?.toFixed(2) : '0.00'}
-                  </span>
-                </div>
-
-                {/* Discount Control */}
-                <div className="flex justify-between items-center text-stone-600 text-[11px] pt-1 border-t border-stone-100">
-                  <div className="flex items-center gap-1">
-                    <span>Discount:</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowDiscountModal(!showDiscountModal)}
-                      className="text-[10px] text-[#762F39] hover:underline"
-                    >
-                      {discountValue ? `(${discountType === 'PERCENT' ? `${discountValue}%` : `₹${discountValue}`})` : '+ Add'}
-                    </button>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      placeholder="WhatsApp (10 digits)"
+                      className="w-full pl-2.5 pr-6 py-1.5 bg-white border border-stone-300 rounded-lg text-xs focus:ring-1 focus:ring-[#762F39] focus:outline-none font-mono"
+                    />
+                    <Smartphone className="w-3.5 h-3.5 text-stone-400 absolute right-2 top-2 pointer-events-none" />
                   </div>
-                  <span className="text-rose-600">
-                    -₹{calculation ? calculation.discountTotal?.toFixed(2) : '0.00'}
-                  </span>
                 </div>
 
-                {/* Discount Inline Editor */}
-                {showDiscountModal && (
-                  <div className="p-2 bg-stone-50 rounded border border-stone-200 space-y-1.5 my-1 font-sans">
-                    <div className="flex items-center gap-2">
+                {/* Payment Method Pills */}
+                <div>
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-stone-600 uppercase tracking-wider mb-1">
+                    <span>Payment Method</span>
+                    <span className="font-mono text-stone-400">
+                      {paymentStatus === 'PAID' ? 'Immediate Settlement' : 'Marked Pending'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { id: 'CASH', label: 'Cash', icon: Banknote },
+                      { id: 'UPI', label: 'UPI / QR', icon: Smartphone },
+                      { id: 'CARD', label: 'Card POS', icon: CreditCard },
+                    ].map((m) => {
+                      const Icon = m.icon;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setPaymentMethod(m.id)}
+                          className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                            paymentMethod === m.id
+                              ? 'bg-[#762F39] text-white border-[#762F39] shadow-xs'
+                              : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-100'
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                          <span>{m.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Financial Summary Breakdown */}
+                <div className="bg-white rounded-xl p-2.5 border border-stone-200 space-y-1.5">
+                  <div className="flex justify-between text-stone-600 text-[11px]">
+                    <span>Gross Subtotal</span>
+                    <span className="font-mono">₹{(grossPaise / 100).toFixed(2)}</span>
+                  </div>
+
+                  {/* Discount Field */}
+                  <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center gap-1">
+                      <span className="text-stone-600">Discount:</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={discountValue}
+                        onChange={(e) => setDiscountValue(e.target.value)}
+                        placeholder="0"
+                        className="w-14 px-1.5 py-0.5 bg-stone-50 border border-stone-300 rounded text-center text-xs font-mono font-bold"
+                      />
                       <select
                         value={discountType}
                         onChange={(e) => setDiscountType(e.target.value)}
-                        className="text-[11px] bg-white border border-stone-300 rounded px-1.5 py-1"
+                        className="bg-stone-50 border border-stone-300 rounded text-[10px] font-bold py-0.5 px-1 cursor-pointer"
                       >
-                        <option value="AMOUNT">Flat ₹</option>
-                        <option value="PERCENT">% Off</option>
+                        <option value="AMOUNT">₹</option>
+                        <option value="PERCENT">%</option>
                       </select>
-                      <input
-                        type="number"
-                        value={discountValue}
-                        onChange={(e) => setDiscountValue(e.target.value)}
-                        placeholder="Discount value"
-                        className="flex-1 text-[11px] bg-white border border-stone-300 rounded px-2 py-1"
-                      />
                     </div>
-                    <input
-                      type="text"
-                      value={discountReason}
-                      onChange={(e) => setDiscountReason(e.target.value)}
-                      placeholder="Reason (e.g. Festival offer, stall concession)"
-                      className="w-full text-[11px] bg-white border border-stone-300 rounded px-2 py-1"
-                    />
+                    {calculation?.discountPaise > 0 && (
+                      <span className="font-mono text-emerald-700 font-bold">
+                        -₹{(calculation.discountPaise / 100).toFixed(2)}
+                      </span>
+                    )}
                   </div>
-                )}
 
-                {/* Final Net Amount */}
-                <div className="flex justify-between items-center text-stone-900 font-bold text-sm sm:text-base pt-1.5 border-t border-stone-300">
-                  <span className="font-serif">TOTAL PAYABLE:</span>
-                  <span className="text-[#762F39]">₹{finalPayable.toFixed(2)}</span>
+                  {/* Included GST Notice: Guaranteed never added twice */}
+                  <div className="flex justify-between items-center pt-1 border-t border-stone-100 text-[11px] text-stone-500 font-mono">
+                    <span className="flex items-center gap-1">
+                      <Tag className="w-3 h-3 text-[#3F5A35]" />
+                      <span>Included GST ({calculation?.effectiveTaxRatePaise ? (calculation.effectiveTaxRatePaise / 100).toFixed(1) : '5'}%)</span>
+                    </span>
+                    <span className="text-stone-700 font-medium">
+                      ₹{(includedGstPaise / 100).toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Final Payable Amount in Bold Typography */}
+                  <div className="flex justify-between items-baseline pt-1.5 border-t border-stone-200">
+                    <span className="font-serif font-bold text-sm text-stone-900">Total Payable</span>
+                    <div className="text-right">
+                      <span className="font-mono font-extrabold text-base sm:text-lg text-[#762F39]">
+                        ₹{(totalPayablePaise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Finalize Button */}
+                <button
+                  type="button"
+                  disabled={isFinalizing || cart.length === 0}
+                  onClick={handleFinalizeBill}
+                  className="w-full py-3 bg-[#762F39] hover:bg-[#5E252D] text-white text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#762F39]/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isFinalizing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Finalizing Bill & Deducting Stock...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Finalize & Generate Bill</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Bottom Floating Cart Summary Pill (when bill drawer is closed) */}
+          {cart.length > 0 && !mobileCartOpen && (
+            <div className="lg:hidden fixed bottom-3 left-3 right-3 z-40 bg-stone-900 text-white rounded-2xl p-3 shadow-2xl flex items-center justify-between border border-stone-700 animate-slideUp">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#762F39] flex items-center justify-center font-bold text-xs">
+                  {totalItemsCount}
+                </div>
+                <div>
+                  <span className="text-[11px] font-mono text-stone-400 block leading-none">
+                    Bill Total
+                  </span>
+                  <span className="font-mono font-bold text-sm text-white">
+                    ₹{(totalPayablePaise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
               </div>
 
-              {/* WhatsApp Toggle */}
-              <div className="flex items-center justify-between text-xs text-stone-700 px-1">
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={sendWhatsApp}
-                    onChange={(e) => setSendWhatsApp(e.target.checked)}
-                    className="rounded text-[#762F39] focus:ring-[#762F39]"
-                  />
-                  <span>Send receipt via WhatsApp</span>
-                </label>
-              </div>
-
-              {/* Finalize Button */}
               <button
                 type="button"
-                onClick={handleFinalizeBill}
-                disabled={isFinalizing || isCalculating || cart.length === 0}
-                className="w-full py-3 bg-[#762F39] hover:bg-[#5E252D] text-white font-medium rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:bg-stone-300 disabled:cursor-not-allowed"
+                onClick={() => setMobileCartOpen(true)}
+                className="px-4 py-2 bg-[#762F39] hover:bg-[#5E252D] text-white text-xs font-semibold uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-md"
               >
-                {isFinalizing ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Deducting Stall Stock & Finalizing...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Finalize Bill — ₹{finalPayable.toFixed(2)}</span>
-                  </>
-                )}
+                <span>View Bill</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Post Finalization Modal */}
-      {showReceiptModal && finalizedSale && (
-        <PosReceiptModal
-          isOpen={showReceiptModal}
-          onClose={() => {
-            setShowReceiptModal(false);
-            setFinalizedSale(null);
-          }}
-          sale={finalizedSale}
-          onResendWhatsApp={async (id, phone) => {
-            return await posApi.sendWhatsApp(id, phone);
-          }}
-        />
+      ) : (
+        /* Bill History Tab (Allows quick reprint and WhatsApp resend) */
+        <div className="flex-1 overflow-y-auto bg-stone-50">
+          <AdminPosHistory />
+        </div>
       )}
 
-      {/* Quick Stock Transfer Modal */}
+      {/* Stock Transfer Modal (For Stall Managers & Super Admins) */}
       {showTransferModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="p-4 bg-stone-900 text-white flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 max-w-md w-full overflow-hidden animate-fadeIn">
+            <div className="p-4 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ArrowLeftRight className="w-5 h-5 text-amber-400" />
-                <h3 className="font-serif text-base font-semibold">Stock Transfer to Stall</h3>
+                <ArrowLeftRight className="w-4 h-4 text-[#762F39]" />
+                <h4 className="font-serif font-bold text-stone-900 text-sm">
+                  Transfer Stock to {activeLocation?.name || 'Stall'}
+                </h4>
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  setShowTransferModal(false);
-                  setTransferProductId('');
-                  setTransferVariantId('');
-                }}
-                className="text-stone-400 hover:text-white cursor-pointer"
+                onClick={() => setShowTransferModal(false)}
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-600"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleExecuteTransfer} className="p-5 space-y-4">
-              <div className="text-xs text-stone-600 bg-stone-50 p-3 rounded-lg border border-stone-200 space-y-1">
-                <div>
-                  <span className="font-semibold text-stone-700">Source:</span> Central Warehouse (MAIN-WAREHOUSE)
-                </div>
-                <div>
-                  <span className="font-semibold text-stone-700">Destination Stall:</span> {activeLocation?.name || 'Selected Stall'}
-                </div>
-              </div>
-
+            <form onSubmit={handleExecuteTransfer} className="p-4 space-y-3.5 text-xs">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">
-                  Product
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                  Select Product to Transfer
                 </label>
                 <select
                   value={transferProductId}
@@ -1223,95 +1227,94 @@ export function StallBillingPage() {
                     setTransferVariantId('');
                   }}
                   required
-                  className="w-full text-xs sm:text-sm border border-stone-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#762F39] focus:outline-none"
+                  className="w-full p-2 bg-stone-50 border border-stone-300 rounded-lg text-xs focus:ring-1 focus:ring-[#762F39] focus:outline-none"
                 >
-                  <option value="">-- Choose Product to Allocate --</option>
+                  <option value="">-- Choose from Catalogue --</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} ({p.sku || p.collectionId}) — Stall: {p.availableQuantity ?? 0}
+                      {p.name} ({p.sku})
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* If chosen product has variants, allow selecting variant */}
-              {(() => {
-                const selectedProd = products.find((p) => p.id === transferProductId);
-                if (!selectedProd?.variants || selectedProd.variants.length === 0) return null;
-                return (
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">
-                      Variant (Optional)
-                    </label>
-                    <select
-                      value={transferVariantId}
-                      onChange={(e) => setTransferVariantId(e.target.value)}
-                      className="w-full text-xs sm:text-sm border border-stone-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#762F39] focus:outline-none"
-                    >
-                      <option value="">Base Product / No Variant</option>
-                      {selectedProd.variants.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name} ({v.sku}) — Stall: {v.availableQuantity ?? 0}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })()}
+              {transferProductId && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    Select Variant (Optional)
+                  </label>
+                  {(() => {
+                    const sel = products.find((p) => p.id === transferProductId);
+                    if (!sel || !sel.variants || sel.variants.length === 0) {
+                      return <span className="text-[11px] text-stone-500 font-mono">No variants (Base item)</span>;
+                    }
+                    return (
+                      <select
+                        value={transferVariantId}
+                        onChange={(e) => setTransferVariantId(e.target.value)}
+                        className="w-full p-2 bg-stone-50 border border-stone-300 rounded-lg text-xs focus:ring-1 focus:ring-[#762F39] focus:outline-none"
+                      >
+                        <option value="">Base Product</option>
+                        {sel.variants.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.name} ({v.sku})
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  })()}
+                </div>
+              )}
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">
-                  Transfer Quantity
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                  Transfer Quantity (Units)
                 </label>
                 <input
                   type="number"
                   min="1"
-                  max="1000"
+                  max="500"
                   value={transferQuantity}
                   onChange={(e) => setTransferQuantity(e.target.value)}
                   required
-                  className="w-full text-xs sm:text-sm border border-stone-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#762F39] focus:outline-none"
+                  className="w-full p-2 bg-stone-50 border border-stone-300 rounded-lg text-xs font-mono font-bold focus:ring-1 focus:ring-[#762F39] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">
-                  Transfer Reason
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                  Reason / Notes
                 </label>
                 <input
                   type="text"
                   value={transferReason}
                   onChange={(e) => setTransferReason(e.target.value)}
-                  placeholder="e.g. Stall morning stock replenishment"
-                  className="w-full text-xs sm:text-sm border border-stone-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#762F39] focus:outline-none"
+                  placeholder="Stall stock allocation"
+                  className="w-full p-2 bg-stone-50 border border-stone-300 rounded-lg text-xs focus:ring-1 focus:ring-[#762F39] focus:outline-none"
                 />
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowTransferModal(false);
-                    setTransferProductId('');
-                    setTransferVariantId('');
-                  }}
-                  className="px-4 py-2 border border-stone-300 rounded-lg text-xs font-medium text-stone-700 hover:bg-stone-50 cursor-pointer"
+                  onClick={() => setShowTransferModal(false)}
+                  className="px-3 py-2 text-stone-600 hover:bg-stone-100 rounded-lg font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isTransferring || !transferProductId}
-                  className="px-5 py-2 bg-[#762F39] hover:bg-[#5E252D] text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  disabled={isTransferring}
+                  className="px-4 py-2 bg-[#762F39] hover:bg-[#5E252D] text-white font-semibold rounded-lg shadow-sm flex items-center gap-1.5"
                 >
                   {isTransferring ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       <span>Transferring...</span>
                     </>
                   ) : (
                     <>
-                      <Truck className="w-4 h-4" />
+                      <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Confirm Stock Transfer</span>
                     </>
                   )}
@@ -1320,6 +1323,18 @@ export function StallBillingPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Verified POS Receipt Modal */}
+      {completedSale && (
+        <PosReceiptModal
+          isOpen={showReceiptModal}
+          onClose={() => {
+            setShowReceiptModal(false);
+            setCompletedSale(null);
+          }}
+          sale={completedSale}
+        />
       )}
     </StallPosLayout>
   );

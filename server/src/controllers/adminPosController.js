@@ -140,6 +140,7 @@ export async function finalizePosSaleEndpoint(req, res, next) {
       staffId,
       staffEmail,
       staffName,
+      staffRole: userRole,
       customerName: customerName ? customerName.trim() : null,
       customerPhone: customerPhone ? customerPhone.trim() : null,
       customerEmail: customerEmail ? customerEmail.trim() : null,
@@ -416,25 +417,62 @@ export async function sendPosBillWhatsAppEndpoint(req, res, next) {
 // 9. Aggregated POS Sales Reports
 export async function getPosSalesReportEndpoint(req, res, next) {
   try {
-    const {
+    let {
+      period,
       startDate,
       endDate,
       stallEventId,
+      stockLocationId,
       staffId,
       paymentMethod,
       collectionId,
     } = req.query;
 
+    if (period && !startDate) {
+      const now = new Date();
+      if (period === 'today') {
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        startDate = start.toISOString();
+        endDate = now.toISOString();
+      } else if (period === 'week') {
+        const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        startDate = start.toISOString();
+        endDate = now.toISOString();
+      } else if (period === 'month') {
+        const start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        startDate = start.toISOString();
+        endDate = now.toISOString();
+      } else if (period === 'year') {
+        const start = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        startDate = start.toISOString();
+        endDate = now.toISOString();
+      }
+    }
+
     const report = await getPosSalesReport({
       startDate,
       endDate,
       stallEventId,
+      stockLocationId,
       staffId,
       paymentMethod,
       collectionId,
     });
 
-    return res.json({ success: true, report });
+    const paymentMethodBreakdown = report.paymentBreakdown
+      ? Object.entries(report.paymentBreakdown).map(([method, data]) => ({
+          method,
+          count: data.count,
+          totalAmount: data.amount,
+        }))
+      : [];
+
+    return res.json({
+      success: true,
+      report,
+      summary: report.summary,
+      paymentMethodBreakdown,
+    });
   } catch (error) {
     next(error);
   }

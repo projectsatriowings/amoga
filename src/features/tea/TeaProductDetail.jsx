@@ -54,7 +54,6 @@ export function TeaProductDetail() {
       details: (Array.isArray(apiProduct.details) && apiProduct.details.length > 0)
         ? apiProduct.details
         : staticProduct.details,
-      originalPrice: apiProduct.originalPrice || staticProduct.originalPrice,
       packSize: apiProduct.packSize || staticProduct.packSize,
       badge: apiProduct.badge || staticProduct.badge,
       image: staticProduct.image || apiProduct.image,
@@ -257,11 +256,6 @@ export function TeaProductDetail() {
                       <span className="text-3xl font-sans font-bold text-[#2C1E11] tabular-nums font-numeric">
                         ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                       </span>
-                      {product.originalPrice && (
-                        <span className="text-sm text-[#7D5C3F] line-through font-sans tabular-nums font-numeric">
-                          ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
-                        </span>
-                      )}
                       {product.packSize && (
                         <span className="text-xs font-sans font-medium text-[#8C6320] bg-white/80 px-2.5 py-0.5 rounded-full border border-[#B88E38]/25 tabular-nums font-numeric">
                           {product.packSize}

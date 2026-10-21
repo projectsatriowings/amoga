@@ -23,6 +23,8 @@ import {
   Terminal,
   Code2,
   FileSpreadsheet,
+  Store,
+  Layers,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
@@ -123,6 +125,28 @@ export function AdminCommandPalette({ isOpen, onClose, onRefresh }) {
       category: 'System & Settings',
       path: '/admin/settings',
       icon: Settings,
+    },
+    {
+      id: 'stall-dash',
+      title: 'Stall Dashboard',
+      category: 'Stall Management & POS',
+      path: '/admin/stall/dashboard',
+      icon: LayoutDashboard,
+      shortcut: 'G S',
+    },
+    {
+      id: 'stall-pos',
+      title: 'Stall POS / Billing Terminal',
+      category: 'Stall Management & POS',
+      path: '/stall',
+      icon: Store,
+    },
+    {
+      id: 'stall-inv',
+      title: 'Stall Inventory',
+      category: 'Stall Management & POS',
+      path: '/admin/stall/inventory',
+      icon: Layers,
     },
     ...(isDeveloperMode
       ? [

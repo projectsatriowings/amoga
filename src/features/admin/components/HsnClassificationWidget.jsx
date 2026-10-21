@@ -63,7 +63,8 @@ export function HsnClassificationWidget({
     try {
       setIsSearching(true);
       setSearchError(null);
-      const res = await adminFetch(`/api/admin/tax/hsn/search?q=${encodeURIComponent(clean)}&limit=15`);
+      const collectionParam = formData?.collectionId ? `&collectionId=${encodeURIComponent(formData.collectionId)}` : '';
+      const res = await adminFetch(`/api/admin/tax/hsn/search?q=${encodeURIComponent(clean)}&limit=15${collectionParam}`);
       const data = await res.json();
       if (res.ok && data.candidates) {
         setCandidates(data.candidates);
@@ -104,6 +105,9 @@ export function HsnClassificationWidget({
         updated.gstRate = String(candidate.verifiedRateMapping.gstRate.toFixed(2));
         updated.taxTreatment = candidate.verifiedRateMapping.taxTreatment || 'TAXABLE';
         updated.cessRate = String((candidate.verifiedRateMapping.cessRate || 0).toFixed(2));
+      } else if (candidate.verifiedGstRate !== null && candidate.verifiedGstRate !== undefined) {
+        updated.gstRate = String(Number(candidate.verifiedGstRate).toFixed(2));
+        updated.taxTreatment = 'TAXABLE';
       }
 
       // Keep status as PENDING_VERIFICATION until authorized user explicitly confirms
@@ -365,12 +369,13 @@ export function HsnClassificationWidget({
             </label>
             <select
               name="gstRate"
-              value={formData.gstRate || '5.00'}
+              value={formData.gstRate !== '' && formData.gstRate !== null ? Number(formData.gstRate).toFixed(2) : ''}
               onChange={(e) => {
                 setFormData((p) => ({ ...p, gstRate: e.target.value }));
               }}
               className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
             >
+              <option value="">-- Select GST Rate --</option>
               <option value="0.00">0% (Nil / Exempt)</option>
               <option value="3.00">3% (Silver & Jewellery)</option>
               <option value="5.00">5% (Sarees, Teas, Basic Food)</option>

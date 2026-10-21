@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Save,
   ShieldCheck,
@@ -16,13 +17,19 @@ import {
   Trash2,
   Check,
   Percent,
+  Users,
+  Sliders,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { SystemHealthCard } from '../components/SystemHealthCard';
+import { AdminStaffManagement } from '../components/AdminStaffManagement';
 import { BackButton } from '../../../components/ui/BackButton';
 
 export function AdminSettings() {
   const { adminFetch, admin } = useAdminStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'general';
+
   const [settings, setSettings] = useState(null);
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -262,12 +269,47 @@ export function AdminSettings() {
         <BackButton collection="admin" fallbackTo="/admin" label="Back to Dashboard" />
       </div>
 
-      <div className="border-b border-[#E5E0D5] pb-4">
-        <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Business & Store Settings</h1>
-        <p className="text-xs text-[#7A7167]">
-          Configure concierge details, shipping thresholds, tax percentages, and review truthful infrastructure health
-        </p>
+      <div className="border-b border-[#E5E0D5] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Business & Staff Settings</h1>
+          <p className="text-xs text-[#7A7167]">
+            Configure store parameters, shipping rules, tax compliance, and manage stall staff credentials.
+          </p>
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="inline-flex p-1 bg-[#EFEAE1]/70 rounded-xl border border-[#D5CEC2] shrink-0">
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: 'general' })}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              currentTab !== 'staff'
+                ? 'bg-white text-[#722F37] shadow-xs'
+                : 'text-[#7A7167] hover:text-[#1A1817]'
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Store & Compliance</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: 'staff' })}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              currentTab === 'staff'
+                ? 'bg-white text-[#722F37] shadow-xs'
+                : 'text-[#7A7167] hover:text-[#1A1817]'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Stall Staff & Roles</span>
+          </button>
+        </div>
       </div>
+
+      {currentTab === 'staff' ? (
+        <AdminStaffManagement />
+      ) : (
+        <>
 
       {message && (
         <div
@@ -1081,6 +1123,8 @@ export function AdminSettings() {
           </p>
         )}
       </form>
+      </>
+      )}
     </div>
   );
 }
