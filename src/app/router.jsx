@@ -71,6 +71,7 @@ export const router = createBrowserRouter([
         <GatekeeperHub />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/collections',
@@ -95,6 +96,7 @@ export const router = createBrowserRouter([
         <FoodStorefront />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/food/products',
@@ -103,6 +105,7 @@ export const router = createBrowserRouter([
         <FoodProductList />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/food/products/:slug',
@@ -111,6 +114,7 @@ export const router = createBrowserRouter([
         <FoodProductDetail />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/tea',
@@ -119,6 +123,7 @@ export const router = createBrowserRouter([
         <TeaStorefront />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/tea/products',
@@ -127,6 +132,7 @@ export const router = createBrowserRouter([
         <TeaProductList />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/tea/products/:slug',
@@ -135,6 +141,7 @@ export const router = createBrowserRouter([
         <TeaProductDetail />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/sarees',
@@ -143,6 +150,7 @@ export const router = createBrowserRouter([
         <SareesStorefront />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/sarees/products',
@@ -151,6 +159,7 @@ export const router = createBrowserRouter([
         <SareesProductList />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/sarees/products/:slug',
@@ -159,6 +168,7 @@ export const router = createBrowserRouter([
         <SareesProductDetail />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/jewellery',
@@ -167,6 +177,7 @@ export const router = createBrowserRouter([
         <JewelleryStorefront />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/jewellery/products',
@@ -175,6 +186,7 @@ export const router = createBrowserRouter([
         <JewelleryProductList />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/jewellery/products/:slug',
@@ -183,6 +195,7 @@ export const router = createBrowserRouter([
         <JewelleryProductDetail />
       </AppShell>
     ),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/cart',

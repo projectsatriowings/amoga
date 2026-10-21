@@ -35,6 +35,10 @@ export function CollectionContactSection({ collectionId = 'food', className = ''
     ? (palette.heading && !isDarkColor(palette.heading) ? palette.heading : '#F7F3EB')
     : (palette.heading && isDarkColor(palette.heading) ? palette.heading : '#173B2A');
 
+  const sectionTextColor = isSectionDark
+    ? (palette.text && !isDarkColor(palette.text) ? palette.text : '#E4E4E7')
+    : (palette.text && isDarkColor(palette.text) ? palette.text : '#27272A');
+
   const sectionMutedColor = isSectionDark
     ? (palette.mutedText && !isDarkColor(palette.mutedText) ? palette.mutedText : '#D1D5DB')
     : (palette.mutedText && isDarkColor(palette.mutedText) ? palette.mutedText : '#65675A');
