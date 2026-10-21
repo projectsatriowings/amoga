@@ -236,7 +236,9 @@ export function AdminLayout() {
   else if (currentPath === '/admin/payments') pageTitle = 'Payment Reconciliation';
   else if (currentPath === '/admin/customers') pageTitle = 'Customer Profiles';
   else if (currentPath === '/admin/reports') pageTitle = 'Business Intelligence & Exports';
-  else if (currentPath === '/admin/settings') pageTitle = 'Atelier Settings';
+  else if (currentPath === '/admin/settings') {
+    pageTitle = location.search.includes('tab=staff') ? 'Staff & Roles' : 'Atelier Settings';
+  }
   else if (currentPath === '/admin/audit-logs') pageTitle = 'System Audit Trail';
   else if (currentPath === '/admin/stall/dashboard') pageTitle = 'Stall Management — Dashboard';
   else if (currentPath === '/admin/stall/inventory') pageTitle = 'Stall Management — Multi-Location Inventory';

@@ -13,7 +13,6 @@ import {
   Zap,
   Bell,
 } from 'lucide-react';
-import { getProductBySlug, getProductsByCategory } from './data/products';
 import { FoodProductCard } from './components/FoodProductCard';
 import { resolveAvailability } from '../../utils/inventory.js';
 import { RestockModal } from '../../components/ui/RestockModal.jsx';
@@ -22,16 +21,15 @@ import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSe
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { Button } from '../../components/ui/Button';
-import { useProductDetail } from '../../hooks/useProducts';
+import { useProductDetail, useProducts } from '../../hooks/useProducts';
 import { isValidPrice } from '../../utils/pricing';
 import { BackButton } from '../../components/ui/BackButton';
 
 export function FoodProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const staticProduct = getProductBySlug(slug);
-  const { product: apiProduct, isLoading } = useProductDetail('food', slug, staticProduct);
-  const product = apiProduct || staticProduct;
+  const { product, isLoading } = useProductDetail('food', slug);
+  const { products: allFoodProducts } = useProducts({ collection: 'food' });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -84,9 +82,9 @@ export function FoodProductDetail() {
   const inWishlist = isInWishlist(product.id);
   const hasPrice = product.price !== null;
 
-  // Related products from the same category
-  const relatedProducts = getProductsByCategory(product.category)
-    .filter((p) => p.id !== product.id)
+  // Related products from database
+  const relatedProducts = (allFoodProducts || [])
+    .filter((p) => p.id !== product.id && p.slug !== slug)
     .slice(0, 4);
 
   const handleAddToCart = () => {

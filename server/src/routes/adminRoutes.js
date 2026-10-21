@@ -63,6 +63,7 @@ import {
   updateStoreSettings,
   listAdminUsers,
   createAdminUser,
+  updateAdminUser,
   toggleAdminUser,
   sendStaffResetLink,
   listAuditLogs,
@@ -198,6 +199,7 @@ router.get('/settings', requireAdminAuth(), getStoreSettings);
 router.put('/settings', requireAdminAuth(['SUPER_ADMIN']), updateStoreSettings);
 router.get('/users', requireAdminAuth(['SUPER_ADMIN']), listAdminUsers);
 router.post('/users', requireAdminAuth(['SUPER_ADMIN']), createAdminUser);
+router.put('/users/:id', requireAdminAuth(['SUPER_ADMIN']), updateAdminUser);
 router.patch('/users/:id/toggle', requireAdminAuth(['SUPER_ADMIN']), toggleAdminUser);
 router.post('/users/:id/send-reset-link', requireAdminAuth(['SUPER_ADMIN']), sendStaffResetLink);
 router.get('/audit-logs', requireAdminAuth(['SUPER_ADMIN']), listAuditLogs);

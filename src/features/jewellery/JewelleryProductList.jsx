@@ -9,7 +9,6 @@ import {
   Sparkles,
   ShoppingBag,
 } from 'lucide-react';
-import { JEWELLERY_PRODUCTS } from './data/products';
 import { JEWELLERY_CATEGORIES } from './data/categories';
 import { JewelleryProductCard } from './components/JewelleryProductCard';
 
@@ -20,10 +19,9 @@ import { BackButton } from '../../components/ui/BackButton';
 export function JewelleryProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Load from backend API with fallback
-  const { products: apiProducts } = useProducts({
+  // Load from backend API
+  const { products: apiProducts, isLoading, error } = useProducts({
     collection: 'jewellery',
-    fallbackData: JEWELLERY_PRODUCTS,
   });
 
   // Read URL query parameters
@@ -97,7 +95,7 @@ export function JewelleryProductList() {
 
   // Filter and sort products reactively based on live searchInput
   const filteredProducts = useMemo(() => {
-    let result = [...apiProducts];
+    let result = [...(apiProducts || [])];
 
     // Category filter
     if (currentCategory && currentCategory !== 'all') {
@@ -297,19 +295,23 @@ export function JewelleryProductList() {
             </div>
             <div className="space-y-1">
               <h3 className="font-serif text-xl text-[#F7F3EB]">
-                No Jewellery Found
+                {currentQuery || currentCategory !== 'all' ? 'No Jewellery Found' : 'No Jewellery Currently Available'}
               </h3>
               <p className="text-xs text-[#B9B8B5]">
-                We couldn't find any pieces matching &ldquo;{currentQuery}&rdquo; in the selected category.
+                {currentQuery || currentCategory !== 'all'
+                  ? `We couldn't find any pieces matching "${currentQuery}".`
+                  : 'Our curated collection of sterling silver jewellery is currently being prepared.'}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleClearFilters}
-              className="px-5 py-2.5 rounded-xl bg-[#B9B8B5] text-[#242326] text-xs font-medium uppercase tracking-wider hover:bg-white transition-colors"
-            >
-              Reset Filters & Show All
-            </button>
+            {(currentQuery || currentCategory !== 'all') && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="px-5 py-2.5 rounded-xl bg-[#B9B8B5] text-[#242326] text-xs font-medium uppercase tracking-wider hover:bg-white transition-colors"
+              >
+                Reset Filters & Show All
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">

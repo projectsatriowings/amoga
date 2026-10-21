@@ -621,6 +621,70 @@ export async function createAdminUser(req, res) {
   }
 }
 
+export async function updateAdminUser(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, role, assignedLocationIds } = req.body;
+
+    const existing = await prisma.adminUser.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Staff user not found' });
+    }
+
+    const dataToUpdate = {};
+    if (name && typeof name === 'string') dataToUpdate.name = name.trim();
+    if (role && typeof role === 'string') {
+      const validRoles = [
+        'SUPER_ADMIN',
+        'CATALOGUE_MANAGER',
+        'ORDER_MANAGER',
+        'CONTENT_MANAGER',
+        'STALL_MANAGER',
+        'STALL_CASHIER',
+      ];
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({ error: 'INVALID_ROLE', message: 'Invalid role provided' });
+      }
+      dataToUpdate.role = role;
+    }
+    if (assignedLocationIds !== undefined) {
+      dataToUpdate.assignedLocationIds = Array.isArray(assignedLocationIds) ? assignedLocationIds : null;
+    }
+
+    const updated = await prisma.adminUser.update({
+      where: { id },
+      data: dataToUpdate,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        assignedLocationIds: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await logAdminAction({
+      adminId: req.admin.id,
+      adminEmail: req.admin.email,
+      action: 'ADMIN_USER_UPDATE',
+      entityType: 'AdminUser',
+      entityId: id,
+      status: 'SUCCESS',
+      details: { email: updated.email, changes: dataToUpdate },
+    });
+
+    return res.status(200).json({ success: true, user: updated });
+  } catch (err) {
+    console.error('[ADMIN UPDATE USER ERROR]:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to update admin user' });
+  }
+}
+
+
 export async function toggleAdminUser(req, res) {
   try {
     const { id } = req.params;

@@ -16,7 +16,6 @@ import {
   Zap,
   Bell,
 } from 'lucide-react';
-import { getSareeBySlug, SAREE_PRODUCTS } from './data/products';
 import { SareeProductCard } from './components/SareeProductCard';
 import { resolveAvailability } from '../../utils/inventory.js';
 import { RestockModal } from '../../components/ui/RestockModal.jsx';
@@ -24,15 +23,14 @@ import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSe
 
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
-import { useProductDetail } from '../../hooks/useProducts';
+import { useProductDetail, useProducts } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
 
 export function SareesProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const staticProduct = getSareeBySlug(slug);
-  const { product: apiProduct, isLoading } = useProductDetail('sarees', slug, staticProduct);
-  const product = apiProduct || staticProduct;
+  const { product, isLoading } = useProductDetail('sarees', slug);
+  const { products: allSarees } = useProducts({ collection: 'sarees' });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -135,9 +133,9 @@ export function SareesProductDetail() {
     }
   };
 
-  // Related products from same category, excluding current
-  const relatedProducts = SAREE_PRODUCTS.filter(
-    (p) => p.category === product.category && p.id !== product.id
+  // Related products from database, excluding current
+  const relatedProducts = (allSarees || []).filter(
+    (p) => p.id !== product.id && p.slug !== slug
   ).slice(0, 4);
 
   return (

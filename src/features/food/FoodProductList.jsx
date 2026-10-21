@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ArrowLeft, SlidersHorizontal, PackageSearch, Sparkles } from 'lucide-react';
-import { FOOD_PRODUCTS } from './data/products';
 import { FoodProductCard } from './components/FoodProductCard';
 
 import { Container } from '../../components/ui/Container';
@@ -18,10 +17,9 @@ const APPROVED_PANTRY_CATEGORIES = [
 export function FoodProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Load from backend API with fallback
-  const { products: apiProducts } = useProducts({
+  // Load from backend API
+  const { products: apiProducts, isLoading, error } = useProducts({
     collection: 'food',
-    fallbackData: FOOD_PRODUCTS,
   });
 
   // URL state synchronization
@@ -94,7 +92,7 @@ export function FoodProductList() {
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
-    return apiProducts
+    return (apiProducts || [])
       .filter((product) => {
         // Category Match
         const matchesCategory =
@@ -252,18 +250,22 @@ export function FoodProductList() {
           <div className="py-20 text-center bg-[#FFFFFF] border border-[#E5E0D5] rounded-3xl p-8 max-w-xl mx-auto shadow-2xs space-y-4">
             <PackageSearch className="w-12 h-12 text-[#746F63] mx-auto opacity-60" />
             <h2 className="text-xl font-serif text-[#173B2A]">
-              No Products Found
+              {searchQuery || selectedCategory !== 'all' ? 'No Products Found' : 'No Pantry Products Currently Available'}
             </h2>
             <p className="text-xs text-[#746F63] leading-relaxed max-w-sm mx-auto">
-              We couldn't find any blends matching your search or selected category in the Wholesome Pantry collection.
+              {searchQuery || selectedCategory !== 'all'
+                ? "We couldn't find any blends matching your search or selected category in the Wholesome Pantry collection."
+                : 'Our traditional pantry blends and mixes are currently being curated for the upcoming season.'}
             </p>
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#173B2A] text-white text-xs font-mono uppercase tracking-wider hover:bg-[#3F7B43] transition-all"
-            >
-              Clear All Filters
-            </button>
+            {(searchQuery || selectedCategory !== 'all') && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#173B2A] text-white text-xs font-mono uppercase tracking-wider hover:bg-[#3F7B43] transition-all"
+              >
+                Clear All Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

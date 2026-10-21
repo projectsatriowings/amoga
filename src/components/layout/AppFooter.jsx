@@ -161,40 +161,30 @@ export function AppFooter({ activeCollection }) {
                   </li>
                   <li>
                     <Link to="/food/products" className="hover:text-[#287A25] hover:underline font-semibold">
-                      All Products (61 Items)
+                      All Pantry Blends
                     </Link>
                   </li>
                 </>
               ) : isTea ? (
                 <>
                   <li>
-                    <Link to="/tea/products/hibiscus-tea" className="hover:text-[#8C6320] hover:underline">
-                      Hibiscus Tea
+                    <Link to="/tea/products?category=flower" className="hover:text-[#8C6320] hover:underline">
+                      Flower & Herbal Infusions
                     </Link>
                   </li>
                   <li>
-                    <Link to="/tea/products/butterfly-blue-pea-tea" className="hover:text-[#8C6320] hover:underline">
-                      Butterfly Blue Pea Tea
+                    <Link to="/tea/products?category=leaf" className="hover:text-[#8C6320] hover:underline">
+                      Botanical Leaf Blends
                     </Link>
                   </li>
                   <li>
-                    <Link to="/tea/products/cinnamon-tea" className="hover:text-[#8C6320] hover:underline">
-                      Cinnamon Tea
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/tea/products/sarsaparilla-tea" className="hover:text-[#8C6320] hover:underline">
-                      Sarsaparilla Tea
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/tea/products/moringa-leaf-tea" className="hover:text-[#8C6320] hover:underline">
-                      Moringa Leaf Tea
+                    <Link to="/tea/products?category=herbal" className="hover:text-[#8C6320] hover:underline">
+                      Ayurvedic Root Teas
                     </Link>
                   </li>
                   <li>
                     <Link to="/tea/products" className="hover:text-[#8C6320] hover:underline font-semibold">
-                      All 5 Brews
+                      All Botanical Brews
                     </Link>
                   </li>
                 </>
@@ -227,7 +217,7 @@ export function AppFooter({ activeCollection }) {
                   </li>
                   <li>
                     <Link to="/sarees/products" className="hover:text-[#C5A46D] hover:underline font-semibold">
-                      All Sarees (12 Items)
+                      All Heritage Sarees
                     </Link>
                   </li>
                 </>
@@ -235,32 +225,32 @@ export function AppFooter({ activeCollection }) {
                 <>
                   <li>
                     <Link to="/jewellery/products?category=rings" className="hover:text-[#B9B8B5] hover:underline">
-                      Rings (4 Designs)
+                      Rings
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products?category=necklaces" className="hover:text-[#B9B8B5] hover:underline">
-                      Necklaces & Pendants (2 Designs)
+                      Necklaces & Pendants
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products?category=earrings" className="hover:text-[#B9B8B5] hover:underline">
-                      Earrings (2 Designs)
+                      Earrings
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products?category=bracelets" className="hover:text-[#B9B8B5] hover:underline">
-                      Bracelets & Cuffs (1 Design)
+                      Bracelets & Cuffs
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products?category=traditional" className="hover:text-[#B9B8B5] hover:underline">
-                      Traditional Silver (1 Design)
+                      Traditional Silver
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products" className="hover:text-[#B9B8B5] hover:underline font-semibold">
-                      All Jewellery (10 Pieces)
+                      All Silver Jewellery
                     </Link>
                   </li>
                 </>

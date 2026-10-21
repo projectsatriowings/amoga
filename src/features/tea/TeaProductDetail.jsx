@@ -14,13 +14,12 @@ import {
   Zap,
   Bell,
 } from 'lucide-react';
-import { getTeaProductBySlug, TEA_PRODUCTS } from './data/products';
 import { TeaProductCard } from './components/TeaProductCard';
 import { BotanicalSideAnimations } from './components/BotanicalAnimations';
 
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
-import { useProductDetail } from '../../hooks/useProducts';
+import { useProductDetail, useProducts } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
 import { resolveAvailability } from '../../utils/inventory';
 import { RestockModal } from '../../components/ui/RestockModal';
@@ -29,36 +28,13 @@ import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSe
 export function TeaProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const staticProduct = getTeaProductBySlug(slug);
-  const { product: apiProduct, isLoading } = useProductDetail('tea', slug, staticProduct);
+  const { product, isLoading } = useProductDetail('tea', slug);
+  const { products: allTeas } = useProducts({ collection: 'tea' });
 
-  // Always reset scroll to top on mount or when navigating to another brew
+  // Scroll to top on slug change
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [slug]);
-
-  // Safely combine API updates with rich static botanical catalogue metadata
-  const product = useMemo(() => {
-    if (!staticProduct && !apiProduct) return null;
-    if (!apiProduct) return staticProduct;
-    if (!staticProduct) return apiProduct;
-
-    return {
-      ...staticProduct,
-      ...apiProduct,
-      botanicalName: apiProduct.botanicalName || staticProduct.botanicalName,
-      standeeNotes: apiProduct.standeeNotes || staticProduct.standeeNotes,
-      categoryName: staticProduct.categoryName || apiProduct.categoryName,
-      origin: apiProduct.origin || staticProduct.origin,
-      brewingTime: apiProduct.brewingTime || staticProduct.brewingTime,
-      details: (Array.isArray(apiProduct.details) && apiProduct.details.length > 0)
-        ? apiProduct.details
-        : staticProduct.details,
-      packSize: apiProduct.packSize || staticProduct.packSize,
-      badge: apiProduct.badge || staticProduct.badge,
-      image: staticProduct.image || apiProduct.image,
-    };
-  }, [staticProduct, apiProduct]);
 
   const { addToCart, toggleWishlistItem, isInWishlist, initiateBuyNow, openCart } = useStore();
   const [quantity, setQuantity] = useState(1);
@@ -109,8 +85,8 @@ export function TeaProductDetail() {
   const inWishlist = isInWishlist(product.id);
   const hasPrice = product.price !== null;
 
-  // Other teas in the collection
-  const otherTeas = TEA_PRODUCTS.filter((p) => p.id !== product.id).slice(0, 4);
+  // Other teas in the collection from database
+  const otherTeas = (allTeas || []).filter((p) => p.id !== product.id && p.slug !== slug).slice(0, 4);
 
   const handleAddToCart = () => {
     if (addedSuccess) {
@@ -454,7 +430,7 @@ export function TeaProductDetail() {
                 to="/tea/products"
                 className="text-xs font-medium text-[#8C6320] hover:text-[#2C1E11] underline"
               >
-                View all 5 brews &rarr;
+                View all brews &rarr;
               </Link>
             </div>
 

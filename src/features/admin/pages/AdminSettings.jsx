@@ -252,6 +252,8 @@ export function AdminSettings() {
     }
   };
 
+  const [addStaffTrigger, setAddStaffTrigger] = useState(0);
+
   const isSuperAdmin = admin?.role === 'SUPER_ADMIN';
 
   if (loading) {
@@ -264,50 +266,82 @@ export function AdminSettings() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="w-full max-w-7xl mx-auto space-y-6 pb-12 pt-2">
+      {/* Breadcrumb Navigation */}
       <div className="flex items-center justify-between">
-        <BackButton collection="admin" fallbackTo="/admin" label="Back to Dashboard" />
-      </div>
-
-      <div className="border-b border-[#E5E0D5] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Business & Staff Settings</h1>
-          <p className="text-xs text-[#7A7167]">
-            Configure store parameters, shipping rules, tax compliance, and manage stall staff credentials.
-          </p>
-        </div>
-
-        {/* Tab Switcher */}
-        <div className="inline-flex p-1 bg-[#EFEAE1]/70 rounded-xl border border-[#D5CEC2] shrink-0">
+        <div className="flex items-center gap-2 text-xs text-[#7A7167]">
           <button
             type="button"
             onClick={() => setSearchParams({ tab: 'general' })}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              currentTab !== 'staff'
-                ? 'bg-white text-[#722F37] shadow-xs'
-                : 'text-[#7A7167] hover:text-[#1A1817]'
-            }`}
+            className="hover:text-[#1A1817] transition-colors cursor-pointer"
           >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>Store & Compliance</span>
+            Settings
           </button>
-          <button
-            type="button"
-            onClick={() => setSearchParams({ tab: 'staff' })}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              currentTab === 'staff'
-                ? 'bg-white text-[#722F37] shadow-xs'
-                : 'text-[#7A7167] hover:text-[#1A1817]'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Stall Staff & Roles</span>
-          </button>
+          <span>/</span>
+          <span className="font-semibold text-[#1A1817]">
+            {currentTab === 'staff' ? 'Staff & Roles' : 'Store & Compliance'}
+          </span>
+        </div>
+        <BackButton collection="admin" fallbackTo="/admin" label="Back to Dashboard" />
+      </div>
+
+      <div className="border-b border-[#E5E0D5] pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-2xl lg:text-3xl font-bold text-[#1A1817] tracking-tight">
+            {currentTab === 'staff' ? 'Staff & Roles' : 'Store & Compliance'}
+          </h1>
+          <p className="text-xs sm:text-sm text-[#7A7167] mt-1">
+            {currentTab === 'staff'
+              ? 'Manage staff accounts, permissions, and assigned stall locations.'
+              : 'Configure store parameters, shipping rules, tax compliance, and legal credentials.'}
+          </p>
+        </div>
+
+        {/* Action Controls & Tab Switcher */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex p-1 bg-[#EFEAE1]/80 rounded-xl border border-[#D5CEC2] shrink-0 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setSearchParams({ tab: 'general' })}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                currentTab !== 'staff'
+                  ? 'bg-white text-[#722F37] shadow-xs'
+                  : 'text-[#7A7167] hover:text-[#1A1817]'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Store & Compliance</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchParams({ tab: 'staff' })}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                currentTab === 'staff'
+                  ? 'bg-white text-[#722F37] shadow-xs'
+                  : 'text-[#7A7167] hover:text-[#1A1817]'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Staff & Roles</span>
+            </button>
+          </div>
+
+          {/* Primary Action Button: Add Staff Member (in Page Header) */}
+          {currentTab === 'staff' && isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => setAddStaffTrigger((c) => c + 1)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#722F37] hover:bg-[#5E2229] text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-xs shrink-0 active:scale-98"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Add Staff Member</span>
+            </button>
+          )}
         </div>
       </div>
 
       {currentTab === 'staff' ? (
-        <AdminStaffManagement />
+        <AdminStaffManagement addStaffTrigger={addStaffTrigger} />
       ) : (
         <>
 

@@ -246,11 +246,31 @@ describe('Amoga Admin API Integration & RBAC Security Suite', () => {
   });
 
   it('8. Inventory Management: adjustStock atomically updates stock and creates inventory log', async () => {
-    // Find an existing product
-    const product = await prisma.product.findFirst({
+    // Find or create a temporary test product
+    let product = await prisma.product.findFirst({
       where: { isActive: true },
     });
-    assert.ok(product, 'Existing product must exist in database');
+
+    let createdTemp = false;
+    if (!product) {
+      product = await prisma.product.create({
+        data: {
+          sourceId: `test-adj-${Date.now()}`,
+          collectionId: 'food',
+          slug: `test-adj-${Date.now()}`,
+          name: 'Temporary Adjustment Test Product',
+          description: 'Self-contained test fixture',
+          category: 'Spices',
+          price: 100.00,
+          stockQuantity: 10,
+          image: '/images/test.jpg',
+          verified: true,
+          isActive: true,
+        },
+      });
+      createdTemp = true;
+    }
+    assert.ok(product, 'Existing or temporary test product must exist in database');
 
     const originalStock = product.stockQuantity;
     const newStock = originalStock + 5;
@@ -287,6 +307,11 @@ describe('Amoga Admin API Integration & RBAC Security Suite', () => {
         reason: 'Reverting test adjustment',
       }),
     });
+
+    if (createdTemp) {
+      await prisma.inventoryLog.deleteMany({ where: { productId: product.id } });
+      await prisma.product.delete({ where: { id: product.id } });
+    }
   });
 
   it('9. Order Management: updateOrderStatus validates allowed transitions and rejects invalid jumps', async () => {

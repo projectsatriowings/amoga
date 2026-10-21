@@ -312,22 +312,21 @@ function mergeProductWithFallback(apiItem, fallbackItem) {
 
 /**
  * Hook to retrieve products for a specific collection from the API
- * with explicit loading, error handling, live cross-session revalidation, and robust metadata preservation.
+ * with explicit loading, error handling, live cross-session revalidation, and zero mock fallback fabrication.
  */
-export function useProducts({ collection, category, q, sort, fallbackData = [] } = {}) {
+export function useProducts({ collection, category, q, sort } = {}) {
   const cacheKey = `${collection || 'all'}:${category || 'all'}:${q || ''}:${sort || 'default'}`;
 
-  // Initialize immediately from client cache if available, preventing flash/delay of newly added products
+  // Initialize immediately from client cache if available
   const [products, setProducts] = useState(() => {
     const cached = getCachedProducts(cacheKey);
-    return cached && cached.length > 0 ? cached : fallbackData;
+    return Array.isArray(cached) ? cached : [];
   });
   const [isLoading, setIsLoading] = useState(() => {
     const cached = getCachedProducts(cacheKey);
-    return !(cached && cached.length > 0);
+    return cached === null;
   });
   const [error, setError] = useState(null);
-  const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
 
   // Sync state if cacheKey changes
@@ -336,15 +335,15 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
     if (prevKeyRef.current !== cacheKey) {
       prevKeyRef.current = cacheKey;
       const cached = getCachedProducts(cacheKey);
-      if (cached && cached.length > 0) {
+      if (Array.isArray(cached)) {
         setProducts(cached);
         setIsLoading(false);
       } else {
-        setProducts(fallbackData);
+        setProducts([]);
         setIsLoading(true);
       }
     }
-  }, [cacheKey, fallbackData]);
+  }, [cacheKey]);
 
   // Initialize global SSE and bounded visibility revalidator once
   useEffect(() => {
@@ -364,19 +363,17 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
       .then((res) => {
         if (isMounted) {
           if (res && Array.isArray(res.data)) {
-            const mergedList = res.data.map((apiItem) => {
-              const fallback = Array.isArray(fallbackData)
-                ? fallbackData.find((f) => f.slug === apiItem.slug || f.id === apiItem.id)
-                : null;
-              return mergeProductWithFallback(apiItem, fallback);
-            });
-            setCachedProducts(cacheKey, mergedList);
-            setProducts(mergedList);
-            setIsUsingFallback(false);
+            const list = res.data.map((apiItem) => ({
+              ...apiItem,
+              image: resolveProductImage(apiItem.image, apiItem.image),
+            }));
+            setCachedProducts(cacheKey, list);
+            setProducts(list);
           } else {
-            setProducts(fallbackData);
-            setIsUsingFallback(true);
+            setCachedProducts(cacheKey, []);
+            setProducts([]);
           }
+          setError(null);
           setIsLoading(false);
         }
       })
@@ -385,12 +382,10 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
           console.warn(`[Amoga API] Could not load products for ${collection} from API:`, err.message);
           setError(err.message);
           const cached = getCachedProducts(cacheKey);
-          if (cached && cached.length > 0) {
+          if (Array.isArray(cached)) {
             setProducts(cached);
-            setIsUsingFallback(false);
           } else {
-            setProducts(fallbackData);
-            setIsUsingFallback(true);
+            setProducts([]);
           }
           setIsLoading(false);
         }
@@ -399,7 +394,7 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
     return () => {
       isMounted = false;
     };
-  }, [collection, category, q, sort, fallbackData, refreshToken, cacheKey]);
+  }, [collection, category, q, sort, refreshToken, cacheKey]);
 
   // Live synchronization effect: listen for updates from admin actions, SSE, other tabs, and window focus
   useEffect(() => {
@@ -456,18 +451,16 @@ export function useProducts({ collection, category, q, sort, fallbackData = [] }
     };
   }, [collection, refetch]);
 
-  return { products, isLoading, error, isUsingFallback, refetch };
+  return { products, isLoading, error, isUsingFallback: false, refetch };
 }
 
 /**
- * Hook to retrieve single product detail by collection and slug
- * with rich catalogue metadata retention and live revalidation.
+ * Hook to retrieve single product detail by collection and slug from the database API.
  */
-export function useProductDetail(collection, slug, fallbackItem = null) {
-  const [product, setProduct] = useState(fallbackItem);
+export function useProductDetail(collection, slug) {
+  const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
 
   useEffect(() => {
@@ -479,20 +472,25 @@ export function useProductDetail(collection, slug, fallbackItem = null) {
   }, []);
 
   useEffect(() => {
-    if (!collection || !slug) return;
+    if (!collection || !slug) {
+      setIsLoading(false);
+      return;
+    }
 
     let isMounted = true;
+    setIsLoading(true);
+    setError(null);
 
     fetchProductBySlug(collection, slug)
       .then((data) => {
         if (isMounted) {
           if (data) {
-            const merged = mergeProductWithFallback(data, fallbackItem);
-            setProduct(merged);
-            setIsUsingFallback(false);
+            setProduct({
+              ...data,
+              image: resolveProductImage(data.image, data.image),
+            });
           } else {
-            setProduct(fallbackItem);
-            setIsUsingFallback(true);
+            setProduct(null);
           }
           setIsLoading(false);
         }
@@ -501,8 +499,7 @@ export function useProductDetail(collection, slug, fallbackItem = null) {
         if (isMounted) {
           console.warn(`[Amoga API] Could not load product "${slug}" from API:`, err.message);
           setError(err.message);
-          setProduct(fallbackItem);
-          setIsUsingFallback(true);
+          setProduct(null);
           setIsLoading(false);
         }
       });
@@ -510,7 +507,7 @@ export function useProductDetail(collection, slug, fallbackItem = null) {
     return () => {
       isMounted = false;
     };
-  }, [collection, slug, fallbackItem, refreshToken]);
+  }, [collection, slug, refreshToken]);
 
   // Synchronize on global product updates
   useEffect(() => {
@@ -524,5 +521,5 @@ export function useProductDetail(collection, slug, fallbackItem = null) {
     return () => window.removeEventListener('amoga:products_updated', handleUpdate);
   }, [collection, refetch]);
 
-  return { product, isLoading, error, isUsingFallback, refetch };
+  return { product, isLoading, error, isUsingFallback: false, refetch };
 }
