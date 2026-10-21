@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.js';
 
+// Canonical domain configuration for SEO
 const CANONICAL_DOMAIN = 'https://amogastores.com';
 
 export function getRobotsTxt(req, res) {
