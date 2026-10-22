@@ -60,6 +60,7 @@ export class RazorpayPaymentProvider extends PaymentProvider {
     let razorpayOrder;
     try {
       razorpayOrder = await this.client.orders.create(orderOptions);
+    } catch (rzpErr) {
       console.error('[RAZORPAY ORDERS CREATE ERROR]:', rzpErr);
       const rawDesc =
         rzpErr?.error?.description ||
