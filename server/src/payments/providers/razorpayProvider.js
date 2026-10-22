@@ -60,12 +60,15 @@ export class RazorpayPaymentProvider extends PaymentProvider {
     let razorpayOrder;
     try {
       razorpayOrder = await this.client.orders.create(orderOptions);
-    } catch (rzpErr) {
       console.error('[RAZORPAY ORDERS CREATE ERROR]:', rzpErr);
-      const desc =
+      const rawDesc =
         rzpErr?.error?.description ||
         rzpErr?.message ||
-        'Razorpay rejected order creation. Please verify your Razorpay API keys or use Cash on Delivery.';
+        'Razorpay rejected order creation. Please verify your Razorpay API keys.';
+      const desc =
+        rawDesc === 'Authentication failed'
+          ? 'Payment Gateway Authentication failed: Invalid or expired Razorpay Key ID or Secret on the server.'
+          : rawDesc;
       const err = new Error(desc);
       err.status = 502;
       err.details = rzpErr?.error || rzpErr;

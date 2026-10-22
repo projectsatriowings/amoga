@@ -312,7 +312,11 @@ export const OrderReviewPage = () => {
 
       // If backend error has a specific message, display it clearly
       if (err.message) {
-        setSimulationError(err.message);
+        if (err.message.toLowerCase().includes('authentication failed')) {
+          setSimulationError('Payment Gateway Authentication Error: The server is unable to authenticate with Razorpay. Please verify the Razorpay Key ID and Secret in the server configuration.');
+        } else {
+          setSimulationError(err.message);
+        }
         return;
       }
 
