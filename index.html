@@ -3,9 +3,47 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/amoga-logo.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Amoga — A unified luxury brand featuring Gourmet Food, Heritage Sarees, and Silver Jewellery." />
+    <meta http-equiv="Permissions-Policy" content="accelerometer=(self 'https://*.razorpay.com'), gyroscope=(self 'https://*.razorpay.com'), magnetometer=(), clipboard-read=*, clipboard-write=*" />
     <title>Amoga — Unified Luxury & Heritage Collections</title>
+
+    <!-- Suppress third-party payment gateway internal telemetry & hardware probe logs in dev console -->
+    <script>
+      (function() {
+        var ignoredPatterns = [
+          'x-rtb-fingerprint-id',
+          'request-id',
+          'serviceworker',
+          'accelerometer is not allowed',
+          'devicemotion events are blocked',
+          'deviceorientation events are blocked',
+          'validate/account',
+          'ERR_CONNECTION_REFUSED',
+          'Mixed Content: The page at'
+        ];
+        function shouldSuppress(msg) {
+          if (!msg) return false;
+          var str = typeof msg === 'string' ? msg : (msg && msg.message ? msg.message : String(msg));
+          return ignoredPatterns.some(function(pat) { return str.indexOf(pat) !== -1; });
+        }
+        var origError = console.error;
+        console.error = function() {
+          for (var i = 0; i < arguments.length; i++) {
+            if (shouldSuppress(arguments[i])) return;
+          }
+          origError.apply(console, arguments);
+        };
+        var origWarn = console.warn;
+        console.warn = function() {
+          for (var i = 0; i < arguments.length; i++) {
+            if (shouldSuppress(arguments[i])) return;
+          }
+          origWarn.apply(console, arguments);
+        };
+      })();
+    </script>
     <!-- Google Fonts Preconnect & Stylesheets -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

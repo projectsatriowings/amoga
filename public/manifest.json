@@ -1,0 +1,21 @@
+{
+  "name": "Amoga Luxury & Heritage",
+  "short_name": "Amoga",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0f12",
+  "theme_color": "#722F37",
+  "description": "Amoga — Luxury Gourmet Food, Heritage Sarees, Artisanal Teas, and Fine Jewellery.",
+  "icons": [
+    {
+      "src": "/amoga-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/amoga-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
