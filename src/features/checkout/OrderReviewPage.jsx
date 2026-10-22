@@ -201,28 +201,6 @@ export const OrderReviewPage = () => {
           }
         }
 
-        // Handle Cash on Delivery (COD) directly without opening online payment gateway
-        if (paymentMethod === 'cod') {
-          const completedOrderSnapshot = {
-            orderId: orderResult.orderReference,
-            orderReference: orderResult.orderReference,
-            guestAccessToken: orderResult.guestAccessToken,
-            status: 'PENDING_CONFIRMATION',
-            paymentStatus: 'PENDING',
-            paymentMethod: 'cod',
-            createdAt: getNowIso(),
-            customer: orderResult.customer || { ...customerDetails },
-            items: orderResult.items || checkoutItems.map((item) => ({ ...item })),
-            totals: orderResult.totals || { ...totals },
-            isPersistent: true,
-            isDemo: false,
-          };
-          setLastCompletedOrder(completedOrderSnapshot);
-          reconcileCartAfterPurchase(checkoutItems);
-          navigate(`/order-confirmation/${orderResult.orderReference}`);
-          return;
-        }
-
         // 4. Create authoritative payment order attempt for online payment
         const paymentResult = await createPaymentOrderApi({
           orderReference: orderResult.orderReference,
@@ -659,60 +637,22 @@ export const OrderReviewPage = () => {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
                 {/* Online Payment Option */}
-                <label
-                  className={`relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all ${
-                    paymentMethod === 'online'
-                      ? 'border-[var(--collection-accent)] bg-black/5 dark:bg-white/10 shadow-xs ring-1 ring-[var(--collection-accent)]'
-                      : 'border-[var(--collection-border)] hover:border-[var(--collection-accent)]/50 bg-[var(--collection-card-bg)]'
-                  }`}
-                >
+                <div className="relative flex flex-col p-4 rounded-xl border border-[var(--collection-accent)] bg-black/5 dark:bg-white/10 shadow-xs ring-1 ring-[var(--collection-accent)]">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-xs sm:text-sm text-[var(--collection-text)] flex items-center gap-2">
                       <CreditCard className="w-4 h-4 text-[var(--collection-accent)]" />
                       <span>Online Payment</span>
                     </span>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="online"
-                      checked={paymentMethod === 'online'}
-                      onChange={() => setPaymentMethod('online')}
-                      className="accent-[var(--collection-accent)]"
-                    />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      Encrypted & Verified
+                    </span>
                   </div>
                   <p className="text-[11px] text-[var(--collection-text)] opacity-85 leading-relaxed">
                     UPI (Google Pay, PhonePe, Paytm), Credit & Debit Cards, Netbanking via Razorpay.
                   </p>
-                </label>
-
-                {/* Cash on Delivery Option */}
-                <label
-                  className={`relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all ${
-                    paymentMethod === 'cod'
-                      ? 'border-[var(--collection-accent)] bg-black/5 dark:bg-white/10 shadow-xs ring-1 ring-[var(--collection-accent)]'
-                      : 'border-[var(--collection-border)] hover:border-[var(--collection-accent)]/50 bg-[var(--collection-card-bg)]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-xs sm:text-sm text-[var(--collection-text)] flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-[var(--collection-accent)]" />
-                      <span>Cash on Delivery (COD)</span>
-                    </span>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="cod"
-                      checked={paymentMethod === 'cod'}
-                      onChange={() => setPaymentMethod('cod')}
-                      className="accent-[var(--collection-accent)]"
-                    />
-                  </div>
-                  <p className="text-[11px] text-[var(--collection-text)] opacity-85 leading-relaxed">
-                    Pay with cash or UPI when your order is delivered.
-                  </p>
-                </label>
+                </div>
               </div>
             </div>
 
@@ -875,27 +815,14 @@ export const OrderReviewPage = () => {
                     color: 'var(--collection-button-text, #FFFFFF)',
                   }}
                 >
-                  {paymentMethod === 'cod' ? (
-                    <>
-                      <Truck className="w-4 h-4 shrink-0" />
-                      <span>
-                        {isSubmitting ? 'Placing COD Order...' : `Place Order (Cash on Delivery) — ${formatINR(finalPayableTotal)}`}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-4 h-4 shrink-0" />
-                      <span>
-                        {isSubmitting ? 'Initiating Payment Order...' : `Proceed to Secure Payment — ${formatINR(finalPayableTotal)}`}
-                      </span>
-                    </>
-                  )}
+                  <CreditCard className="w-4 h-4 shrink-0" />
+                  <span>
+                    {isSubmitting ? 'Initiating Payment Order...' : `Proceed to Secure Payment — ${formatINR(finalPayableTotal)}`}
+                  </span>
                 </button>
 
                 <p className="mt-2.5 text-[11px] text-center text-[var(--collection-text)] opacity-85 leading-tight">
-                  {paymentMethod === 'cod'
-                    ? 'Payment collected upon courier arrival • Cash or UPI accepted'
-                    : 'Encrypted Payment Gateway • Authoritative Server Pricing in INR'}
+                  Encrypted Payment Gateway • Authoritative Server Pricing in INR
                 </p>
               </div>
 

@@ -60,6 +60,14 @@ import {
   exportCsv,
 } from '../controllers/adminReportsController.js';
 import {
+  getGstReportEndpoint,
+  listInvoicesEndpoint,
+  downloadInvoicePdfEndpoint,
+  downloadBatchInvoicesZipEndpoint,
+  exportPaymentsToDateEndpoint,
+  exportOutstandingPaymentsEndpoint,
+} from '../controllers/adminGstInvoicesController.js';
+import {
   getStoreSettings,
   updateStoreSettings,
   listAdminUsers,
@@ -181,6 +189,14 @@ router.patch('/orders/:id/tracking', requireAdminAuth(['ORDER_MANAGER']), update
 router.get('/payments', requireAdminAuth(), listPayments);
 router.get('/payments/events', requireAdminAuth(), listPaymentEvents);
 router.get('/payments/:id', requireAdminAuth(), getPaymentById);
+
+// 6.5 GST Reports & Tax Invoices (Order Manager & Super Admin)
+router.get('/reports/gst', requireAdminAuth(['ORDER_MANAGER']), getGstReportEndpoint);
+router.get('/reports/payments-to-date', requireAdminAuth(['ORDER_MANAGER']), exportPaymentsToDateEndpoint);
+router.get('/reports/outstanding-payments', requireAdminAuth(['ORDER_MANAGER']), exportOutstandingPaymentsEndpoint);
+router.get('/invoices', requireAdminAuth(['ORDER_MANAGER']), listInvoicesEndpoint);
+router.get('/invoices/:id/pdf', requireAdminAuth(['ORDER_MANAGER']), downloadInvoicePdfEndpoint);
+router.post('/invoices/batch-pdf', requireAdminAuth(['ORDER_MANAGER']), downloadBatchInvoicesZipEndpoint);
 
 // 7. Customers (Order Manager & Super Admin)
 router.get('/customers', requireAdminAuth(), listCustomers);
