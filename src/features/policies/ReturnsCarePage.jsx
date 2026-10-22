@@ -144,7 +144,7 @@ export function ReturnsCarePage() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <a
-              href="mailto:support@amoga.com?subject=Return%20Request"
+              href="mailto:amogastores05@gmail.com?subject=Return%20Request"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#722F37] text-white text-xs font-semibold hover:bg-[#5E2229] transition-colors"
             >
               <Mail className="w-3.5 h-3.5" />

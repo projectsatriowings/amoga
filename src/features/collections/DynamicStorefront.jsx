@@ -35,9 +35,17 @@ export function DynamicStorefront() {
           return;
         }
 
-        // 1. Fetch collection details
-        const colRes = await fetch('/api/collections');
-        const colJson = await colRes.json();
+        // Concurrently fetch collection details and collection products (eliminates network waterfall)
+        const [colRes, prodRes] = await Promise.all([
+          fetch('/api/collections'),
+          fetch(`/api/products?collection=${encodeURIComponent(collectionSlug)}`),
+        ]);
+
+        const [colJson, prodJson] = await Promise.all([
+          colRes.json(),
+          prodRes.json(),
+        ]);
+
         const matched = (colJson.data || []).find(
           (c) => c.slug === collectionSlug || c.id === collectionSlug
         );
@@ -46,12 +54,8 @@ export function DynamicStorefront() {
           throw new Error(`Collection '/${collectionSlug}' not found.`);
         }
 
-        if (isMounted) setCollection(matched);
-
-        // 2. Fetch products for this collection
-        const prodRes = await fetch(`/api/products?collection=${matched.id}`);
-        const prodJson = await prodRes.json();
         if (isMounted) {
+          setCollection(matched);
           setProducts(prodJson.data || []);
         }
       } catch (err) {

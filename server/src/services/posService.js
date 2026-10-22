@@ -1392,7 +1392,7 @@ export async function getPosSale(identifier, client = prisma) {
       state: storeSettings?.sellerState || 'Tamil Nadu',
       pincode: storeSettings?.sellerPincode || '600017',
       contactPhone: storeSettings?.contactPhone || '+91 98765 43210',
-      contactEmail: storeSettings?.contactEmail || 'support@amoga.com',
+      contactEmail: storeSettings?.contactEmail || 'amogastores05@gmail.com',
     },
   };
 }

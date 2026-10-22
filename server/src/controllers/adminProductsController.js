@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma.js';
 import { logAdminAction } from '../utils/adminAuth.js';
-import { broadcastProductUpdate } from './productsController.js';
+import { broadcastProductUpdate, registerCatalogueInvalidation } from './productsController.js';
 import {
   generateProductSku,
   generateVariantSku,
@@ -13,12 +13,17 @@ import {
   validateProductTaxCompliance,
 } from '../services/taxService.js';
 
+// High-speed in-memory cache for admin product listings
+const adminProductsCache = new Map();
+const ADMIN_PRODUCTS_CACHE_TTL_MS = 30 * 1000; // 30s TTL
+
+export function invalidateAdminProductsCache() {
+  adminProductsCache.clear();
+}
+registerCatalogueInvalidation(invalidateAdminProductsCache);
+
 export async function listProducts(req, res) {
   try {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-
     const {
       q,
       collectionId,
@@ -29,6 +34,14 @@ export async function listProducts(req, res) {
       page = 1,
       limit = 20,
     } = req.query;
+
+    const cacheKey = JSON.stringify({ q, collectionId, inStock, category, sortBy, order, page, limit });
+    const cached = adminProductsCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < ADMIN_PRODUCTS_CACHE_TTL_MS) {
+      res.setHeader('Cache-Control', 'private, max-age=15, stale-while-revalidate=60');
+      return res.status(200).json(cached.payload);
+    }
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
@@ -77,7 +90,7 @@ export async function listProducts(req, res) {
       }),
     ]);
 
-    return res.status(200).json({
+    const payload = {
       success: true,
       data: products.map((p) => ({
         ...p,
@@ -94,7 +107,11 @@ export async function listProducts(req, res) {
         total,
         totalPages: Math.ceil(total / limitNum),
       },
-    });
+    };
+
+    adminProductsCache.set(cacheKey, { payload, timestamp: now });
+    res.setHeader('Cache-Control', 'private, max-age=15, stale-while-revalidate=60');
+    return res.status(200).json(payload);
   } catch (err) {
     console.error('[ADMIN LIST PRODUCTS ERROR]:', err);
     return res.status(500).json({
@@ -658,6 +675,14 @@ export async function updateProduct(req, res) {
 export async function archiveProduct(req, res) {
   try {
     const { id } = req.params;
+    const existing = await prisma.product.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({
+        error: 'NOT_FOUND',
+        message: 'Product not found',
+      });
+    }
+
     const product = await prisma.product.update({
       where: { id },
       data: { isActive: false },
@@ -669,7 +694,7 @@ export async function archiveProduct(req, res) {
       action: 'PRODUCT_ARCHIVE',
       entityType: 'Product',
       entityId: id,
-      details: { name: product.name },
+      details: { name: product.name, sku: product.sku, collectionId: product.collectionId },
     });
 
     broadcastProductUpdate(product.collectionId);
@@ -690,9 +715,42 @@ export async function archiveProduct(req, res) {
 export async function restoreProduct(req, res) {
   try {
     const { id } = req.params;
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true },
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        error: 'NOT_FOUND',
+        message: 'Product not found',
+      });
+    }
+
+    // Verify price: product or at least one variant must have an approved price > 0
+    const productPriceNum = existingProduct.price !== null && existingProduct.price !== undefined
+      ? Number(existingProduct.price)
+      : null;
+    const hasValidProductPrice = productPriceNum !== null && !isNaN(productPriceNum) && productPriceNum > 0;
+    const hasValidVariantPrice = existingProduct.variants?.some((v) => {
+      const vPrice = v.price !== null && v.price !== undefined ? Number(v.price) : null;
+      return vPrice !== null && !isNaN(vPrice) && vPrice > 0;
+    });
+
+    if (!hasValidProductPrice && !hasValidVariantPrice) {
+      return res.status(400).json({
+        error: 'INVALID_PRICE',
+        message: `Cannot restore product "${existingProduct.name}": Product or its variants must have an approved selling price greater than ₹0 before being made purchasable.`,
+      });
+    }
+
     const product = await prisma.product.update({
       where: { id },
-      data: { isActive: true },
+      data: {
+        isActive: true,
+        // Ensure inStock aligns with available stock
+        inStock: existingProduct.stockQuantity > 0,
+      },
     });
 
     await logAdminAction({
@@ -701,7 +759,7 @@ export async function restoreProduct(req, res) {
       action: 'PRODUCT_RESTORE',
       entityType: 'Product',
       entityId: id,
-      details: { name: product.name },
+      details: { name: product.name, sku: product.sku, collectionId: product.collectionId },
     });
 
     broadcastProductUpdate(product.collectionId);
@@ -715,6 +773,320 @@ export async function restoreProduct(req, res) {
     return res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: 'Failed to restore product',
+    });
+  }
+}
+
+export async function deleteProduct(req, res) {
+  try {
+    const { id } = req.params;
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({
+        error: 'INVALID_ID',
+        message: 'Product ID is required',
+      });
+    }
+
+    // 1. Verify product exists
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        variants: true,
+        collection: { select: { id: true, name: true } },
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        error: 'NOT_FOUND',
+        message: `Product with ID "${id}" was not found in the catalogue.`,
+      });
+    }
+
+    const variantIds = (product.variants || []).map((v) => v.id);
+    const productOrVariantCondition = [
+      { productId: id },
+      ...(variantIds.length > 0 ? [{ variantId: { in: variantIds } }] : []),
+    ];
+
+    // 2. Safeguard check: Historical Orders
+    const orderItemCount = await prisma.orderItem.count({
+      where: {
+        OR: productOrVariantCondition,
+      },
+    });
+
+    if (orderItemCount > 0) {
+      await logAdminAction({
+        adminId: req.admin.id,
+        adminEmail: req.admin.email,
+        action: 'PRODUCT_DELETE_BLOCKED',
+        entityType: 'Product',
+        entityId: id,
+        status: 'FAILURE',
+        failureReason: `Product is referenced in ${orderItemCount} historical order item(s)`,
+        details: {
+          name: product.name,
+          sku: product.sku,
+          collectionId: product.collectionId,
+          orderItemCount,
+        },
+      });
+
+      return res.status(409).json({
+        error: 'PROTECTED_HISTORICAL_RECORD',
+        message: `Product "${product.name}" cannot be permanently deleted because it is referenced in past customer orders (${orderItemCount} order line item${orderItemCount > 1 ? 's' : ''}). Permanent deletion is blocked to preserve customer order snapshots, invoices, and statutory tax history. Please archive the product instead.`,
+        canArchive: true,
+      });
+    }
+
+    // 3. Safeguard check: POS Stall Sales
+    const posSaleItemCount = await prisma.posSaleItem.count({
+      where: {
+        OR: productOrVariantCondition,
+      },
+    });
+
+    if (posSaleItemCount > 0) {
+      await logAdminAction({
+        adminId: req.admin.id,
+        adminEmail: req.admin.email,
+        action: 'PRODUCT_DELETE_BLOCKED',
+        entityType: 'Product',
+        entityId: id,
+        status: 'FAILURE',
+        failureReason: `Product is referenced in ${posSaleItemCount} POS sale item(s)`,
+        details: {
+          name: product.name,
+          sku: product.sku,
+          collectionId: product.collectionId,
+          posSaleItemCount,
+        },
+      });
+
+      return res.status(409).json({
+        error: 'PROTECTED_HISTORICAL_RECORD',
+        message: `Product "${product.name}" cannot be permanently deleted because it is referenced in physical stall POS sales (${posSaleItemCount} sale item${posSaleItemCount > 1 ? 's' : ''}). Deletion is blocked to preserve financial and tax audit records. Please archive the product instead.`,
+        canArchive: true,
+      });
+    }
+
+    // 4. Safeguard check: Active & Historical Stock Transfers
+    const activeTransferCount = await prisma.stockTransferItem.count({
+      where: {
+        OR: productOrVariantCondition,
+        transfer: {
+          status: { in: ['PENDING', 'IN_TRANSIT'] },
+        },
+      },
+    });
+
+    if (activeTransferCount > 0) {
+      await logAdminAction({
+        adminId: req.admin.id,
+        adminEmail: req.admin.email,
+        action: 'PRODUCT_DELETE_BLOCKED',
+        entityType: 'Product',
+        entityId: id,
+        status: 'FAILURE',
+        failureReason: `Product has ${activeTransferCount} active or in-transit stock transfer item(s)`,
+        details: {
+          name: product.name,
+          sku: product.sku,
+          collectionId: product.collectionId,
+          activeTransferCount,
+        },
+      });
+
+      return res.status(409).json({
+        error: 'ACTIVE_STOCK_TRANSFER',
+        message: `Product "${product.name}" has ${activeTransferCount} active or in-transit stock transfer item(s). Deletion is blocked until all stock transfers are completed or cancelled.`,
+        canArchive: false,
+      });
+    }
+
+    const historicalTransferCount = await prisma.stockTransferItem.count({
+      where: {
+        OR: productOrVariantCondition,
+      },
+    });
+
+    if (historicalTransferCount > 0) {
+      await logAdminAction({
+        adminId: req.admin.id,
+        adminEmail: req.admin.email,
+        action: 'PRODUCT_DELETE_BLOCKED',
+        entityType: 'Product',
+        entityId: id,
+        status: 'FAILURE',
+        failureReason: `Product is referenced in ${historicalTransferCount} completed stock transfer(s)`,
+        details: {
+          name: product.name,
+          sku: product.sku,
+          collectionId: product.collectionId,
+          historicalTransferCount,
+        },
+      });
+
+      return res.status(409).json({
+        error: 'PROTECTED_HISTORICAL_RECORD',
+        message: `Product "${product.name}" cannot be permanently deleted because it is recorded in historical stock transfers. Deletion is blocked to preserve location audit trails. Please archive the product instead.`,
+        canArchive: true,
+      });
+    }
+
+    // 5. Safeguard check: Active Inventory Reservations
+    const activeReservationCount = await prisma.inventoryReservation.count({
+      where: {
+        OR: productOrVariantCondition,
+        status: 'ACTIVE',
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    if (activeReservationCount > 0) {
+      await logAdminAction({
+        adminId: req.admin.id,
+        adminEmail: req.admin.email,
+        action: 'PRODUCT_DELETE_BLOCKED',
+        entityType: 'Product',
+        entityId: id,
+        status: 'FAILURE',
+        failureReason: `Product has ${activeReservationCount} active inventory reservation(s)`,
+        details: {
+          name: product.name,
+          sku: product.sku,
+          collectionId: product.collectionId,
+          activeReservationCount,
+        },
+      });
+
+      return res.status(409).json({
+        error: 'ACTIVE_RESERVATION',
+        message: `Product "${product.name}" has ${activeReservationCount} active inventory reservation(s) in progress. Deletion is blocked until active checkouts are finalized or reservations expire.`,
+        canArchive: false,
+      });
+    }
+
+    // 6. Safeguard check: Protected Stock Movement Logs
+    const protectedMovementCount = await prisma.locationMovementLog.count({
+      where: {
+        OR: productOrVariantCondition,
+        movementType: { in: ['STALL_POS', 'TRANSFER_IN', 'TRANSFER_OUT'] },
+      },
+    });
+
+    if (protectedMovementCount > 0) {
+      await logAdminAction({
+        adminId: req.admin.id,
+        adminEmail: req.admin.email,
+        action: 'PRODUCT_DELETE_BLOCKED',
+        entityType: 'Product',
+        entityId: id,
+        status: 'FAILURE',
+        failureReason: `Product contains ${protectedMovementCount} protected stock movement log(s)`,
+        details: {
+          name: product.name,
+          sku: product.sku,
+          collectionId: product.collectionId,
+          protectedMovementCount,
+        },
+      });
+
+      return res.status(409).json({
+        error: 'PROTECTED_HISTORICAL_RECORD',
+        message: `Product "${product.name}" cannot be permanently deleted because it contains protected stock movement records. Please archive the product instead.`,
+        canArchive: true,
+      });
+    }
+
+    // 7. Atomic transaction to delete eligible dependent records and the product
+    await prisma.$transaction(
+      async (tx) => {
+        // a. Restock notification jobs
+        await tx.restockNotificationJob.deleteMany({
+          where: { OR: productOrVariantCondition },
+        });
+
+        // b. Restock subscriptions
+        await tx.restockSubscription.deleteMany({
+          where: { OR: productOrVariantCondition },
+        });
+
+        // c. Inventory alerts
+        await tx.inventoryAlert.deleteMany({
+          where: { OR: productOrVariantCondition },
+        });
+
+        // d. Safe inventory reservations (expired, released, or cancelled)
+        await tx.inventoryReservation.deleteMany({
+          where: { OR: productOrVariantCondition },
+        });
+
+        // e. Safe location movement logs (e.g. initial stock balance or test adjustments)
+        await tx.locationMovementLog.deleteMany({
+          where: { OR: productOrVariantCondition },
+        });
+
+        // f. Inventory logs (adjustments)
+        await tx.inventoryLog.deleteMany({
+          where: { OR: productOrVariantCondition },
+        });
+
+        // g. Location inventories
+        await tx.locationInventory.deleteMany({
+          where: { OR: productOrVariantCondition },
+        });
+
+        // h. Customer reviews
+        await tx.review.deleteMany({
+          where: { productId: id },
+        });
+
+        // i. Product variants
+        await tx.productVariant.deleteMany({
+          where: { productId: id },
+        });
+
+        // j. Product record
+        await tx.product.delete({
+          where: { id },
+        });
+      },
+      { timeout: 30000, maxWait: 15000 }
+    );
+
+    // 8. Log successful audit event
+    await logAdminAction({
+      adminId: req.admin.id,
+      adminEmail: req.admin.email,
+      action: 'PRODUCT_DELETE',
+      entityType: 'Product',
+      entityId: id,
+      status: 'SUCCESS',
+      details: {
+        name: product.name,
+        sku: product.sku,
+        collectionId: product.collectionId,
+        sourceId: product.sourceId,
+        variantsCount: product.variants?.length || 0,
+      },
+    });
+
+    // 9. Invalidate server-side cache and broadcast catalogue update to storefronts
+    broadcastProductUpdate(product.collectionId);
+
+    return res.status(200).json({
+      success: true,
+      message: `Product "${product.name}" (${product.sku || product.sourceId || id}) has been permanently deleted from PostgreSQL.`,
+      deletedProductId: id,
+      deletedSku: product.sku,
+    });
+  } catch (err) {
+    console.error('[ADMIN DELETE PRODUCT ERROR]:', err);
+    return res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to permanently delete product due to an unexpected error.',
     });
   }
 }

@@ -125,7 +125,7 @@ export async function getStoreSettings(req, res) {
         : {
             id: 'default',
             storeName: 'Amoga Luxury',
-            contactEmail: 'support@amoga.com',
+            contactEmail: 'amogastores05@gmail.com',
             contactPhone: '+91 98765 43210',
             shippingStandardRate: 0,
             freeShippingThreshold: 2500,
@@ -418,7 +418,7 @@ export async function updateStoreSettings(req, res) {
       create: {
         id: 'default',
         storeName: storeName ? storeName.trim() : 'Amoga Luxury',
-        contactEmail: contactEmail ? contactEmail.trim().toLowerCase() : 'support@amoga.com',
+        contactEmail: contactEmail ? contactEmail.trim().toLowerCase() : 'amogastores05@gmail.com',
         contactPhone: contactPhone ? contactPhone.trim() : '+91 98765 43210',
         shippingStandardRate: Number(shippingStandardRate || 0),
         freeShippingThreshold: Number(freeShippingThreshold ?? 2500),
@@ -737,6 +737,52 @@ export async function toggleAdminUser(req, res) {
     return res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: 'Failed to toggle admin user status',
+    });
+  }
+}
+
+export async function deleteAdminUser(req, res) {
+  try {
+    const { id } = req.params;
+
+    if (id === req.admin.id) {
+      return res.status(400).json({
+        error: 'CANNOT_DELETE_SELF',
+        message: 'You cannot delete your own Super Admin account',
+      });
+    }
+
+    const targetUser = await prisma.adminUser.findUnique({ where: { id } });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Staff user not found' });
+    }
+
+    // Cascade delete active sessions and reset tokens
+    await prisma.adminSession.deleteMany({ where: { adminId: id } }).catch(() => {});
+    await prisma.passwordResetToken.deleteMany({ where: { adminUserId: id } }).catch(() => {});
+
+    await prisma.adminUser.delete({ where: { id } });
+
+    await logAdminAction({
+      adminId: req.admin.id,
+      adminEmail: req.admin.email,
+      action: 'ADMIN_USER_DELETE',
+      entityType: 'AdminUser',
+      entityId: id,
+      status: 'SUCCESS',
+      details: { email: targetUser.email, role: targetUser.role },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Staff member ${targetUser.email} has been permanently deleted`,
+      deletedUserId: id,
+    });
+  } catch (err) {
+    console.error('[ADMIN DELETE USER ERROR]:', err);
+    return res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to delete staff user',
     });
   }
 }

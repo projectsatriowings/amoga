@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import helmet from 'helmet';
 import cors from 'cors';
 import path from 'path';
@@ -15,6 +16,17 @@ const __dirname = path.dirname(__filename);
 const distPath = path.resolve(__dirname, '../../dist');
 
 export const app = express();
+
+// High performance response compression (Gzip / Deflate)
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+  threshold: 1024, // Only compress responses above 1KB
+}));
 
 // Security Headers
 app.use(

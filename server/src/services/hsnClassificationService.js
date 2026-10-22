@@ -25,6 +25,14 @@ export function getCachedReferenceData() {
   return cachedReferenceData;
 }
 
+// In-memory cache for Rate Master listing queries
+const rateMasterCache = new Map();
+const RATE_MASTER_CACHE_TTL_MS = 30 * 1000; // 30 seconds
+
+export function invalidateRateMasterCache() {
+  rateMasterCache.clear();
+}
+
 /**
  * Searches HSN reference candidates from HSN_SAC.pdf and cross-references with verified rate master
  * 
@@ -383,6 +391,8 @@ export async function createRateMasterEntry({
     details: { hsnCode: record.hsnCode, gstRate: record.gstRate, taxTreatment: record.taxTreatment },
   });
 
+  invalidateRateMasterCache();
+
   return record;
 }
 
@@ -446,6 +456,8 @@ export async function updateRateMasterEntry(id, updates = {}, adminEmail = 'tax-
     details: { changes: updates },
   });
 
+  invalidateRateMasterCache();
+
   return updated;
 }
 
@@ -453,6 +465,13 @@ export async function updateRateMasterEntry(id, updates = {}, adminEmail = 'tax-
  * Lists GST rate master entries with optional search and filters
  */
 export async function listRateMasterEntries({ search = '', status = null, page = 1, limit = 50 }) {
+  const cacheKey = JSON.stringify({ search, status, page, limit });
+  const now = Date.now();
+  const cached = rateMasterCache.get(cacheKey);
+  if (cached && (now - cached.timestamp < RATE_MASTER_CACHE_TTL_MS)) {
+    return cached.data;
+  }
+
   const where = {};
   if (status) {
     where.status = status;
@@ -477,7 +496,7 @@ export async function listRateMasterEntries({ search = '', status = null, page =
     }),
   ]);
 
-  return {
+  const result = {
     total,
     page,
     limit,
@@ -488,6 +507,9 @@ export async function listRateMasterEntries({ search = '', status = null, page =
       cessRate: Number(item.cessRate),
     })),
   };
+
+  rateMasterCache.set(cacheKey, { timestamp: now, data: result });
+  return result;
 }
 
 /**

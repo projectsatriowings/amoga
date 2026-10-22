@@ -523,7 +523,7 @@ model InventoryLog {
 model StoreSetting {
   id                       String         @id @default("default")
   storeName                String         @default("Amoga Luxury")
-  contactEmail             String         @default("support@amoga.com")
+  contactEmail             String         @default("amogastores05@gmail.com")
   contactPhone             String         @default("+91 98765 43210")
   shippingStandardRate     Decimal        @default(0.00) @db.Decimal(10, 2)
   freeShippingThreshold    Decimal        @default(2500.00) @db.Decimal(10, 2)

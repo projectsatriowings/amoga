@@ -24,6 +24,7 @@ import {
   Building2,
   ExternalLink,
   Check,
+  Trash2,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { PasswordInput } from '../../../components/ui/PasswordInput';
@@ -513,6 +514,42 @@ export function AdminStaffManagement({ addStaffTrigger }) {
     });
   };
 
+  const confirmDeleteStaff = (targetUser) => {
+    if (targetUser.id === admin?.id) {
+      alert('You cannot delete your own logged-in Super Admin account.');
+      return;
+    }
+    setOpenActionMenuId(null);
+    setConfirmModal({
+      isOpen: true,
+      title: `Permanently Delete ${targetUser.name}?`,
+      message: `Are you sure you want to delete ${targetUser.email}? This will revoke their access and permanently remove their staff login.`,
+      confirmText: 'Delete Staff Account',
+      variant: 'danger',
+      onConfirm: async () => {
+        setActionInProgressId(targetUser.id);
+        try {
+          const res = await adminFetch(`/api/admin/users/${targetUser.id}`, {
+            method: 'DELETE',
+          });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.message || 'Failed to delete staff member.');
+
+          setUsers((prev) => prev.filter((u) => u.id !== targetUser.id));
+          setNotification({
+            type: 'success',
+            text: `Staff account ${targetUser.email} has been permanently deleted.`,
+          });
+        } catch (err) {
+          setNotification({ type: 'error', text: err.message || 'Error deleting account.' });
+        } finally {
+          setActionInProgressId(null);
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Toast Notification */}
@@ -967,6 +1004,18 @@ export function AdminStaffManagement({ addStaffTrigger }) {
                                       <span>Activate Account</span>
                                     </>
                                   )}
+                                </button>
+                              )}
+
+                              {/* Permanently Delete Account (Super Admin only, not self) */}
+                              {isSuperAdmin && u.id !== admin?.id && (
+                                <button
+                                  type="button"
+                                  onClick={() => confirmDeleteStaff(u)}
+                                  className="w-full px-3 py-2 text-xs text-rose-700 hover:bg-rose-50 border-t border-stone-100 flex items-center gap-2 cursor-pointer transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                                  <span>Delete Staff Account</span>
                                 </button>
                               )}
                             </div>

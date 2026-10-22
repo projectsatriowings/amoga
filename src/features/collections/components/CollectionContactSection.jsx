@@ -236,11 +236,11 @@ export function CollectionContactSection({ collectionId = 'food', className = ''
                 style={{ borderColor: isCardDark ? 'rgba(255, 255, 255, 0.1)' : '#E5E0D5' }}
               >
                 <a
-                  href={`mailto:${contact.email1}`}
+                  href={`mailto:${contact.email1 || 'amogastores05@gmail.com'}`}
                   className="flex items-center justify-between text-xs font-mono font-semibold transition-colors group"
                   style={{ color: cardHeadingColor }}
                 >
-                  <span className="group-hover:underline">{contact.email1}</span>
+                  <span className="group-hover:underline">{contact.email1 || 'amogastores05@gmail.com'}</span>
                   <span
                     className="text-[10px] font-sans font-medium uppercase px-2.5 py-0.5 rounded-full border shadow-2xs"
                     style={{
@@ -249,26 +249,28 @@ export function CollectionContactSection({ collectionId = 'food', className = ''
                       color: badgeTextColor,
                     }}
                   >
-                    Primary Desk
+                    Official Desk
                   </span>
                 </a>
-                <a
-                  href={`mailto:${contact.email2}`}
-                  className="flex items-center justify-between text-xs font-mono font-semibold transition-colors group"
-                  style={{ color: cardHeadingColor }}
-                >
-                  <span className="group-hover:underline">{contact.email2}</span>
-                  <span
-                    className="text-[10px] font-sans font-medium uppercase px-2.5 py-0.5 rounded-full border shadow-2xs"
-                    style={{
-                      backgroundColor: badgeBg,
-                      borderColor: badgeBorder,
-                      color: badgeTextColor,
-                    }}
+                {contact.email2 && contact.email2 !== (contact.email1 || 'amogastores05@gmail.com') && (
+                  <a
+                    href={`mailto:${contact.email2}`}
+                    className="flex items-center justify-between text-xs font-mono font-semibold transition-colors group"
+                    style={{ color: cardHeadingColor }}
                   >
-                    Support
-                  </span>
-                </a>
+                    <span className="group-hover:underline">{contact.email2}</span>
+                    <span
+                      className="text-[10px] font-sans font-medium uppercase px-2.5 py-0.5 rounded-full border shadow-2xs"
+                      style={{
+                        backgroundColor: badgeBg,
+                        borderColor: badgeBorder,
+                        color: badgeTextColor,
+                      }}
+                    >
+                      Support
+                    </span>
+                  </a>
+                )}
               </div>
             </div>
 

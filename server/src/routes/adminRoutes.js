@@ -13,6 +13,7 @@ import {
   updateProduct,
   archiveProduct,
   restoreProduct,
+  deleteProduct,
   getNextSkuPreview,
   validateSkuEndpoint,
 } from '../controllers/adminProductsController.js';
@@ -65,6 +66,7 @@ import {
   createAdminUser,
   updateAdminUser,
   toggleAdminUser,
+  deleteAdminUser,
   sendStaffResetLink,
   listAuditLogs,
   getAuditLogById,
@@ -143,6 +145,7 @@ router.post('/products', requireAdminAuth(['CATALOGUE_MANAGER']), createProduct)
 router.put('/products/:id', requireAdminAuth(['CATALOGUE_MANAGER']), updateProduct);
 router.patch('/products/:id/archive', requireAdminAuth(['CATALOGUE_MANAGER']), archiveProduct);
 router.patch('/products/:id/restore', requireAdminAuth(['CATALOGUE_MANAGER']), restoreProduct);
+router.delete('/products/:id', requireAdminAuth(['CATALOGUE_MANAGER']), deleteProduct);
 router.post('/products/:id/tax-verify', requireAdminAuth(['CATALOGUE_MANAGER']), verifyProductTaxEndpoint);
 
 // 2.5 Assisted GST/HSN Classification & Verified Rate Master (Catalogue & Super Admin)
@@ -201,6 +204,7 @@ router.get('/users', requireAdminAuth(['SUPER_ADMIN']), listAdminUsers);
 router.post('/users', requireAdminAuth(['SUPER_ADMIN']), createAdminUser);
 router.put('/users/:id', requireAdminAuth(['SUPER_ADMIN']), updateAdminUser);
 router.patch('/users/:id/toggle', requireAdminAuth(['SUPER_ADMIN']), toggleAdminUser);
+router.delete('/users/:id', requireAdminAuth(['SUPER_ADMIN']), deleteAdminUser);
 router.post('/users/:id/send-reset-link', requireAdminAuth(['SUPER_ADMIN']), sendStaffResetLink);
 router.get('/audit-logs', requireAdminAuth(['SUPER_ADMIN']), listAuditLogs);
 router.get('/audit-logs/:id', requireAdminAuth(['SUPER_ADMIN']), getAuditLogById);

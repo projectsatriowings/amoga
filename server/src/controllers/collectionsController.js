@@ -1,7 +1,24 @@
 import { prisma } from '../config/prisma.js';
+import { registerCatalogueInvalidation } from './productsController.js';
+
+let collectionsCache = null;
+let collectionsCacheTime = 0;
+const COLLECTIONS_CACHE_TTL_MS = 60 * 1000; // 60s TTL
+
+export function invalidateCollectionsCache() {
+  collectionsCache = null;
+  collectionsCacheTime = 0;
+}
+registerCatalogueInvalidation(invalidateCollectionsCache);
 
 export async function getCollections(req, res, next) {
   try {
+    const now = Date.now();
+    if (collectionsCache && (now - collectionsCacheTime < COLLECTIONS_CACHE_TTL_MS)) {
+      res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+      return res.status(200).json(collectionsCache);
+    }
+
     const collections = await prisma.collection.findMany({
       where: { isActive: true },
       include: {
@@ -19,13 +36,19 @@ export async function getCollections(req, res, next) {
       return a.name.localeCompare(b.name);
     });
 
-    return res.status(200).json({
+    const payload = {
       success: true,
       data: collections.map((c) => ({
         ...c,
         productCount: c._count?.products || 0,
       })),
-    });
+    };
+
+    collectionsCache = payload;
+    collectionsCacheTime = now;
+
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    return res.status(200).json(payload);
   } catch (error) {
     next(error);
   }

@@ -21,6 +21,18 @@ export const STALL_ROLES = [
   'STALL_CASHIER',
 ];
 
+// High-performance in-memory cache for validated admin sessions
+const sessionCache = new Map();
+const SESSION_CACHE_TTL_MS = 20 * 1000; // 20 seconds TTL
+
+export function invalidateSessionCache(tokenHash = null) {
+  if (tokenHash) {
+    sessionCache.delete(tokenHash);
+  } else {
+    sessionCache.clear();
+  }
+}
+
 /**
  * Middleware to authenticate admin requests via Bearer token.
  * Defaults to ADMIN_PANEL_ROLES so that stall-only roles cannot access admin panel endpoints.
@@ -49,10 +61,21 @@ export function requireAdminAuth(allowedRoles = []) {
       }
 
       const tokenHash = hashSessionToken(token);
-      const session = await prisma.adminSession.findUnique({
-        where: { tokenHash },
-        include: { admin: true },
-      });
+      let session = null;
+      const cached = sessionCache.get(tokenHash);
+      const now = Date.now();
+
+      if (cached && (now - cached.timestamp < SESSION_CACHE_TTL_MS)) {
+        session = cached.session;
+      } else {
+        session = await prisma.adminSession.findUnique({
+          where: { tokenHash },
+          include: { admin: true },
+        });
+        if (session) {
+          sessionCache.set(tokenHash, { session, timestamp: now });
+        }
+      }
 
       if (!session) {
         return res.status(401).json({

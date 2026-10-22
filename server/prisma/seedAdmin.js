@@ -11,24 +11,6 @@ async function seedAdmin() {
       password: 'Admin@Amoga2026!',
       role: 'SUPER_ADMIN',
     },
-    {
-      email: 'catalogue@amoga.com',
-      name: 'Priya Sharma (Catalogue Lead)',
-      password: 'Catalogue@Amoga2026!',
-      role: 'CATALOGUE_MANAGER',
-    },
-    {
-      email: 'orders@amoga.com',
-      name: 'Vikram Mehta (Fulfilment Lead)',
-      password: 'Orders@Amoga2026!',
-      role: 'ORDER_MANAGER',
-    },
-    {
-      email: 'content@amoga.com',
-      name: 'Ananya Roy (Content Lead)',
-      password: 'Content@Amoga2026!',
-      role: 'CONTENT_MANAGER',
-    },
   ];
 
   for (const admin of defaultAdmins) {
@@ -54,11 +36,13 @@ async function seedAdmin() {
   // 2. Default Store Settings
   const settings = await prisma.storeSetting.upsert({
     where: { id: 'default' },
-    update: {},
+    update: {
+      contactEmail: 'amogastores05@gmail.com',
+    },
     create: {
       id: 'default',
       storeName: 'Amoga Luxury Atelier',
-      contactEmail: 'concierge@amoga.com',
+      contactEmail: 'amogastores05@gmail.com',
       contactPhone: '+91 98200 12345',
       shippingStandardRate: 0.0,
       freeShippingThreshold: 2500.0,

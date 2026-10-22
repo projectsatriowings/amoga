@@ -8,6 +8,13 @@ const sseClients = new Set();
 const productsResponseCache = new Map();
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds fallback TTL
 
+const invalidationListeners = new Set();
+export function registerCatalogueInvalidation(fn) {
+  if (typeof fn === 'function') {
+    invalidationListeners.add(fn);
+  }
+}
+
 /**
  * Broadcast catalogue changes (creation, edit, archive, restore, stock change)
  * to all connected storefront clients in real-time.
@@ -15,6 +22,15 @@ const CACHE_TTL_MS = 60 * 1000; // 60 seconds fallback TTL
 export function broadcastProductUpdate(collectionId = null) {
   catalogueVersion = Date.now();
   productsResponseCache.clear();
+
+  for (const listener of invalidationListeners) {
+    try {
+      listener();
+    } catch (err) {
+      console.error('[CACHE INVALIDATION LISTENER ERROR]:', err);
+    }
+  }
+
   const payload = JSON.stringify({
     type: 'PRODUCTS_UPDATED',
     collectionId: collectionId || 'all',
@@ -92,9 +108,7 @@ function sanitizeImagePath(img) {
 
 export async function getProducts(req, res, next) {
   try {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
 
     const { collection, collectionId, category, q, sort = 'default', page = '1', limit = '100' } = req.query;
 
@@ -115,7 +129,12 @@ export async function getProducts(req, res, next) {
 
     const targetCollection = (collection || collectionId || '').trim();
     if (targetCollection && targetCollection !== 'all') {
-      where.collectionId = targetCollection.toLowerCase();
+      where.collection = {
+        OR: [
+          { id: targetCollection.toLowerCase() },
+          { slug: targetCollection.toLowerCase() },
+        ],
+      };
     }
 
     if (category && category !== 'all') {
@@ -252,9 +271,7 @@ export async function getProducts(req, res, next) {
 
 export async function getProductBySlug(req, res, next) {
   try {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
 
     const { collection, slug } = req.params;
 

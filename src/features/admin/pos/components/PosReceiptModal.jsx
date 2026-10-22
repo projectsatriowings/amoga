@@ -59,7 +59,7 @@ export function PosReceiptModal({
     state: 'Tamil Nadu',
     pincode: '600017',
     contactPhone: '+91 98765 43210',
-    contactEmail: 'support@amoga.com',
+    contactEmail: 'amogastores05@gmail.com',
   };
 
   const formattedDate = new Date(sale.createdAt || Date.now()).toLocaleString('en-IN', {

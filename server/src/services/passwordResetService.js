@@ -195,7 +195,7 @@ export async function sendPasswordResetEmail(options = {}) {
     accountType,
   });
 
-  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_FROM || `"Amoga Atelier Concierge" <concierge@amoga.co.in>`;
+  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_FROM || `"Amoga Atelier" <amogastores05@gmail.com>`;
 
   try {
     // 1. Mock delivery mode (used in tests or local dev with MOCK_EMAIL_DELIVERY=true)
@@ -252,7 +252,7 @@ export async function sendPasswordResetEmail(options = {}) {
         },
         body: JSON.stringify({
           personalizations: [{ to: [{ email: cleanEmail, name: displayName }] }],
-          from: { email: process.env.SENDGRID_FROM || 'concierge@amoga.co.in', name: 'Amoga Atelier' },
+          from: { email: process.env.SENDGRID_FROM || 'amogastores05@gmail.com', name: 'Amoga Atelier' },
           subject,
           content: [{ type: 'text/html', value: html }],
         }),

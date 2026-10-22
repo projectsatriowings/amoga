@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Search,
-  Barcode,
   ShoppingBag,
   Plus,
   Minus,
@@ -147,8 +146,6 @@ export function StallBillingPage() {
   const [products, setProducts] = useState([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState('');
-  const [barcodeMode, setBarcodeMode] = useState(false);
-  const barcodeInputRef = useRef(null);
 
   // Quick Stock Transfer Modal State (Stall Manager & Super Admin only)
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -396,8 +393,8 @@ export function StallBillingPage() {
     }
   };
 
-  // 4. Barcode Enter handler
-  const handleBarcodeSubmit = (e) => {
+  // 4. Quick SKU / Search Enter handler
+  const handleSearchKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const code = searchQuery.trim().toLowerCase();
@@ -415,7 +412,7 @@ export function StallBillingPage() {
         handleAddToCart(exactMatch, matchedVariant || null);
         setSearchQuery('');
       } else {
-        setErrorMessage(`No product found matching barcode/SKU "${code}".`);
+        setErrorMessage(`No product found matching "${code}".`);
         setTimeout(() => setErrorMessage(''), 3000);
       }
     }
@@ -617,51 +614,23 @@ export function StallBillingPage() {
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 absolute left-3 top-2.5 text-stone-400" />
                   <input
-                    ref={barcodeInputRef}
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={handleBarcodeSubmit}
-                    placeholder={
-                      barcodeMode
-                        ? 'Scan barcode / SKU and press Enter...'
-                        : 'Search by product name, SKU, or tag...'
-                    }
-                    className={`w-full pl-9 pr-8 py-2 text-xs sm:text-sm border rounded-lg focus:outline-none transition-colors ${
-                      barcodeMode
-                        ? 'border-[#762F39] bg-rose-50/20 text-[#762F39] focus:ring-2 focus:ring-[#762F39]'
-                        : 'border-stone-300 bg-white focus:ring-2 focus:ring-[#3F5A35]'
-                    }`}
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder="Search by product name, SKU, or tag..."
+                    className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm border border-stone-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F5A35] transition-colors"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-600"
+                      className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-600 cursor-pointer"
+                      title="Clear search"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
-
-                {/* Barcode Scanner Toggle */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBarcodeMode(!barcodeMode);
-                    if (!barcodeMode && barcodeInputRef.current) {
-                      barcodeInputRef.current.focus();
-                    }
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors shrink-0 cursor-pointer ${
-                    barcodeMode
-                      ? 'bg-[#762F39] text-white border-[#762F39]'
-                      : 'bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200'
-                  }`}
-                  title="Toggle Barcode Scanner Mode"
-                >
-                  <Barcode className="w-4 h-4" />
-                  <span className="hidden sm:inline">{barcodeMode ? 'Scanner ON' : 'Scanner'}</span>
-                </button>
 
                 {/* Refresh Catalog */}
                 <button
@@ -931,7 +900,7 @@ export function StallBillingPage() {
                   <div>
                     <h5 className="font-semibold text-stone-700 text-sm">Register Bill is Empty</h5>
                     <p className="text-xs text-stone-500 mt-1 max-w-[240px]">
-                      Select items from the catalog or toggle barcode mode to scan items into the bill.
+                      Select items from the catalog to add them into the bill.
                     </p>
                   </div>
                   <div className="text-[11px] text-stone-600 bg-stone-50 border border-stone-200 rounded-lg p-2 font-mono flex items-center gap-1.5">

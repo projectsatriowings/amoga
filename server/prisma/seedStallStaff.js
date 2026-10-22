@@ -19,13 +19,6 @@ async function seedStallStaff() {
       role: 'STALL_MANAGER',
       assignedLocationIds,
     },
-    {
-      email: 'stallcashier@amoga.com',
-      name: 'Pooja Sundaram (Stall Cashier)',
-      password: 'StallCashier@Amoga2026!',
-      role: 'STALL_CASHIER',
-      assignedLocationIds,
-    },
   ];
 
   for (const staff of defaultStallStaff) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ShieldCheck,
   Search,
@@ -15,6 +15,7 @@ import {
   AlertCircle,
   HelpCircle,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 
@@ -46,9 +47,12 @@ export function AdminTaxRates() {
   const [modalError, setModalError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Quick statutory HSN lookup in modal
+  // Statutory HSN search & lookup in modal (by code or name)
+  const [nameSearchQuery, setNameSearchQuery] = useState('');
   const [hsnLookupResults, setHsnLookupResults] = useState([]);
   const [isLookingUpHsn, setIsLookingUpHsn] = useState(false);
+  const [selectedCandidateInfo, setSelectedCandidateInfo] = useState(null);
+  const debounceTimerRef = useRef(null);
 
   const isAuthorized = admin?.role === 'SUPER_ADMIN' || admin?.role === 'CATALOGUE_MANAGER';
 
@@ -106,6 +110,8 @@ export function AdminTaxRates() {
       notes: '',
       status: 'ACTIVE',
     });
+    setNameSearchQuery('');
+    setSelectedCandidateInfo(null);
     setHsnLookupResults([]);
     setModalError(null);
     setShowModal(true);
@@ -126,37 +132,68 @@ export function AdminTaxRates() {
       notes: item.notes || '',
       status: item.status || 'ACTIVE',
     });
+    setNameSearchQuery(item.description || item.hsnCode);
+    setSelectedCandidateInfo(null);
     setHsnLookupResults([]);
     setModalError(null);
     setShowModal(true);
   };
 
-  const handleHsnLookup = async (code) => {
-    if (!code || code.length < 2) {
+  const handleHsnLookup = (query) => {
+    const clean = String(query || '').trim();
+    if (!clean || clean.length < 2) {
       setHsnLookupResults([]);
+      setIsLookingUpHsn(false);
       return;
     }
-    try {
-      setIsLookingUpHsn(true);
-      const res = await adminFetch(`/api/admin/tax/hsn/search?q=${encodeURIComponent(code)}&limit=6`);
-      const data = await res.json();
-      if (data.candidates) {
-        setHsnLookupResults(data.candidates);
-      }
-    } catch {
-      // Non-blocking
-    } finally {
-      setIsLookingUpHsn(false);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
+
+    setIsLookingUpHsn(true);
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await adminFetch(`/api/admin/tax/hsn/search?q=${encodeURIComponent(clean)}&limit=10`);
+        const data = await res.json();
+        if (data.candidates && Array.isArray(data.candidates)) {
+          setHsnLookupResults(data.candidates);
+        } else {
+          setHsnLookupResults([]);
+        }
+      } catch {
+        setHsnLookupResults([]);
+      } finally {
+        setIsLookingUpHsn(false);
+      }
+    }, 200);
   };
 
   const handleSelectHsnCandidate = (cand) => {
+    const code = String(cand.hsnCode || '').trim();
+    // Intelligently suggest rate based on category / HSN chapter
+    let suggestedRate = '5.00';
+    if (cand.verifiedGstRate) {
+      suggestedRate = Number(cand.verifiedGstRate).toFixed(2);
+    } else if (code.startsWith('71')) {
+      suggestedRate = '3.00'; // Silver Jewellery
+    } else if (code.startsWith('50') || code.startsWith('52') || code.startsWith('54') || code.startsWith('09')) {
+      suggestedRate = '5.00'; // Silk, Cotton, Sarees, Tea
+    } else if (code.startsWith('2104') || code.startsWith('2106')) {
+      suggestedRate = '12.00'; // Soups & Processed Blends
+    } else if (code.startsWith('10') || code.startsWith('11') || code.startsWith('2103')) {
+      suggestedRate = '5.00'; // Millets & Podis
+    }
+
     setModalForm((prev) => ({
       ...prev,
       hsnCode: cand.hsnCode,
-      description: prev.description || cand.description,
+      description: cand.description || prev.description,
+      gstRate: suggestedRate,
     }));
+    setSelectedCandidateInfo(cand);
     setHsnLookupResults([]);
+    setNameSearchQuery(cand.description || cand.hsnCode);
   };
 
   const handleSaveModal = async (e) => {
@@ -289,7 +326,7 @@ export function AdminTaxRates() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by HSN code (e.g. 5007, 2104) or description..."
+              placeholder="Search by product name (e.g. silk, silver, tea, soup, podi) or HSN code..."
               className="w-full pl-9 pr-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
             />
           </div>
@@ -521,49 +558,158 @@ export function AdminTaxRates() {
                 </div>
               )}
 
-              {/* HSN Code & Lookup */}
+              {/* Option to find HSN code based on Name or Keyword */}
+              {modalMode === 'create' && (
+                <div className="p-3.5 bg-gradient-to-r from-stone-50 to-[#FDFBF7] rounded-xl border border-[#E5E0D5] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1817]">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Find HSN Code by Product / Commodity Name</span>
+                    </label>
+                    <span className="text-[10px] text-[#7A7167]">CBIC HSN/SAC Directory</span>
+                  </div>
+
+                  <div className="relative flex items-center">
+                    <Search className="w-4 h-4 text-[#7A7167] absolute left-3 pointer-events-none z-10" />
+                    <input
+                      type="text"
+                      value={nameSearchQuery}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNameSearchQuery(val);
+                        handleHsnLookup(val);
+                      }}
+                      placeholder="Type name (e.g. Silk Saree, Herbal Tea, Silver Ring, Soup Mix, Podi)..."
+                      className="w-full pl-10 pr-10 py-2.5 bg-white border border-[#D5CEC2] rounded-lg text-xs text-[#1A1817] placeholder:text-stone-400 focus:border-[#722F37] focus:ring-1 focus:ring-[#722F37] outline-none shadow-xs"
+                    />
+                    {isLookingUpHsn ? (
+                      <Clock className="w-4 h-4 animate-spin text-[#722F37] absolute right-3 pointer-events-none z-10" />
+                    ) : nameSearchQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNameSearchQuery('');
+                          setHsnLookupResults([]);
+                        }}
+                        className="absolute right-2.5 p-1 text-stone-400 hover:text-stone-700 rounded-full cursor-pointer flex items-center justify-center z-10"
+                        title="Clear search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {/* Quick Category Chips */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span className="text-[10px] text-stone-500 font-medium">Quick categories:</span>
+                    {[
+                      { label: '🥻 Silk Sarees', q: 'silk saree' },
+                      { label: '💍 Silver Jewellery', q: 'silver' },
+                      { label: '🫖 Herbal Tea', q: 'tea' },
+                      { label: '🍲 Soup Mixes', q: 'soup' },
+                      { label: '🌾 Millets', q: 'millet' },
+                      { label: '🌶️ Rice Podis', q: 'podi' },
+                    ].map((chip) => (
+                      <button
+                        type="button"
+                        key={chip.label}
+                        onClick={() => {
+                          setNameSearchQuery(chip.q);
+                          handleHsnLookup(chip.q);
+                        }}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-white border border-[#D5CEC2] text-stone-700 hover:border-[#722F37] hover:text-[#722F37] hover:bg-[#722F37]/5 transition cursor-pointer"
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Candidate recommendations list */}
+                  {hsnLookupResults.length > 0 && (
+                    <div className="mt-2 p-2 bg-white border border-[#D5CEC2] rounded-lg max-h-56 overflow-y-auto space-y-1 shadow-sm">
+                      <p className="text-[10px] text-[#7A7167] font-semibold uppercase px-1 pb-1 border-b border-stone-100 flex items-center justify-between">
+                        <span>Matches found for "{nameSearchQuery}":</span>
+                        <span className="font-normal normal-case text-stone-500">Click to select & auto-fill</span>
+                      </p>
+                      {hsnLookupResults.map((cand) => (
+                        <button
+                          type="button"
+                          key={`${cand.hsnCode}-${cand.description}`}
+                          onClick={() => handleSelectHsnCandidate(cand)}
+                          className="w-full text-left p-2 hover:bg-[#FBF9F5] rounded border border-transparent hover:border-[#E5E0D5] transition flex items-start justify-between gap-3 text-xs cursor-pointer group"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-[#722F37] text-xs group-hover:underline">
+                                HSN {cand.hsnCode}
+                              </span>
+                              {cand.level && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-stone-100 text-stone-600 border border-stone-200 uppercase">
+                                  {cand.level}
+                                </span>
+                              )}
+                              {cand.verifiedGstRate && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#722F37]/10 text-[#722F37]">
+                                  {cand.verifiedGstRate}% GST
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-stone-700 leading-snug line-clamp-2 mt-0.5">
+                              {cand.description}
+                            </p>
+                            {cand.matchReason && (
+                              <p className="text-[9px] text-stone-400 mt-0.5 italic">
+                                {cand.matchReason}
+                              </p>
+                            )}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Select HSN
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedCandidateInfo && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50/80 px-2.5 py-1.5 rounded-md border border-emerald-200">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="truncate">
+                        Selected <strong>HSN {modalForm.hsnCode}</strong> — details and suggested GST rate auto-filled below.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* HSN Code Direct Input */}
               <div>
-                <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                  HSN Code <span className="text-rose-600">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-[#4A423B]">
+                    HSN Code <span className="text-rose-600">*</span>
+                  </label>
+                  <span className="text-[10px] text-stone-400 font-mono">2 to 8 digits</span>
+                </div>
                 <div className="relative">
                   <input
                     type="text"
                     value={modalForm.hsnCode}
                     disabled={modalMode === 'edit'}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      const val = e.target.value.trim();
                       setModalForm((p) => ({ ...p, hsnCode: val }));
                       handleHsnLookup(val);
                     }}
-                    placeholder="e.g. 5007 or 2104"
+                    placeholder="e.g. 5007, 7113, 2104 or search name above"
                     maxLength={8}
-                    className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs font-mono text-[#1A1817] disabled:bg-stone-100"
+                    className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs font-mono text-[#1A1817] disabled:bg-stone-100 focus:border-[#722F37] outline-none"
                   />
                   {isLookingUpHsn && (
                     <Clock className="w-4 h-4 animate-spin text-[#722F37] absolute right-3 top-2.5" />
                   )}
                 </div>
-
-                {/* Candidate recommendations from PDF */}
-                {hsnLookupResults.length > 0 && modalMode === 'create' && (
-                  <div className="mt-1.5 p-2 bg-[#FBF9F5] border border-[#D5CEC2] rounded-md space-y-1">
-                    <p className="text-[10px] text-[#7A7167] font-semibold uppercase">
-                      Candidates found in HSN_SAC.pdf:
-                    </p>
-                    {hsnLookupResults.map((cand) => (
-                      <button
-                        type="button"
-                        key={cand.id}
-                        onClick={() => handleSelectHsnCandidate(cand)}
-                        className="w-full text-left p-1.5 hover:bg-white rounded border border-transparent hover:border-[#D5CEC2] flex items-center justify-between text-xs cursor-pointer"
-                      >
-                        <span className="font-mono font-bold text-[#722F37]">{cand.hsnCode}</span>
-                        <span className="truncate max-w-xs text-[11px] text-stone-700">{cand.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Description */}

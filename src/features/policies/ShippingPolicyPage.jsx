@@ -155,7 +155,7 @@ export function ShippingPolicyPage() {
               <span>5. Delivery Help & Customer Support</span>
             </h2>
             <p className="text-xs sm:text-sm text-[#4A423B] leading-relaxed">
-              If your delivery is delayed or if you need to update your delivery address before dispatch, contact our customer support team at <a href="mailto:support@amoga.com" className="text-[#722F37] font-semibold underline">support@amoga.com</a> or call us at <a href="tel:+919940018593" className="text-[#722F37] font-semibold underline">+91 99400 18593</a> (Mon–Sat, 9:00 AM – 7:00 PM IST).
+              If your delivery is delayed or if you need to update your delivery address before dispatch, contact our customer support team at <a href="mailto:amogastores05@gmail.com" className="text-[#722F37] font-semibold underline">amogastores05@gmail.com</a> or call us at <a href="tel:+919940018593" className="text-[#722F37] font-semibold underline">+91 99400 18593</a> (Mon–Sat, 9:00 AM – 7:00 PM IST).
             </p>
           </section>
         </div>
