@@ -6,7 +6,6 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Amoga — A unified luxury brand featuring Gourmet Food, Heritage Sarees, and Silver Jewellery." />
-    <meta http-equiv="Permissions-Policy" content="accelerometer=(self 'https://*.razorpay.com'), gyroscope=(self 'https://*.razorpay.com'), magnetometer=(), clipboard-read=*, clipboard-write=*" />
     <title>Amoga — Unified Luxury & Heritage Collections</title>
 
     <!-- Suppress third-party payment gateway internal telemetry & hardware probe logs in dev console -->
@@ -42,6 +41,25 @@
           }
           origWarn.apply(console, arguments);
         };
+
+        // Grant permission to third-party payment iframes to prevent accelerometer/orientation violations
+        if (typeof MutationObserver !== 'undefined') {
+          var obs = new MutationObserver(function(mutations) {
+            mutations.forEach(function(m) {
+              m.addedNodes.forEach(function(node) {
+                if (node && node.nodeName === 'IFRAME') {
+                  try {
+                    var cur = node.getAttribute('allow') || '';
+                    if (cur.indexOf('accelerometer') === -1) {
+                      node.setAttribute('allow', (cur ? cur + '; ' : '') + 'accelerometer; gyroscope; payment');
+                    }
+                  } catch (e) {}
+                }
+              });
+            });
+          });
+          obs.observe(document.documentElement, { childList: true, subtree: true });
+        }
       })();
     </script>
     <!-- Google Fonts Preconnect & Stylesheets -->

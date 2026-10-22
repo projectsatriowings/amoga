@@ -6,6 +6,10 @@
   "background_color": "#0e0f12",
   "theme_color": "#722F37",
   "description": "Amoga — Luxury Gourmet Food, Heritage Sarees, Artisanal Teas, and Fine Jewellery.",
+  "serviceworker": {
+    "src": "/sw.js",
+    "scope": "/"
+  },
   "icons": [
     {
       "src": "/amoga-logo.png",
