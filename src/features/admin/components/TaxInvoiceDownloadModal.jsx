@@ -12,6 +12,7 @@ import {
   Square,
   Archive,
   AlertTriangle,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 
@@ -193,6 +194,51 @@ export function TaxInvoiceDownloadModal({ isOpen, onClose }) {
       setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1000);
     } catch (err) {
       alert(`Batch download error: ${err.message}`);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // Export matching invoices register as CSV
+  const handleExportRegisterCsv = async () => {
+    if (!appliedFilters?.fromDate || !appliedFilters?.toDate) {
+      alert('Please apply date filters first.');
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      const params = new URLSearchParams({
+        fromDate: appliedFilters.fromDate,
+        toDate: appliedFilters.toDate,
+      });
+      if (paymentStatus !== 'ALL') params.append('paymentStatus', paymentStatus);
+      if (orderStatus !== 'ALL') params.append('status', orderStatus);
+      if (search.trim()) params.append('search', search.trim());
+
+      const res = await fetch(`/api/admin/invoices/export-csv?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'x-admin-token': token,
+        },
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.message || 'Failed to export invoices register');
+      }
+
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `Amoga_Tax_Invoices_Register_${appliedFilters.fromDate}_to_${appliedFilters.toDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1000);
+    } catch (err) {
+      alert(`Export error: ${err.message}`);
     } finally {
       setDownloading(false);
     }
@@ -450,7 +496,7 @@ export function TaxInvoiceDownloadModal({ isOpen, onClose }) {
                               <td className="px-3 py-2">
                                 <div className="font-medium text-[#1A1817]">{inv.customerName}</div>
                                 <div className="text-[10px] text-[#7A7167]">
-                                  {inv.placeOfSupply || 'Tamil Nadu'} • GSTIN: {inv.customerGstin}
+                                  {inv.placeOfSupply || 'Tamil Nadu'}{inv.customerGstin && inv.customerGstin !== 'URP' ? ` • GSTIN: ${inv.customerGstin}` : ''}
                                 </div>
                               </td>
                               <td className="px-3 py-2 text-right font-jakarta font-bold text-[#1A1817] tabular-nums whitespace-nowrap text-xs">
@@ -505,9 +551,20 @@ export function TaxInvoiceDownloadModal({ isOpen, onClose }) {
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <button
               type="button"
+              onClick={handleExportRegisterCsv}
+              disabled={!appliedFilters || invoices.length === 0 || downloading}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white border border-[#5C544C] text-[#332D28] text-xs font-medium rounded-lg hover:bg-[#F5F2EB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              title="Download line-item tax invoices register for selected date range (CSV)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-[#5C544C]" />
+              <span>Export Register (CSV)</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => handleBatchDownload('all')}
               disabled={!appliedFilters || invoices.length === 0 || downloading}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white border border-[#722F37] text-[#722F37] text-xs font-medium rounded-lg hover:bg-[#722F37]/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white border border-[#722F37] text-[#722F37] text-xs font-medium rounded-lg hover:bg-[#722F37]/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               title="Download all invoices matching current date filters as a ZIP archive"
             >
               <Archive className="w-3.5 h-3.5" />

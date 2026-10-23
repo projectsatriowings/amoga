@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma.js';
 import {
   calculateMonthBoundaries,
   fetchGstMonthlyData,
+  generateGstExcelWorkbook,
   generateGstCsvString,
   generateGstPdfBuffer,
 } from '../services/gstReportService.js';
@@ -26,6 +27,7 @@ function escapeCsv(val) {
  * GET /api/admin/reports/gst
  * Monthly GST Report endpoint supporting:
  * - format=preview (JSON summary & preview)
+ * - format=excel | xlsx (Downloadable multi-sheet Excel Workbook)
  * - format=csv (Downloadable CSV)
  * - format=pdf (Downloadable PDF Summary)
  */
@@ -59,6 +61,16 @@ export async function getGstReportEndpoint(req, res) {
 
     const reportData = await fetchGstMonthlyData({ month: m, year: y });
     const filenameBase = `Amoga_GST_Report_${reportData.period.monthName}_${y}`;
+
+    if (format === 'excel' || format === 'xlsx') {
+      const excelBuffer = await generateGstExcelWorkbook(reportData);
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      );
+      res.setHeader('Content-Disposition', `attachment; filename="${filenameBase}.xlsx"`);
+      return res.status(200).send(excelBuffer);
+    }
 
     if (format === 'csv') {
       const csv = generateGstCsvString(reportData);
@@ -442,3 +454,140 @@ export async function exportOutstandingPaymentsEndpoint(req, res) {
     return res.status(500).json({ error: 'EXPORT_ERROR', message: 'Failed to export outstanding payments' });
   }
 }
+
+/**
+ * GET /api/admin/invoices/export-csv
+ * Exports date-range filtered Tax Invoice Register as RFC 4180 CSV
+ */
+export async function exportInvoicesCsvEndpoint(req, res) {
+  try {
+    const { fromDate, toDate, status, paymentStatus, search } = req.query;
+
+    if (!fromDate || !toDate) {
+      return res.status(400).json({
+        error: 'MISSING_DATE_RANGE',
+        message: 'Both From Date and To Date are required.',
+      });
+    }
+
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        error: 'INVALID_DATE_FORMAT',
+        message: 'From Date and To Date must be valid dates (YYYY-MM-DD).',
+      });
+    }
+
+    if (start > end) {
+      return res.status(400).json({
+        error: 'INVALID_DATE_RANGE',
+        message: 'From Date cannot be later than To Date.',
+      });
+    }
+
+    const fromUtc = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0) - (5.5 * 3600 * 1000));
+    const toUtcNextDay = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() + 1, 0, 0, 0) - (5.5 * 3600 * 1000));
+
+    const where = {
+      status: { not: 'CANCELLED' },
+      OR: [
+        { invoiceDate: { gte: fromUtc, lt: toUtcNextDay } },
+        { invoiceDate: null, createdAt: { gte: fromUtc, lt: toUtcNextDay } },
+      ],
+    };
+
+    if (status && status !== 'ALL') where.status = status;
+    if (paymentStatus && paymentStatus !== 'ALL') where.paymentStatus = paymentStatus;
+
+    if (search && search.trim()) {
+      const q = search.trim();
+      where.AND = [
+        {
+          OR: [
+            { invoiceNumber: { contains: q, mode: 'insensitive' } },
+            { orderReference: { contains: q, mode: 'insensitive' } },
+            { customerName: { contains: q, mode: 'insensitive' } },
+            { customerEmail: { contains: q, mode: 'insensitive' } },
+          ],
+        },
+      ];
+    }
+
+    const orders = await prisma.order.findMany({
+      where,
+      include: { items: true, payments: true },
+      orderBy: { createdAt: 'desc' },
+      take: 5000,
+    });
+
+    const headers = [
+      'Invoice Number',
+      'Invoice Date',
+      'Order Reference',
+      'Customer Name',
+      'Customer Email',
+      'Customer Phone',
+      'Billing State',
+      'Place of Supply',
+      'Supply Type',
+      'Line Items Count',
+      'Taxable Value (INR)',
+      'CGST (INR)',
+      'SGST (INR)',
+      'IGST (INR)',
+      'Total Tax (INR)',
+      'Invoice Total (INR)',
+      'Payment Status',
+      'Order Status',
+    ];
+
+    const rows = orders.map((o) => {
+      const isInter = Boolean(o.isInterState || (o.state && o.state.toLowerCase() !== 'tamil nadu'));
+      return [
+        escapeCsv(o.invoiceNumber || 'INV-PENDING'),
+        escapeCsv(o.invoiceDate ? o.invoiceDate.toISOString().split('T')[0] : o.createdAt.toISOString().split('T')[0]),
+        escapeCsv(o.orderReference),
+        escapeCsv(o.customerName),
+        escapeCsv(o.customerEmail),
+        escapeCsv(o.customerPhone),
+        escapeCsv(o.state || 'Tamil Nadu'),
+        escapeCsv(o.placeOfSupply || o.state || 'Tamil Nadu'),
+        escapeCsv(isInter ? 'INTER_STATE' : 'INTRA_STATE'),
+        escapeCsv(o.items?.length || 0),
+        escapeCsv(Number(o.taxableAmount || 0).toFixed(2)),
+        escapeCsv(Number(o.cgstAmount || 0).toFixed(2)),
+        escapeCsv(Number(o.sgstAmount || 0).toFixed(2)),
+        escapeCsv(Number(o.igstAmount || 0).toFixed(2)),
+        escapeCsv(Number(o.taxAmount || 0).toFixed(2)),
+        escapeCsv(Number(o.totalAmount || 0).toFixed(2)),
+        escapeCsv(o.paymentStatus),
+        escapeCsv(o.status),
+      ];
+    });
+
+    const totalInvoiced = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+    const totalTaxable = orders.reduce((sum, o) => sum + Number(o.taxableAmount || 0), 0);
+    const totalTax = orders.reduce((sum, o) => sum + Number(o.taxAmount || 0), 0);
+
+    const summary = [
+      '',
+      `"Total Matching Invoices",${escapeCsv(orders.length)}`,
+      `"Total Taxable Value (INR)",${escapeCsv(totalTaxable.toFixed(2))}`,
+      `"Total Tax Collected (INR)",${escapeCsv(totalTax.toFixed(2))}`,
+      `"Total Invoiced Amount (INR)",${escapeCsv(totalInvoiced.toFixed(2))}`,
+      `"Date Filter Range",${escapeCsv(`${fromDate} to ${toDate}`)}`,
+      `"Exported At",${escapeCsv(new Date().toISOString())}`,
+    ];
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(',')), ...summary].join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="Amoga_Tax_Invoices_Register_${fromDate}_to_${toDate}.csv"`);
+    return res.status(200).send(csvContent);
+  } catch (err) {
+    console.error('[EXPORT INVOICES CSV ERROR]:', err);
+    return res.status(500).json({ error: 'EXPORT_ERROR', message: 'Failed to export invoices CSV' });
+  }
+}
+

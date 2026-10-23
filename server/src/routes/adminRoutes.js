@@ -66,6 +66,7 @@ import {
   downloadBatchInvoicesZipEndpoint,
   exportPaymentsToDateEndpoint,
   exportOutstandingPaymentsEndpoint,
+  exportInvoicesCsvEndpoint,
 } from '../controllers/adminGstInvoicesController.js';
 import {
   getStoreSettings,
@@ -195,6 +196,7 @@ router.get('/reports/gst', requireAdminAuth(['ORDER_MANAGER']), getGstReportEndp
 router.get('/reports/payments-to-date', requireAdminAuth(['ORDER_MANAGER']), exportPaymentsToDateEndpoint);
 router.get('/reports/outstanding-payments', requireAdminAuth(['ORDER_MANAGER']), exportOutstandingPaymentsEndpoint);
 router.get('/invoices', requireAdminAuth(['ORDER_MANAGER']), listInvoicesEndpoint);
+router.get('/invoices/export-csv', requireAdminAuth(['ORDER_MANAGER']), exportInvoicesCsvEndpoint);
 router.get('/invoices/:id/pdf', requireAdminAuth(['ORDER_MANAGER']), downloadInvoicePdfEndpoint);
 router.post('/invoices/batch-pdf', requireAdminAuth(['ORDER_MANAGER']), downloadBatchInvoicesZipEndpoint);
 

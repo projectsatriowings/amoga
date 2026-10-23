@@ -174,4 +174,73 @@ describe('GST Report & Tax Invoice API Test Suite', () => {
     assert.strictEqual(res2.status, 200);
     assert.ok(res2.headers.get('content-type').includes('text/csv'));
   });
+
+  test('10. GET /api/admin/reports/gst with format=excel returns downloadable Excel spreadsheet', async () => {
+    const res = await fetch(`${baseUrl}/admin/reports/gst?month=9&year=2026&format=excel`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    assert.strictEqual(res.status, 200);
+    const contentType = res.headers.get('content-type');
+    const contentDisposition = res.headers.get('content-disposition');
+    assert.ok(contentType.includes('spreadsheetml.sheet'));
+    assert.ok(contentDisposition.includes('Amoga_GST_Report_September_2026.xlsx'));
+
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    // Excel (.xlsx) file is a zip archive starting with PK (0x50, 0x4B)
+    assert.strictEqual(buffer.slice(0, 2).toString(), 'PK');
+    assert.ok(buffer.length > 1000);
+  });
+
+  test('11. JSON preview contains complete Sections A-E (Rates, Supply Types, Returns, ITC, Review)', async () => {
+    const res = await fetch(`${baseUrl}/admin/reports/gst?month=10&year=2026&format=preview`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    assert.strictEqual(res.status, 200);
+    const json = await res.json();
+    assert.strictEqual(json.success, true);
+    const report = json.report;
+
+    // Section A
+    assert.ok(report.supplyTypeBreakdown.intraState);
+    assert.ok(report.supplyTypeBreakdown.interState);
+    assert.ok(Array.isArray(report.rateBreakdown));
+
+    // Section B
+    assert.ok(Array.isArray(report.hsnBreakdown));
+
+    // Section C
+    assert.ok(report.returnsAndAdjustments);
+    assert.strictEqual(typeof report.returnsAndAdjustments.totalReturnsTaxable, 'number');
+    assert.strictEqual(typeof report.returnsAndAdjustments.totalReturnsTax, 'number');
+
+    // Section D
+    assert.ok(report.purchaseAndItc);
+    assert.strictEqual(report.purchaseAndItc.eligibleItc, 0);
+    assert.ok(report.purchaseAndItc.guidanceNotice.includes('GSTR-1'));
+
+    // Section E
+    assert.ok(report.taxSummaryReview);
+    assert.strictEqual(typeof report.taxSummaryReview.estimatedNetGstToPay, 'number');
+    assert.ok(report.taxSummaryReview.reviewDisclaimer.includes('accountant review'));
+  });
+
+  test('12. GET /api/admin/invoices/export-csv returns date-filtered invoice register CSV', async () => {
+    const res = await fetch(`${baseUrl}/admin/invoices/export-csv?fromDate=2026-10-01&toDate=2026-10-31`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    assert.strictEqual(res.status, 200);
+    const contentType = res.headers.get('content-type');
+    const contentDisposition = res.headers.get('content-disposition');
+    assert.ok(contentType.includes('text/csv'));
+    assert.ok(contentDisposition.includes('Amoga_Tax_Invoices_Register_2026-10-01_to_2026-10-31.csv'));
+
+    const text = await res.text();
+    assert.ok(text.includes('Invoice Number'));
+    assert.ok(text.includes('Customer Name'));
+    assert.ok(text.includes('Place of Supply'));
+    assert.ok(text.includes('Total Matching Invoices'));
+    // Verify Customer GSTIN column was removed
+    assert.ok(!text.includes('Customer GSTIN'));
+  });
 });
