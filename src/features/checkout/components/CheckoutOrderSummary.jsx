@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../../store/useStore';
-import { formatINR } from '../../../utils/pricing';
+import { formatINR, estimateIndiaPostShipping } from '../../../utils/pricing';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { resolveAvailability } from '../../../utils/inventory';
 import { useShippingConfig } from '../../../hooks/useShippingConfig';
@@ -16,9 +16,15 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
   const { subtotal, payableItemsCount, hasUnpricedItems, unpricedCount } = getCheckoutTotals();
 
   const isBuyNow = checkoutContext?.type === 'buy_now';
-  const isFreeShipping = shippingThresholdOperator === 'GT' ? subtotal > freeShippingThreshold : subtotal >= freeShippingThreshold;
-  const standardShipping = payableItemsCount <= 2 ? 100 : payableItemsCount === 3 ? 150 : payableItemsCount === 4 ? 200 : 200 + (payableItemsCount - 4) * 50;
-  const shippingAmount = isFreeShipping ? 0 : standardShipping;
+  const shippingEst = estimateIndiaPostShipping({
+    items: checkoutItems,
+    itemCount: payableItemsCount,
+    subtotal,
+    freeShippingThreshold,
+    thresholdOperator: shippingThresholdOperator,
+  });
+  const isFreeShipping = shippingEst.isFree;
+  const shippingAmount = shippingEst.amount;
 
   const stockIssues = checkoutItems.filter((item) => {
     const product = item.product || item;
@@ -123,6 +129,14 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
                       • {item.selectedVariant.name}
                     </span>
                   )}
+                  {(collectionId === 'tea' || item.packSize || item.product?.packSize) && (
+                    <span
+                      className="text-[10px] break-words font-mono"
+                      style={{ color: 'var(--collection-text-muted)' }}
+                    >
+                      • Net Weight: {item.packSize || item.product?.packSize || '25 g'}
+                    </span>
+                  )}
                 </div>
                 <h3
                   className="font-medium break-words text-xs"
@@ -192,7 +206,7 @@ export const CheckoutOrderSummary = ({ compact = false }) => {
             <span style={{ color: 'var(--collection-text-muted)' }}>India Post Delivery</span>
             <span className="block text-[10px] text-stone-500">
               {isFreeShipping
-                ? `Free Shipping (Orders ${shippingThresholdOperator === 'GT' ? '>' : '≥'} ₹${freeShippingThreshold.toLocaleString('en-IN')})`
+                ? (shippingEst.freeShippingReason || `Free Shipping (Eligible)`)
                 : `${payableItemsCount} ${payableItemsCount === 1 ? 'piece' : 'pieces'} standard parcel`}
             </span>
           </div>

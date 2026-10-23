@@ -17,7 +17,7 @@ import amogaLogo from '../../../assets/images/amoga-logo.png';
 import { useStore } from '../../../store/useStore';
 import { useCustomerStore } from '../../account/store/useCustomerStore';
 import { Container } from '../../../components/ui/Container';
-import { getCollectionTheme } from '../themeConfig';
+import { getCollectionTheme, isDarkColor } from '../themeConfig';
 import { CollectionCategoryMenu } from './CollectionCategoryMenu';
 import { BackButton } from '../../../components/ui/BackButton';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
@@ -215,6 +215,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   categories={categories}
                   palette={palette}
                   anchorRef={dropdownButtonRef}
+                  collectionId={collectionId}
                 />
               </div>
 
@@ -380,7 +381,7 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   <button
                     type="button"
                     onClick={() => setMobileCategoriesOpen((prev) => !prev)}
-                    className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-left font-medium hover:bg-black/5"
+                    className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-left font-medium hover:bg-current/10 transition-colors"
                     style={{ color: palette.heading || '#173B2A' }}
                   >
                     <span
@@ -400,10 +401,64 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                   {mobileCategoriesOpen && (
                     <div className="pl-2 pr-1 pt-1 space-y-1">
                       {categories.map((cat) => {
+                        const isMenuDark =
+                          collectionId === 'sarees' ||
+                          collectionId === 'jewellery' ||
+                          palette.cardBg === '#35121F' ||
+                          palette.cardBg === '#343238' ||
+                          palette.bg === '#2C0E1A' ||
+                          palette.bg === '#242326' ||
+                          isDarkColor(palette.cardBg) ||
+                          isDarkColor(palette.bg);
+                        const isSarees =
+                          collectionId === 'sarees' ||
+                          palette.cardBg === '#35121F' ||
+                          palette.bg === '#2C0E1A';
+
+                        const label =
+                          cat.name ||
+                          cat.title ||
+                          cat.label ||
+                          cat.categoryName ||
+                          (cat.id === 'all'
+                            ? (isSarees ? 'All Sarees & Attire' : collectionId === 'jewellery' ? 'All Jewellery' : 'All Products')
+                            : cat.id);
+
                         const isAll = cat.id === 'all';
                         const isItemActive = isAll
                           ? location.pathname.endsWith('/products') && !location.search
                           : location.search.includes(`category=${cat.id}`);
+
+                        // Mobile active & inactive styling with guaranteed contrast
+                        let rowBg = 'transparent';
+                        let labelColor = isMenuDark ? '#F6EBD8' : (palette.heading || '#173B2A');
+                        let borderColor = isMenuDark
+                          ? (isSarees ? 'rgba(197, 164, 109, 0.3)' : 'rgba(185, 184, 181, 0.3)')
+                          : (palette.border || '#E5E0D5');
+                        let badgeBg = isMenuDark
+                          ? (isSarees ? 'rgba(197, 164, 109, 0.22)' : 'rgba(255, 255, 255, 0.14)')
+                          : (palette.accentLight || 'rgba(0, 0, 0, 0.05)');
+                        let badgeColor = isMenuDark
+                          ? (isSarees ? '#F6EBD8' : '#F7F3EB')
+                          : (palette.heading || '#173B2A');
+
+                        if (isItemActive) {
+                          rowBg = isMenuDark
+                            ? (isSarees ? '#F6EBD8' : '#F7F3EB')
+                            : (palette.heading || '#173B2A');
+                          labelColor = isMenuDark
+                            ? (isSarees ? '#2C0E1A' : '#1A191C')
+                            : '#FFFFFF';
+                          borderColor = isMenuDark
+                            ? (isSarees ? '#C5A46D' : '#B9B8B5')
+                            : (palette.heading || '#173B2A');
+                          badgeBg = isMenuDark
+                            ? (isSarees ? 'rgba(44, 14, 26, 0.12)' : 'rgba(26, 25, 28, 0.12)')
+                            : 'rgba(255, 255, 255, 0.25)';
+                          badgeColor = isMenuDark
+                            ? (isSarees ? '#2C0E1A' : '#1A191C')
+                            : '#FFFFFF';
+                        }
 
                         return (
                           <Link
@@ -412,27 +467,19 @@ export function CollectionNavbar({ collectionId = 'food' }) {
                             onClick={() => setMobileMenuOpen(false)}
                             className="flex items-center justify-between p-2.5 rounded-lg text-xs border transition-colors"
                             style={{
-                              backgroundColor: isItemActive
-                                ? palette.heading || '#173B2A'
-                                : palette.cardBg || '#FFFFFF',
-                              color: isItemActive
-                                ? palette.announcementText || '#FFFFFF'
-                                : palette.text || '#292820',
-                              borderColor: palette.border || '#E5E0D5',
-                              fontWeight: isItemActive ? 600 : 400,
+                              backgroundColor: rowBg,
+                              color: labelColor,
+                              borderColor: borderColor,
+                              fontWeight: isItemActive ? 600 : 500,
                             }}
                           >
-                            <span>{cat.name}</span>
+                            <span style={{ color: labelColor }}>{label}</span>
                             {cat.count !== undefined && (
                               <span
-                                className="text-[10px] font-mono px-2 py-0.5 rounded-full"
+                                className="text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold"
                                 style={{
-                                  backgroundColor: isItemActive
-                                    ? 'rgba(255, 255, 255, 0.2)'
-                                    : palette.accentLight || 'rgba(0, 0, 0, 0.05)',
-                                  color: isItemActive
-                                    ? '#FFFFFF'
-                                    : palette.heading || '#173B2A',
+                                  backgroundColor: badgeBg,
+                                  color: badgeColor,
                                 }}
                               >
                                 {cat.count}

@@ -96,8 +96,30 @@ export function JewelleryProductDetail() {
   }
 
   const isWishlisted = isInWishlist(product.id);
-  const gallery = product.gallery || [product.image];
-  const activeImage = gallery[activeImageIndex] || product.image;
+  const gallery = useMemo(() => {
+    const list = [product.image];
+    if (Array.isArray(product.gallery)) {
+      product.gallery.forEach((img) => {
+        if (img && !list.includes(img)) list.push(img);
+      });
+    }
+    return list;
+  }, [product]);
+
+  // Find variant corresponding to activeSize if selected
+  const activeVariant = useMemo(() => {
+    if (!activeSize || !Array.isArray(product.variants)) return null;
+    const cleanSize = activeSize.trim().toLowerCase();
+    const slug = cleanSize.replace(/\s+/g, '-');
+    return product.variants.find((v) => (
+      v.name?.toLowerCase() === cleanSize ||
+      v.sourceId?.toLowerCase() === slug ||
+      v.sourceId?.toLowerCase() === `size-${slug}` ||
+      v.attributes?.size?.toLowerCase() === cleanSize
+    ));
+  }, [activeSize, product]);
+
+  const activeImage = activeVariant?.image || gallery[activeImageIndex] || product.image;
   const hasPrice = product.price !== null;
 
   const handleAddToCart = () => {

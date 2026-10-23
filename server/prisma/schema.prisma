@@ -50,6 +50,7 @@ model Product {
   image            String           @db.Text
   gallery          Json?            // Array of image paths/URLs
   packSize         String?
+  sellingUnit      String?          @default("Pack")
   inStock          Boolean          @default(true)
   stockQuantity    Int              @default(50)
   reservedQuantity Int              @default(0)
@@ -104,6 +105,7 @@ model ProductVariant {
   name          String         // e.g. 'Royal Wine', 'US 7'
   sku           String?        @unique
   price         Decimal?       @db.Decimal(10, 2)
+  image         String?        @db.Text
   hsnCode       String?
   gstRate       Decimal?       @db.Decimal(5, 2)
   isTaxInclusive Boolean?

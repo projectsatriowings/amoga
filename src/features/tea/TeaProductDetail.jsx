@@ -38,11 +38,33 @@ export function TeaProductDetail() {
 
   const { addToCart, toggleWishlistItem, isInWishlist, initiateBuyNow, openCart } = useStore();
   const [quantity, setQuantity] = useState(1);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [addError, setAddError] = useState(null);
   const [showRestockModal, setShowRestockModal] = useState(false);
 
-  const availability = resolveAvailability(product);
+  // Set default variant if available
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0 && !selectedVariant) {
+      setSelectedVariant(product.variants[0]);
+    }
+  }, [product, selectedVariant]);
+
+  const availability = resolveAvailability(product, selectedVariant);
+
+  const gallery = useMemo(() => {
+    if (!product) return [];
+    const list = [product.image];
+    if (Array.isArray(product.gallery)) {
+      product.gallery.forEach((img) => {
+        if (img && !list.includes(img)) list.push(img);
+      });
+    }
+    return list;
+  }, [product]);
+
+  const activeImage = selectedVariant?.image || gallery[activeImageIndex] || product?.image;
 
   // While loading from API for newly created or dynamic products, render skeleton/loader instead of premature not-found
   if (isLoading && !product) {
@@ -106,7 +128,7 @@ export function TeaProductDetail() {
       setAddError(`Only ${availability.availableQuantity} pack(s) currently available.`);
       return;
     }
-    const res = addToCart(product, quantity);
+    const res = addToCart(product, quantity, selectedVariant);
     if (res?.success) {
       setAddedSuccess(true);
       setTimeout(() => {
@@ -131,7 +153,7 @@ export function TeaProductDetail() {
       setAddError(`Only ${availability.availableQuantity} pack(s) currently available.`);
       return;
     }
-    const res = initiateBuyNow(product, quantity);
+    const res = initiateBuyNow(product, quantity, selectedVariant);
     if (res?.success) {
       navigate('/checkout');
     } else {
@@ -172,13 +194,13 @@ export function TeaProductDetail() {
 
         {/* Main Product Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 bg-[#FFFDF5] p-6 sm:p-10 rounded-3xl border border-[#B88E38]/30 shadow-lg mb-16">
-          {/* Left Column: Product Photography */}
+          {/* Left Column: Product Photography & Thumbnail Gallery */}
           <div className="lg:col-span-6 space-y-4">
             <div className="relative rounded-2xl overflow-hidden aspect-square bg-[#FAF1BB]/60 border border-[#B88E38]/20 shadow-md">
               <img
-                src={product.image}
+                src={activeImage}
                 alt={product.name}
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-center transition-opacity duration-300"
               />
 
               {product.badge && (
@@ -189,6 +211,37 @@ export function TeaProductDetail() {
                 </div>
               )}
             </div>
+
+            {/* Thumbnail Gallery (Up to 4 images, with smooth mobile swipe/scroll) */}
+            {gallery.length > 1 && (
+              <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                {gallery.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setActiveImageIndex(idx);
+                      // If user selects thumbnail, clear active variant override to show clicked image
+                      if (selectedVariant?.image && selectedVariant.image !== img) {
+                        // User explicitly clicked a thumbnail
+                      }
+                    }}
+                    className={`relative w-20 aspect-square rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+                      activeImage === img
+                        ? 'border-[#8C6320] scale-105 shadow-md'
+                        : 'border-[#B88E38]/20 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right Column: Narrative, Details & Actions */}
@@ -232,14 +285,15 @@ export function TeaProductDetail() {
                       <span className="text-3xl font-sans font-bold text-[#2C1E11] tabular-nums font-numeric">
                         ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                       </span>
-                      {product.packSize && (
-                        <span className="text-xs font-sans font-medium text-[#8C6320] bg-white/80 px-2.5 py-0.5 rounded-full border border-[#B88E38]/25 tabular-nums font-numeric">
-                          {product.packSize}
-                        </span>
-                      )}
+                      <span className="text-sm font-sans font-medium text-[#8C6320]">
+                        / Pack
+                      </span>
+                      <span className="text-xs font-sans font-medium text-[#8C6320] bg-white/80 px-2.5 py-0.5 rounded-full border border-[#B88E38]/25 tabular-nums font-numeric">
+                        Net Weight: {selectedVariant?.attributes?.weight || selectedVariant?.attributes?.packSize || product.packSize || '25 g'}
+                      </span>
                     </div>
                     <div className="text-[11px] text-[#8C6320] font-medium">
-                      Inclusive of GST • India Post delivery calculated at checkout
+                      Inclusive of GST • Sold per pack • India Post delivery calculated at checkout
                     </div>
                   </div>
                 ) : (
@@ -277,6 +331,39 @@ export function TeaProductDetail() {
                   </span>
                 </div>
               </div>
+
+              {/* Variant Selector (if product has variants) */}
+              {product.variants && product.variants.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-[#B88E38]/20">
+                  <span className="text-xs font-mono uppercase tracking-wider text-[#8C6320] font-semibold">
+                    Select Pack / Option:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variants.map((variant) => {
+                      const isSelected = selectedVariant?.id === variant.id || selectedVariant?.name === variant.name;
+                      return (
+                        <button
+                          key={variant.id || variant.name}
+                          type="button"
+                          onClick={() => {
+                            setSelectedVariant(variant);
+                            if (variant.image) {
+                              // Variant image immediately displays
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#2C1E11] text-[#FAF1BB] border-[#2C1E11] shadow-xs'
+                              : 'bg-white text-[#4A423B] border-[#D5CEC2] hover:border-[#8C6320]'
+                          }`}
+                        >
+                          {variant.name} {variant.price ? `(₹${variant.price})` : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Description */}
               <p className="text-xs sm:text-sm text-[#543B25] leading-relaxed">
@@ -338,7 +425,7 @@ export function TeaProductDetail() {
                 <>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                     {/* Quantity selector */}
-                    <div className="flex items-center justify-between border border-[#B88E38]/30 rounded-full px-3 py-1.5 bg-white w-32 shrink-0">
+                    <div className="flex items-center justify-between border border-[#B88E38]/30 rounded-full px-3 py-1.5 bg-white w-36 shrink-0">
                       <button
                         type="button"
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -347,7 +434,9 @@ export function TeaProductDetail() {
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="font-sans text-sm font-semibold tabular-nums font-numeric">{quantity}</span>
+                      <span className="font-sans text-xs font-semibold tabular-nums font-numeric text-[#2C1E11]">
+                        {quantity} {quantity === 1 ? 'Pack' : 'Packs'}
+                      </span>
                       <button
                         type="button"
                         onClick={() =>

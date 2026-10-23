@@ -22,6 +22,7 @@ import {
   Package,
   MapPin,
   ArrowRightLeft,
+  Info,
 } from 'lucide-react';
 import { posApi } from '../services/posApiClient';
 import { PosReceiptModal } from '../components/PosReceiptModal';
@@ -236,19 +237,36 @@ export function AdminStallDashboard() {
           </div>
         </div>
 
-        {/* GST Audit Total */}
-        <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs">
+        {/* GST on Completed Sales */}
+        <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs relative group">
           <div className="flex items-center justify-between text-stone-500 mb-2">
-            <span className="text-xs uppercase font-mono tracking-wider font-semibold">GST Collected</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs uppercase font-mono tracking-wider font-semibold">
+                GST on Completed Sales
+              </span>
+              <span
+                className="inline-flex cursor-help text-stone-400 hover:text-stone-600"
+                title="Calculated strictly from completed POS sales during the selected reporting period. Excludes voided, cancelled, and refunded sales. This figure is not the final amount payable to the government, as actual GST liability also depends on input tax credit (ITC) and applicable tax adjustments."
+              >
+                <Info className="w-3.5 h-3.5" />
+              </span>
+            </div>
             <ShoppingBag className="w-4 h-4 text-[#3F5A35]" />
           </div>
           <div className="font-sans text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight tabular-nums">
-            ₹{(summary.totalTax || summary.totalGstCollected || 0).toLocaleString('en-IN')}
+            ₹{(summary.gstOnCompletedSales ?? summary.totalTax ?? 0).toLocaleString('en-IN')}
           </div>
           <div className="mt-2 text-[11px] text-stone-500 flex items-center justify-between">
-            <span className="text-[#3F5A35] font-medium font-mono text-[10px]">HSN AUDITED</span>
-            <span className="text-stone-400 text-[10px]">CGST + SGST</span>
+            <span className="text-[#3F5A35] font-medium font-mono text-[10px]">
+              COMPLETED ONLY (CGST+SGST)
+            </span>
+            <span className="text-stone-400 text-[10px] tabular-nums">
+              Gross: ₹{(summary.grossCompletedSales ?? summary.grossSales ?? 0).toLocaleString('en-IN')}
+            </span>
           </div>
+          <p className="mt-1 text-[10px] text-stone-400 leading-tight">
+            Excludes voided/refunded bills (Refunded GST: ₹{(summary.refundedTax || 0).toLocaleString('en-IN')})
+          </p>
         </div>
       </div>
 

@@ -371,6 +371,9 @@ export function CustomerAccountPage() {
                               <p className="font-semibold text-[#1A1817]">{item.productName}</p>
                               <span className="text-[11px] text-[#7A7167] font-mono">
                                 Qty: {item.quantity} {item.variantName ? `(${item.variantName})` : ''}
+                                {(item.collectionId === 'tea' || item.product?.collectionId === 'tea' || item.packSize) && (
+                                  <> • Net Weight: {item.packSize || item.product?.packSize || '25 g'}</>
+                                )}
                               </span>
                             </div>
                           </div>

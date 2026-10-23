@@ -102,10 +102,33 @@ export function calculateShipping({
   const rulesEnabled = storeSettings.shippingRulesEnabled !== false;
   const standardRate = Number(storeSettings.shippingStandardRate || 0);
 
-  // 1. Calculate eligible items and quantity
+  // 1. Calculate eligible items and quantity, partitioning tea vs standard collections
+  let teaQuantity = 0;
+  let teaSubtotal = 0;
+  let standardQuantity = 0;
+  let standardSubtotal = 0;
+
   const eligibleItemsCount = items.reduce((sum, item) => {
     const qty = Number(item.quantity) || 0;
-    return sum + (qty > 0 ? qty : 0);
+    if (qty <= 0) return sum;
+
+    // Detect if item belongs to Wellness Tea collection
+    const colId = (item.collectionId || item.collection?.id || item.collectionSlug || item.product?.collectionId || '').toLowerCase();
+    const colName = (item.collectionName || item.collection?.name || item.product?.collection?.name || '').toLowerCase();
+    const isTea = colId === 'tea' || colName.includes('tea') || colName.includes('wellness');
+
+    const unitPrice = Number(item.unitPrice !== undefined ? item.unitPrice : (item.priceRupees !== undefined ? item.priceRupees : (item.price || 0)));
+    const lineTotal = Number(item.lineTotal !== undefined ? item.lineTotal : (unitPrice * qty));
+
+    if (isTea) {
+      teaQuantity += qty;
+      teaSubtotal += lineTotal;
+    } else {
+      standardQuantity += qty;
+      standardSubtotal += lineTotal;
+    }
+
+    return sum + qty;
   }, 0);
 
   // 2. Authoritative discounted subtotal (threshold basis: discounted product subtotal before shipping)
@@ -113,15 +136,45 @@ export function calculateShipping({
   const freeShippingThreshold = Number(storeSettings.freeShippingThreshold ?? 2500.0);
   const thresholdOperator = (storeSettings.shippingThresholdOperator || 'GTE').toUpperCase();
 
+  // If discount exists, allocate proportionately to sub-categories for threshold evaluation
+  const discountFactor = subtotalRupees > 0 ? Math.max(0, netSubtotal / Number(subtotalRupees)) : 1;
+  const netTeaSubtotal = teaSubtotal * discountFactor;
+  const netStandardSubtotal = standardSubtotal * discountFactor;
+
   // 3. Evaluate Free Shipping Threshold Condition
+  // Standard collections (Food, Sarees, Jewellery): net subtotal >= ₹2,500
+  // Wellness Tea: at least 5 tea packs AND net tea subtotal >= ₹1,000 (both must be true)
+  // Mixed cart: free shipping applies to overall shipment if standard qualifies OR qualifying tea items meet tea threshold.
+  const isStandardFree = standardQuantity > 0 && (
+    thresholdOperator === 'GT' ? netStandardSubtotal > freeShippingThreshold : netStandardSubtotal >= freeShippingThreshold
+  );
+
+  const isTeaFree = teaQuantity >= 5 && (
+    thresholdOperator === 'GT' ? netTeaSubtotal > 1000 : netTeaSubtotal >= 1000
+  );
+
+  // If items do not contain any collection tags (e.g. generic tests without collection specified), fallback to standard netSubtotal threshold
+  const hasCollectionMetadata = teaQuantity > 0 || standardQuantity > 0;
   let isFreeShipping = false;
-  if (freeShippingThreshold >= 0) {
-    if (thresholdOperator === 'GT') {
-      isFreeShipping = netSubtotal > freeShippingThreshold;
+  let freeShippingReason = '';
+
+  if (hasCollectionMetadata) {
+    if (isStandardFree && isTeaFree) {
+      isFreeShipping = true;
+      freeShippingReason = 'Standard items qualify (≥₹2,500) and Tea items qualify (≥5 packs & ≥₹1,000)';
+    } else if (isStandardFree) {
+      isFreeShipping = true;
+      freeShippingReason = `Standard collection items qualify (₹${Math.round(netStandardSubtotal)} ${thresholdOperator === 'GT' ? '>' : '≥'} ₹${freeShippingThreshold})`;
+    } else if (isTeaFree) {
+      isFreeShipping = true;
+      freeShippingReason = `Wellness Tea items qualify (${teaQuantity} packs and ₹${Math.round(netTeaSubtotal)} ≥ ₹1,000)`;
     } else {
-      // Default GTE: >= threshold qualifies
-      isFreeShipping = netSubtotal >= freeShippingThreshold;
+      isFreeShipping = false;
     }
+  } else {
+    // Generic fallback if items have no collection tag
+    isFreeShipping = thresholdOperator === 'GT' ? netSubtotal > freeShippingThreshold : netSubtotal >= freeShippingThreshold;
+    if (isFreeShipping) freeShippingReason = `Order subtotal meets standard free shipping threshold`;
   }
 
   // If cart is empty, shipping is 0
@@ -136,6 +189,10 @@ export function calculateShipping({
       isThresholdMet: false,
       netSubtotal,
       eligibleItemsCount: 0,
+      teaQuantity,
+      netTeaSubtotal,
+      standardQuantity,
+      netStandardSubtotal,
       ruleApplied: 'EMPTY_CART',
       bracket: null,
       snapshot: {
@@ -153,7 +210,12 @@ export function calculateShipping({
     const snapshot = {
       carrier: carrierName,
       ruleApplied: 'FREE_SHIPPING_THRESHOLD',
+      freeShippingReason,
       eligibleItemsCount,
+      teaQuantity,
+      netTeaSubtotal,
+      standardQuantity,
+      netStandardSubtotal,
       netSubtotal,
       freeShippingThreshold,
       thresholdOperator,
@@ -171,8 +233,13 @@ export function calculateShipping({
       freeShippingThreshold,
       thresholdOperator,
       isThresholdMet: true,
+      freeShippingReason,
       netSubtotal,
       eligibleItemsCount,
+      teaQuantity,
+      netTeaSubtotal,
+      standardQuantity,
+      netStandardSubtotal,
       ruleApplied: 'FREE_SHIPPING_THRESHOLD',
       bracket: null,
       snapshot,
@@ -285,6 +352,10 @@ export function calculateShipping({
     carrier: carrierName,
     ruleApplied,
     eligibleItemsCount,
+    teaQuantity,
+    netTeaSubtotal,
+    standardQuantity,
+    netStandardSubtotal,
     netSubtotal,
     freeShippingThreshold,
     thresholdOperator,
@@ -305,6 +376,10 @@ export function calculateShipping({
     isThresholdMet: false,
     netSubtotal,
     eligibleItemsCount,
+    teaQuantity,
+    netTeaSubtotal,
+    standardQuantity,
+    netStandardSubtotal,
     ruleApplied,
     bracket: matchedBracket,
     calculationDetails,

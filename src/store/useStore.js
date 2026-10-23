@@ -165,6 +165,7 @@ export const useStore = create(
                 name: normalizedProduct.name,
                 price,
                 image: normalizedProduct.image,
+                packSize: selectedVariant?.attributes?.weight || selectedVariant?.attributes?.packSize || normalizedProduct.packSize || (collectionId === 'tea' ? '25 g' : null),
                 collectionId,
               },
             ];

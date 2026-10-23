@@ -317,6 +317,11 @@ export const DemoOrderConfirmation = () => {
                             {item.selectedVariant?.name || item.variantName}
                           </p>
                         )}
+                        {(item.collectionId === 'tea' || item.packSize || item.product?.packSize) && (
+                          <p className="text-[10px] text-[var(--collection-text-muted)] font-mono">
+                            Net Weight: {item.packSize || item.product?.packSize || '25 g'}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="text-right shrink-0">

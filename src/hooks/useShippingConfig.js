@@ -31,13 +31,13 @@ try {
 }
 
 const DEFAULT_CONFIG = {
-  freeShippingThreshold: 2000,
+  freeShippingThreshold: 2500,
   shippingThresholdOperator: 'GTE',
   shippingCarrierName: 'India Post',
   shippingStandardRate: 0,
   businessApprovalPending: true,
   status: 'PENDING_BUSINESS_CONFIRMATION',
-  notes: 'Authoritative configuration loaded from StoreSetting database table. Final threshold pending business owner confirmation.',
+  notes: 'Authoritative configuration loaded from StoreSetting database table. Standard threshold ₹2,500; Wellness Tea: ≥5 packs & ≥₹1,000.',
 };
 
 export function useShippingConfig() {
@@ -65,7 +65,7 @@ export function useShippingConfig() {
             const merged = {
               ...DEFAULT_CONFIG,
               ...fetchedConfig,
-              freeShippingThreshold: Number(fetchedConfig.freeShippingThreshold ?? 2000),
+              freeShippingThreshold: Number(fetchedConfig.freeShippingThreshold ?? 2500),
             };
             broadcastConfig(merged);
           }
@@ -86,7 +86,7 @@ export function useShippingConfig() {
   }, []);
 
   return {
-    freeShippingThreshold: Number(config.freeShippingThreshold ?? 2000),
+    freeShippingThreshold: Number(config.freeShippingThreshold ?? 2500),
     shippingThresholdOperator: config.shippingThresholdOperator || 'GTE',
     shippingCarrierName: config.shippingCarrierName || 'India Post',
     shippingStandardRate: Number(config.shippingStandardRate || 0),

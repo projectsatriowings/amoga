@@ -75,18 +75,18 @@ const COLLECTION_SUBCATEGORIES = {
     { id: 'herbal', name: 'Herbal & Root Brews' },
   ],
   sarees: [
-    { id: 'silk', name: 'Silk Sarees' },
-    { id: 'traditional', name: 'Traditional Weaves' },
-    { id: 'festive', name: 'Festive Collection' },
-    { id: 'wedding', name: 'Bridal & Wedding Sarees' },
-    { id: 'contemporary', name: 'Contemporary Weaves' },
+    { id: 'saree', name: 'Saree' },
+    { id: 'salwar', name: 'Salwar' },
+    { id: 'half-saree', name: 'Half Saree' },
   ],
   jewellery: [
-    { id: 'rings', name: 'Rings' },
-    { id: 'necklaces', name: 'Necklaces & Pendants' },
-    { id: 'earrings', name: 'Earrings' },
-    { id: 'bracelets', name: 'Bracelets & Cuffs' },
-    { id: 'traditional', name: 'Traditional Silver' },
+    { id: 'chain-with-pendant', name: 'Chain with Pendant' },
+    { id: 'chain-pendant-earring', name: 'Chain Pendant Earring' },
+    { id: 'earring', name: 'Earring' },
+    { id: 'anklets', name: 'Anklets' },
+    { id: 'toe-rings', name: 'Toe Rings' },
+    { id: 'bracelet', name: 'Bracelet' },
+    { id: 'necklace', name: 'Necklace' },
   ],
 };
 
@@ -97,12 +97,23 @@ const CATEGORY_DEFAULT_TAX = {
   spices: { hsnCode: '0910', gstRate: '5.00' },
   tea: { hsnCode: '0902', gstRate: '5.00' },
   sarees: { hsnCode: '5007', gstRate: '5.00' },
+  saree: { hsnCode: '5007', gstRate: '5.00' },
+  salwar: { hsnCode: '6204', gstRate: '5.00' },
+  'half-saree': { hsnCode: '5007', gstRate: '5.00' },
+  silk: { hsnCode: '5007', gstRate: '5.00' },
   cotton: { hsnCode: '5208', gstRate: '5.00' },
   jewellery: { hsnCode: '7113', gstRate: '3.00' },
-  rings: { hsnCode: '7113', gstRate: '3.00' },
-  necklaces: { hsnCode: '7113', gstRate: '3.00' },
+  'chain-with-pendant': { hsnCode: '7113', gstRate: '3.00' },
+  'chain-pendant-earring': { hsnCode: '7113', gstRate: '3.00' },
+  earring: { hsnCode: '7113', gstRate: '3.00' },
   earrings: { hsnCode: '7113', gstRate: '3.00' },
+  anklets: { hsnCode: '7113', gstRate: '3.00' },
+  'toe-rings': { hsnCode: '7113', gstRate: '3.00' },
+  bracelet: { hsnCode: '7113', gstRate: '3.00' },
   bracelets: { hsnCode: '7113', gstRate: '3.00' },
+  necklace: { hsnCode: '7113', gstRate: '3.00' },
+  necklaces: { hsnCode: '7113', gstRate: '3.00' },
+  rings: { hsnCode: '7113', gstRate: '3.00' },
   traditional: { hsnCode: '7113', gstRate: '3.00' },
   food: { hsnCode: '2104', gstRate: '18.00' },
 };
@@ -122,16 +133,26 @@ const COLLECTION_DEFAULT_SKU = {
   leaf: 'AMOGA-TEA001',
   herbal: 'AMOGA-TEA001',
   sarees: 'AMOGA-SAR001',
+  saree: 'AMOGA-SAR001',
+  salwar: 'AMOGA-SLW001',
+  'half-saree': 'AMOGA-HFS001',
   silk: 'AMOGA-SAR001',
   traditional: 'AMOGA-SAR001',
   festive: 'AMOGA-SAR001',
   wedding: 'AMOGA-SAR001',
   contemporary: 'AMOGA-SAR001',
   jewellery: 'AMOGA-SIL001',
+  'chain-with-pendant': 'AMOGA-CWP001',
+  'chain-pendant-earring': 'AMOGA-CPE001',
+  earring: 'AMOGA-EAR001',
+  earrings: 'AMOGA-EAR001',
+  anklets: 'AMOGA-ANK001',
+  'toe-rings': 'AMOGA-TOE001',
+  bracelet: 'AMOGA-BRC001',
+  bracelets: 'AMOGA-BRC001',
+  necklace: 'AMOGA-NCK001',
+  necklaces: 'AMOGA-NCK001',
   rings: 'AMOGA-SIL001',
-  necklaces: 'AMOGA-SIL001',
-  earrings: 'AMOGA-SIL001',
-  bracelets: 'AMOGA-SIL001',
 };
 
 export function AdminProductForm() {
@@ -139,6 +160,7 @@ export function AdminProductForm() {
   const isEditing = Boolean(id);
   const navigate = useNavigate();
   const { adminFetch, admin } = useAdminStore();
+  const isAuthorizedToEditWeight = admin?.role === 'SUPER_ADMIN' || admin?.role === 'CATALOGUE_MANAGER';
 
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(isEditing);
@@ -178,6 +200,7 @@ export function AdminProductForm() {
 
     // Pricing & Inventory
     price: '',
+    sellingUnit: 'Pack',
     stockQuantity: 25,
     lowStockThreshold: 5,
     inStock: true,
@@ -266,6 +289,7 @@ export function AdminProductForm() {
             gallery: Array.isArray(p.gallery) ? p.gallery : [],
             status: p.isActive ? 'active' : 'draft',
             price: p.price !== null && p.price !== undefined ? String(p.price) : '',
+            sellingUnit: p.sellingUnit || (targetCollection === 'tea' ? 'Pack' : 'Piece'),
             stockQuantity: p.stockQuantity ?? 25,
             lowStockThreshold: p.lowStockThreshold ?? 5,
             inStock: Boolean(p.inStock),
@@ -288,6 +312,7 @@ export function AdminProductForm() {
               name: v.name || '',
               sku: v.sku || '',
               price: v.price !== null && v.price !== undefined ? String(v.price) : '',
+              image: v.image || '',
               stockQuantity: v.stockQuantity ?? 25,
               inStock: v.inStock !== undefined ? Boolean(v.inStock) : true,
               hsnCode: v.hsnCode || '',
@@ -329,6 +354,7 @@ export function AdminProductForm() {
         collectionId: value,
         category: nextCat,
         categoryName: nextCatName,
+        packSize: value === 'tea' ? (!isEditing || !prev.packSize ? '25 g' : prev.packSize) : prev.packSize,
         sku: isSkuLockedRef.current ? immediateSku : prev.sku,
         ...(defaultTax && (!prev.hsnCode || prev.taxVerificationStatus !== 'VERIFIED') ? {
           hsnCode: defaultTax.hsnCode,
@@ -379,18 +405,86 @@ export function AdminProductForm() {
     }));
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadingSlot, setUploadingSlot] = useState(null);
+
+  // Helper to upload an image file to /api/admin/upload and return the permanent URL
+  const uploadImageFile = async (file) => {
+    if (!file) return null;
+
+    // Validate size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error(`File "${file.name}" exceeds the maximum 5MB size limit.`);
+    }
+
+    // Validate mime type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      throw new Error(`Invalid file type "${file.type}". Allowed: JPG, PNG, WEBP, GIF, SVG.`);
+    }
+
+    // Convert file to base64
+    const base64Data = await new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (loadEvt) => {
-        if (loadEvt.target?.result) {
-          setFormData((prev) => ({ ...prev, image: loadEvt.target.result }));
-          setImageError(false);
-          setFieldErrors((prev) => ({ ...prev, image: null }));
-        }
-      };
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (err) => reject(err);
       reader.readAsDataURL(file);
+    });
+
+    const res = await adminFetch('/api/admin/upload', {
+      method: 'POST',
+      body: JSON.stringify({
+        data: base64Data,
+        filename: file.name,
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.url) {
+      throw new Error(json.message || 'Image upload failed.');
+    }
+
+    return json.url;
+  };
+
+  const handleSlotUpload = async (slotIndex, file) => {
+    if (!file) return;
+    try {
+      setUploadingSlot(slotIndex);
+      setUploadError(null);
+      const publicUrl = await uploadImageFile(file);
+
+      if (slotIndex === 0) {
+        // Main product image
+        setFormData((prev) => ({ ...prev, image: publicUrl }));
+        setImageError(false);
+        setFieldErrors((prev) => ({ ...prev, image: null }));
+      } else {
+        // Gallery slot 1, 2, or 3 (index 1 => gallery[0], index 2 => gallery[1], index 3 => gallery[2])
+        const galleryIndex = slotIndex - 1;
+        setFormData((prev) => {
+          const gallery = Array.isArray(prev.gallery) ? [...prev.gallery] : [];
+          gallery[galleryIndex] = publicUrl;
+          return { ...prev, gallery };
+        });
+      }
+    } catch (err) {
+      setUploadError(err.message || 'Failed to upload image.');
+    } finally {
+      setUploadingSlot(null);
+    }
+  };
+
+  const handleRemoveSlot = (slotIndex) => {
+    if (slotIndex === 0) {
+      setFormData((prev) => ({ ...prev, image: '' }));
+    } else {
+      const galleryIndex = slotIndex - 1;
+      setFormData((prev) => {
+        const gallery = Array.isArray(prev.gallery) ? [...prev.gallery] : [];
+        gallery[galleryIndex] = '';
+        return { ...prev, gallery };
+      });
     }
   };
 
@@ -495,6 +589,16 @@ export function AdminProductForm() {
       }
     }
 
+    if (formData.collectionId === 'tea') {
+      const rawWeight = formData.packSize ? String(formData.packSize).replace(/[^\d.]/g, '') : '';
+      const weightNum = parseFloat(rawWeight);
+      if (!rawWeight || isNaN(weightNum) || weightNum <= 0) {
+        errors.packWeight = 'Pack weight must be a positive number in grams (e.g. 25).';
+      } else if (weightNum > 5000) {
+        errors.packWeight = 'Pack weight cannot exceed 5,000 g.';
+      }
+    }
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -522,14 +626,21 @@ export function AdminProductForm() {
         categoryName: formData.categoryName || formData.category,
         description: formData.description?.trim() || '',
         price: formData.price !== '' ? Number(formData.price) : null,
+        sellingUnit: formData.sellingUnit || (formData.collectionId === 'tea' ? 'Pack' : 'Piece'),
         stockQuantity: Number(formData.stockQuantity) || 0,
         lowStockThreshold: Number(formData.lowStockThreshold) || 5,
         inStock: Boolean(formData.inStock),
         isFeatured: Boolean(formData.isFeatured),
         badge: formData.badge || null,
-        packSize: formData.packSize || null,
+        packSize: formData.collectionId === 'tea'
+          ? (formData.packSize
+              ? (String(formData.packSize).trim().match(/^(\d+(?:\.\d+)?)\s*(?:g|gm|grams?)?$/i)
+                  ? `${String(formData.packSize).replace(/[^\d.]/g, '')} g`
+                  : String(formData.packSize).trim())
+              : '25 g')
+          : (formData.packSize || null),
         image: formData.image?.trim() || '/placeholder-luxury.jpg',
-        gallery: formData.gallery,
+        gallery: Array.isArray(formData.gallery) ? formData.gallery : [],
         specs: formData.specs,
         sku: formData.sku?.trim() || null,
         hsnCode: formData.hsnCode?.trim() || null,
@@ -550,6 +661,7 @@ export function AdminProductForm() {
               name: v.name.trim(),
               sku: v.sku?.trim() || null,
               price: v.price !== '' ? Number(v.price) : null,
+              image: v.image ? v.image.trim() : null,
               stockQuantity: Number(v.stockQuantity) || 0,
               inStock: Boolean(v.inStock),
               hsnCode: v.hsnCode?.trim() || null,
@@ -666,6 +778,16 @@ export function AdminProductForm() {
           <h2 className="font-serif text-sm font-bold text-[#1A1817] uppercase tracking-wider border-b border-[#EAE4D9] pb-2">
             A. Basic Information
           </h2>
+
+          {formData.specs?.categoryReviewRequired && (
+            <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-900 text-xs flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <div>
+                <span className="font-semibold">Category Review Required: </span>
+                <span>{formData.specs?.reviewReason || 'Please select one of the updated categories below.'}</span>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Product Name */}
@@ -797,89 +919,162 @@ export function AdminProductForm() {
               />
             </div>
 
-            {/* Product Image */}
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                Product Image
-              </label>
-              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={(e) => {
-                    handleInputChange(e);
-                    setImageError(false);
-                  }}
-                  placeholder="Paste image URL (https://... or /images/...)"
-                  className="flex-1 px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
-                />
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#1E1916] hover:bg-[#342D28] text-white rounded text-xs font-medium transition-colors shrink-0 cursor-pointer"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Upload</span>
-                </button>
+            {/* Up to 4 Product Images (Main + 3 Gallery slots) */}
+            <div className="sm:col-span-2 space-y-3 pt-2 border-t border-[#EAE4D9]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-xs font-semibold text-[#4A423B]">
+                    Product Images (Up to 4 Slots)
+                  </label>
+                  <p className="text-[11px] text-[#8C8377]">
+                    Provide up to four product images. Main Product Image is the primary catalogue visual.
+                  </p>
+                </div>
+                {uploadingSlot !== null && (
+                  <span className="text-[11px] text-[#722F37] font-medium flex items-center gap-1.5 animate-pulse">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    Uploading slot #{uploadingSlot + 1}...
+                  </span>
+                )}
               </div>
 
-              {/* Image Preview & Presets */}
-              <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
-                {/* Presets */}
-                {PRESET_COLLECTION_IMAGES[formData.collectionId] && (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] text-[#8C6320] font-semibold">Presets:</span>
-                    {PRESET_COLLECTION_IMAGES[formData.collectionId].map((preset) => (
-                      <button
-                        key={preset.url}
-                        type="button"
-                        onClick={() => {
-                          setFormData((p) => ({ ...p, image: preset.url }));
-                          setImageError(false);
-                        }}
-                        className={`text-[10px] px-2 py-0.5 rounded border transition-colors cursor-pointer ${
-                          formData.image === preset.url
-                            ? 'bg-[#722F37] text-white border-[#722F37]'
-                            : 'bg-white hover:bg-[#F4F1EA] text-[#4A423B] border-[#D5CEC2]'
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              {uploadError && (
+                <div className="p-2.5 rounded bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
+                  <span>{uploadError}</span>
+                  <button type="button" onClick={() => setUploadError(null)} className="text-rose-600 hover:text-rose-900">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
 
-                {/* Compact Thumbnail Preview */}
-                {formData.image && (
-                  <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded border border-[#E0D9CE] self-end sm:self-auto">
-                    <img
-                      src={formData.image}
-                      alt="Thumbnail"
-                      onLoad={() => setImageError(false)}
-                      onError={() => setImageError(true)}
-                      className="w-6 h-6 object-cover rounded"
-                    />
-                    <span className="text-[10px] text-[#4A423B] truncate max-w-[140px]">
-                      {imageError ? 'Invalid image' : 'Image loaded'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setFormData((p) => ({ ...p, image: '' }))}
-                      className="text-[#8C8377] hover:text-rose-600 cursor-pointer"
+              {/* 4 Image Slots Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: 'Main Product Image', index: 0, url: formData.image },
+                  { label: 'Product Image 2', index: 1, url: formData.gallery?.[0] || '' },
+                  { label: 'Product Image 3', index: 2, url: formData.gallery?.[1] || '' },
+                  { label: 'Product Image 4', index: 3, url: formData.gallery?.[2] || '' },
+                ].map((slot) => {
+                  const inputId = `slot-file-${slot.index}`;
+                  return (
+                    <div
+                      key={slot.index}
+                      className="p-3 bg-white rounded-xl border border-[#D5CEC2] flex flex-col justify-between space-y-2.5 relative group hover:border-[#722F37] transition-all"
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-[#2C1E11] font-mono">
+                          {slot.label}
+                        </span>
+                        {slot.index === 0 && (
+                          <span className="text-[9px] uppercase font-mono tracking-wider font-bold px-1.5 py-0.5 rounded bg-[#722F37] text-white">
+                            Primary
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Image Preview Box */}
+                      <div className="aspect-square rounded-lg bg-[#FAF8F5] border border-dashed border-[#D5CEC2] overflow-hidden flex items-center justify-center relative">
+                        {slot.url ? (
+                          <>
+                            <img
+                              src={slot.url}
+                              alt={slot.label}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/placeholder-luxury.jpg';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              <label
+                                htmlFor={inputId}
+                                className="p-1.5 bg-white/90 rounded-full text-stone-800 hover:bg-white cursor-pointer shadow-xs"
+                                title="Replace image"
+                              >
+                                <Upload className="w-3.5 h-3.5" />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSlot(slot.index)}
+                                className="p-1.5 bg-white/90 rounded-full text-rose-600 hover:bg-white cursor-pointer shadow-xs"
+                                title="Remove image"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <label
+                            htmlFor={inputId}
+                            className="w-full h-full flex flex-col items-center justify-center text-stone-400 hover:text-[#722F37] hover:bg-stone-50 cursor-pointer p-2 text-center transition-colors"
+                          >
+                            <Upload className="w-5 h-5 mb-1" />
+                            <span className="text-[10px] font-medium">Click to upload</span>
+                            <span className="text-[9px] text-stone-400">Max 5MB</span>
+                          </label>
+                        )}
+                      </div>
+
+                      {/* URL input or Upload button */}
+                      <div className="space-y-1">
+                        <input
+                          type="file"
+                          id={inputId}
+                          accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleSlotUpload(slot.index, file);
+                            e.target.value = '';
+                          }}
+                          className="hidden"
+                        />
+                        <input
+                          type="text"
+                          value={slot.url}
+                          placeholder="Or paste URL"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (slot.index === 0) {
+                              setFormData((p) => ({ ...p, image: val }));
+                            } else {
+                              const gIdx = slot.index - 1;
+                              setFormData((p) => {
+                                const gallery = Array.isArray(p.gallery) ? [...p.gallery] : [];
+                                gallery[gIdx] = val;
+                                return { ...p, gallery };
+                              });
+                            }
+                          }}
+                          className="w-full px-2 py-1 text-[10px] border border-[#D5CEC2] rounded bg-white text-[#1A1817] font-mono truncate focus:border-[#722F37] outline-none"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Presets Row for Primary Image */}
+              {PRESET_COLLECTION_IMAGES[formData.collectionId] && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] text-[#8C6320] font-semibold">Catalogue Presets:</span>
+                  {PRESET_COLLECTION_IMAGES[formData.collectionId].map((preset) => (
+                    <button
+                      key={preset.url}
+                      type="button"
+                      onClick={() => {
+                        setFormData((p) => ({ ...p, image: preset.url }));
+                        setImageError(false);
+                      }}
+                      className={`text-[10px] px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                        formData.image === preset.url
+                          ? 'bg-[#722F37] text-white border-[#722F37]'
+                          : 'bg-white hover:bg-[#F4F1EA] text-[#4A423B] border-[#D5CEC2]'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -894,7 +1089,7 @@ export function AdminProductForm() {
             {/* Selling Price */}
             <div>
               <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                Selling Price (₹) {formData.status === 'active' && <span className="text-rose-600">*</span>}
+                Selling Price (₹) {formData.collectionId === 'tea' ? '(Per Pack)' : ''} {formData.status === 'active' && <span className="text-rose-600">*</span>}
               </label>
               <input
                 type="number"
@@ -911,14 +1106,37 @@ export function AdminProductForm() {
               {fieldErrors.price ? (
                 <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.price}</p>
               ) : (
-                <p className="text-[10px] text-[#8C8377] mt-1">Authoritative selling price in INR (Incl. GST)</p>
+                <p className="text-[10px] text-[#8C8377] mt-1">
+                  {formData.collectionId === 'tea' ? 'Approved selling price per pack in INR (Incl. GST)' : 'Authoritative selling price in INR (Incl. GST)'}
+                </p>
               )}
+            </div>
+
+            {/* Selling Unit */}
+            <div>
+              <label className="block text-xs font-semibold text-[#4A423B] mb-1">
+                Selling Unit
+              </label>
+              <select
+                name="sellingUnit"
+                value={formData.sellingUnit || (formData.collectionId === 'tea' ? 'Pack' : 'Piece')}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs text-[#1A1817] focus:border-[#722F37] outline-none"
+              >
+                <option value="Pack">Pack (Standard for Teas & Pantry Packs)</option>
+                <option value="Piece">Piece (Standard for Sarees & Jewellery)</option>
+                <option value="Unit">Unit (General)</option>
+                <option value="Set">Set</option>
+              </select>
+              <p className="text-[10px] text-[#8C8377] mt-1">
+                {formData.collectionId === 'tea' ? 'Wellness Tea uses piece-based Pack pricing.' : 'Commercial unit displayed across cart, orders, and POS.'}
+              </p>
             </div>
 
             {/* Initial Stock Quantity */}
             <div>
               <label className="block text-xs font-semibold text-[#4A423B] mb-1">
-                Stock Quantity (Units)
+                Stock Quantity ({formData.sellingUnit || (formData.collectionId === 'tea' ? 'Packs' : 'Units')})
               </label>
               <input
                 type="number"
@@ -1070,14 +1288,43 @@ export function AdminProductForm() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#4A423B] mb-1">Net Weight</label>
-                <input
-                  type="text"
-                  value={formData.packSize || ''}
-                  onChange={(e) => setFormData((p) => ({ ...p, packSize: e.target.value }))}
-                  placeholder="e.g. 50g Glass Jar (25 Servings)"
-                  className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs"
-                />
+                <label className="block text-xs font-semibold text-[#4A423B] mb-1">
+                  Pack Weight (g) <span className="text-[#8C6320] font-normal">(Default: 25 g)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max="5000"
+                    step="1"
+                    disabled={!isAuthorizedToEditWeight}
+                    value={formData.packSize ? (formData.packSize.replace(/[^\d.]/g, '') || '') : '25'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFieldErrors((prev) => ({ ...prev, packWeight: null }));
+                      setFormData((p) => ({ ...p, packSize: val ? `${val} g` : '' }));
+                    }}
+                    placeholder="25"
+                    className={`w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded text-xs pr-14 ${
+                      !isAuthorizedToEditWeight ? 'bg-stone-100 text-stone-500 cursor-not-allowed' : ''
+                    }`}
+                  />
+                  <span className="absolute right-3 top-2 text-xs font-mono text-[#8C6320] pointer-events-none">
+                    grams
+                  </span>
+                </div>
+                {!isAuthorizedToEditWeight ? (
+                  <p className="text-[10px] text-stone-500 mt-1">
+                    Only Catalogue Managers and Super Admins are authorized to edit tea pack weight.
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-[#7A7167] mt-1">
+                    Standard Amoga Wellness Tea default is 25 g.
+                  </p>
+                )}
+                {fieldErrors.packWeight && (
+                  <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.packWeight}</p>
+                )}
               </div>
 
               <div>
@@ -1404,37 +1651,101 @@ export function AdminProductForm() {
                     </button>
                   </div>
 
-                  {/* Optional Variant-Level Tax Override */}
-                  <div className="sm:col-span-5 pt-2 border-t border-stone-100 flex flex-wrap items-center gap-3 text-[11px] text-[#7A7167]">
-                    <span className="font-semibold uppercase text-[10px] text-stone-500">Tax Override (Optional):</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px]">HSN:</span>
-                      <input
-                        type="text"
-                        value={v.hsnCode || ''}
-                        onChange={(e) => handleVariantChange(idx, 'hsnCode', e.target.value)}
-                        placeholder={formData.hsnCode || 'Inherit parent'}
-                        maxLength={8}
-                        className="w-24 px-2 py-1 border border-[#D5CEC2] rounded text-xs font-mono bg-white"
-                      />
+                  {/* Variant Image & Optional Tax Override */}
+                  <div className="sm:col-span-5 pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#7A7167]">
+                    {/* Variant Specific Image Upload */}
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold uppercase text-[10px] text-stone-500">Variant Image:</span>
+                      {v.image ? (
+                        <div className="flex items-center gap-2 bg-stone-50 px-2 py-1 rounded border border-stone-200">
+                          <img
+                            src={v.image}
+                            alt={v.name || 'Variant preview'}
+                            className="w-6 h-6 object-cover rounded"
+                            onError={(e) => { e.currentTarget.src = '/placeholder-luxury.jpg'; }}
+                          />
+                          <span className="text-[10px] text-stone-600 truncate max-w-[120px]">
+                            {v.image.startsWith('/uploads/') ? 'Uploaded' : 'URL set'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleVariantChange(idx, 'image', '')}
+                            className="text-stone-400 hover:text-rose-600"
+                            title="Remove variant image"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="file"
+                            id={`variant-file-${idx}`}
+                            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                try {
+                                  const url = await uploadImageFile(file);
+                                  handleVariantChange(idx, 'image', url);
+                                } catch (err) {
+                                  setUploadError(err.message || 'Variant image upload failed');
+                                }
+                              }
+                              e.target.value = '';
+                            }}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor={`variant-file-${idx}`}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded text-[10px] font-medium cursor-pointer"
+                          >
+                            <Upload className="w-3 h-3" />
+                            <span>Upload Image</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={v.image || ''}
+                            onChange={(e) => handleVariantChange(idx, 'image', e.target.value)}
+                            placeholder="or paste image URL"
+                            className="w-36 px-2 py-0.5 border border-[#D5CEC2] rounded text-[10px] bg-white font-mono"
+                          />
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px]">GST %:</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={v.gstRate || ''}
-                        onChange={(e) => handleVariantChange(idx, 'gstRate', e.target.value)}
-                        placeholder={formData.gstRate ? `${formData.gstRate}%` : 'Inherit'}
-                        className="w-20 px-2 py-1 border border-[#D5CEC2] rounded text-xs font-mono bg-white"
-                      />
+
+                    {/* Tax Override */}
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold uppercase text-[10px] text-stone-500">Tax Override:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px]">HSN:</span>
+                        <input
+                          type="text"
+                          value={v.hsnCode || ''}
+                          onChange={(e) => handleVariantChange(idx, 'hsnCode', e.target.value)}
+                          placeholder={formData.hsnCode || 'Inherit parent'}
+                          maxLength={8}
+                          className="w-24 px-2 py-1 border border-[#D5CEC2] rounded text-xs font-mono bg-white"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px]">GST %:</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={v.gstRate || ''}
+                          onChange={(e) => handleVariantChange(idx, 'gstRate', e.target.value)}
+                          placeholder={formData.gstRate ? `${formData.gstRate}%` : 'Inherit'}
+                          className="w-20 px-2 py-1 border border-[#D5CEC2] rounded text-xs font-mono bg-white"
+                        />
+                      </div>
+                      {v.hsnCode && (
+                        <span className="text-[10px] text-[#722F37] font-medium">
+                          Variant-specific tax rate active
+                        </span>
+                      )}
                     </div>
-                    {v.hsnCode && (
-                      <span className="text-[10px] text-[#722F37] font-medium">
-                        Variant-specific tax rate active
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}

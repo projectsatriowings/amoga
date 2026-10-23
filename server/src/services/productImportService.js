@@ -40,25 +40,48 @@ export const COLLECTION_INFO = {
   sarees: {
     id: 'sarees',
     name: 'Heritage Sarees',
-    categories: ['silk', 'traditional', 'festive', 'wedding', 'contemporary'],
+    categories: ['saree', 'salwar', 'half-saree', 'silk', 'traditional', 'festive', 'wedding', 'contemporary'],
     categoryNames: {
-      silk: 'Silk Sarees',
-      traditional: 'Traditional Weaves',
-      festive: 'Festive Collection',
-      wedding: 'Bridal & Wedding Sarees',
-      contemporary: 'Contemporary Weaves',
+      saree: 'Saree',
+      salwar: 'Salwar',
+      'half-saree': 'Half Saree',
+      silk: 'Saree',
+      traditional: 'Saree',
+      festive: 'Saree',
+      wedding: 'Saree',
+      contemporary: 'Saree',
     },
     description: 'Handloom Kanchipuram mulberry silks, Banarasi brocades, and heirloom drapes woven on traditional pit looms.',
   },
   jewellery: {
     id: 'jewellery',
     name: 'Sterling Silver',
-    categories: ['rings', 'necklaces', 'earrings', 'bracelets', 'traditional'],
+    categories: [
+      'chain-with-pendant',
+      'chain-pendant-earring',
+      'earring',
+      'anklets',
+      'toe-rings',
+      'bracelet',
+      'necklace',
+      'rings',
+      'necklaces',
+      'earrings',
+      'bracelets',
+      'traditional',
+    ],
     categoryNames: {
+      'chain-with-pendant': 'Chain with Pendant',
+      'chain-pendant-earring': 'Chain Pendant Earring',
+      earring: 'Earring',
+      anklets: 'Anklets',
+      'toe-rings': 'Toe Rings',
+      bracelet: 'Bracelet',
+      necklace: 'Necklace',
       rings: 'Rings',
-      necklaces: 'Necklaces & Pendants',
-      earrings: 'Earrings',
-      bracelets: 'Bracelets & Cuffs',
+      necklaces: 'Necklace',
+      earrings: 'Earring',
+      bracelets: 'Bracelet',
       traditional: 'Traditional Silver',
     },
     description: 'BIS 925 hallmarked sterling silver jewellery featuring natural gemstones, architectural bezels, and rhodium anti-tarnish finish.',
@@ -472,7 +495,7 @@ export async function generateProductImportTemplate() {
       categoryName: 'Botanical Flower Brews',
       tagline: 'Whole chamomile blossoms with Himalayan spearmint',
       gallery: '',
-      packSize: '50 g Tin',
+      packSize: '25 g',
       price: 499,
       sku: 'AMOGA-TEA001',
       hsnCode: '0902',
@@ -1862,8 +1885,10 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         parsedThreshold = Math.floor(thresholdVal);
       }
 
-      // 9. Collect Category-Specific Specs
+      // 9. Collect Category-Specific Specs & Pack Size
       const specs = {};
+      let finalPackSize = packSize ? String(packSize).trim() : null;
+
       if (collectionId === 'food') {
         const ing = getCellByNormalized(row, headerMap, 'pantry: ingredients', 'pantry ingredients');
         const allg = getCellByNormalized(row, headerMap, 'pantry: allergens', 'pantry allergens');
@@ -1916,6 +1941,30 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         if (harv) specs.harvestSeason = harv;
         if (stor) specs.storage = stor;
         if (disc) specs.disclaimer = disc;
+
+        // Validate Pack Size / Weight for Wellness Tea
+        if (!finalPackSize) {
+          finalPackSize = '25 g';
+        } else {
+          const match = finalPackSize.match(/^(\d+(?:\.\d+)?)\s*(?:g|gm|grams?|kg)?$/i);
+          let num = null;
+          if (match) {
+            num = parseFloat(match[1]);
+            if (/kg/i.test(finalPackSize)) num = num * 1000;
+          }
+          if (!match || isNaN(num) || num <= 0 || num > 5000) {
+            errors.push({
+              sheet: 'Products',
+              row: r,
+              column: 'Pack Size / Weight',
+              code: 'INVALID_TEA_WEIGHT',
+              message: `Invalid tea pack weight "${packSize}". Wellness Tea weight must be a positive number in grams (e.g. 25 g).`,
+            });
+          } else {
+            const formattedNum = Number.isInteger(num) ? num : parseFloat(num.toFixed(2));
+            finalPackSize = `${formattedNum} g`;
+          }
+        }
       } else if (collectionId === 'sarees') {
         const fab = getCellByNormalized(row, headerMap, 'sarees: fabric', 'sarees fabric');
         const wea = getCellByNormalized(row, headerMap, 'sarees: weave type', 'sarees weave');
@@ -1998,7 +2047,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         description,
         image,
         gallery,
-        packSize: packSize || null,
+        packSize: finalPackSize || null,
         price: priceVal !== 'INVALID' ? priceVal : null,
         originalPrice: origPriceVal !== 'INVALID' ? origPriceVal : null,
         discount: discount || null,

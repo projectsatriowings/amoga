@@ -277,7 +277,7 @@ export async function searchPosCatalog({
       category: p.category,
       price: p.price !== null ? Number(p.price) : 0,
       image: p.image,
-      packSize: p.packSize,
+      packSize: p.packSize || (p.collectionId === 'tea' ? '25 g' : null),
       hsnCode: p.hsnCode || '5007',
       gstRate: p.gstRate !== null ? Number(p.gstRate) : 5,
       isTaxInclusive: p.isTaxInclusive !== null ? Boolean(p.isTaxInclusive) : true,
@@ -1437,11 +1437,12 @@ export async function getPosSalesReport({
     }
   }
 
-  // 1. Fetch completed sales
+  // 1. Fetch sales and payments
   const sales = await client.posSale.findMany({
     where,
     include: {
       items: true,
+      payments: true,
       stallEvent: { select: { id: true, name: true, venue: true } },
       stockLocation: { select: { id: true, name: true, code: true, city: true } },
     },
@@ -1449,11 +1450,16 @@ export async function getPosSalesReport({
   });
 
   let grossSales = 0;
+  let grossCompletedSales = 0;
   let totalDiscounts = 0;
   let totalTax = 0;
+  let gstOnCompletedSales = 0;
+  let refundedTax = 0;
   let netSales = 0;
   let totalUnits = 0;
   let totalRefunds = 0;
+  let totalPaymentsReceived = 0;
+  let completedBillsCount = 0;
 
   const paymentBreakdown = {
     CASH: { count: 0, amount: 0 },
@@ -1472,12 +1478,14 @@ export async function getPosSalesReport({
   const stallSalesMap = {};
 
   for (const s of sales) {
+    const isCompleted = s.status === 'COMPLETED';
     const isRefunded = s.status === 'REFUNDED';
     const subtotal = Number(s.subtotal) || 0;
     const discount = Number(s.discountAmount) || 0;
     const tax = Number(s.totalTaxAmount) || 0;
     const total = Number(s.totalAmount) || 0;
     const refund = Number(s.refundedAmount) || 0;
+    const amountPaid = Number(s.amountPaid) || 0;
 
     grossSales += subtotal;
     totalDiscounts += discount;
@@ -1485,7 +1493,27 @@ export async function getPosSalesReport({
     netSales += isRefunded ? Math.max(0, total - refund) : total;
     totalRefunds += refund;
 
-    // Payment methods
+    if (isCompleted) {
+      completedBillsCount += 1;
+      grossCompletedSales += subtotal;
+      gstOnCompletedSales += tax;
+    } else if (isRefunded) {
+      // For fully refunded sales, tax is part of refunded tax
+      refundedTax += tax;
+    }
+
+    // Payments received (use actual payments relation to avoid double-counting if split, or amountPaid fallback)
+    if (Array.isArray(s.payments) && s.payments.length > 0) {
+      for (const p of s.payments) {
+        if (p.status === 'SUCCEEDED' || !p.status) {
+          totalPaymentsReceived += Number(p.amount) || 0;
+        }
+      }
+    } else {
+      totalPaymentsReceived += amountPaid;
+    }
+
+    // Payment methods aggregation (from sale or split payments)
     const method = s.paymentMethod ? s.paymentMethod.toUpperCase() : 'CASH';
     if (!paymentBreakdown[method]) {
       paymentBreakdown[method] = { count: 0, amount: 0 };
@@ -1524,11 +1552,16 @@ export async function getPosSalesReport({
   return {
     summary: {
       totalBills: sales.length,
+      completedBillsCount,
       grossSales: Number(grossSales.toFixed(2)),
+      grossCompletedSales: Number(grossCompletedSales.toFixed(2)),
       totalDiscounts: Number(totalDiscounts.toFixed(2)),
       totalTax: Number(totalTax.toFixed(2)),
+      gstOnCompletedSales: Number(gstOnCompletedSales.toFixed(2)),
+      refundedTax: Number(refundedTax.toFixed(2)),
       netSales: Number(netSales.toFixed(2)),
       totalRefunds: Number(totalRefunds.toFixed(2)),
+      paymentsReceived: Number(totalPaymentsReceived.toFixed(2)),
       totalUnitsSold: totalUnits,
       averageBillValue: sales.length > 0 ? Number((netSales / sales.length).toFixed(2)) : 0,
     },

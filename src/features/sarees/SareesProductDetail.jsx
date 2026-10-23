@@ -93,8 +93,17 @@ export function SareesProductDetail() {
   }
 
   const isWishlisted = isInWishlist(product.id);
-  const gallery = product.gallery || [product.image];
-  const activeImage = gallery[activeImageIndex] || product.image;
+  const gallery = useMemo(() => {
+    const list = [product.image];
+    if (Array.isArray(product.gallery)) {
+      product.gallery.forEach((img) => {
+        if (img && !list.includes(img)) list.push(img);
+      });
+    }
+    return list;
+  }, [product]);
+
+  const activeImage = selectedVariant?.image || gallery[activeImageIndex] || product.image;
   const hasPrice = product.price !== null;
 
   const handleAddToCart = () => {

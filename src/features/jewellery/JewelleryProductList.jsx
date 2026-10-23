@@ -97,9 +97,17 @@ export function JewelleryProductList() {
   const filteredProducts = useMemo(() => {
     let result = [...(apiProducts || [])];
 
-    // Category filter
+    // Category filter with graceful mapping for normalized slugs and legacy categories
     if (currentCategory && currentCategory !== 'all') {
-      result = result.filter((p) => (p.category || '').toLowerCase() === currentCategory.toLowerCase());
+      result = result.filter((p) => {
+        const cat = (p.category || '').toLowerCase().replace(/\s+/g, '-');
+        const cur = currentCategory.toLowerCase().replace(/\s+/g, '-');
+        if (cat === cur) return true;
+        if (cur === 'earring' && (cat === 'earrings' || cat === 'earring')) return true;
+        if (cur === 'necklace' && (cat === 'necklaces' || cat === 'necklace')) return true;
+        if (cur === 'bracelet' && (cat === 'bracelets' || cat === 'bracelet')) return true;
+        return false;
+      });
     }
 
     // Search query filter (search by name, tagline, description, specs)

@@ -251,6 +251,11 @@ export function CartDrawer() {
                             {categoryLabel && (
                               <span className="opacity-75">/ {categoryLabel}</span>
                             )}
+                            {(collectionId === 'tea' || product?.packSize || item.packSize) && (
+                              <span className="text-[#8C6320] font-medium bg-[#8C6320]/10 px-1.5 py-0.5 rounded text-[10px]">
+                                Net Weight: {product?.packSize || item.packSize || '25 g'}
+                              </span>
+                            )}
                             {availability.isOutOfStock ? (
                               <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200 ml-1">
                                 Currently Out of Stock

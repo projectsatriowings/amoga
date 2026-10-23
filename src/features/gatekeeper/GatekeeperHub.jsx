@@ -19,6 +19,16 @@ import { GlobalProfileMenu } from '../../components/layout/GlobalProfileMenu';
  * 6. Responsive mobile/touch carousel with swipe gestures and accessible pagination.
  * 7. Full keyboard navigation (Arrow keys, Tab, Enter).
  */
+const CANONICAL_COLLECTION_ORDER = { tea: 1, sarees: 2, jewellery: 3, food: 4 };
+const sortCollections = (list) => {
+  if (!Array.isArray(list)) return [];
+  return [...list].sort((a, b) => {
+    const rankA = CANONICAL_COLLECTION_ORDER[a.id] || CANONICAL_COLLECTION_ORDER[a.slug] || 99;
+    const rankB = CANONICAL_COLLECTION_ORDER[b.id] || CANONICAL_COLLECTION_ORDER[b.slug] || 99;
+    return rankA - rankB;
+  });
+};
+
 export function GatekeeperHub() {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
@@ -30,10 +40,12 @@ export function GatekeeperHub() {
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((c) => {
+          const sorted = sortCollections(parsed);
+          return sorted.map((c, idx) => {
             const staticMatch = COLLECTIONS.find((s) => s.id === c.id);
             return {
               ...c,
+              number: String(idx + 1).padStart(2, '0'),
               ctaText: staticMatch?.ctaText || 'EXPLORE COLLECTION',
             };
           });
@@ -100,10 +112,15 @@ export function GatekeeperHub() {
             };
           });
 
+          const sortedMerged = sortCollections(merged).map((c, i) => ({
+            ...c,
+            number: String(i + 1).padStart(2, '0'),
+          }));
+
           if (isMounted) {
-            setLiveCollections(merged);
+            setLiveCollections(sortedMerged);
             try {
-              sessionStorage.setItem('amoga_gatekeeper_collections', JSON.stringify(merged));
+              sessionStorage.setItem('amoga_gatekeeper_collections', JSON.stringify(sortedMerged));
             } catch {
               // Ignore sessionStorage errors
             }

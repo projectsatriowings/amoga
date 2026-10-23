@@ -719,6 +719,11 @@ export const OrderReviewPage = () => {
                               • {variantName}
                             </span>
                           )}
+                          {(collectionId === 'tea' || item.packSize || item.product?.packSize) && (
+                            <span className="text-[11px] text-[var(--collection-text)] font-medium break-words font-mono">
+                              • Net Weight: {item.packSize || item.product?.packSize || '25 g'}
+                            </span>
+                          )}
                         </div>
                         <h3 className="font-medium text-sm text-[var(--collection-text)] break-words">
                           {name}

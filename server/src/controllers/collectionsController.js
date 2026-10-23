@@ -28,7 +28,7 @@ export async function getCollections(req, res, next) {
       },
     });
 
-    const orderMap = { food: 1, tea: 2, sarees: 3, jewellery: 4 };
+    const orderMap = { tea: 1, sarees: 2, jewellery: 3, food: 4 };
     collections.sort((a, b) => {
       const rankA = orderMap[a.slug] || orderMap[a.id] || 99;
       const rankB = orderMap[b.slug] || orderMap[b.id] || 99;

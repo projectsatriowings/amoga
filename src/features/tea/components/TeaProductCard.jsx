@@ -150,11 +150,12 @@ export function TeaProductCard({ product }) {
                   <span className="text-base font-sans font-semibold text-[#2C1E11] tabular-nums font-numeric">
                     ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                   </span>
-                  {product.packSize && (
-                    <span className="text-[10px] font-sans text-[#8C6320] opacity-85 tabular-nums font-numeric">
-                      ({product.packSize})
-                    </span>
-                  )}
+                  <span className="text-xs font-sans font-medium text-[#8C6320]">
+                    / Pack
+                  </span>
+                  <span className="text-[10px] font-sans text-[#8C6320] bg-white/80 px-2 py-0.5 rounded-md border border-[#B88E38]/25 tabular-nums font-numeric">
+                    Net Weight: {product.packSize || '25 g'}
+                  </span>
                   <span className="text-[9px] text-[#8C6320] block w-full">Incl. GST</span>
                 </div>
               ) : (

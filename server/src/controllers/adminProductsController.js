@@ -22,6 +22,66 @@ export function invalidateAdminProductsCache() {
 }
 registerCatalogueInvalidation(invalidateAdminProductsCache);
 
+/**
+ * Validate and format tea pack weight.
+ * Default is 25 g.
+ * Value must be a positive reasonable number in grams (e.g. 1 to 5000g).
+ */
+export function validateAndFormatTeaPackWeight(val, isDefaultIfEmpty = false) {
+  if (val === undefined || val === null || val === '') {
+    if (isDefaultIfEmpty) return { isValid: true, formatted: '25 g' };
+    return { isValid: true, formatted: null };
+  }
+
+  let num = null;
+  if (typeof val === 'number') {
+    num = val;
+  } else if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed) {
+      if (isDefaultIfEmpty) return { isValid: true, formatted: '25 g' };
+      return { isValid: true, formatted: null };
+    }
+    const match = trimmed.match(/^(\d+(?:\.\d+)?)\s*(?:g|gm|grams?|kg)?$/i);
+    if (match) {
+      num = parseFloat(match[1]);
+      if (/kg/i.test(trimmed)) {
+        num = num * 1000;
+      }
+    } else {
+      return {
+        isValid: false,
+        message: 'Pack weight must be a valid positive number in grams (e.g. 25 or 25 g).',
+      };
+    }
+  } else {
+    return {
+      isValid: false,
+      message: 'Pack weight must be a positive number.',
+    };
+  }
+
+  if (isNaN(num) || !isFinite(num) || num <= 0) {
+    return {
+      isValid: false,
+      message: 'Pack weight must be a positive number greater than 0.',
+    };
+  }
+
+  if (num > 5000) {
+    return {
+      isValid: false,
+      message: 'Pack weight exceeds maximum reasonable limit of 5,000 g.',
+    };
+  }
+
+  const formattedNum = Number.isInteger(num) ? num : parseFloat(num.toFixed(2));
+  return {
+    isValid: true,
+    formatted: `${formattedNum} g`,
+  };
+}
+
 export async function listProducts(req, res) {
   try {
     const {
@@ -194,6 +254,13 @@ export async function createProduct(req, res) {
       status,
     } = req.body;
 
+    if (req.admin && req.admin.role !== 'SUPER_ADMIN' && req.admin.role !== 'CATALOGUE_MANAGER') {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        message: 'Only catalogue managers and super admins are authorized to create products.',
+      });
+    }
+
     if (!name || !collectionId) {
       return res.status(400).json({
         error: 'INVALID_INPUT',
@@ -296,6 +363,19 @@ export async function createProduct(req, res) {
         : 'j';
     const sourceId = `${sourcePrefix}-${cleanSlug}-${Date.now().toString(36)}`;
 
+    // Pack size validation / default
+    let finalPackSize = packSize ? String(packSize).trim() : null;
+    if (collectionId === 'tea') {
+      const weightResult = validateAndFormatTeaPackWeight(req.body.packWeight ?? packSize, true);
+      if (!weightResult.isValid) {
+        return res.status(400).json({
+          error: 'INVALID_PACK_WEIGHT',
+          message: weightResult.message,
+        });
+      }
+      finalPackSize = weightResult.formatted;
+    }
+
     // Create product and variants in transaction
     const createdProduct = await prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
@@ -309,9 +389,10 @@ export async function createProduct(req, res) {
           categoryName: categoryName || category || collection.name,
           price: numPrice,
           originalPrice: null,
+          sellingUnit: req.body.sellingUnit ? String(req.body.sellingUnit).trim() : (collectionId === 'tea' ? 'Pack' : null),
           image: image || '/placeholder-luxury.jpg',
           gallery: Array.isArray(gallery) ? gallery : [],
-          packSize: packSize || null,
+          packSize: finalPackSize,
           stockQuantity: Math.max(0, parseInt(stockQuantity, 10) || 0),
           lowStockThreshold: Math.max(0, parseInt(lowStockThreshold, 10) || 5),
           inStock: Boolean(inStock),
@@ -356,6 +437,7 @@ export async function createProduct(req, res) {
                 name: v.name.trim(),
                 sku: variantSku,
                 price: v.price ? Number(v.price) : null,
+                image: v.image ? String(v.image).trim() : null,
                 hsnCode: v.hsnCode ? String(v.hsnCode).trim() : cleanHsn,
                 gstRate: v.gstRate !== undefined && v.gstRate !== null ? Number(v.gstRate) : numGstRate,
                 isTaxInclusive: v.isTaxInclusive !== undefined ? Boolean(v.isTaxInclusive) : Boolean(isTaxInclusive),
@@ -417,6 +499,13 @@ export async function createProduct(req, res) {
 
 export async function updateProduct(req, res) {
   try {
+    if (req.admin && req.admin.role !== 'SUPER_ADMIN' && req.admin.role !== 'CATALOGUE_MANAGER') {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        message: 'Only catalogue managers and super admins are authorized to edit products and pack weights.',
+      });
+    }
+
     const { id } = req.params;
     const {
       name,
@@ -532,6 +621,22 @@ export async function updateProduct(req, res) {
       finalIsActive = false;
     }
 
+    const effectiveCollectionId = collectionId !== undefined ? collectionId : existingProduct.collectionId;
+    let validatedTeaPackWeight = undefined;
+    if (effectiveCollectionId === 'tea') {
+      if (packSize !== undefined || req.body.packWeight !== undefined) {
+        const rawWeight = req.body.packWeight !== undefined ? req.body.packWeight : packSize;
+        const weightResult = validateAndFormatTeaPackWeight(rawWeight, false);
+        if (!weightResult.isValid) {
+          return res.status(400).json({
+            error: 'INVALID_PACK_WEIGHT',
+            message: weightResult.message,
+          });
+        }
+        validatedTeaPackWeight = weightResult.formatted || '25 g';
+      }
+    }
+
     const updated = await prisma.$transaction(async (tx) => {
       const updateData = {};
       if (name !== undefined) updateData.name = name.trim();
@@ -540,6 +645,7 @@ export async function updateProduct(req, res) {
       if (categoryName !== undefined) updateData.categoryName = categoryName;
       if (price !== undefined) updateData.price = price !== null ? Number(price) : null;
       if (originalPrice !== undefined) updateData.originalPrice = originalPrice !== null ? Number(originalPrice) : null;
+      if (req.body.sellingUnit !== undefined) updateData.sellingUnit = req.body.sellingUnit ? String(req.body.sellingUnit).trim() : null;
       if (image !== undefined) updateData.image = image;
       if (gallery !== undefined) updateData.gallery = gallery;
       if (stockQuantity !== undefined) updateData.stockQuantity = Math.max(0, parseInt(stockQuantity, 10) || 0);
@@ -547,7 +653,13 @@ export async function updateProduct(req, res) {
       if (inStock !== undefined) updateData.inStock = Boolean(inStock);
       if (isFeatured !== undefined) updateData.isFeatured = Boolean(isFeatured);
       if (badge !== undefined) updateData.badge = badge;
-      if (packSize !== undefined) updateData.packSize = packSize;
+      if (effectiveCollectionId === 'tea') {
+        if (validatedTeaPackWeight !== undefined) {
+          updateData.packSize = validatedTeaPackWeight;
+        }
+      } else if (packSize !== undefined) {
+        updateData.packSize = packSize;
+      }
       if (specs !== undefined) updateData.specs = specs;
       if (status !== undefined || req.body.isActive !== undefined) updateData.isActive = finalIsActive;
       if (updatedSku !== undefined) updateData.sku = updatedSku;
@@ -600,6 +712,7 @@ export async function updateProduct(req, res) {
                 name: v.name?.trim(),
                 sku: vSku,
                 price: v.price ? Number(v.price) : null,
+                image: v.image !== undefined ? (v.image ? String(v.image).trim() : null) : undefined,
                 hsnCode: v.hsnCode ? String(v.hsnCode).trim() : undefined,
                 gstRate: v.gstRate !== undefined && v.gstRate !== null ? Number(v.gstRate) : undefined,
                 isTaxInclusive: v.isTaxInclusive !== undefined ? Boolean(v.isTaxInclusive) : undefined,
@@ -632,6 +745,7 @@ export async function updateProduct(req, res) {
                 name: v.name.trim(),
                 sku: newVariantSku,
                 price: v.price ? Number(v.price) : null,
+                image: v.image ? String(v.image).trim() : null,
                 hsnCode: v.hsnCode ? String(v.hsnCode).trim() : (finalHsn || null),
                 gstRate: v.gstRate !== undefined && v.gstRate !== null ? Number(v.gstRate) : finalGst,
                 isTaxInclusive: v.isTaxInclusive !== undefined ? Boolean(v.isTaxInclusive) : Boolean(isTaxInclusive),

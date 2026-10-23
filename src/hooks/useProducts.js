@@ -306,7 +306,7 @@ function mergeProductWithFallback(apiItem, fallbackItem) {
       ? apiItem.details
       : fallbackItem.details,
     badge: apiItem.badge || fallbackItem.badge,
-    packSize: apiItem.packSize || fallbackItem.packSize,
+    packSize: apiItem.packSize || fallbackItem.packSize || ((apiItem.collection === 'tea' || fallbackItem.collection === 'tea') ? '25 g' : null),
   };
 }
 

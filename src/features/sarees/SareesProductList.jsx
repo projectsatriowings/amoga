@@ -97,9 +97,17 @@ export function SareesProductList() {
   const filteredProducts = useMemo(() => {
     let result = [...(apiProducts || [])];
 
-    // Category filter
+    // Category filter with graceful mapping for legacy categories
     if (currentCategory && currentCategory !== 'all') {
-      result = result.filter((p) => (p.category || '').toLowerCase() === currentCategory.toLowerCase());
+      result = result.filter((p) => {
+        const cat = (p.category || '').toLowerCase();
+        const cur = currentCategory.toLowerCase();
+        if (cat === cur) return true;
+        if (cur === 'saree' && ['silk', 'traditional', 'festive', 'wedding', 'contemporary'].includes(cat)) {
+          return true;
+        }
+        return false;
+      });
     }
 
     // Search query filter (search by name, tagline, description, and specs)

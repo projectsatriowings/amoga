@@ -413,6 +413,14 @@ export function AdminProducts() {
                                 {p.sku}
                               </span>
                             )}
+                            {p.specs?.categoryReviewRequired && (
+                              <span
+                                className="text-[9px] font-mono px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded border border-amber-300 font-semibold cursor-help"
+                                title={p.specs?.reviewReason || 'Category review required: Please edit and select an approved category'}
+                              >
+                                Needs Category Review
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
