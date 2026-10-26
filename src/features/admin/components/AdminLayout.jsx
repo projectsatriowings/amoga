@@ -154,7 +154,6 @@ export function AdminLayout() {
       items: [
         { label: 'Products', path: '/admin/products', icon: Package },
         { label: 'Bulk Product Upload', path: '/admin/products/bulk-upload', icon: FileSpreadsheet },
-        { label: 'GST Rate Master', path: '/admin/tax-rates', icon: ShieldCheck },
         { label: 'Inventory', path: '/admin/inventory', icon: Boxes },
       ],
     },
@@ -231,7 +230,6 @@ export function AdminLayout() {
   let pageTitle = 'Executive Dashboard';
   if (currentPath === '/admin/products') pageTitle = 'Product Catalogue';
   else if (currentPath === '/admin/products/bulk-upload') pageTitle = 'Bulk Product Upload';
-  else if (currentPath === '/admin/tax-rates') pageTitle = 'Verified GST Rate Master';
   else if (currentPath === '/admin/collections') pageTitle = 'Collection Architecture';
   else if (currentPath === '/admin/inventory') pageTitle = 'Stock & Inventory Control';
   else if (currentPath === '/admin/orders') pageTitle = 'Customer Order Stream';

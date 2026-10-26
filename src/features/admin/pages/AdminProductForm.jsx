@@ -218,7 +218,7 @@ export function AdminProductForm() {
     cessRate: '0.00',
     taxClassification: 'GOODS',
     taxTreatment: 'TAXABLE',
-    taxVerificationStatus: 'PENDING',
+    taxVerificationStatus: 'VERIFIED',
     taxConfirmedBy: null,
     taxConfirmedAt: null,
     taxNotes: '',
@@ -582,10 +582,6 @@ export function AdminProductForm() {
 
       if (formData.gstRate === '' || formData.gstRate === null || isNaN(Number(formData.gstRate))) {
         errors.gstRate = 'GST rate is required for live tax compliance';
-      }
-
-      if (formData.taxVerificationStatus !== 'VERIFIED') {
-        errors.taxVerificationStatus = 'Tax classification must be confirmed and verified by an authorized user before publishing live.';
       }
     }
 
@@ -1517,22 +1513,11 @@ export function AdminProductForm() {
               <ShieldCheck className="w-4 h-4 text-[#722F37]" />
               <div>
                 <h2 className="font-serif text-sm font-bold text-[#1A1817] uppercase tracking-wider">
-                  D. Assisted GST & HSN Classification
+                  D. GST & HSN Classification
                 </h2>
                 <p className="text-[11px] text-[#7A7167]">
                   HSN: <span className="font-mono font-medium">{formData.hsnCode || 'Not classified'}</span> | GST:{' '}
-                  <span className="font-medium">{formData.gstRate !== '' && formData.gstRate !== null ? `${formData.gstRate}%` : 'Unassigned'}</span> | Status:{' '}
-                  <span
-                    className={`font-semibold ${
-                      formData.taxVerificationStatus === 'VERIFIED'
-                        ? 'text-emerald-700'
-                        : formData.taxVerificationStatus === 'EXEMPT'
-                        ? 'text-blue-700'
-                        : 'text-amber-700'
-                    }`}
-                  >
-                    {formData.taxVerificationStatus || 'PENDING'}
-                  </span>
+                  <span className="font-medium">{formData.gstRate !== '' && formData.gstRate !== null ? `${formData.gstRate}%` : 'Unassigned'}</span>
                 </p>
               </div>
             </div>
