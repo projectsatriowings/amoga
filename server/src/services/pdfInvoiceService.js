@@ -27,10 +27,11 @@ export async function generateInvoicePdfBuffer(order) {
 
       const sellerLegalName = order.sellerLegalName || 'Amoga Luxury Private Limited';
       const sellerTradeName = order.sellerTradeName || 'Amoga';
-      const sellerGstin = order.sellerGstin || '33AAACA1234A1Z5';
+      const sellerGstin = order.sellerGstin || '33AYMPK1833D1ZQ';
       const sellerAddress = order.sellerAddress || '108, Heritage Walk, Anna Salai, T. Nagar, Chennai, Tamil Nadu - 600017';
       const sellerState = order.sellerState || 'Tamil Nadu';
       const sellerStateCode = order.sellerStateCode || '33';
+      const sellerFssai = order.sellerFssai || order.fssaiLicenseNumber || '22425540000677';
 
       const invoiceNumber = order.invoiceNumber || 'INV-PENDING';
       const invoiceDateStr = order.invoiceDate
@@ -60,7 +61,7 @@ export async function generateInvoicePdfBuffer(order) {
       
       doc.fillColor('#722F37').fontSize(20).font('Helvetica-Bold').text('AMOGA', 48, 48, { characterSpacing: 2 });
       doc.fillColor('#5C544C').fontSize(8).font('Helvetica').text('HAUTE LUXURY & ATELIER HERITAGE', 48, 72, { characterSpacing: 1 });
-      doc.fillColor('#7A7167').fontSize(7.5).text(`GSTIN: ${sellerGstin} | State Code: ${sellerStateCode}`, 48, 84);
+      doc.fillColor('#7A7167').fontSize(7.5).text(`GSTIN: ${sellerGstin} | State Code: ${sellerStateCode} | FSSAI: ${sellerFssai}`, 48, 84);
 
       doc.fillColor('#1A1817').fontSize(14).font('Helvetica-Bold').text('TAX INVOICE', 350, 48, { align: 'right', width: 195 });
       doc.fillColor('#5C544C').fontSize(8).font('Helvetica').text(`Invoice No: ${invoiceNumber}`, 350, 68, { align: 'right', width: 195 });

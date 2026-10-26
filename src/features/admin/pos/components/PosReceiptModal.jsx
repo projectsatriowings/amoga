@@ -51,8 +51,8 @@ export function PosReceiptModal({
   const seller = sale.sellerDetails || {
     tradeName: 'Amoga',
     legalName: 'Amoga Luxury Private Limited',
-    gstin: '33AAACA1234A1Z5',
-    pan: 'AAACA1234A',
+    gstin: '33AYMPK1833D1ZQ',
+    pan: 'AYMPK1833D',
     addressLine1: '108, Heritage Walk, Anna Salai',
     addressLine2: 'T. Nagar',
     city: 'Chennai',

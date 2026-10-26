@@ -482,7 +482,7 @@ export async function generateProductImportTemplate() {
       food_prep: 'Mix 2 tbsp with 200ml boiling water. Simmer for 2 mins and serve hot.',
       food_storage: 'Store in an airtight container in a cool, dry place.',
       food_shelfLife: '9 Months',
-      food_compliance: 'FSSAI Lic. No. 11522001000456',
+      food_compliance: 'FSSAI Lic. No. 22425540000677',
     },
     {
       collectionId: 'tea',
@@ -1118,7 +1118,7 @@ export async function generateProductImportTemplate() {
       collection: 'Wholesome Pantry (food)',
       description: 'FSSAI License number or regulatory registration.',
       format: 'Text string / license number',
-      example: 'FSSAI Lic. No. 11522001000456',
+      example: 'FSSAI Lic. No. 22425540000677',
     },
 
     // Category Specific - Wellness Tea

@@ -147,8 +147,8 @@ export async function getStoreSettings(req, res) {
             sellerState: 'Tamil Nadu',
             sellerStateCode: '33',
             sellerPincode: '600017',
-            sellerGstin: '33AAACA1234A1Z5',
-            sellerPan: 'AAACA1234A',
+            sellerGstin: '33AYMPK1833D1ZQ',
+            sellerPan: 'AYMPK1833D',
             invoicePrefix: 'AMOGA/2026-27/',
             invoiceSequence: 1001,
             isTaxEnabled: true,
@@ -223,6 +223,14 @@ export async function updateStoreSettings(req, res) {
       shippingBeyondMaxRule,
       shippingBeyondMaxBaseCharge,
       shippingBeyondMaxChargePerPiece,
+      fssaiLicenseNumber,
+      fssaiLicenseHolder,
+      fssaiLicenseType,
+      fssaiCertificateUrl,
+      fssaiScopeNotice,
+      returnWindowDays,
+      foodReturnWindowHours,
+      returnPolicyVersion,
     } = req.body;
 
     // Strict Server-side Validation
@@ -360,6 +368,37 @@ export async function updateStoreSettings(req, res) {
       }
     }
 
+    // FSSAI 14-Digit Format Validation
+    if (fssaiLicenseNumber !== undefined && fssaiLicenseNumber.trim()) {
+      const cleanFssai = fssaiLicenseNumber.trim();
+      if (!/^[0-9]{14}$/.test(cleanFssai)) {
+        return res.status(400).json({
+          error: 'INVALID_FSSAI_NUMBER',
+          message: 'FSSAI License / Registration Number must be exactly 14 digits',
+        });
+      }
+    }
+
+    if (returnWindowDays !== undefined) {
+      const days = Number(returnWindowDays);
+      if (isNaN(days) || days < 1 || days > 90) {
+        return res.status(400).json({
+          error: 'INVALID_RETURN_WINDOW',
+          message: 'Return window must be between 1 and 90 days',
+        });
+      }
+    }
+
+    if (foodReturnWindowHours !== undefined) {
+      const hours = Number(foodReturnWindowHours);
+      if (isNaN(hours) || hours < 1 || hours > 336) {
+        return res.status(400).json({
+          error: 'INVALID_FOOD_RETURN_WINDOW',
+          message: 'Food return window must be between 1 and 336 hours',
+        });
+      }
+    }
+
     // Retrieve previous settings to compute readable field-by-field diff
     const previous = await prisma.storeSetting.findUnique({
       where: { id: 'default' },
@@ -414,6 +453,14 @@ export async function updateStoreSettings(req, res) {
         shippingBeyondMaxChargePerPiece: shippingBeyondMaxChargePerPiece !== undefined ? Number(shippingBeyondMaxChargePerPiece) : undefined,
         shippingConfiguredBy: req.admin?.email || 'admin@amoga.com',
         shippingConfiguredAt: new Date(),
+        fssaiLicenseNumber: fssaiLicenseNumber !== undefined ? (fssaiLicenseNumber.trim() || null) : undefined,
+        fssaiLicenseHolder: fssaiLicenseHolder !== undefined ? fssaiLicenseHolder.trim() : undefined,
+        fssaiLicenseType: fssaiLicenseType !== undefined ? fssaiLicenseType.trim() : undefined,
+        fssaiCertificateUrl: fssaiCertificateUrl !== undefined ? (fssaiCertificateUrl.trim() || null) : undefined,
+        fssaiScopeNotice: fssaiScopeNotice !== undefined ? fssaiScopeNotice.trim() : undefined,
+        returnWindowDays: returnWindowDays !== undefined ? parseInt(returnWindowDays, 10) : undefined,
+        foodReturnWindowHours: foodReturnWindowHours !== undefined ? parseInt(foodReturnWindowHours, 10) : undefined,
+        returnPolicyVersion: returnPolicyVersion !== undefined ? returnPolicyVersion.trim() : undefined,
       },
       create: {
         id: 'default',
@@ -442,14 +489,22 @@ export async function updateStoreSettings(req, res) {
         sellerState: sellerState ? sellerState.trim() : 'Tamil Nadu',
         sellerStateCode: computedStateCode || '33',
         sellerPincode: sellerPincode ? sellerPincode.trim() : '600017',
-        sellerGstin: validatedGstin || '33AAACA1234A1Z5',
-        sellerPan: sellerPan ? sellerPan.trim().toUpperCase() : 'AAACA1234A',
+        sellerGstin: validatedGstin || '33AYMPK1833D1ZQ',
+        sellerPan: sellerPan ? sellerPan.trim().toUpperCase() : 'AYMPK1833D',
         invoicePrefix: invoicePrefix ? invoicePrefix.trim() : 'AMOGA/2026-27/',
         invoiceSequence: parseInt(invoiceSequence, 10) || 1001,
         isTaxEnabled: isTaxEnabled !== undefined ? Boolean(isTaxEnabled) : true,
         defaultGstRate: Number(defaultGstRate || 5.0),
         defaultHsnCode: defaultHsnCode ? defaultHsnCode.trim() : '5007',
         isTaxInclusiveDefault: isTaxInclusiveDefault !== undefined ? Boolean(isTaxInclusiveDefault) : true,
+        fssaiLicenseNumber: fssaiLicenseNumber ? fssaiLicenseNumber.trim() : '22425540000677',
+        fssaiLicenseHolder: fssaiLicenseHolder ? fssaiLicenseHolder.trim() : 'Amoga Luxury Private Limited',
+        fssaiLicenseType: fssaiLicenseType ? fssaiLicenseType.trim() : 'State License',
+        fssaiCertificateUrl: fssaiCertificateUrl ? fssaiCertificateUrl.trim() : null,
+        fssaiScopeNotice: fssaiScopeNotice ? fssaiScopeNotice.trim() : 'Verified 14-digit FSSAI licence for proprietary food and botanical tea retail packaging.',
+        returnWindowDays: returnWindowDays ? parseInt(returnWindowDays, 10) : 7,
+        foodReturnWindowHours: foodReturnWindowHours ? parseInt(foodReturnWindowHours, 10) : 48,
+        returnPolicyVersion: returnPolicyVersion ? returnPolicyVersion.trim() : '2026.1',
       },
     });
 

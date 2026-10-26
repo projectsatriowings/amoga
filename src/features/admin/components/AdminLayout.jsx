@@ -40,6 +40,7 @@ import {
   Sliders,
   ArrowRightLeft,
   Layers,
+  RotateCcw,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminCommandPalette } from './AdminCommandPalette';
@@ -161,6 +162,7 @@ export function AdminLayout() {
       title: 'COMMERCE & SALES',
       items: [
         { label: 'Orders', path: '/admin/orders', icon: ShoppingBag },
+        { label: 'Returns & Claims', path: '/admin/returns', icon: RotateCcw },
         { label: 'Payments', path: '/admin/payments', icon: CreditCard },
         { label: 'Customers', path: '/admin/customers', icon: Users },
         { label: 'Customer Inquiries', path: '/admin/customer-inquiries', icon: MessageSquare },

@@ -20,10 +20,13 @@ import {
   Lock,
   RefreshCw,
   X,
+  RotateCcw,
+  ExternalLink,
 } from 'lucide-react';
 import { BackButton } from '../../components/ui/BackButton';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
+import { ReturnPolicyNoticeCard } from '../../components/checkout/ReturnPolicyNoticeCard';
 
 // Pure helper to generate demo reference outside component render scope
 function generateDemoOrderId() {
@@ -87,6 +90,7 @@ export const OrderReviewPage = () => {
   const [simulationError, setSimulationError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('online');
+  const [returnPolicyAcknowledged, setReturnPolicyAcknowledged] = useState(true);
 
   // Authoritative server shipping from store settings
   const [serverShipping, setServerShipping] = useState({
@@ -184,6 +188,9 @@ export const OrderReviewPage = () => {
         customer: customerDetails,
         idempotencyKey,
         paymentMethod,
+        returnPolicyAcknowledged: Boolean(returnPolicyAcknowledged),
+        returnPolicyVersion: '2026.1',
+        returnPolicyAcknowledgedAt: new Date().toISOString(),
       });
 
       if (orderResult && orderResult.orderReference) {
@@ -496,6 +503,7 @@ export const OrderReviewPage = () => {
           </ol>
         </nav>
         </div>
+
 
         {/* Page Title */}
         <div className="pb-6 border-b border-[var(--collection-border)] mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -811,6 +819,14 @@ export const OrderReviewPage = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Returns & Refunds Disclosure */}
+              <ReturnPolicyNoticeCard
+                showAcknowledgement
+                returnPolicyAcknowledged={returnPolicyAcknowledged}
+                onAcknowledgeChange={setReturnPolicyAcknowledged}
+                className="my-2"
+              />
 
               {/* Payment CTA Button */}
               <div className="pt-2">

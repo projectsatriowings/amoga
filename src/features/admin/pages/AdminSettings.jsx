@@ -19,6 +19,7 @@ import {
   Percent,
   Users,
   Sliders,
+  RotateCcw,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { SystemHealthCard } from '../components/SystemHealthCard';
@@ -232,6 +233,24 @@ export function AdminSettings() {
           return;
         }
       }
+    }
+
+    if (settings.fssaiLicenseNumber && !/^[0-9]{14}$/.test(settings.fssaiLicenseNumber)) {
+      setMessage({ type: 'error', text: 'FSSAI License Number must be exactly 14 digits.' });
+      setSubmitting(false);
+      return;
+    }
+
+    if (settings.returnWindowDays && (Number(settings.returnWindowDays) < 1 || Number(settings.returnWindowDays) > 90)) {
+      setMessage({ type: 'error', text: 'Standard return window must be between 1 and 90 days.' });
+      setSubmitting(false);
+      return;
+    }
+
+    if (settings.foodReturnWindowHours && (Number(settings.foodReturnWindowHours) < 1 || Number(settings.foodReturnWindowHours) > 168)) {
+      setMessage({ type: 'error', text: 'Food transit damage reporting window must be between 1 and 168 hours.' });
+      setSubmitting(false);
+      return;
     }
 
     try {
@@ -978,7 +997,7 @@ export function AdminSettings() {
                   const stateCode = val.length >= 2 ? val.substring(0, 2) : settings?.sellerStateCode;
                   setSettings({ ...settings, sellerGstin: val, sellerPan: pan, sellerStateCode: stateCode });
                 }}
-                placeholder="33AAACA1234A1Z5"
+                placeholder="33AYMPK1833D1ZQ"
                 className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
               />
               <p className="text-[10px] text-[#7A7167] mt-1">
@@ -1136,6 +1155,180 @@ export function AdminSettings() {
                   {settings?.invoicePrefix || 'AMOGA/2026-27/'}{String(settings?.invoiceSequence ?? 1001).padStart(4, '0')}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FSSAI Food Safety Compliance Card */}
+        <div className="bg-[#FBF9F5] p-6 rounded-2xl border border-[#E5E0D5] space-y-5">
+          <div className="border-b border-[#EAE4D9] pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="font-serif text-base font-bold text-[#1A1817] flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#722F37]" />
+                <span>Food Safety & Standards Authority of India (FSSAI) Compliance</span>
+              </h2>
+              <p className="text-[11px] text-[#7A7167] mt-0.5">
+                Statutory 14-digit FSSAI licence registration for food storefronts, product detail badges, and GST tax invoices.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+              Food Safety Act 2006
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                FSSAI Licence / Reg Number *
+              </label>
+              <input
+                type="text"
+                maxLength={14}
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiLicenseNumber || ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/[^0-9]/g, '');
+                  setSettings({ ...settings, fssaiLicenseNumber: digits });
+                }}
+                placeholder="22425540000677"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">
+                {/^[0-9]{14}$/.test(settings?.fssaiLicenseNumber || '') ? (
+                  <span className="text-emerald-700 font-semibold">✓ Valid 14-digit FSSAI number</span>
+                ) : settings?.fssaiLicenseNumber ? (
+                  <span className="text-amber-700">Must be exactly 14 numeric digits ({settings.fssaiLicenseNumber.length}/14)</span>
+                ) : (
+                  '14-digit FSSAI registration number'
+                )}
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Licence Holder Entity Name
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiLicenseHolder || ''}
+                onChange={(e) => setSettings({ ...settings, fssaiLicenseHolder: e.target.value })}
+                placeholder="e.g. Amoga Luxury Private Limited"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Matching legal entity on registration document.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Licence Classification / Type
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiLicenseType || ''}
+                onChange={(e) => setSettings({ ...settings, fssaiLicenseType: e.target.value })}
+                placeholder="e.g. State License - E-Commerce Retail"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Licence Scope Notice / FBO Category
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiScopeNotice || ''}
+                onChange={(e) => setSettings({ ...settings, fssaiScopeNotice: e.target.value })}
+                placeholder="E-Commerce FBO for Packaged Dry Goods, Wellness Teas & Artisanal Infusions"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Disclosed on footer and food category detail pages.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Publishable Certificate Link (optional)
+              </label>
+              <input
+                type="url"
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiCertificateUrl || ''}
+                onChange={(e) => setSettings({ ...settings, fssaiCertificateUrl: e.target.value })}
+                placeholder="https://.../amoga-fssai-certificate.pdf"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Provide link only when verified and authorized for public viewing.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Return & Refund Policy Parameters */}
+        <div className="bg-[#FBF9F5] p-6 rounded-2xl border border-[#E5E0D5] space-y-5">
+          <div className="border-b border-[#EAE4D9] pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="font-serif text-base font-bold text-[#1A1817] flex items-center gap-2">
+                <RotateCcw className="w-4 h-4 text-[#722F37]" />
+                <span>Return, Replacement & Refund Policy Parameters</span>
+              </h2>
+              <p className="text-[11px] text-[#7A7167] mt-0.5">
+                Indian Consumer Protection (E-Commerce) Rules compliant reporting windows and policy versioning.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200">
+              Consumer Protection 2020
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Non-Perishable Return Window (Days) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="90"
+                disabled={!isSuperAdmin}
+                value={settings?.returnWindowDays ?? 7}
+                onChange={(e) => setSettings({ ...settings, returnWindowDays: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Days from delivery for sarees, silver jewellery, and crafts.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Food Damage Reporting Window (Hours) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="168"
+                disabled={!isSuperAdmin}
+                value={settings?.foodReturnWindowHours ?? 48}
+                onChange={(e) => setSettings({ ...settings, foodReturnWindowHours: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Hours from delivery for transit damage or broken seal claims.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Return Policy Version *
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.returnPolicyVersion || '2026.1'}
+                onChange={(e) => setSettings({ ...settings, returnPolicyVersion: e.target.value })}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Recorded on checkout disclosures and customer orders.</p>
             </div>
           </div>
         </div>

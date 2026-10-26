@@ -79,13 +79,13 @@ app.use(
 // Body Parsers with size limits & rawBody preservation for webhooks
 app.use(
   express.json({
-    limit: '10mb',
+    limit: '50mb',
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
   })
 );
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Static uploads directory for collection and product images
 const uploadsDir = path.resolve(__dirname, '../public/uploads');

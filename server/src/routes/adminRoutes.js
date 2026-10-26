@@ -24,6 +24,12 @@ import {
   downloadErrorReport,
 } from '../controllers/adminProductImportController.js';
 import {
+  listAdminReturnsEndpoint,
+  getAdminReturnDetailEndpoint,
+  updateAdminReturnWorkflowEndpoint,
+  downloadAdminEvidenceEndpoint,
+} from '../controllers/adminReturnController.js';
+import {
   listCollections,
   createCollection,
   updateCollection,
@@ -185,6 +191,17 @@ router.get('/orders/:id', requireAdminAuth(), getOrderById);
 router.get('/orders/:id/invoice', requireAdminAuth(['ORDER_MANAGER']), getOrderInvoice);
 router.patch('/orders/:id/status', requireAdminAuth(['ORDER_MANAGER']), updateOrderStatus);
 router.patch('/orders/:id/tracking', requireAdminAuth(['ORDER_MANAGER']), updateOrderTracking);
+
+// 5.5 Returns & Customer Claims (Order Manager & Super Admin)
+router.get('/returns', requireAdminAuth(['ORDER_MANAGER']), listAdminReturnsEndpoint);
+router.get('/returns/:refOrId', requireAdminAuth(['ORDER_MANAGER']), getAdminReturnDetailEndpoint);
+router.patch('/returns/:id/workflow', requireAdminAuth(['ORDER_MANAGER']), updateAdminReturnWorkflowEndpoint);
+router.patch('/returns/:id/status', requireAdminAuth(['ORDER_MANAGER']), updateAdminReturnWorkflowEndpoint);
+router.post('/returns/:id/restock', requireAdminAuth(['ORDER_MANAGER']), (req, res, next) => {
+  req.body = { ...(req.body || {}), shouldRestock: true };
+  return updateAdminReturnWorkflowEndpoint(req, res, next);
+});
+router.get('/returns/:id/evidence/:evidenceId', requireAdminAuth(['ORDER_MANAGER']), downloadAdminEvidenceEndpoint);
 
 // 6. Payments (Order Manager & Super Admin)
 router.get('/payments', requireAdminAuth(), listPayments);

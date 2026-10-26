@@ -366,6 +366,36 @@ export function FoodProductDetail() {
                 <span>Dispatched Fresh from Origin</span>
               </div>
             </div>
+
+            {/* Food Safety & Transit Guarantee */}
+            <div className="p-3.5 rounded-2xl bg-white/70 border border-[#287A25]/20 text-xs space-y-1.5 mt-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-[#172B1C]">
+                  <div className="bg-white rounded px-1.5 py-0.5 border border-[#287A25]/20 flex items-center">
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/en/e/e2/FSSAI_logo.png"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/fssai-logo.png';
+                      }}
+                      alt="FSSAI"
+                      className="h-4 w-auto object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <span className="font-mono text-xs">Lic. No. 22425540000677</span>
+                </div>
+                <Link
+                  to="/returns-policy"
+                  className="text-[11px] font-semibold text-[#287A25] hover:underline"
+                >
+                  Transit Policy &rarr;
+                </Link>
+              </div>
+              <p className="text-[11px] text-[#405244] leading-relaxed">
+                Hygiene sealed pantry item. Non-returnable once opened; 100% immediate replacement or refund guarantee for transit seal damage or defect.
+              </p>
+            </div>
           </div>
         </div>
 

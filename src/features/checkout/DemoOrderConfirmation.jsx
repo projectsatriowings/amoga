@@ -16,7 +16,6 @@ import {
   Truck,
   FileText,
   Database,
-  User,
 } from 'lucide-react';
 
 export const DemoOrderConfirmation = () => {
@@ -101,6 +100,7 @@ export const DemoOrderConfirmation = () => {
             </li>
           </ol>
         </nav>
+
 
         {hasMatchingOrder ? (
           /* Active Order Snapshot View */

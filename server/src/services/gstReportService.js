@@ -270,7 +270,7 @@ export async function fetchGstMonthlyData({ month, year }) {
         supplyType: isInter ? 'INTER_STATE' : 'INTRA_STATE',
         customerBillingState: order.state || 'Tamil Nadu',
         sellerLegalName: order.sellerLegalName || 'Amoga Luxury Private Limited',
-        sellerGstin: order.sellerGstin || '33AAACA1234A1Z5',
+        sellerGstin: order.sellerGstin || '33AYMPK1833D1ZQ',
         placeOfSupply: order.placeOfSupply || order.state || 'Tamil Nadu',
         productName: 'General Order',
         sku: 'GEN-001',
@@ -375,7 +375,7 @@ export async function fetchGstMonthlyData({ month, year }) {
           supplyType: isInter ? 'INTER_STATE' : 'INTRA_STATE',
           customerBillingState: order.state || 'Tamil Nadu',
           sellerLegalName: order.sellerLegalName || 'Amoga Luxury Private Limited',
-          sellerGstin: order.sellerGstin || '33AAACA1234A1Z5',
+          sellerGstin: order.sellerGstin || '33AYMPK1833D1ZQ',
           placeOfSupply: order.placeOfSupply || order.state || 'Tamil Nadu',
           productName: item.productName || 'Amoga Product',
           sku: item.sku || 'N/A',
@@ -668,7 +668,7 @@ export async function generateGstExcelWorkbook(data) {
   wsSummary.addRow([]);
   wsSummary.addRow(['REPORTING PERIOD', data.period.displayPeriod]);
   wsSummary.addRow(['SELLER LEGAL NAME', 'Amoga Luxury Private Limited']);
-  wsSummary.addRow(['SELLER GSTIN', '33AAACA1234A1Z5 (Tamil Nadu)']);
+  wsSummary.addRow(['SELLER GSTIN', '33AYMPK1833D1ZQ (Tamil Nadu)']);
   wsSummary.addRow(['REPORT GENERATION TIMESTAMP', data.period.generatedAt]);
   wsSummary.addRow([]);
 
@@ -1077,7 +1077,7 @@ export async function generateGstPdfBuffer(data) {
       doc.rect(tableX, currentY, 523, 62).fillAndStroke('#FBF9F5', '#E5E0D5');
       doc.fillColor('#722F37').fontSize(16).font('Helvetica-Bold').text('AMOGA ATELIER', tableX + 12, currentY + 12, { characterSpacing: 1 });
       doc.fillColor('#5C544C').fontSize(8).font('Helvetica').text('MONTHLY GST ACCOUNTING & RECONCILIATION REPORT', tableX + 12, currentY + 34);
-      doc.fillColor('#7A7167').fontSize(7.5).text('GSTIN: 33AAACA1234A1Z5 | State: Tamil Nadu (Code: 33)', tableX + 12, currentY + 46);
+      doc.fillColor('#7A7167').fontSize(7.5).text('GSTIN: 33AYMPK1833D1ZQ | State: Tamil Nadu (Code: 33)', tableX + 12, currentY + 46);
 
       doc.fillColor('#1A1817').fontSize(11).font('Helvetica-Bold').text(`${data.period.monthName.toUpperCase()} ${data.period.year}`, tableX + 320, currentY + 14, { align: 'right', width: 190 });
       doc.fillColor('#7A7167').fontSize(7.5).font('Helvetica').text(data.period.displayPeriod, tableX + 320, currentY + 30, { align: 'right', width: 190 });

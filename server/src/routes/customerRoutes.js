@@ -48,4 +48,17 @@ router.patch('/addresses/:id/default', requireCustomerAuth, setDefaultAddress);
 router.get('/orders', requireCustomerAuth, listCustomerOrders);
 router.get('/orders/:orderReference', requireCustomerAuth, getCustomerOrder);
 
+// Customer Returns & Replacements
+import {
+  submitReturnEndpoint,
+  listCustomerReturnsEndpoint,
+  getCustomerReturnDetailEndpoint,
+  downloadCustomerEvidenceEndpoint,
+} from '../controllers/customerReturnController.js';
+
+router.post('/returns', requireCustomerAuth, submitReturnEndpoint);
+router.get('/returns', requireCustomerAuth, listCustomerReturnsEndpoint);
+router.get('/returns/:returnReference', requireCustomerAuth, getCustomerReturnDetailEndpoint);
+router.get('/returns/:returnReference/evidence/:evidenceId', requireCustomerAuth, downloadCustomerEvidenceEndpoint);
+
 export default router;

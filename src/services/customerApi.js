@@ -190,3 +190,33 @@ export async function changePasswordCustomerApi({ currentPassword, newPassword, 
   });
 }
 
+/**
+ * Submit return or replacement request for a delivered order
+ */
+export async function submitReturnRequestApi(returnData) {
+  return await request('/customer/returns', {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify(returnData),
+  });
+}
+
+/**
+ * Fetch all return/replacement claims for logged-in customer
+ */
+export async function fetchCustomerReturnsApi() {
+  return await request('/customer/returns', {
+    headers: getAuthHeader(),
+  });
+}
+
+/**
+ * Fetch return claim details by reference
+ */
+export async function fetchCustomerReturnDetailApi(returnReference) {
+  return await request(`/customer/returns/${encodeURIComponent(returnReference)}`, {
+    headers: getAuthHeader(),
+  });
+}
+
+

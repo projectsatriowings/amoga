@@ -1384,8 +1384,8 @@ export async function getPosSale(identifier, client = prisma) {
     sellerDetails: {
       legalName: storeSettings?.sellerLegalName || 'Amoga Luxury Private Limited',
       tradeName: storeSettings?.sellerTradeName || 'Amoga',
-      gstin: storeSettings?.sellerGstin || '33AAACA1234A1Z5',
-      pan: storeSettings?.sellerPan || 'AAACA1234A',
+      gstin: storeSettings?.sellerGstin || '33AYMPK1833D1ZQ',
+      pan: storeSettings?.sellerPan || 'AYMPK1833D',
       addressLine1: storeSettings?.sellerAddressLine1 || '108, Heritage Walk, Anna Salai',
       addressLine2: storeSettings?.sellerAddressLine2 || 'T. Nagar',
       city: storeSettings?.sellerCity || 'Chennai',

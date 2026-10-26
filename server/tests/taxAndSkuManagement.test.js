@@ -292,7 +292,7 @@ describe('Category-Based SKU Generation & Tax Management Suite', () => {
         createdAt: new Date('2026-10-16'),
         sellerLegalName: 'Amoga Luxury Crafts Private Limited',
         sellerTradeName: 'Amoga',
-        sellerGstin: '33AAACA1234A1Z5',
+        sellerGstin: '33AYMPK1833D1ZQ',
         sellerAddress: '108, Heritage Walk, Anna Salai, T. Nagar, Chennai, Tamil Nadu 600017',
         sellerState: 'Tamil Nadu',
         sellerStateCode: '33',
@@ -340,7 +340,7 @@ describe('Category-Based SKU Generation & Tax Management Suite', () => {
 
       assert.ok(html.includes('TAX INVOICE'));
       assert.ok(html.includes('Rule 46 of the Central Goods and Services Tax Rules, 2017'));
-      assert.ok(html.includes('33AAACA1234A1Z5')); // Seller GSTIN
+      assert.ok(html.includes('33AYMPK1833D1ZQ')); // Seller GSTIN
       assert.ok(html.includes('AMOGA/2026-27/1001')); // Invoice Number
       assert.ok(html.includes('29BBBCB5678B1Z9')); // Customer GSTIN (B2B)
       assert.ok(html.includes('AMOGA-SAR001')); // Product SKU

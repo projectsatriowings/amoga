@@ -41,6 +41,7 @@ import { AdminCollections } from '../features/admin/pages/AdminCollections';
 import { AdminInventory } from '../features/admin/pages/AdminInventory';
 import { AdminOrders } from '../features/admin/pages/AdminOrders';
 import { AdminOrderDetail } from '../features/admin/pages/AdminOrderDetail';
+import { AdminReturns } from '../features/admin/pages/AdminReturns';
 import { AdminPayments } from '../features/admin/pages/AdminPayments';
 import { AdminCustomers } from '../features/admin/pages/AdminCustomers';
 import { AdminReports } from '../features/admin/pages/AdminReports';
@@ -397,6 +398,7 @@ export const router = createBrowserRouter([
       { path: 'inventory', element: <AdminInventory /> },
       { path: 'orders', element: <AdminOrders /> },
       { path: 'orders/:id', element: <AdminOrderDetail /> },
+      { path: 'returns', element: <AdminReturns /> },
       { path: 'payments', element: <AdminPayments /> },
       { path: 'customers', element: <AdminCustomers /> },
       { path: 'customer-inquiries', element: <AdminCustomerInquiries /> },

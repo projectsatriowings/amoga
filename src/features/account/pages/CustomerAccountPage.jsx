@@ -18,9 +18,22 @@ import {
   Package,
   KeyRound,
   Lock,
+  RotateCcw,
+  UploadCloud,
+  AlertCircle,
+  FileText,
+  Video,
+  Image as ImageIcon,
+  ChevronRight,
+  X,
+  Pencil,
 } from 'lucide-react';
 import { PasswordInput } from '../../../components/ui/PasswordInput';
-import { changePasswordCustomerApi } from '../../../services/customerApi';
+import {
+  changePasswordCustomerApi,
+  submitReturnRequestApi,
+  fetchCustomerReturnsApi,
+} from '../../../services/customerApi';
 
 export function CustomerAccountPage() {
   const navigate = useNavigate();
@@ -35,6 +48,7 @@ export function CustomerAccountPage() {
     addresses,
     fetchAddresses,
     addAddress,
+    updateAddress,
     deleteAddress,
     setDefaultAddress,
     orders,
@@ -58,7 +72,9 @@ export function CustomerAccountPage() {
 
   // Address Modal / Form State
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState(null);
   const [addressLabel, setAddressLabel] = useState('Home');
+  const [addressCustomLabel, setAddressCustomLabel] = useState('');
   const [addressFullName, setAddressFullName] = useState('');
   const [addressPhone, setAddressPhone] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
@@ -69,6 +85,34 @@ export function CustomerAccountPage() {
   const [addressIsDefault, setAddressIsDefault] = useState(false);
   const [addressError, setAddressError] = useState(null);
 
+  // Return & Replacement Workflow State
+  const [customerReturns, setCustomerReturns] = useState([]);
+  const [loadingReturns, setLoadingReturns] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnOrder, setReturnOrder] = useState(null);
+  const [returnSelectedItems, setReturnSelectedItems] = useState({}); // { [orderItemId]: quantity }
+  const [returnReason, setReturnReason] = useState('DAMAGED_PRODUCT');
+  const [returnResolution, setReturnResolution] = useState('REPLACEMENT');
+  const [returnNote, setReturnNote] = useState('');
+  const [returnEvidenceFiles, setReturnEvidenceFiles] = useState([]); // [{ originalName, mimeType, fileSizeBytes, fileData, isVideo }]
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [returnModalError, setReturnModalError] = useState(null);
+  const [returnSuccessData, setReturnSuccessData] = useState(null);
+
+  const loadReturns = async () => {
+    setLoadingReturns(true);
+    try {
+      const res = await fetchCustomerReturnsApi();
+      if (res?.success) {
+        setCustomerReturns(res.returnRequests || []);
+      }
+    } catch (err) {
+      console.error('[LOAD RETURNS ERROR]:', err);
+    } finally {
+      setLoadingReturns(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/account/login?redirect=/account', { replace: true });
@@ -76,6 +120,7 @@ export function CustomerAccountPage() {
     }
     fetchOrders();
     fetchAddresses();
+    loadReturns();
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -98,6 +143,138 @@ export function CustomerAccountPage() {
       setProfileMsg({ type: 'success', text: 'Profile details updated successfully.' });
     } else {
       setProfileMsg({ type: 'error', text: res.error || 'Failed to update profile.' });
+    }
+  };
+
+  // Return modal handlers
+  const handleOpenReturnModal = (order) => {
+    setReturnOrder(order);
+    const initialSelection = {};
+    if (order.items && order.items.length > 0) {
+      initialSelection[order.items[0].id] = 1;
+    }
+    setReturnSelectedItems(initialSelection);
+    setReturnReason('DAMAGED_PRODUCT');
+    setReturnResolution('REPLACEMENT');
+    setReturnNote('');
+    setReturnEvidenceFiles([]);
+    setReturnModalError(null);
+    setReturnSuccessData(null);
+    setShowReturnModal(true);
+  };
+
+  const handleCloseReturnModal = () => {
+    setShowReturnModal(false);
+    setReturnOrder(null);
+    setReturnSuccessData(null);
+    setReturnModalError(null);
+  };
+
+  const handleToggleItemSelection = (itemId, maxQty) => {
+    setReturnSelectedItems((prev) => {
+      const next = { ...prev };
+      if (next[itemId]) {
+        delete next[itemId];
+      } else {
+        next[itemId] = 1;
+      }
+      return next;
+    });
+  };
+
+  const handleItemQtyChange = (itemId, qty, maxQty) => {
+    const val = Math.max(1, Math.min(Number(qty) || 1, maxQty));
+    setReturnSelectedItems((prev) => ({
+      ...prev,
+      [itemId]: val,
+    }));
+  };
+
+  const handleFileUpload = (e, isVideo = false) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      const maxBytes = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (file.size > maxBytes) {
+        setReturnModalError(
+          `File "${file.name}" exceeds the allowed limit of ${isVideo ? '50MB' : '10MB'}.`
+        );
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        setReturnEvidenceFiles((prev) => [
+          ...prev,
+          {
+            originalName: file.name,
+            mimeType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
+            fileSizeBytes: file.size,
+            fileData: reader.result,
+            isVideo,
+          },
+        ]);
+        setReturnModalError(null);
+      };
+      reader.onerror = () => {
+        setReturnModalError(`Failed to read file "${file.name}".`);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const handleRemoveEvidence = (index) => {
+    setReturnEvidenceFiles((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleSubmitReturnRequest = async (e) => {
+    e.preventDefault();
+    setReturnModalError(null);
+
+    const items = Object.entries(returnSelectedItems).map(([orderItemId, quantity]) => ({
+      orderItemId,
+      quantity,
+    }));
+
+    if (items.length === 0) {
+      setReturnModalError('Please select at least one item to return or replace.');
+      return;
+    }
+
+    if (!returnNote.trim() || returnNote.trim().length < 10) {
+      setReturnModalError('Please describe the issue in detail (at least 10 characters).');
+      return;
+    }
+
+    setSubmittingReturn(true);
+    try {
+      const payload = {
+        orderReference: returnOrder.orderReference,
+        reason: returnReason,
+        resolutionType: returnResolution,
+        customerNote: returnNote.trim(),
+        items,
+        evidence: returnEvidenceFiles.map((f) => ({
+          originalName: f.originalName,
+          mimeType: f.mimeType,
+          fileSizeBytes: f.fileSizeBytes,
+          fileData: f.fileData,
+        })),
+      };
+
+      const res = await submitReturnRequestApi(payload);
+      if (!res?.success) {
+        throw new Error(res?.message || 'Failed to submit return request.');
+      }
+
+      setReturnSuccessData(res.returnRequest);
+      loadReturns();
+    } catch (err) {
+      setReturnModalError(err.message || 'Submission failed. Please check details.');
+    } finally {
+      setSubmittingReturn(false);
     }
   };
 
@@ -138,24 +315,67 @@ export function CustomerAccountPage() {
     }
   };
 
-  const handleAddAddress = async (e) => {
+  const handleOpenAddAddress = () => {
+    setEditingAddressId(null);
+    setAddressLabel('Home');
+    setAddressCustomLabel('');
+    setAddressFullName(customer?.name || '');
+    setAddressPhone(customer?.phone || '');
+    setAddressLine1('');
+    setAddressLine2('');
+    setAddressCity('');
+    setAddressState('');
+    setAddressPincode('');
+    setAddressIsDefault(false);
+    setAddressError(null);
+    setShowAddressModal(true);
+  };
+
+  const handleOpenEditAddress = (addr) => {
+    setEditingAddressId(addr.id);
+    const isStandard = ['Home', 'Office'].includes(addr.label);
+    setAddressLabel(isStandard ? addr.label : 'Other');
+    setAddressCustomLabel(isStandard ? '' : (addr.label || ''));
+    setAddressFullName(addr.fullName || '');
+    setAddressPhone(addr.phone || '');
+    setAddressLine1(addr.addressLine1 || '');
+    setAddressLine2(addr.addressLine2 || '');
+    setAddressCity(addr.city || '');
+    setAddressState(addr.state || '');
+    setAddressPincode(addr.pincode || '');
+    setAddressIsDefault(Boolean(addr.isDefault));
+    setAddressError(null);
+    setShowAddressModal(true);
+  };
+
+  const handleSaveAddress = async (e) => {
     e.preventDefault();
     setAddressError(null);
-    const res = await addAddress({
-      label: addressLabel,
-      fullName: addressFullName,
-      phone: addressPhone,
-      addressLine1,
-      addressLine2,
-      city: addressCity,
-      state: addressState,
-      pincode: addressPincode,
-      isDefault: addressIsDefault,
-    });
 
-    if (res.success) {
+    const finalLabel =
+      addressLabel === 'Other' && addressCustomLabel.trim()
+        ? addressCustomLabel.trim()
+        : addressLabel || 'Home';
+
+    const payload = {
+      label: finalLabel,
+      fullName: addressFullName.trim(),
+      phone: addressPhone.trim(),
+      addressLine1: addressLine1.trim(),
+      addressLine2: addressLine2.trim() || null,
+      city: addressCity.trim(),
+      state: addressState.trim(),
+      pincode: addressPincode.trim(),
+      isDefault: addressIsDefault,
+    };
+
+    const res = editingAddressId
+      ? await updateAddress(editingAddressId, payload)
+      : await addAddress(payload);
+
+    if (res?.success) {
       setShowAddressModal(false);
-      // Reset form
+      setEditingAddressId(null);
       setAddressFullName('');
       setAddressPhone('');
       setAddressLine1('');
@@ -165,7 +385,7 @@ export function CustomerAccountPage() {
       setAddressPincode('');
       setAddressIsDefault(false);
     } else {
-      setAddressError(res.error || 'Failed to save address');
+      setAddressError(res?.error || res?.message || 'Failed to save address');
     }
   };
 
@@ -253,6 +473,17 @@ export function CustomerAccountPage() {
           >
             <ShoppingBag className="w-4 h-4" />
             <span>My Orders ({orders.length})</span>
+          </button>
+          <button
+            onClick={() => handleTabChange('returns')}
+            className={`pb-3 text-sm font-semibold tracking-wide transition-all border-b-2 flex items-center gap-2 shrink-0 ${
+              activeTab === 'returns'
+                ? 'border-[#722F37] text-[#722F37]'
+                : 'border-transparent text-[#7A7167] hover:text-[#2C0E1A]'
+            }`}
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Returns & Claims ({customerReturns.length})</span>
           </button>
           <button
             onClick={() => handleTabChange('addresses')}
@@ -393,7 +624,17 @@ export function CustomerAccountPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        {order.status === 'DELIVERED' && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenReturnModal(order)}
+                            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 shadow-sm"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-800" />
+                            <span>Request Return / Replacement</span>
+                          </button>
+                        )}
                         <Link
                           to={`/track/${encodeURIComponent(order.orderReference)}`}
                           className="px-4 py-2 bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 shadow-sm"
@@ -424,8 +665,9 @@ export function CustomerAccountPage() {
               </div>
 
               <button
-                onClick={() => setShowAddressModal(true)}
-                className="px-4 py-2 bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 shadow"
+                type="button"
+                onClick={handleOpenAddAddress}
+                className="px-4 py-2 bg-[#722F37] hover:bg-[#5E2229] text-[#F6EBD8] text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 shadow cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Address</span>
@@ -466,8 +708,9 @@ export function CustomerAccountPage() {
                   <div className="pt-3 border-t border-[#EFECE6] flex items-center justify-between text-xs">
                     {!addr.isDefault ? (
                       <button
+                        type="button"
                         onClick={() => setDefaultAddress(addr.id)}
-                        className="text-[#722F37] hover:underline font-medium text-[11px]"
+                        className="text-[#722F37] hover:underline font-medium text-[11px] cursor-pointer"
                       >
                         Set as Default
                       </button>
@@ -475,13 +718,24 @@ export function CustomerAccountPage() {
                       <span className="text-[11px] text-[#7A7167] italic">Default Address</span>
                     )}
 
-                    <button
-                      onClick={() => deleteAddress(addr.id)}
-                      className="text-rose-700 hover:text-rose-900 flex items-center gap-1 text-[11px]"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Remove</span>
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditAddress(addr)}
+                        className="text-[#722F37] hover:text-[#5E2229] flex items-center gap-1 text-[11px] font-medium cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteAddress(addr.id)}
+                        className="text-rose-700 hover:text-rose-900 flex items-center gap-1 text-[11px] cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -493,7 +747,7 @@ export function CustomerAccountPage() {
                 <div className="bg-white rounded-2xl border border-[#DDD5C7] max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl">
                   <div className="flex items-center justify-between pb-3 border-b border-[#EAE3D5]">
                     <h3 className="font-serif text-lg font-bold text-[#1F0811]">
-                      Add Delivery Address
+                      {editingAddressId ? 'Edit Delivery Address' : 'Add Delivery Address'}
                     </h3>
                     <button
                       onClick={() => setShowAddressModal(false)}
@@ -509,98 +763,126 @@ export function CustomerAccountPage() {
                     </div>
                   )}
 
-                  <form onSubmit={handleAddAddress} className="space-y-3 text-xs">
+                  <form onSubmit={handleSaveAddress} className="space-y-3 text-xs">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[#4A423B] mb-1">Address Type</label>
+                        <label className="block text-[#4A423B] mb-1 font-medium">Address Label</label>
                         <select
                           value={addressLabel}
                           onChange={(e) => setAddressLabel(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
+                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
                         >
                           <option value="Home">Home</option>
-                          <option value="Work">Work</option>
+                          <option value="Office">Office</option>
                           <option value="Other">Other</option>
                         </select>
                       </div>
 
+                      {addressLabel === 'Other' ? (
+                        <div>
+                          <label className="block text-[#4A423B] mb-1 font-medium">Custom Label *</label>
+                          <input
+                            type="text"
+                            required
+                            value={addressCustomLabel}
+                            onChange={(e) => setAddressCustomLabel(e.target.value)}
+                            placeholder="e.g. Studio, Warehouse"
+                            className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-[#4A423B] mb-1 font-medium">Full Name *</label>
+                          <input
+                            type="text"
+                            required
+                            value={addressFullName}
+                            onChange={(e) => setAddressFullName(e.target.value)}
+                            placeholder="Full Name"
+                            className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {addressLabel === 'Other' && (
                       <div>
-                        <label className="block text-[#4A423B] mb-1">Full Name *</label>
+                        <label className="block text-[#4A423B] mb-1 font-medium">Full Name *</label>
                         <input
                           type="text"
                           required
                           value={addressFullName}
                           onChange={(e) => setAddressFullName(e.target.value)}
                           placeholder="Full Name"
-                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
+                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
                         />
                       </div>
-                    </div>
+                    )}
 
                     <div>
-                      <label className="block text-[#4A423B] mb-1">Mobile Number *</label>
+                      <label className="block text-[#4A423B] mb-1 font-medium">Mobile Number *</label>
                       <input
                         type="tel"
                         required
                         value={addressPhone}
                         onChange={(e) => setAddressPhone(e.target.value)}
                         placeholder="10-digit mobile number"
-                        className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
+                        className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[#4A423B] mb-1">Address Line 1 *</label>
+                      <label className="block text-[#4A423B] mb-1 font-medium">Address Line 1 *</label>
                       <input
                         type="text"
                         required
                         value={addressLine1}
                         onChange={(e) => setAddressLine1(e.target.value)}
                         placeholder="Flat, House no., Building, Street"
-                        className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
+                        className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[#4A423B] mb-1">Address Line 2 (Optional)</label>
+                      <label className="block text-[#4A423B] mb-1 font-medium">Address Line 2 (Optional)</label>
                       <input
                         type="text"
                         value={addressLine2}
                         onChange={(e) => setAddressLine2(e.target.value)}
                         placeholder="Area, Landmark, Colony (Optional)"
-                        className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
+                        className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
                       />
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[#4A423B] mb-1">City *</label>
+                        <label className="block text-[#4A423B] mb-1 font-medium">City *</label>
                         <input
                           type="text"
                           required
                           value={addressCity}
                           onChange={(e) => setAddressCity(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
+                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
                         />
                       </div>
                       <div>
-                        <label className="block text-[#4A423B] mb-1">State *</label>
+                        <label className="block text-[#4A423B] mb-1 font-medium">State *</label>
                         <input
                           type="text"
                           required
                           value={addressState}
                           onChange={(e) => setAddressState(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs"
+                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
                         />
                       </div>
                       <div>
-                        <label className="block text-[#4A423B] mb-1">PIN Code *</label>
+                        <label className="block text-[#4A423B] mb-1 font-medium">PIN Code *</label>
                         <input
                           type="text"
                           required
                           value={addressPincode}
                           onChange={(e) => setAddressPincode(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs font-mono"
+                          className="w-full px-3 py-2 bg-[#FAF8F5] border border-[#DDD5C7] rounded-xl text-xs font-mono focus:ring-1 focus:ring-[#722F37] focus:border-[#722F37]"
                         />
                       </div>
                     </div>
@@ -622,15 +904,15 @@ export function CustomerAccountPage() {
                       <button
                         type="button"
                         onClick={() => setShowAddressModal(false)}
-                        className="px-4 py-2 border border-[#DDD5C7] rounded-xl text-xs text-[#7A7167]"
+                        className="px-4 py-2 border border-[#DDD5C7] rounded-xl text-xs text-[#7A7167] hover:bg-[#FAF8F5]"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-5 py-2 bg-[#722F37] text-[#F6EBD8] rounded-xl text-xs font-semibold hover:bg-[#5E2229]"
+                        className="px-5 py-2 bg-[#722F37] text-[#F6EBD8] rounded-xl text-xs font-semibold hover:bg-[#5E2229] transition-colors"
                       >
-                        Save Address
+                        {editingAddressId ? 'Update Address' : 'Save Address'}
                       </button>
                     </div>
                   </form>
@@ -789,6 +1071,428 @@ export function CustomerAccountPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: RETURNS & CLAIMS */}
+        {activeTab === 'returns' && (
+          <div className="space-y-6">
+            <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#E5E0D5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start sm:items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#722F37]/10 text-[#722F37] flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-sm font-bold text-[#1A1817]">Amoga Return & Replacement Protection</h3>
+                  <p className="text-xs text-[#5C544C]">
+                    7-day non-perishable return window • 48-hour food transit damage coverage • Free reverse pickup
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/returns-policy"
+                target="_blank"
+                className="text-xs text-[#722F37] font-semibold hover:underline flex items-center gap-1 shrink-0"
+              >
+                <span>Read Full Policy</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {loadingReturns ? (
+              <div className="bg-white rounded-2xl border border-[#E6DFD3] p-12 text-center space-y-3">
+                <div className="w-7 h-7 border-2 border-[#722F37] border-t-transparent rounded-full animate-spin mx-auto" />
+                <p className="text-xs text-[#7A7167] font-mono">Loading your return claims...</p>
+              </div>
+            ) : customerReturns.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-[#E6DFD3] p-12 text-center space-y-4">
+                <div className="w-12 h-12 rounded-full bg-[#FAF7F2] text-[#8C6320] flex items-center justify-center mx-auto">
+                  <RotateCcw className="w-6 h-6" />
+                </div>
+                <h3 className="font-serif text-lg font-bold text-[#1F0811]">
+                  No return or replacement claims submitted
+                </h3>
+                <p className="text-xs text-[#7A7167] max-w-md mx-auto">
+                  If an order arrives damaged, defective, or incorrect, go to <strong>My Orders</strong>, locate your delivered order, and click <strong>Request Return / Replacement</strong>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('orders')}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#722F37] text-[#F6EBD8] rounded-xl text-xs font-semibold uppercase tracking-wider hover:bg-[#5E2229] transition-all shadow"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>View Delivered Orders</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6">
+                {customerReturns.map((claim) => (
+                  <div
+                    key={claim.id}
+                    className="bg-white rounded-2xl border border-[#E5E0D5] p-6 hover:shadow-md transition-shadow space-y-4"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#EFECE6] gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono uppercase text-[#7A7167]">Claim Ref:</span>
+                          <span className="font-mono text-sm font-bold text-[#722F37]">{claim.returnReference}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#7A7167] mt-0.5">
+                          <span>Order: <strong className="font-mono text-[#1A1817]">{claim.order?.orderReference}</strong></span>
+                          <span>•</span>
+                          <span>Requested on {new Date(claim.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold border bg-[#FAF7F2] text-[#1A1817] border-[#D5CEC2]">
+                          {claim.status.replace(/_/g, ' ')}
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                          {claim.resolutionType}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Claim Details */}
+                    <div className="space-y-3">
+                      <div className="text-xs space-y-1">
+                        <p className="text-[#4A423B]">
+                          <strong>Reported Issue:</strong> {claim.reason.replace(/_/g, ' ')}
+                        </p>
+                        {claim.customerNote && (
+                          <p className="text-[#7A7167] italic bg-[#FAF7F2] p-2.5 rounded-lg border border-[#EAE4D9]">
+                            "{claim.customerNote}"
+                          </p>
+                        )}
+                        {claim.adminNote && (
+                          <p className="text-xs text-amber-900 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                            <strong>Atelier Concierge Note:</strong> {claim.adminNote}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Items Claimed */}
+                      <div className="pt-2 border-t border-[#EFECE6] space-y-2">
+                        <span className="text-[11px] font-mono uppercase text-[#7A7167] block">Items in Claim:</span>
+                        {claim.items?.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between text-xs py-1">
+                            <div className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#722F37]" />
+                              <span className="font-medium text-[#1A1817]">{item.orderItem?.productName || 'Order Item'}</span>
+                              <span className="text-[#7A7167] font-mono">Qty: {item.quantity}</span>
+                            </div>
+                            <span className="text-[#7A7167] text-[11px] uppercase font-mono">{item.itemCondition}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Reverse Logistics Tracking / Refund Details */}
+                      {(claim.reverseAwbNumber || claim.refundReference) && (
+                        <div className="p-3 bg-[#FAF7F2] rounded-xl border border-[#E5E0D5] text-xs flex flex-wrap gap-4">
+                          {claim.reverseAwbNumber && (
+                            <div>
+                              <span className="text-[10px] font-mono uppercase text-[#7A7167] block">Reverse Pickup AWB:</span>
+                              <span className="font-mono font-bold text-[#1A1817]">{claim.reverseCarrier} • {claim.reverseAwbNumber}</span>
+                            </div>
+                          )}
+                          {claim.refundReference && (
+                            <div>
+                              <span className="text-[10px] font-mono uppercase text-[#7A7167] block">Refund Reference:</span>
+                              <span className="font-mono font-bold text-emerald-800">
+                                {claim.refundReference} {claim.refundAmount ? `(₹${Number(claim.refundAmount).toFixed(2)})` : ''}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Evidence Files Count */}
+                      {claim.evidence && claim.evidence.length > 0 && (
+                        <div className="flex items-center gap-2 text-[11px] font-mono text-[#7A7167]">
+                          <FileText className="w-3.5 h-3.5 text-[#8C6320]" />
+                          <span>{claim.evidence.length} supporting proof document(s) securely filed on record</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CUSTOMER RETURN REQUEST MODAL */}
+        {showReturnModal && returnOrder && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-3xl border border-[#DDD5C7] max-w-2xl w-full p-6 sm:p-8 space-y-5 shadow-2xl my-8">
+              <div className="flex items-center justify-between pb-3 border-b border-[#EAE3D5]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 flex items-center justify-center shrink-0">
+                    <RotateCcw className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-[#1F0811]">
+                      Request Return or Replacement
+                    </h3>
+                    <p className="text-xs font-mono text-[#7A7167]">
+                      Order: {returnOrder.orderReference}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCloseReturnModal}
+                  className="w-8 h-8 rounded-full bg-[#FAF7F2] text-[#7A7167] hover:text-[#1A1817] flex items-center justify-center transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {returnSuccessData ? (
+                <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-serif text-lg font-bold text-emerald-950">
+                    Return Request Submitted Successfully
+                  </h4>
+                  <p className="text-xs text-emerald-900">
+                    Your claim reference is <strong className="font-mono text-sm">{returnSuccessData.returnReference}</strong>.
+                    Our atelier concierge will review your submission and initiate free doorstep reverse pickup within 24–48 business hours.
+                  </p>
+                  <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleCloseReturnModal();
+                        handleTabChange('returns');
+                      }}
+                      className="px-5 py-2.5 bg-[#722F37] text-white text-xs font-semibold rounded-xl hover:bg-[#5E2229] transition-colors"
+                    >
+                      View in Returns & Claims
+                    </button>
+                    <Link
+                      to="/returns-policy"
+                      target="_blank"
+                      className="text-xs text-[#722F37] font-semibold hover:underline"
+                    >
+                      Review Return Policy Timelines
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitReturnRequest} className="space-y-4 text-xs">
+                  {returnModalError && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                      <span>{returnModalError}</span>
+                    </div>
+                  )}
+
+                  {/* Step 1: Select Affected Items */}
+                  <div className="space-y-2">
+                    <label className="block font-serif font-bold text-xs text-[#1A1817]">
+                      1. Select Affected Product(s) *
+                    </label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto p-1">
+                      {returnOrder.items?.map((item) => {
+                        const isSelected = Boolean(returnSelectedItems[item.id]);
+                        const selectedQty = returnSelectedItems[item.id] || 1;
+                        return (
+                          <div
+                            key={item.id}
+                            className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-colors ${
+                              isSelected
+                                ? 'bg-amber-50/60 border-amber-300'
+                                : 'bg-[#FAF7F2] border-[#E5E0D5]'
+                            }`}
+                          >
+                            <label className="flex items-center gap-3 cursor-pointer flex-1">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleToggleItemSelection(item.id, item.quantity)}
+                                className="w-4 h-4 text-[#722F37] rounded border-[#C5A46D] focus:ring-[#722F37]"
+                              />
+                              {item.image && (
+                                <img
+                                  src={item.image}
+                                  alt={item.productName}
+                                  className="w-10 h-10 object-cover rounded-lg border border-[#E5E0D5]"
+                                />
+                              )}
+                              <div>
+                                <p className="font-semibold text-[#1A1817]">{item.productName}</p>
+                                <span className="text-[11px] text-[#7A7167] font-mono">
+                                  Ordered: {item.quantity} {item.variantName ? `(${item.variantName})` : ''}
+                                </span>
+                              </div>
+                            </label>
+
+                            {isSelected && (
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[11px] text-[#7A7167]">Return Qty:</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={item.quantity}
+                                  value={selectedQty}
+                                  onChange={(e) => handleItemQtyChange(item.id, e.target.value, item.quantity)}
+                                  className="w-14 px-2 py-1 bg-white border border-[#D5CEC2] rounded text-center font-mono text-xs"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Step 2: Reason & Resolution */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-serif font-bold text-xs text-[#1A1817] mb-1.5">
+                        2. Reason for Claim *
+                      </label>
+                      <select
+                        value={returnReason}
+                        onChange={(e) => setReturnReason(e.target.value)}
+                        required
+                        className="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-xs text-[#1A1817]"
+                      >
+                        <option value="DAMAGED_PRODUCT">Damaged in Transit / Broken Goods</option>
+                        <option value="INCORRECT_PRODUCT">Incorrect Product or Variant Delivered</option>
+                        <option value="TRANSIT_SEAL_BROKEN">Transit Aroma / Security Seal Broken</option>
+                        <option value="DEFECTIVE_OR_SPOILED">Defective or Spoiled Food Goods</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-serif font-bold text-xs text-[#1A1817] mb-1.5">
+                        3. Desired Resolution *
+                      </label>
+                      <select
+                        value={returnResolution}
+                        onChange={(e) => setReturnResolution(e.target.value)}
+                        required
+                        className="w-full px-3 py-2 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-xs text-[#1A1817]"
+                      >
+                        <option value="REPLACEMENT">Brand-New Replacement (Recommended)</option>
+                        <option value="REFUND">Original Payment Source Refund</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Description of Issue */}
+                  <div>
+                    <label className="block font-serif font-bold text-xs text-[#1A1817] mb-1.5">
+                      4. Description of Defect or Transit Damage *
+                    </label>
+                    <textarea
+                      rows={3}
+                      required
+                      minLength={10}
+                      value={returnNote}
+                      onChange={(e) => setReturnNote(e.target.value)}
+                      placeholder="Please specify details regarding outer box condition, seal status, damaged item state, or wrong item labels..."
+                      className="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-xl text-xs text-[#1A1817] focus:outline-none focus:ring-2 focus:ring-[#722F37]"
+                    />
+                    <span className="text-[10px] text-[#7A7167]">Minimum 10 characters describing the condition.</span>
+                  </div>
+
+                  {/* Step 4: Photo & Video Evidence Upload */}
+                  <div className="space-y-2">
+                    <label className="block font-serif font-bold text-xs text-[#1A1817]">
+                      5. Supporting Photos & Optional Video Evidence
+                    </label>
+                    
+                    <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-relaxed">
+                      <strong>Statutory Consumer Rights Notice:</strong> An unboxing video is optional and will accelerate verification. Your claim will <strong>never be refused solely because an unboxing video is unavailable</strong>. Clear photos of the outer shipping box, shipping label, and damaged contents are sufficient for review.
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Photo Upload */}
+                      <label className="border-2 border-dashed border-[#DDD5C7] hover:border-[#722F37] rounded-xl p-3.5 text-center cursor-pointer bg-[#FAF8F5] transition-colors block">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          multiple
+                          onChange={(e) => handleFileUpload(e, false)}
+                          className="hidden"
+                        />
+                        <ImageIcon className="w-5 h-5 text-[#8C6320] mx-auto mb-1" />
+                        <span className="font-semibold text-xs text-[#1A1817] block">Add Photos</span>
+                        <span className="text-[10px] text-[#7A7167]">JPG, PNG, WEBP (Max 10MB)</span>
+                      </label>
+
+                      {/* Video Upload */}
+                      <label className="border-2 border-dashed border-[#DDD5C7] hover:border-[#722F37] rounded-xl p-3.5 text-center cursor-pointer bg-[#FAF8F5] transition-colors block">
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/quicktime"
+                          onChange={(e) => handleFileUpload(e, true)}
+                          className="hidden"
+                        />
+                        <Video className="w-5 h-5 text-[#8C6320] mx-auto mb-1" />
+                        <span className="font-semibold text-xs text-[#1A1817] block">Add Unboxing Video</span>
+                        <span className="text-[10px] text-[#7A7167]">MP4, WEBM, MOV (Optional, Max 50MB)</span>
+                      </label>
+                    </div>
+
+                    {/* Previews of attached files */}
+                    {returnEvidenceFiles.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {returnEvidenceFiles.map((file, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#FAF7F2] border border-[#DDD5C7] rounded-lg text-xs"
+                          >
+                            {file.isVideo ? (
+                              <Video className="w-3.5 h-3.5 text-indigo-700" />
+                            ) : (
+                              <ImageIcon className="w-3.5 h-3.5 text-[#8C6320]" />
+                            )}
+                            <span className="font-mono text-[11px] truncate max-w-[120px]">{file.originalName}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEvidence(idx)}
+                              className="text-rose-600 hover:text-rose-800 ml-1"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-[#EAE3D5] flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={handleCloseReturnModal}
+                      className="px-4 py-2 border border-[#DDD5C7] text-[#4A423B] rounded-xl hover:bg-[#FAF7F2] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingReturn}
+                      className="px-6 py-2.5 bg-[#722F37] hover:bg-[#5E2229] text-white font-semibold rounded-xl transition-all shadow disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {submittingReturn ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Submitting Claim...</span>
+                        </>
+                      ) : (
+                        <span>Submit Return / Replacement Claim</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}

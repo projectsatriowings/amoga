@@ -237,6 +237,12 @@ model Order {
   items                 OrderItem[]
   payments              Payment[]
   trackingEvents        OrderTrackingEvent[]
+  returnRequests        ReturnRequest[]
+
+  // Return policy acknowledgement snapshot
+  returnPolicyAcknowledged Boolean?     @default(true)
+  returnPolicyVersion     String?      @default("2026.1")
+  returnPolicyAcknowledgedAt DateTime?
 
   @@index([orderReference])
   @@index([customerEmail])
@@ -259,6 +265,7 @@ model Customer {
   sessions              CustomerSession[]
   addresses             CustomerAddress[]
   orders                Order[]
+  returnRequests        ReturnRequest[]
   restockSubscriptions  RestockSubscription[]
   reviews               Review[]
   passwordResetTokens   PasswordResetToken[]
@@ -402,6 +409,7 @@ model OrderItem {
   order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product       Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
   variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  returnItems   ReturnRequestItem[]
 
   @@index([orderId])
   @@index([productId])
@@ -551,8 +559,8 @@ model StoreSetting {
   sellerState              String?        @default("Tamil Nadu")
   sellerStateCode          String?        @default("33")
   sellerPincode            String?        @default("600017")
-  sellerGstin              String?        @default("33AAACA1234A1Z5")
-  sellerPan                String?        @default("AAACA1234A")
+  sellerGstin              String?        @default("33AYMPK1833D1ZQ")
+  sellerPan                String?        @default("AYMPK1833D")
   invoicePrefix            String?        @default("AMOGA/2026-27/")
   invoiceSequence          Int            @default(1001)
   isTaxEnabled             Boolean        @default(true)
@@ -561,6 +569,18 @@ model StoreSetting {
   isTaxInclusiveDefault    Boolean        @default(true)
   requireTaxVerificationForCheckout Boolean @default(true)
   strictTaxCompliance               Boolean @default(false)
+
+  // FSSAI Food Safety & Regulatory Details
+  fssaiLicenseNumber       String?        @default("22425540000677")
+  fssaiLicenseHolder       String?        @default("Amoga Luxury Private Limited")
+  fssaiLicenseType         String?        @default("State License")
+  fssaiCertificateUrl      String?
+  fssaiScopeNotice         String?        @default("Verified 14-digit FSSAI licence for proprietary food and botanical tea retail packaging.")
+
+  // Return Policy Configuration
+  returnWindowDays         Int            @default(7)
+  foodReturnWindowHours    Int            @default(48)
+  returnPolicyVersion      String         @default("2026.1")
 
   updatedAt                DateTime       @default(now()) @updatedAt
 
@@ -1049,5 +1069,148 @@ model PasswordResetToken {
   @@index([expiresAt])
   @@map("password_reset_tokens")
 }
+
+// ================= CUSTOMER RETURN & REPLACEMENT MODELS =================
+
+enum ReturnRequestReason {
+  DAMAGED_PRODUCT
+  INCORRECT_PRODUCT
+  TRANSIT_SEAL_BROKEN
+  DEFECTIVE_OR_SPOILED
+}
+
+enum ReturnRequestStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  INFO_REQUESTED
+  APPROVED
+  PICKUP_SCHEDULED
+  RECEIVED_AT_FACILITY
+  INSPECTED_PASSED
+  INSPECTED_REJECTED
+  REPLACEMENT_DISPATCHED
+  REFUND_APPROVED
+  REFUND_COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum ReturnResolutionType {
+  REPLACEMENT
+  REFUND
+}
+
+model ReturnRequest {
+  id                    String              @id @default(uuid())
+  returnReference       String              @unique // e.g. 'AMOGA-RET-2026-XXXXX'
+  orderId               String
+  customerId            String?
+  customerEmail         String
+  customerPhone         String?
+  reason                ReturnRequestReason
+  resolutionPreference ReturnResolutionType @default(REPLACEMENT)
+  description           String              @db.Text
+  status                ReturnRequestStatus @default(SUBMITTED)
+  adminNotes            String?             @db.Text
+  rejectionReason       String?             @db.Text
+  infoRequestedDetails  String?             @db.Text
+
+  // Inspection & Decisions
+  inspectionNotes       String?             @db.Text
+  inspectedBy           String?             // admin email
+  inspectedAt           DateTime?
+
+  // Return Pickup tracking
+  returnCarrier         String?
+  returnTrackingNumber  String?
+  pickupScheduledAt     DateTime?
+  receivedAtFacilityAt  DateTime?
+
+  // Financial Refund details (to prevent duplicate refunds)
+  refundAmount          Decimal?            @db.Decimal(10, 2)
+  refundReference       String?             // Payment gateway refund ID or bank UTR
+  refundStatus          String?             @default("NOT_APPLICABLE") // 'NOT_APPLICABLE' | 'PENDING' | 'PROCESSED' | 'FAILED'
+  refundedAt            DateTime?
+
+  // Replacement order / item tracking
+  replacementOrderReference String?
+  replacementDispatchedAt   DateTime?
+
+  // Restock control (prevent duplicate stock movements)
+  isRestocked           Boolean             @default(false)
+  restockedAt           DateTime?
+  restockedBy           String?
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  order                 Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer              Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items                 ReturnRequestItem[]
+  evidences             ReturnEvidence[]
+  history               ReturnStatusHistory[]
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([returnReference])
+  @@map("return_requests")
+}
+
+model ReturnRequestItem {
+  id                 String         @id @default(uuid())
+  returnRequestId    String
+  orderItemId        String
+  productId          String?
+  variantId          String?
+  productName        String
+  variantName        String?
+  quantity           Int            @default(1)
+  unitPrice          Decimal        @db.Decimal(10, 2)
+  lineTotal          Decimal        @db.Decimal(10, 2)
+  itemConditionNotes String?
+
+  returnRequest      ReturnRequest  @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderItem          OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+  @@index([orderItemId])
+  @@map("return_request_items")
+}
+
+model ReturnEvidence {
+  id              String        @id @default(uuid())
+  returnRequestId String
+  fileType        String        // 'IMAGE' | 'VIDEO'
+  mimeType        String        // 'image/jpeg', 'image/png', 'video/mp4', etc.
+  fileName        String
+  fileSize        Int           // in bytes
+  storageKey      String        // unguessable private storage filename e.g. 'evidence-uuid.ext'
+  createdAt       DateTime      @default(now())
+
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+  @@map("return_evidences")
+}
+
+model ReturnStatusHistory {
+  id              String              @id @default(uuid())
+  returnRequestId String
+  fromStatus      ReturnRequestStatus?
+  toStatus        ReturnRequestStatus
+  changedBy       String              // Admin email or 'Customer' or 'System'
+  actorRole       String              @default("ADMIN") // 'ADMIN' | 'CUSTOMER' | 'SYSTEM'
+  notes           String?             @db.Text
+  createdAt       DateTime            @default(now())
+
+  returnRequest   ReturnRequest       @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+  @@index([createdAt])
+  @@map("return_status_histories")
+}
+
 
 

@@ -389,6 +389,44 @@ export async function createAddress(req, res) {
       });
     }
 
+    // Prevent duplicate addresses: Check if this customer already saved the same street address & PIN
+    const duplicate = await prisma.customerAddress.findFirst({
+      where: {
+        customerId: req.customerId,
+        addressLine1: { equals: addressLine1.trim(), mode: 'insensitive' },
+        pincode: pincode.trim(),
+      },
+    });
+
+    if (duplicate) {
+      if (shouldBeDefault) {
+        await prisma.customerAddress.updateMany({
+          where: { customerId: req.customerId },
+          data: { isDefault: false },
+        });
+      }
+
+      const updated = await prisma.customerAddress.update({
+        where: { id: duplicate.id },
+        data: {
+          label: label ? label.trim() : duplicate.label,
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          addressLine2: addressLine2 !== undefined ? (addressLine2 ? addressLine2.trim() : null) : duplicate.addressLine2,
+          city: city.trim(),
+          state: state.trim(),
+          isDefault: shouldBeDefault ? true : duplicate.isDefault,
+        },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Saved address updated successfully',
+        address: updated,
+        isExisting: true,
+      });
+    }
+
     const address = await prisma.customerAddress.create({
       data: {
         customerId: req.customerId,
