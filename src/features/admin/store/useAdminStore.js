@@ -2,8 +2,6 @@ import { create } from 'zustand';
 
 const TOKEN_KEY = 'amoga_admin_token';
 const USER_KEY = 'amoga_admin_user';
-const DEV_MODE_KEY = 'amoga_developer_mode_active';
-const VALID_DEV_PASSCODES = ['dev2026', 'amoga-dev', 'developer', 'amoga2026'];
 
 export const useAdminStore = create((set, get) => ({
   token: localStorage.getItem(TOKEN_KEY) || null,
@@ -19,34 +17,39 @@ export const useAdminStore = create((set, get) => ({
   isLoading: false,
   error: null,
 
-  // Developer Mode (Protects Collections Architecture & Audit Trail for developers only)
-  isDeveloperMode: localStorage.getItem(DEV_MODE_KEY) === 'true',
+  // Developer Mode (Strictly restricted to verified SUPER_ADMIN session)
+  isDeveloperMode: (() => {
+    try {
+      const stored = localStorage.getItem(USER_KEY);
+      return stored ? JSON.parse(stored)?.role === 'SUPER_ADMIN' : false;
+    } catch {
+      return false;
+    }
+  })(),
   devModalOpen: false,
 
   setDevModalOpen: (open) => set({ devModalOpen: Boolean(open) }),
 
-  unlockDeveloperMode: (passcode) => {
-    const trimmed = (passcode || '').trim().toLowerCase();
-    if (VALID_DEV_PASSCODES.includes(trimmed)) {
-      localStorage.setItem(DEV_MODE_KEY, 'true');
+  unlockDeveloperMode: () => {
+    const { admin } = get();
+    if (admin?.role === 'SUPER_ADMIN') {
       set({ isDeveloperMode: true, devModalOpen: false });
       return { success: true };
     }
-    return { success: false, error: 'Incorrect developer passcode. Access denied.' };
+    return { success: false, error: 'Super Admin privileges required.' };
   },
 
   lockDeveloperMode: () => {
-    localStorage.removeItem(DEV_MODE_KEY);
     set({ isDeveloperMode: false });
   },
 
   toggleDeveloperMode: () => {
-    const { isDeveloperMode } = get();
-    if (isDeveloperMode) {
-      get().lockDeveloperMode();
-    } else {
-      set({ devModalOpen: true });
+    const { isDeveloperMode, admin } = get();
+    if (admin?.role !== 'SUPER_ADMIN') {
+      set({ isDeveloperMode: false });
+      return;
     }
+    set({ isDeveloperMode: !isDeveloperMode });
   },
 
   login: async (email, password, isRetry = false) => {
@@ -89,6 +92,7 @@ export const useAdminStore = create((set, get) => ({
         token: data.token,
         admin: data.admin,
         isAuthenticated: true,
+        isDeveloperMode: data.admin?.role === 'SUPER_ADMIN',
         isLoading: false,
         error: null,
       });
@@ -118,7 +122,7 @@ export const useAdminStore = create((set, get) => ({
 
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    set({ token: null, admin: null, isAuthenticated: false, error: null });
+    set({ token: null, admin: null, isAuthenticated: false, isDeveloperMode: false, error: null });
   },
 
   checkSession: async () => {
@@ -138,7 +142,11 @@ export const useAdminStore = create((set, get) => ({
         get().logout();
       } else {
         const data = await res.json();
-        set({ admin: data.admin, isAuthenticated: true });
+        set({
+          admin: data.admin,
+          isAuthenticated: true,
+          isDeveloperMode: data.admin?.role === 'SUPER_ADMIN',
+        });
         localStorage.setItem(USER_KEY, JSON.stringify(data.admin));
       }
     } catch {

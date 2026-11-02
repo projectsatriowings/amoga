@@ -4,6 +4,8 @@ import {
   loginAdmin,
   logoutAdmin,
   getAdminProfile,
+  requestPasswordResetOtp,
+  verifyAndResetPassword,
 } from '../controllers/adminAuthController.js';
 import { getDashboardStats } from '../controllers/adminDashboardController.js';
 import {
@@ -115,6 +117,8 @@ const router = Router();
 
 // ================= PUBLIC ADMIN AUTH ROUTES =================
 router.post('/auth/login', loginAdmin);
+router.post('/auth/forgot-password', requestPasswordResetOtp);
+router.post('/auth/reset-password', verifyAndResetPassword);
 
 // ================= PROTECTED ADMIN ROUTES =================
 router.post('/auth/logout', requireAdminAuth(), logoutAdmin);
