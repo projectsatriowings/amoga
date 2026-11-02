@@ -26,11 +26,35 @@ export async function getDashboardStats(req, res) {
       return res.status(200).json(cached.payload);
     }
 
-    const metricsData = await getDashboardMetrics({
-      range,
-      startDate,
-      endDate,
-    });
+    let metricsData;
+    try {
+      metricsData = await getDashboardMetrics({
+        range,
+        startDate,
+        endDate,
+      });
+    } catch (firstErr) {
+      const isTransient =
+        firstErr?.code === 'P1001' ||
+        firstErr?.code === 'P1017' ||
+        firstErr?.code === 'P2024' ||
+        firstErr?.message?.includes("Can't reach database server") ||
+        firstErr?.message?.includes('Connection closed') ||
+        firstErr?.message?.includes('10054') ||
+        firstErr?.message?.includes('ECONNRESET');
+
+      if (isTransient) {
+        console.warn('[ADMIN DASHBOARD]: Database compute is waking from sleep. Retrying after 1.5s delay...');
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        metricsData = await getDashboardMetrics({
+          range,
+          startDate,
+          endDate,
+        });
+      } else {
+        throw firstErr;
+      }
+    }
 
     dashboardControllerCache.set(cacheKey, { payload: metricsData, timestamp: now });
     res.setHeader('Cache-Control', 'private, max-age=15, stale-while-revalidate=60');
