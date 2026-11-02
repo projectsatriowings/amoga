@@ -277,7 +277,7 @@ export async function searchPosCatalog({
       category: p.category,
       price: p.price !== null ? Number(p.price) : 0,
       image: p.image,
-      packSize: p.packSize,
+      packSize: p.packSize || (p.collectionId === 'tea' ? '25 g' : null),
       hsnCode: p.hsnCode || '5007',
       gstRate: p.gstRate !== null ? Number(p.gstRate) : 5,
       isTaxInclusive: p.isTaxInclusive !== null ? Boolean(p.isTaxInclusive) : true,
@@ -443,6 +443,7 @@ export async function finalizePosSale({
   staffId = null,
   staffEmail,
   staffName = null,
+  staffRole = null,
   stallEventId = null,
   stockLocationId = null,
   items = [],
@@ -508,6 +509,37 @@ export async function finalizePosSale({
         if (defaultStall) {
           resolvedLocationId = defaultStall.id;
           resolvedLocation = defaultStall;
+        }
+      }
+
+      // Enforce staff stall assignment for non-superadmin users
+      if (staffEmail && staffRole && staffRole !== 'SUPER_ADMIN') {
+        const emailLower = staffEmail.toLowerCase();
+        const allActiveEvents = await tx.stallEvent.findMany({
+          where: { status: 'ACTIVE' },
+          include: { stockLocation: true },
+        });
+
+        const staffAssignedEvents = allActiveEvents.filter((ev) => {
+          const list = Array.isArray(ev.assignedStaffIds)
+            ? ev.assignedStaffIds.map((s) => String(s).toLowerCase())
+            : [];
+          return list.includes(emailLower) || (staffId && list.includes(staffId));
+        });
+
+        if (staffAssignedEvents.length > 0) {
+          const authorizedLocationIds = staffAssignedEvents
+            .map((ev) => ev.stockLocation?.id)
+            .filter(Boolean);
+
+          if (resolvedLocationId && !authorizedLocationIds.includes(resolvedLocationId)) {
+            const assignedNames = staffAssignedEvents.map((e) => e.name).join(', ');
+            const err = new Error(
+              `Staff authorization restricted: You are assigned to "${assignedNames}" and cannot bill for this stall location.`
+            );
+            err.status = 403;
+            throw err;
+          }
         }
       }
 
@@ -1352,15 +1384,15 @@ export async function getPosSale(identifier, client = prisma) {
     sellerDetails: {
       legalName: storeSettings?.sellerLegalName || 'Amoga Luxury Private Limited',
       tradeName: storeSettings?.sellerTradeName || 'Amoga',
-      gstin: storeSettings?.sellerGstin || '33AAACA1234A1Z5',
-      pan: storeSettings?.sellerPan || 'AAACA1234A',
+      gstin: storeSettings?.sellerGstin || '33AYMPK1833D1ZQ',
+      pan: storeSettings?.sellerPan || 'AYMPK1833D',
       addressLine1: storeSettings?.sellerAddressLine1 || '108, Heritage Walk, Anna Salai',
       addressLine2: storeSettings?.sellerAddressLine2 || 'T. Nagar',
       city: storeSettings?.sellerCity || 'Chennai',
       state: storeSettings?.sellerState || 'Tamil Nadu',
       pincode: storeSettings?.sellerPincode || '600017',
       contactPhone: storeSettings?.contactPhone || '+91 98765 43210',
-      contactEmail: storeSettings?.contactEmail || 'support@amoga.com',
+      contactEmail: storeSettings?.contactEmail || 'amogastores05@gmail.com',
     },
   };
 }
@@ -1372,6 +1404,7 @@ export async function getPosSalesReport({
   startDate = null,
   endDate = null,
   stallEventId = null,
+  stockLocationId = null,
   staffId = null,
   paymentMethod = null,
   collectionId = null,
@@ -1383,6 +1416,9 @@ export async function getPosSalesReport({
 
   if (stallEventId && stallEventId !== 'all') {
     where.stallEventId = stallEventId;
+  }
+  if (stockLocationId && stockLocationId !== 'all') {
+    where.stockLocationId = stockLocationId;
   }
   if (staffId && staffId !== 'all') {
     where.staffId = staffId;
@@ -1401,22 +1437,29 @@ export async function getPosSalesReport({
     }
   }
 
-  // 1. Fetch completed sales
+  // 1. Fetch sales and payments
   const sales = await client.posSale.findMany({
     where,
     include: {
       items: true,
+      payments: true,
       stallEvent: { select: { id: true, name: true, venue: true } },
+      stockLocation: { select: { id: true, name: true, code: true, city: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
 
   let grossSales = 0;
+  let grossCompletedSales = 0;
   let totalDiscounts = 0;
   let totalTax = 0;
+  let gstOnCompletedSales = 0;
+  let refundedTax = 0;
   let netSales = 0;
   let totalUnits = 0;
   let totalRefunds = 0;
+  let totalPaymentsReceived = 0;
+  let completedBillsCount = 0;
 
   const paymentBreakdown = {
     CASH: { count: 0, amount: 0 },
@@ -1432,15 +1475,17 @@ export async function getPosSalesReport({
     jewellery: { name: 'Silver Jewellery', units: 0, amount: 0 },
   };
 
-  const eventSalesMap = {};
+  const stallSalesMap = {};
 
   for (const s of sales) {
+    const isCompleted = s.status === 'COMPLETED';
     const isRefunded = s.status === 'REFUNDED';
     const subtotal = Number(s.subtotal) || 0;
     const discount = Number(s.discountAmount) || 0;
     const tax = Number(s.totalTaxAmount) || 0;
     const total = Number(s.totalAmount) || 0;
     const refund = Number(s.refundedAmount) || 0;
+    const amountPaid = Number(s.amountPaid) || 0;
 
     grossSales += subtotal;
     totalDiscounts += discount;
@@ -1448,7 +1493,27 @@ export async function getPosSalesReport({
     netSales += isRefunded ? Math.max(0, total - refund) : total;
     totalRefunds += refund;
 
-    // Payment methods
+    if (isCompleted) {
+      completedBillsCount += 1;
+      grossCompletedSales += subtotal;
+      gstOnCompletedSales += tax;
+    } else if (isRefunded) {
+      // For fully refunded sales, tax is part of refunded tax
+      refundedTax += tax;
+    }
+
+    // Payments received (use actual payments relation to avoid double-counting if split, or amountPaid fallback)
+    if (Array.isArray(s.payments) && s.payments.length > 0) {
+      for (const p of s.payments) {
+        if (p.status === 'SUCCEEDED' || !p.status) {
+          totalPaymentsReceived += Number(p.amount) || 0;
+        }
+      }
+    } else {
+      totalPaymentsReceived += amountPaid;
+    }
+
+    // Payment methods aggregation (from sale or split payments)
     const method = s.paymentMethod ? s.paymentMethod.toUpperCase() : 'CASH';
     if (!paymentBreakdown[method]) {
       paymentBreakdown[method] = { count: 0, amount: 0 };
@@ -1456,13 +1521,19 @@ export async function getPosSalesReport({
     paymentBreakdown[method].count += 1;
     paymentBreakdown[method].amount += total;
 
-    // Event aggregation
-    const evName = s.stallEvent?.name || 'Walk-in / Direct Stall';
-    if (!eventSalesMap[evName]) {
-      eventSalesMap[evName] = { count: 0, amount: 0 };
+    // Stall location aggregation
+    const stallName = s.stockLocation?.name || s.stallEvent?.name || 'Walk-in / Direct Stall';
+    if (!stallSalesMap[stallName]) {
+      stallSalesMap[stallName] = {
+        name: stallName,
+        locationId: s.stockLocationId || s.stallEventId || null,
+        city: s.stockLocation?.city || null,
+        count: 0,
+        amount: 0,
+      };
     }
-    eventSalesMap[evName].count += 1;
-    eventSalesMap[evName].amount += total;
+    stallSalesMap[stallName].count += 1;
+    stallSalesMap[stallName].amount = Number((stallSalesMap[stallName].amount + total).toFixed(2));
 
     // Item-level breakdown
     for (const it of s.items) {
@@ -1481,17 +1552,23 @@ export async function getPosSalesReport({
   return {
     summary: {
       totalBills: sales.length,
+      completedBillsCount,
       grossSales: Number(grossSales.toFixed(2)),
+      grossCompletedSales: Number(grossCompletedSales.toFixed(2)),
       totalDiscounts: Number(totalDiscounts.toFixed(2)),
       totalTax: Number(totalTax.toFixed(2)),
+      gstOnCompletedSales: Number(gstOnCompletedSales.toFixed(2)),
+      refundedTax: Number(refundedTax.toFixed(2)),
       netSales: Number(netSales.toFixed(2)),
       totalRefunds: Number(totalRefunds.toFixed(2)),
+      paymentsReceived: Number(totalPaymentsReceived.toFixed(2)),
       totalUnitsSold: totalUnits,
       averageBillValue: sales.length > 0 ? Number((netSales / sales.length).toFixed(2)) : 0,
     },
     paymentBreakdown,
     collectionBreakdown,
-    eventSales: Object.entries(eventSalesMap).map(([name, data]) => ({ name, ...data })),
+    eventSales: Object.values(stallSalesMap),
+    stallSales: Object.values(stallSalesMap),
   };
 }
 

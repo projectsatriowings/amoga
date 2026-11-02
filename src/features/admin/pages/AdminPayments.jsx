@@ -1,16 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { CreditCard, Search, RefreshCw, History, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  CreditCard,
+  Search,
+  RefreshCw,
+  History,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Download,
+  ChevronDown,
+  FileSpreadsheet,
+  FileText,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminPagination } from '../components/AdminPagination';
 import { BackButton } from '../../../components/ui/BackButton';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
+import { GstReportModal } from '../components/GstReportModal';
+import { TaxInvoiceDownloadModal } from '../components/TaxInvoiceDownloadModal';
 
 export function AdminPayments() {
-  const { adminFetch } = useAdminStore();
+  const { adminFetch, token } = useAdminStore();
   const [payments, setPayments] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Download menu & modals
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [showGstModal, setShowGstModal] = useState(false);
+  const [showTaxInvoiceModal, setShowTaxInvoiceModal] = useState(false);
+  const [downloadingQuick, setDownloadingQuick] = useState(null);
+  const downloadMenuRef = useRef(null);
 
   // Filters
   const [status, setStatus] = useState('ALL');
@@ -23,9 +46,61 @@ export function AdminPayments() {
   // Webhook Events Audit Modal
   const [showEvents, setShowEvents] = useState(false);
   const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
 
-  // Lock body scroll when modal is open
-  useBodyScrollLock(Boolean(showEvents));
+  // Lock body scroll when any modal is open
+  useBodyScrollLock(Boolean(showEvents || showGstModal || showTaxInvoiceModal));
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target)) {
+        setShowDownloadMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleQuickDownload = async (type) => {
+    setDownloadingQuick(type);
+    setShowDownloadMenu(false);
+    try {
+      const endpoint =
+        type === 'payments-to-date'
+          ? '/api/admin/reports/payments-to-date'
+          : '/api/admin/reports/outstanding-payments';
+      const defaultFilename =
+        type === 'payments-to-date'
+          ? `Amoga_Payments_To_Date_${new Date().toISOString().split('T')[0]}.csv`
+          : `Amoga_Outstanding_Payments_${new Date().toISOString().split('T')[0]}.csv`;
+
+      const res = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'x-admin-token': token,
+        },
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.message || 'Failed to download report');
+      }
+
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = defaultFilename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1000);
+    } catch (err) {
+      alert(`Export error: ${err.message}`);
+    } finally {
+      setDownloadingQuick(null);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -113,6 +188,98 @@ export function AdminPayments() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Download Reports & Invoices Menu */}
+          <div className="relative" ref={downloadMenuRef}>
+            <button
+              type="button"
+              onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E1916] text-white rounded text-xs font-medium hover:bg-[#2C2520] transition-colors cursor-pointer shadow-xs"
+              aria-haspopup="true"
+              aria-expanded={showDownloadMenu}
+            >
+              <Download className="w-3.5 h-3.5 text-[#E6C687]" />
+              <span>Download</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-[#D5CEC2] transition-transform duration-200 ${
+                  showDownloadMenu ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+
+            {showDownloadMenu && (
+              <div
+                className="absolute right-0 mt-1.5 w-60 bg-[#FBF9F5] border border-[#D5CEC2] rounded-lg shadow-xl py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100"
+                role="menu"
+              >
+                <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-[#7A7167] border-b border-[#EAE4D9]">
+                  Tax & Financial Exports
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDownloadMenu(false);
+                    setShowGstModal(true);
+                  }}
+                  className="w-full px-3 py-2 text-left text-xs text-[#1A1817] hover:bg-[#F0EBE1] flex items-center gap-2.5 transition-colors cursor-pointer"
+                  role="menuitem"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-[#722F37]" />
+                  <div>
+                    <div className="font-medium text-[#1A1817]">GST Report</div>
+                    <div className="text-[10px] text-[#7A7167]">Monthly return & tax summary</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDownloadMenu(false);
+                    setShowTaxInvoiceModal(true);
+                  }}
+                  className="w-full px-3 py-2 text-left text-xs text-[#1A1817] hover:bg-[#F0EBE1] flex items-center gap-2.5 transition-colors cursor-pointer"
+                  role="menuitem"
+                >
+                  <FileText className="w-4 h-4 text-[#8C6320]" />
+                  <div>
+                    <div className="font-medium text-[#1A1817]">Tax Invoice</div>
+                    <div className="text-[10px] text-[#7A7167]">Date-filtered PDF & ZIP batch</div>
+                  </div>
+                </button>
+
+                <div className="my-1 border-t border-[#EAE4D9]" />
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickDownload('payments-to-date')}
+                  disabled={downloadingQuick !== null}
+                  className="w-full px-3 py-2 text-left text-xs text-[#1A1817] hover:bg-[#F0EBE1] flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50"
+                  role="menuitem"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                  <div>
+                    <div className="font-medium text-[#1A1817]">Payments to Date</div>
+                    <div className="text-[10px] text-[#7A7167]">All settled payments (CSV)</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickDownload('outstanding-payments')}
+                  disabled={downloadingQuick !== null}
+                  className="w-full px-3 py-2 text-left text-xs text-[#1A1817] hover:bg-[#F0EBE1] flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50"
+                  role="menuitem"
+                >
+                  <Clock className="w-4 h-4 text-amber-700" />
+                  <div>
+                    <div className="font-medium text-[#1A1817]">Outstanding Payments</div>
+                    <div className="text-[10px] text-[#7A7167]">Unpaid / pending balances (CSV)</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={fetchWebhookEvents}
@@ -238,8 +405,9 @@ export function AdminPayments() {
                     <td className="px-5 py-3 font-mono text-[#5C544C]">
                       {p.order?.orderReference || p.orderId}
                     </td>
-                    <td className="px-5 py-3 font-sans font-semibold text-[#1A1817] tabular-nums whitespace-nowrap">
-                      ₹{p.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    <td className="px-5 py-3 font-jakarta font-bold text-[#1A1817] tabular-nums tracking-tight whitespace-nowrap">
+                      <span className="text-xs text-[#8C8377] font-normal mr-0.5">₹</span>
+                      {p.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-5 py-3 font-mono text-[11px] uppercase text-[#7A7167]">
                       {p.provider}
@@ -339,6 +507,15 @@ export function AdminPayments() {
           </div>
         </div>
       )}
+
+      {/* GST Monthly Report Modal */}
+      <GstReportModal isOpen={showGstModal} onClose={() => setShowGstModal(false)} />
+
+      {/* Tax Invoice Date-Range Download Modal */}
+      <TaxInvoiceDownloadModal
+        isOpen={showTaxInvoiceModal}
+        onClose={() => setShowTaxInvoiceModal(false)}
+      />
     </div>
   );
 }

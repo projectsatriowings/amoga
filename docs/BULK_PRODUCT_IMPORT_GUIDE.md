@@ -150,9 +150,6 @@ Category-specific columns enrich filtering, technical specifications, and compli
 2. **Update Existing Products (`UPDATE_EXISTING`)**:
    - Matches records by `Product Code` or `Slug`.
    - Safely updates descriptions, images, prices, category specs, and variants.
-3. **Initial Inventory Import (`INITIAL_INVENTORY`)**:
-   - Uses the `Inventory` sheet to adjust warehouse stock counts.
-   - Creates immutable `InventoryLog` audit entries with timestamp and administrator email.
 
 ---
 

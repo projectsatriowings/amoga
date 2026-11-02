@@ -125,7 +125,7 @@ export async function getStoreSettings(req, res) {
         : {
             id: 'default',
             storeName: 'Amoga Luxury',
-            contactEmail: 'support@amoga.com',
+            contactEmail: 'amogastores05@gmail.com',
             contactPhone: '+91 98765 43210',
             shippingStandardRate: 0,
             freeShippingThreshold: 2500,
@@ -147,8 +147,8 @@ export async function getStoreSettings(req, res) {
             sellerState: 'Tamil Nadu',
             sellerStateCode: '33',
             sellerPincode: '600017',
-            sellerGstin: '33AAACA1234A1Z5',
-            sellerPan: 'AAACA1234A',
+            sellerGstin: '33AYMPK1833D1ZQ',
+            sellerPan: 'AYMPK1833D',
             invoicePrefix: 'AMOGA/2026-27/',
             invoiceSequence: 1001,
             isTaxEnabled: true,
@@ -223,6 +223,14 @@ export async function updateStoreSettings(req, res) {
       shippingBeyondMaxRule,
       shippingBeyondMaxBaseCharge,
       shippingBeyondMaxChargePerPiece,
+      fssaiLicenseNumber,
+      fssaiLicenseHolder,
+      fssaiLicenseType,
+      fssaiCertificateUrl,
+      fssaiScopeNotice,
+      returnWindowDays,
+      foodReturnWindowHours,
+      returnPolicyVersion,
     } = req.body;
 
     // Strict Server-side Validation
@@ -360,6 +368,37 @@ export async function updateStoreSettings(req, res) {
       }
     }
 
+    // FSSAI 14-Digit Format Validation
+    if (fssaiLicenseNumber !== undefined && fssaiLicenseNumber.trim()) {
+      const cleanFssai = fssaiLicenseNumber.trim();
+      if (!/^[0-9]{14}$/.test(cleanFssai)) {
+        return res.status(400).json({
+          error: 'INVALID_FSSAI_NUMBER',
+          message: 'FSSAI License / Registration Number must be exactly 14 digits',
+        });
+      }
+    }
+
+    if (returnWindowDays !== undefined) {
+      const days = Number(returnWindowDays);
+      if (isNaN(days) || days < 1 || days > 90) {
+        return res.status(400).json({
+          error: 'INVALID_RETURN_WINDOW',
+          message: 'Return window must be between 1 and 90 days',
+        });
+      }
+    }
+
+    if (foodReturnWindowHours !== undefined) {
+      const hours = Number(foodReturnWindowHours);
+      if (isNaN(hours) || hours < 1 || hours > 336) {
+        return res.status(400).json({
+          error: 'INVALID_FOOD_RETURN_WINDOW',
+          message: 'Food return window must be between 1 and 336 hours',
+        });
+      }
+    }
+
     // Retrieve previous settings to compute readable field-by-field diff
     const previous = await prisma.storeSetting.findUnique({
       where: { id: 'default' },
@@ -414,11 +453,19 @@ export async function updateStoreSettings(req, res) {
         shippingBeyondMaxChargePerPiece: shippingBeyondMaxChargePerPiece !== undefined ? Number(shippingBeyondMaxChargePerPiece) : undefined,
         shippingConfiguredBy: req.admin?.email || 'admin@amoga.com',
         shippingConfiguredAt: new Date(),
+        fssaiLicenseNumber: fssaiLicenseNumber !== undefined ? (fssaiLicenseNumber.trim() || null) : undefined,
+        fssaiLicenseHolder: fssaiLicenseHolder !== undefined ? fssaiLicenseHolder.trim() : undefined,
+        fssaiLicenseType: fssaiLicenseType !== undefined ? fssaiLicenseType.trim() : undefined,
+        fssaiCertificateUrl: fssaiCertificateUrl !== undefined ? (fssaiCertificateUrl.trim() || null) : undefined,
+        fssaiScopeNotice: fssaiScopeNotice !== undefined ? fssaiScopeNotice.trim() : undefined,
+        returnWindowDays: returnWindowDays !== undefined ? parseInt(returnWindowDays, 10) : undefined,
+        foodReturnWindowHours: foodReturnWindowHours !== undefined ? parseInt(foodReturnWindowHours, 10) : undefined,
+        returnPolicyVersion: returnPolicyVersion !== undefined ? returnPolicyVersion.trim() : undefined,
       },
       create: {
         id: 'default',
         storeName: storeName ? storeName.trim() : 'Amoga Luxury',
-        contactEmail: contactEmail ? contactEmail.trim().toLowerCase() : 'support@amoga.com',
+        contactEmail: contactEmail ? contactEmail.trim().toLowerCase() : 'amogastores05@gmail.com',
         contactPhone: contactPhone ? contactPhone.trim() : '+91 98765 43210',
         shippingStandardRate: Number(shippingStandardRate || 0),
         freeShippingThreshold: Number(freeShippingThreshold ?? 2500),
@@ -442,14 +489,22 @@ export async function updateStoreSettings(req, res) {
         sellerState: sellerState ? sellerState.trim() : 'Tamil Nadu',
         sellerStateCode: computedStateCode || '33',
         sellerPincode: sellerPincode ? sellerPincode.trim() : '600017',
-        sellerGstin: validatedGstin || '33AAACA1234A1Z5',
-        sellerPan: sellerPan ? sellerPan.trim().toUpperCase() : 'AAACA1234A',
+        sellerGstin: validatedGstin || '33AYMPK1833D1ZQ',
+        sellerPan: sellerPan ? sellerPan.trim().toUpperCase() : 'AYMPK1833D',
         invoicePrefix: invoicePrefix ? invoicePrefix.trim() : 'AMOGA/2026-27/',
         invoiceSequence: parseInt(invoiceSequence, 10) || 1001,
         isTaxEnabled: isTaxEnabled !== undefined ? Boolean(isTaxEnabled) : true,
         defaultGstRate: Number(defaultGstRate || 5.0),
         defaultHsnCode: defaultHsnCode ? defaultHsnCode.trim() : '5007',
         isTaxInclusiveDefault: isTaxInclusiveDefault !== undefined ? Boolean(isTaxInclusiveDefault) : true,
+        fssaiLicenseNumber: fssaiLicenseNumber ? fssaiLicenseNumber.trim() : '22425540000677',
+        fssaiLicenseHolder: fssaiLicenseHolder ? fssaiLicenseHolder.trim() : 'Amoga Luxury Private Limited',
+        fssaiLicenseType: fssaiLicenseType ? fssaiLicenseType.trim() : 'State License',
+        fssaiCertificateUrl: fssaiCertificateUrl ? fssaiCertificateUrl.trim() : null,
+        fssaiScopeNotice: fssaiScopeNotice ? fssaiScopeNotice.trim() : 'Verified 14-digit FSSAI licence for proprietary food and botanical tea retail packaging.',
+        returnWindowDays: returnWindowDays ? parseInt(returnWindowDays, 10) : 7,
+        foodReturnWindowHours: foodReturnWindowHours ? parseInt(foodReturnWindowHours, 10) : 48,
+        returnPolicyVersion: returnPolicyVersion ? returnPolicyVersion.trim() : '2026.1',
       },
     });
 
@@ -518,7 +573,9 @@ export async function listAdminUsers(req, res) {
         email: true,
         name: true,
         role: true,
+        assignedLocationIds: true,
         isActive: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -539,7 +596,7 @@ export async function listAdminUsers(req, res) {
 
 export async function createAdminUser(req, res) {
   try {
-    const { email, name, password, role } = req.body;
+    const { email, name, password, role, assignedLocationIds } = req.body;
 
     if (!email || !name || !password || !role) {
       return res.status(400).json({
@@ -560,7 +617,14 @@ export async function createAdminUser(req, res) {
       });
     }
 
-    const validRoles = ['SUPER_ADMIN', 'CATALOGUE_MANAGER', 'ORDER_MANAGER', 'CONTENT_MANAGER'];
+    const validRoles = [
+      'SUPER_ADMIN',
+      'CATALOGUE_MANAGER',
+      'ORDER_MANAGER',
+      'CONTENT_MANAGER',
+      'STALL_MANAGER',
+      'STALL_CASHIER',
+    ];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         error: 'INVALID_ROLE',
@@ -575,6 +639,7 @@ export async function createAdminUser(req, res) {
         name: name.trim(),
         passwordHash,
         role,
+        assignedLocationIds: Array.isArray(assignedLocationIds) ? assignedLocationIds : null,
         isActive: true,
       },
       select: {
@@ -582,6 +647,7 @@ export async function createAdminUser(req, res) {
         email: true,
         name: true,
         role: true,
+        assignedLocationIds: true,
         isActive: true,
         createdAt: true,
       },
@@ -594,7 +660,7 @@ export async function createAdminUser(req, res) {
       entityType: 'AdminUser',
       entityId: user.id,
       status: 'SUCCESS',
-      details: { email: user.email, role: user.role },
+      details: { email: user.email, role: user.role, assignedLocationIds: user.assignedLocationIds },
     });
 
     return res.status(201).json({
@@ -609,6 +675,70 @@ export async function createAdminUser(req, res) {
     });
   }
 }
+
+export async function updateAdminUser(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, role, assignedLocationIds } = req.body;
+
+    const existing = await prisma.adminUser.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Staff user not found' });
+    }
+
+    const dataToUpdate = {};
+    if (name && typeof name === 'string') dataToUpdate.name = name.trim();
+    if (role && typeof role === 'string') {
+      const validRoles = [
+        'SUPER_ADMIN',
+        'CATALOGUE_MANAGER',
+        'ORDER_MANAGER',
+        'CONTENT_MANAGER',
+        'STALL_MANAGER',
+        'STALL_CASHIER',
+      ];
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({ error: 'INVALID_ROLE', message: 'Invalid role provided' });
+      }
+      dataToUpdate.role = role;
+    }
+    if (assignedLocationIds !== undefined) {
+      dataToUpdate.assignedLocationIds = Array.isArray(assignedLocationIds) ? assignedLocationIds : null;
+    }
+
+    const updated = await prisma.adminUser.update({
+      where: { id },
+      data: dataToUpdate,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        assignedLocationIds: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await logAdminAction({
+      adminId: req.admin.id,
+      adminEmail: req.admin.email,
+      action: 'ADMIN_USER_UPDATE',
+      entityType: 'AdminUser',
+      entityId: id,
+      status: 'SUCCESS',
+      details: { email: updated.email, changes: dataToUpdate },
+    });
+
+    return res.status(200).json({ success: true, user: updated });
+  } catch (err) {
+    console.error('[ADMIN UPDATE USER ERROR]:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to update admin user' });
+  }
+}
+
 
 export async function toggleAdminUser(req, res) {
   try {
@@ -662,6 +792,126 @@ export async function toggleAdminUser(req, res) {
     return res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: 'Failed to toggle admin user status',
+    });
+  }
+}
+
+export async function deleteAdminUser(req, res) {
+  try {
+    const { id } = req.params;
+
+    if (id === req.admin.id) {
+      return res.status(400).json({
+        error: 'CANNOT_DELETE_SELF',
+        message: 'You cannot delete your own Super Admin account',
+      });
+    }
+
+    const targetUser = await prisma.adminUser.findUnique({ where: { id } });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Staff user not found' });
+    }
+
+    // Cascade delete active sessions and reset tokens
+    await prisma.adminSession.deleteMany({ where: { adminId: id } }).catch(() => {});
+    await prisma.passwordResetToken.deleteMany({ where: { adminUserId: id } }).catch(() => {});
+
+    await prisma.adminUser.delete({ where: { id } });
+
+    await logAdminAction({
+      adminId: req.admin.id,
+      adminEmail: req.admin.email,
+      action: 'ADMIN_USER_DELETE',
+      entityType: 'AdminUser',
+      entityId: id,
+      status: 'SUCCESS',
+      details: { email: targetUser.email, role: targetUser.role },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Staff member ${targetUser.email} has been permanently deleted`,
+      deletedUserId: id,
+    });
+  } catch (err) {
+    console.error('[ADMIN DELETE USER ERROR]:', err);
+    return res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to delete staff user',
+    });
+  }
+}
+
+/**
+ * Super Admin initiates a password reset link for a stall manager or cashier
+ */
+export async function sendStaffResetLink(req, res) {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.adminUser.findUnique({
+      where: { id },
+      select: { id: true, email: true, name: true, role: true, isActive: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'NOT_FOUND',
+        message: 'Staff user account not found.',
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(400).json({
+        error: 'ACCOUNT_DEACTIVATED',
+        message: 'Cannot issue a password reset link for a deactivated staff account. Please reactivate the account first.',
+      });
+    }
+
+    const { createPasswordResetToken, sendPasswordResetEmail } = await import('../services/passwordResetService.js');
+
+    const tokenData = await createPasswordResetToken({
+      email: user.email,
+      accountType: 'STAFF',
+      adminUserId: user.id,
+      createdBy: req.admin.email,
+    });
+
+    const emailDelivery = await sendPasswordResetEmail({
+      email: user.email,
+      name: user.name,
+      resetUrl: tokenData.resetUrl,
+      accountType: 'STAFF',
+    });
+
+    await logAdminAction({
+      adminId: req.admin.id,
+      adminEmail: req.admin.email,
+      action: 'STAFF_PASSWORD_RESET_LINK_ISSUED',
+      entityType: 'AdminUser',
+      entityId: user.id,
+      status: 'SUCCESS',
+      details: {
+        targetEmail: user.email,
+        targetRole: user.role,
+        delivered: emailDelivery.delivered,
+        providerConfigured: emailDelivery.providerConfigured,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: emailDelivery.delivered
+        ? `Password reset link sent to ${user.email}.`
+        : `Password reset link created for ${user.email} (Email service: ${emailDelivery.message || 'Check server logs'}).`,
+      emailDelivery,
+      resetUrl: process.env.NODE_ENV !== 'production' ? tokenData.resetUrl : undefined,
+    });
+  } catch (err) {
+    console.error('[ADMIN SEND STAFF RESET LINK ERROR]:', err);
+    return res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'Failed to issue password reset link for staff user',
     });
   }
 }

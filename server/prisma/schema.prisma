@@ -50,6 +50,7 @@ model Product {
   image            String           @db.Text
   gallery          Json?            // Array of image paths/URLs
   packSize         String?
+  sellingUnit      String?          @default("Pack")
   inStock          Boolean          @default(true)
   stockQuantity    Int              @default(50)
   reservedQuantity Int              @default(0)
@@ -104,6 +105,7 @@ model ProductVariant {
   name          String         // e.g. 'Royal Wine', 'US 7'
   sku           String?        @unique
   price         Decimal?       @db.Decimal(10, 2)
+  image         String?        @db.Text
   hsnCode       String?
   gstRate       Decimal?       @db.Decimal(5, 2)
   isTaxInclusive Boolean?
@@ -164,6 +166,8 @@ enum AdminRole {
   CATALOGUE_MANAGER
   ORDER_MANAGER
   CONTENT_MANAGER
+  STALL_MANAGER
+  STALL_CASHIER
 }
 
 model Order {
@@ -233,6 +237,12 @@ model Order {
   items                 OrderItem[]
   payments              Payment[]
   trackingEvents        OrderTrackingEvent[]
+  returnRequests        ReturnRequest[]
+
+  // Return policy acknowledgement snapshot
+  returnPolicyAcknowledged Boolean?     @default(true)
+  returnPolicyVersion     String?      @default("2026.1")
+  returnPolicyAcknowledgedAt DateTime?
 
   @@index([orderReference])
   @@index([customerEmail])
@@ -248,14 +258,17 @@ model Customer {
   phone                 String?
   passwordHash          String
   isActive              Boolean           @default(true)
+  lastLoginAt           DateTime?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
   sessions              CustomerSession[]
   addresses             CustomerAddress[]
   orders                Order[]
+  returnRequests        ReturnRequest[]
   restockSubscriptions  RestockSubscription[]
   reviews               Review[]
+  passwordResetTokens   PasswordResetToken[]
 
   @@map("customers")
 }
@@ -396,6 +409,7 @@ model OrderItem {
   order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product       Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
   variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  returnItems   ReturnRequestItem[]
 
   @@index([orderId])
   @@index([productId])
@@ -416,7 +430,9 @@ model AdminUser {
   name              String
   passwordHash      String
   role              AdminRole         @default(CATALOGUE_MANAGER)
+  assignedLocationIds Json?           // Array of authorized StockLocation IDs
   isActive          Boolean           @default(true)
+  lastLoginAt       DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -425,6 +441,7 @@ model AdminUser {
   inventoryLogs     InventoryLog[]
   assignedInquiries CustomerInquiry[]
   posSales          PosSale[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("admin_users")
 }
@@ -528,7 +545,7 @@ model InventoryLog {
 model StoreSetting {
   id                       String         @id @default("default")
   storeName                String         @default("Amoga Luxury")
-  contactEmail             String         @default("support@amoga.com")
+  contactEmail             String         @default("amogastores05@gmail.com")
   contactPhone             String         @default("+91 98765 43210")
   shippingStandardRate     Decimal        @default(0.00) @db.Decimal(10, 2)
   freeShippingThreshold    Decimal        @default(2500.00) @db.Decimal(10, 2)
@@ -554,8 +571,8 @@ model StoreSetting {
   sellerState              String?        @default("Tamil Nadu")
   sellerStateCode          String?        @default("33")
   sellerPincode            String?        @default("600017")
-  sellerGstin              String?        @default("33AAACA1234A1Z5")
-  sellerPan                String?        @default("AAACA1234A")
+  sellerGstin              String?        @default("33AYMPK1833D1ZQ")
+  sellerPan                String?        @default("AYMPK1833D")
   invoicePrefix            String?        @default("AMOGA/2026-27/")
   invoiceSequence          Int            @default(1001)
   isTaxEnabled             Boolean        @default(true)
@@ -564,6 +581,18 @@ model StoreSetting {
   isTaxInclusiveDefault    Boolean        @default(true)
   requireTaxVerificationForCheckout Boolean @default(true)
   strictTaxCompliance               Boolean @default(false)
+
+  // FSSAI Food Safety & Regulatory Details
+  fssaiLicenseNumber       String?        @default("22425540000677")
+  fssaiLicenseHolder       String?        @default("Amoga Luxury Private Limited")
+  fssaiLicenseType         String?        @default("State License")
+  fssaiCertificateUrl      String?
+  fssaiScopeNotice         String?        @default("Verified 14-digit FSSAI licence for proprietary food and botanical tea retail packaging.")
+
+  // Return Policy Configuration
+  returnWindowDays         Int            @default(7)
+  foodReturnWindowHours    Int            @default(48)
+  returnPolicyVersion      String         @default("2026.1")
 
   updatedAt                DateTime       @default(now()) @updatedAt
 
@@ -1029,5 +1058,171 @@ model LocationMovementLog {
   @@index([createdAt])
   @@map("location_movement_logs")
 }
+
+// ================= PASSWORD RESET TOKENS =================
+
+model PasswordResetToken {
+  id            String      @id @default(uuid())
+  tokenHash     String      @unique
+  accountType   String      // 'CUSTOMER' | 'STAFF'
+  email         String
+  customerId    String?
+  adminUserId   String?
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  createdBy     String?
+
+  customer      Customer?   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  adminUser     AdminUser?  @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([email, accountType])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+// ================= CUSTOMER RETURN & REPLACEMENT MODELS =================
+
+enum ReturnRequestReason {
+  DAMAGED_PRODUCT
+  INCORRECT_PRODUCT
+  TRANSIT_SEAL_BROKEN
+  DEFECTIVE_OR_SPOILED
+}
+
+enum ReturnRequestStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  INFO_REQUESTED
+  APPROVED
+  PICKUP_SCHEDULED
+  RECEIVED_AT_FACILITY
+  INSPECTED_PASSED
+  INSPECTED_REJECTED
+  REPLACEMENT_DISPATCHED
+  REFUND_APPROVED
+  REFUND_COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum ReturnResolutionType {
+  REPLACEMENT
+  REFUND
+}
+
+model ReturnRequest {
+  id                    String              @id @default(uuid())
+  returnReference       String              @unique // e.g. 'AMOGA-RET-2026-XXXXX'
+  orderId               String
+  customerId            String?
+  customerEmail         String
+  customerPhone         String?
+  reason                ReturnRequestReason
+  resolutionPreference ReturnResolutionType @default(REPLACEMENT)
+  description           String              @db.Text
+  status                ReturnRequestStatus @default(SUBMITTED)
+  adminNotes            String?             @db.Text
+  rejectionReason       String?             @db.Text
+  infoRequestedDetails  String?             @db.Text
+
+  // Inspection & Decisions
+  inspectionNotes       String?             @db.Text
+  inspectedBy           String?             // admin email
+  inspectedAt           DateTime?
+
+  // Return Pickup tracking
+  returnCarrier         String?
+  returnTrackingNumber  String?
+  pickupScheduledAt     DateTime?
+  receivedAtFacilityAt  DateTime?
+
+  // Financial Refund details (to prevent duplicate refunds)
+  refundAmount          Decimal?            @db.Decimal(10, 2)
+  refundReference       String?             // Payment gateway refund ID or bank UTR
+  refundStatus          String?             @default("NOT_APPLICABLE") // 'NOT_APPLICABLE' | 'PENDING' | 'PROCESSED' | 'FAILED'
+  refundedAt            DateTime?
+
+  // Replacement order / item tracking
+  replacementOrderReference String?
+  replacementDispatchedAt   DateTime?
+
+  // Restock control (prevent duplicate stock movements)
+  isRestocked           Boolean             @default(false)
+  restockedAt           DateTime?
+  restockedBy           String?
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  order                 Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer              Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items                 ReturnRequestItem[]
+  evidences             ReturnEvidence[]
+  history               ReturnStatusHistory[]
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([returnReference])
+  @@map("return_requests")
+}
+
+model ReturnRequestItem {
+  id                 String         @id @default(uuid())
+  returnRequestId    String
+  orderItemId        String
+  productId          String?
+  variantId          String?
+  productName        String
+  variantName        String?
+  quantity           Int            @default(1)
+  unitPrice          Decimal        @db.Decimal(10, 2)
+  lineTotal          Decimal        @db.Decimal(10, 2)
+  itemConditionNotes String?
+
+  returnRequest      ReturnRequest  @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderItem          OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+  @@index([orderItemId])
+  @@map("return_request_items")
+}
+
+model ReturnEvidence {
+  id              String        @id @default(uuid())
+  returnRequestId String
+  fileType        String        // 'IMAGE' | 'VIDEO'
+  mimeType        String        // 'image/jpeg', 'image/png', 'video/mp4', etc.
+  fileName        String
+  fileSize        Int           // in bytes
+  storageKey      String        // unguessable private storage filename e.g. 'evidence-uuid.ext'
+  createdAt       DateTime      @default(now())
+
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+  @@map("return_evidences")
+}
+
+model ReturnStatusHistory {
+  id              String              @id @default(uuid())
+  returnRequestId String
+  fromStatus      ReturnRequestStatus?
+  toStatus        ReturnRequestStatus
+  changedBy       String              // Admin email or 'Customer' or 'System'
+  actorRole       String              @default("ADMIN") // 'ADMIN' | 'CUSTOMER' | 'SYSTEM'
+  notes           String?             @db.Text
+  createdAt       DateTime            @default(now())
+
+  returnRequest   ReturnRequest       @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+  @@index([createdAt])
+  @@map("return_status_histories")
+}
+
 
 

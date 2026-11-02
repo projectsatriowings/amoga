@@ -74,6 +74,30 @@ export async function getPublicShippingConfig(req, res, next) {
     const shippingCarrierName = settings?.shippingCarrierName || 'India Post';
     const shippingStandardRate = Number(settings?.shippingStandardRate || 0);
 
+    const compliance = {
+      sellerLegalName: settings?.sellerLegalName || 'Amoga Luxury Private Limited',
+      sellerTradeName: settings?.sellerTradeName || 'Amoga',
+      sellerGstin: settings?.sellerGstin || '33AYMPK1833D1ZQ',
+      sellerPan: settings?.sellerPan || 'AYMPK1833D',
+      sellerState: settings?.sellerState || 'Tamil Nadu',
+      sellerStateCode: settings?.sellerStateCode || '33',
+      sellerAddress: [
+        settings?.sellerAddressLine1 || '108, Heritage Walk, Anna Salai',
+        settings?.sellerAddressLine2 || 'T. Nagar',
+        settings?.sellerCity || 'Chennai',
+        settings?.sellerState || 'Tamil Nadu',
+        settings?.sellerPincode || '600017',
+      ].filter(Boolean).join(', '),
+      fssaiLicenseNumber: settings?.fssaiLicenseNumber || '22425540000677',
+      fssaiLicenseHolder: settings?.fssaiLicenseHolder || 'Amoga Luxury Private Limited',
+      fssaiLicenseType: settings?.fssaiLicenseType || 'State License',
+      fssaiCertificateUrl: settings?.fssaiCertificateUrl || null,
+      fssaiScopeNotice: settings?.fssaiScopeNotice || 'Verified 14-digit FSSAI licence for proprietary food and botanical tea retail packaging.',
+      returnWindowDays: settings?.returnWindowDays || 7,
+      foodReturnWindowHours: settings?.foodReturnWindowHours || 48,
+      returnPolicyVersion: settings?.returnPolicyVersion || '2026.1',
+    };
+
     return res.status(200).json({
       success: true,
       config: {
@@ -84,6 +108,7 @@ export async function getPublicShippingConfig(req, res, next) {
         businessApprovalPending: true,
         status: 'PENDING_BUSINESS_CONFIRMATION',
         notes: 'Authoritative configuration loaded from StoreSetting database table. Final threshold pending business owner confirmation.',
+        compliance,
       },
     });
   } catch (error) {

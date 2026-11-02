@@ -4,12 +4,33 @@ import { getAvailability } from '../services/inventoryService.js';
 let catalogueVersion = Date.now();
 const sseClients = new Set();
 
+// High-performance in-memory cache for public catalogue queries
+const productsResponseCache = new Map();
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds fallback TTL
+
+const invalidationListeners = new Set();
+export function registerCatalogueInvalidation(fn) {
+  if (typeof fn === 'function') {
+    invalidationListeners.add(fn);
+  }
+}
+
 /**
  * Broadcast catalogue changes (creation, edit, archive, restore, stock change)
  * to all connected storefront clients in real-time.
  */
 export function broadcastProductUpdate(collectionId = null) {
   catalogueVersion = Date.now();
+  productsResponseCache.clear();
+
+  for (const listener of invalidationListeners) {
+    try {
+      listener();
+    } catch (err) {
+      console.error('[CACHE INVALIDATION LISTENER ERROR]:', err);
+    }
+  }
+
   const payload = JSON.stringify({
     type: 'PRODUCTS_UPDATED',
     collectionId: collectionId || 'all',
@@ -87,11 +108,16 @@ function sanitizeImagePath(img) {
 
 export async function getProducts(req, res, next) {
   try {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
 
     const { collection, collectionId, category, q, sort = 'default', page = '1', limit = '100' } = req.query;
+
+    const cacheKey = JSON.stringify({ collection, collectionId, category, q, sort, page, limit });
+    const cached = productsResponseCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+      return res.status(200).json(cached.payload);
+    }
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(200, Math.max(1, parseInt(limit, 10) || 100));
@@ -103,7 +129,12 @@ export async function getProducts(req, res, next) {
 
     const targetCollection = (collection || collectionId || '').trim();
     if (targetCollection && targetCollection !== 'all') {
-      where.collectionId = targetCollection.toLowerCase();
+      where.collection = {
+        OR: [
+          { id: targetCollection.toLowerCase() },
+          { slug: targetCollection.toLowerCase() },
+        ],
+      };
     }
 
     if (category && category !== 'all') {
@@ -191,12 +222,12 @@ export async function getProducts(req, res, next) {
         category: p.category,
         categoryName: p.categoryName,
         price: p.price ? parseFloat(p.price.toString()) : null,
-        originalPrice: p.originalPrice ? parseFloat(p.originalPrice.toString()) : null,
-        discount: p.discount,
+        originalPrice: null,
+        discount: null,
         currency: p.currency,
         image: sanitizeImagePath(p.image),
         gallery: p.gallery,
-        packSize: p.packSize,
+        packSize: p.packSize || (p.collectionId === 'tea' ? '25 g' : null),
         inStock: pInStock,
         stockQuantity: pOnHand,
         onHandQuantity: pOnHand,
@@ -216,7 +247,7 @@ export async function getProducts(req, res, next) {
       };
     });
 
-    return res.status(200).json({
+    const responsePayload = {
       success: true,
       meta: {
         total,
@@ -225,7 +256,14 @@ export async function getProducts(req, res, next) {
         totalPages: Math.ceil(total / limitNum),
       },
       data: formattedProducts,
+    };
+
+    productsResponseCache.set(cacheKey, {
+      timestamp: now,
+      payload: responsePayload,
     });
+
+    return res.status(200).json(responsePayload);
   } catch (error) {
     next(error);
   }
@@ -233,11 +271,16 @@ export async function getProducts(req, res, next) {
 
 export async function getProductBySlug(req, res, next) {
   try {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
 
     const { collection, slug } = req.params;
+
+    const cacheKey = `slug:${(collection || '').toLowerCase()}:${(slug || '').toLowerCase()}`;
+    const cached = productsResponseCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+      return res.status(200).json(cached.payload);
+    }
 
     const product = await prisma.product.findFirst({
       where: {
@@ -312,12 +355,12 @@ export async function getProductBySlug(req, res, next) {
       category: product.category,
       categoryName: product.categoryName,
       price: product.price ? parseFloat(product.price.toString()) : null,
-      originalPrice: product.originalPrice ? parseFloat(product.originalPrice.toString()) : null,
-      discount: product.discount,
+      originalPrice: null,
+      discount: null,
       currency: product.currency,
       image: sanitizeImagePath(product.image),
       gallery: product.gallery,
-      packSize: product.packSize,
+      packSize: product.packSize || (product.collectionId === 'tea' ? '25 g' : null),
       inStock: pInStock,
       stockQuantity: pOnHand,
       onHandQuantity: pOnHand,
@@ -336,10 +379,17 @@ export async function getProductBySlug(req, res, next) {
       sizes: product.variants.filter((v) => v.attributes?.size).map((v) => v.attributes.size),
     };
 
-    return res.status(200).json({
+    const responsePayload = {
       success: true,
       data: formattedProduct,
+    };
+
+    productsResponseCache.set(cacheKey, {
+      timestamp: now,
+      payload: responsePayload,
     });
+
+    return res.status(200).json(responsePayload);
   } catch (error) {
     next(error);
   }

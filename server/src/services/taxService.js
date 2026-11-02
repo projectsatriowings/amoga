@@ -128,7 +128,7 @@ export function validateGstin(gstin) {
   if (!gstinRegex.test(clean)) {
     return {
       isValid: false,
-      message: 'Invalid GSTIN format. Expected 15 characters (e.g., 33AAACA1234A1Z5).',
+      message: 'Invalid GSTIN format. Expected 15 characters (e.g., 33AYMPK1833D1ZQ).',
     };
   }
 

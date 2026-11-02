@@ -16,12 +16,11 @@ import {
   Zap,
   Bell,
 } from 'lucide-react';
-import { getJewelleryBySlug, JEWELLERY_PRODUCTS } from './data/products';
 import { JewelleryProductCard } from './components/JewelleryProductCard';
 
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
-import { useProductDetail } from '../../hooks/useProducts';
+import { useProductDetail, useProducts } from '../../hooks/useProducts';
 import { BackButton } from '../../components/ui/BackButton';
 import { resolveAvailability } from '../../utils/inventory';
 import { RestockModal } from '../../components/ui/RestockModal';
@@ -30,9 +29,8 @@ import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSe
 export function JewelleryProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const staticProduct = getJewelleryBySlug(slug);
-  const { product: apiProduct, isLoading } = useProductDetail('jewellery', slug, staticProduct);
-  const product = apiProduct || staticProduct;
+  const { product, isLoading } = useProductDetail('jewellery', slug);
+  const { products: allJewellery } = useProducts({ collection: 'jewellery' });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -98,8 +96,30 @@ export function JewelleryProductDetail() {
   }
 
   const isWishlisted = isInWishlist(product.id);
-  const gallery = product.gallery || [product.image];
-  const activeImage = gallery[activeImageIndex] || product.image;
+  const gallery = useMemo(() => {
+    const list = [product.image];
+    if (Array.isArray(product.gallery)) {
+      product.gallery.forEach((img) => {
+        if (img && !list.includes(img)) list.push(img);
+      });
+    }
+    return list;
+  }, [product]);
+
+  // Find variant corresponding to activeSize if selected
+  const activeVariant = useMemo(() => {
+    if (!activeSize || !Array.isArray(product.variants)) return null;
+    const cleanSize = activeSize.trim().toLowerCase();
+    const slug = cleanSize.replace(/\s+/g, '-');
+    return product.variants.find((v) => (
+      v.name?.toLowerCase() === cleanSize ||
+      v.sourceId?.toLowerCase() === slug ||
+      v.sourceId?.toLowerCase() === `size-${slug}` ||
+      v.attributes?.size?.toLowerCase() === cleanSize
+    ));
+  }, [activeSize, product]);
+
+  const activeImage = activeVariant?.image || gallery[activeImageIndex] || product.image;
   const hasPrice = product.price !== null;
 
   const handleAddToCart = () => {
@@ -193,9 +213,9 @@ export function JewelleryProductDetail() {
     }
   };
 
-  // Related products from same category, excluding current
-  const relatedProducts = JEWELLERY_PRODUCTS.filter(
-    (p) => p.category === product.category && p.id !== product.id
+  // Related products from database, excluding current
+  const relatedProducts = (allJewellery || []).filter(
+    (p) => p.id !== product.id && p.slug !== slug
   ).slice(0, 4);
 
   return (

@@ -11,14 +11,14 @@ import { prisma } from '../config/prisma.js';
  */
 
 /**
- * Lists all configured stock locations
+ * Lists all configured stock locations with linked event, venue, and dates
  */
 export async function listStockLocations({ type = null, isActive = null } = {}, client = prisma) {
   const where = {};
   if (type) where.type = type;
   if (isActive !== null && isActive !== undefined) where.isActive = Boolean(isActive);
 
-  return await client.stockLocation.findMany({
+  const locs = await client.stockLocation.findMany({
     where,
     include: {
       stallEvent: {
@@ -27,9 +27,11 @@ export async function listStockLocations({ type = null, isActive = null } = {}, 
           code: true,
           name: true,
           venue: true,
+          city: true,
           startDate: true,
           endDate: true,
           status: true,
+          assignedStaffIds: true,
         },
       },
       _count: {
@@ -45,24 +47,53 @@ export async function listStockLocations({ type = null, isActive = null } = {}, 
       { name: 'asc' },
     ],
   });
+
+  return locs.map((loc) => ({
+    ...loc,
+    venue: loc.stallEvent?.venue || loc.address || null,
+    startDate: loc.stallEvent?.startDate || null,
+    endDate: loc.stallEvent?.endDate || null,
+    assignedStaffIds: loc.stallEvent?.assignedStaffIds || [],
+  }));
 }
 
 /**
- * Creates or updates a stock location
+ * Creates a stock location and automatically links an event record for venue, dates, and staff
  */
 export async function createStockLocation(data, actorEmail, actorId = null, client = prisma) {
+  const code = data.code ? data.code.toUpperCase().trim() : `STALL-${Date.now().toString().slice(-4)}`;
+  const name = data.name.trim();
+
+  let stallEventId = data.stallEventId || null;
+  if (!stallEventId && (data.type === 'STALL' || !data.type)) {
+    const event = await client.stallEvent.create({
+      data: {
+        code,
+        name,
+        venue: data.venue ? data.venue.trim() : (data.city ? `${data.city} Exhibition` : 'Exhibition Ground'),
+        city: data.city ? data.city.trim() : 'Chennai',
+        startDate: data.startDate ? new Date(data.startDate) : new Date(),
+        endDate: data.endDate ? new Date(data.endDate) : new Date(Date.now() + 14 * 86400000),
+        status: data.isActive === false ? 'ARCHIVED' : 'ACTIVE',
+        assignedStaffIds: data.assignedStaffIds || (data.assignedStaffEmail ? [data.assignedStaffEmail] : []),
+      },
+    });
+    stallEventId = event.id;
+  }
+
   const loc = await client.stockLocation.create({
     data: {
-      code: data.code.toUpperCase().trim(),
-      name: data.name.trim(),
+      code,
+      name,
       type: data.type || 'STALL',
-      stallEventId: data.stallEventId || null,
+      stallEventId,
       address: data.address || null,
       city: data.city || null,
-      state: data.state || null,
+      state: data.state || 'Tamil Nadu',
       isActive: data.isActive !== undefined ? Boolean(data.isActive) : true,
       isDefault: Boolean(data.isDefault),
     },
+    include: { stallEvent: true },
   });
 
   await client.auditLog.create({
@@ -72,7 +103,7 @@ export async function createStockLocation(data, actorEmail, actorId = null, clie
       action: 'STOCK_LOCATION_CREATE',
       entityType: 'StockLocation',
       entityId: loc.id,
-      details: { code: loc.code, name: loc.name, type: loc.type },
+      details: { code: loc.code, name: loc.name, type: loc.type, city: loc.city, venue: data.venue },
     },
   });
 
@@ -80,36 +111,126 @@ export async function createStockLocation(data, actorEmail, actorId = null, clie
 }
 
 /**
- * Retrieves inventory balances for a specific stock location
- * with search, collection filters, and stock health thresholds
+ * Updates a stock location without breaking historical records, sales, or transfers
  */
-export async function getLocationInventory({
-  locationId,
-  collectionId = 'all',
-  query = '',
-  stockStatus = 'all',
-  page = 1,
-  limit = 50,
-} = {}, client = prisma) {
-  if (!locationId) {
-    throw new Error('Location ID is required to query location inventory.');
-  }
-
-  const location = await client.stockLocation.findUnique({
-    where: { id: locationId },
+export async function updateStockLocation(id, data, actorEmail, actorId = null, client = prisma) {
+  const current = await client.stockLocation.findUnique({
+    where: { id },
     include: { stallEvent: true },
   });
-
-  if (!location) {
+  if (!current) {
     const err = new Error('Stock location not found.');
     err.status = 404;
     throw err;
   }
 
+  const updateData = {};
+  if (data.name !== undefined && data.name.trim()) updateData.name = data.name.trim();
+  if (data.city !== undefined) updateData.city = data.city ? data.city.trim() : null;
+  if (data.address !== undefined) updateData.address = data.address ? data.address.trim() : null;
+  if (data.isActive !== undefined) updateData.isActive = Boolean(data.isActive);
+  if (data.code !== undefined && data.code.trim()) updateData.code = data.code.trim().toUpperCase();
+
+  const updatedLoc = await client.stockLocation.update({
+    where: { id },
+    data: updateData,
+  });
+
+  if (current.stallEventId) {
+    const eventUpdate = {};
+    if (data.name !== undefined && data.name.trim()) eventUpdate.name = data.name.trim();
+    if (data.venue !== undefined) eventUpdate.venue = data.venue ? data.venue.trim() : 'Exhibition Grounds';
+    if (data.city !== undefined) eventUpdate.city = data.city ? data.city.trim() : 'Chennai';
+    if (data.startDate) eventUpdate.startDate = new Date(data.startDate);
+    if (data.endDate) eventUpdate.endDate = new Date(data.endDate);
+    if (data.isActive !== undefined) eventUpdate.status = data.isActive ? 'ACTIVE' : 'ARCHIVED';
+    if (data.assignedStaffIds !== undefined) eventUpdate.assignedStaffIds = data.assignedStaffIds;
+
+    await client.stallEvent.update({
+      where: { id: current.stallEventId },
+      data: eventUpdate,
+    });
+  } else if (data.venue || data.startDate) {
+    const event = await client.stallEvent.create({
+      data: {
+        code: updatedLoc.code,
+        name: updatedLoc.name,
+        venue: data.venue ? data.venue.trim() : 'Exhibition Grounds',
+        city: updatedLoc.city || 'Chennai',
+        startDate: data.startDate ? new Date(data.startDate) : new Date(),
+        endDate: data.endDate ? new Date(data.endDate) : new Date(Date.now() + 7 * 86400000),
+        status: updatedLoc.isActive ? 'ACTIVE' : 'ARCHIVED',
+        assignedStaffIds: data.assignedStaffIds || [],
+      },
+    });
+    await client.stockLocation.update({
+      where: { id },
+      data: { stallEventId: event.id },
+    });
+  }
+
+  await client.auditLog.create({
+    data: {
+      adminEmail: actorEmail,
+      adminId: actorId,
+      action: 'STOCK_LOCATION_UPDATE',
+      entityType: 'StockLocation',
+      entityId: id,
+      details: { ...updateData, venue: data.venue },
+    },
+  });
+
+  return await client.stockLocation.findUnique({
+    where: { id },
+    include: { stallEvent: true },
+  });
+}
+
+/**
+ * Toggles a stock location active/inactive
+ */
+export async function toggleStockLocationActive(id, actorEmail, actorId = null, client = prisma) {
+  const current = await client.stockLocation.findUnique({ where: { id } });
+  if (!current) {
+    const err = new Error('Stock location not found.');
+    err.status = 404;
+    throw err;
+  }
+  return await updateStockLocation(id, { isActive: !current.isActive }, actorEmail, actorId, client);
+}
+
+/**
+ * Retrieves inventory balances for a specific stock location or all stalls
+ * with search, collection filters, and stock health thresholds
+ */
+export async function getLocationInventory({
+  locationId = 'all',
+  collectionId = 'all',
+  query = '',
+  stockStatus = 'all',
+  page = 1,
+  limit = 100,
+} = {}, client = prisma) {
+  let location = null;
+  const where = {};
+
+  if (locationId && locationId !== 'all') {
+    location = await client.stockLocation.findUnique({
+      where: { id: locationId },
+      include: { stallEvent: true },
+    });
+    if (!location) {
+      const err = new Error('Stock location not found.');
+      err.status = 404;
+      throw err;
+    }
+    where.locationId = locationId;
+  } else {
+    // When "all" is queried, include all active stock locations
+    where.location = { isActive: true };
+  }
+
   const cleanQuery = String(query).trim().toLowerCase();
-  const where = {
-    locationId,
-  };
 
   if (collectionId && collectionId !== 'all') {
     where.product = { collectionId };
@@ -118,6 +239,16 @@ export async function getLocationInventory({
   const rawInventories = await client.locationInventory.findMany({
     where,
     include: {
+      location: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          type: true,
+          city: true,
+          isActive: true,
+        },
+      },
       product: {
         select: {
           id: true,
@@ -144,7 +275,11 @@ export async function getLocationInventory({
         },
       },
     },
-    orderBy: { updatedAt: 'desc' },
+    orderBy: [
+      { location: { name: 'asc' } },
+      { product: { name: 'asc' } },
+      { updatedAt: 'desc' },
+    ],
   });
 
   // Filter in memory for query & stock status
@@ -168,8 +303,10 @@ export async function getLocationInventory({
     return {
       id: inv.id,
       locationId: inv.locationId,
-      locationName: location.name,
-      locationType: location.type,
+      locationName: inv.location?.name || location?.name || 'Location',
+      locationCode: inv.location?.code || location?.code || '',
+      locationType: inv.location?.type || location?.type || 'STALL',
+      locationCity: inv.location?.city || location?.city || '',
       productId: p.id,
       productName: p.name,
       variantId: v?.id || null,
@@ -691,14 +828,43 @@ export async function getStallInventoryReport({ locationId = null, startDate = n
     },
   });
 
-  return locations.map((loc) => {
-    const totalItems = loc.inventories.reduce((acc, inv) => acc + inv.onHandQuantity, 0);
-    const totalValuation = loc.inventories.reduce((acc, inv) => {
-      const price = inv.variant?.price !== null && inv.variant?.price !== undefined
-        ? Number(inv.variant.price)
-        : Number(inv.product.price || 0);
-      return acc + (price * inv.onHandQuantity);
-    }, 0);
+  const lowStockItems = [];
+  const outOfStockItems = [];
+
+  const locationsSummary = locations.map((loc) => {
+    let totalItems = 0;
+    let totalValuation = 0;
+
+    for (const inv of loc.inventories) {
+      const p = inv.product;
+      const v = inv.variant;
+      const onHand = inv.onHandQuantity || 0;
+      const reserved = inv.reservedQuantity || 0;
+      const available = Math.max(0, onHand - reserved);
+      const threshold = inv.reorderThreshold || 5;
+
+      totalItems += onHand;
+      const price = v?.price !== null && v?.price !== undefined
+        ? Number(v.price)
+        : Number(p?.price || 0);
+      totalValuation += price * onHand;
+
+      const itemRecord = {
+        id: inv.id,
+        stockLocation: { id: loc.id, name: loc.name, type: loc.type },
+        product: p,
+        variant: v,
+        sku: v?.sku || p?.sku || 'N/A',
+        availableQuantity: available,
+        lowStockThreshold: threshold,
+      };
+
+      if (available <= 0) {
+        outOfStockItems.push(itemRecord);
+      } else if (available <= threshold) {
+        lowStockItems.push(itemRecord);
+      }
+    }
 
     return {
       locationId: loc.id,
@@ -712,4 +878,11 @@ export async function getStallInventoryReport({ locationId = null, startDate = n
       isActive: loc.isActive,
     };
   });
+
+  return {
+    locations: locationsSummary,
+    locationsSummary,
+    lowStockItems,
+    outOfStockItems,
+  };
 }

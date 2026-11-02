@@ -40,25 +40,48 @@ export const COLLECTION_INFO = {
   sarees: {
     id: 'sarees',
     name: 'Heritage Sarees',
-    categories: ['silk', 'traditional', 'festive', 'wedding', 'contemporary'],
+    categories: ['saree', 'salwar', 'half-saree', 'silk', 'traditional', 'festive', 'wedding', 'contemporary'],
     categoryNames: {
-      silk: 'Silk Sarees',
-      traditional: 'Traditional Weaves',
-      festive: 'Festive Collection',
-      wedding: 'Bridal & Wedding Sarees',
-      contemporary: 'Contemporary Weaves',
+      saree: 'Saree',
+      salwar: 'Salwar',
+      'half-saree': 'Half Saree',
+      silk: 'Saree',
+      traditional: 'Saree',
+      festive: 'Saree',
+      wedding: 'Saree',
+      contemporary: 'Saree',
     },
     description: 'Handloom Kanchipuram mulberry silks, Banarasi brocades, and heirloom drapes woven on traditional pit looms.',
   },
   jewellery: {
     id: 'jewellery',
     name: 'Sterling Silver',
-    categories: ['rings', 'necklaces', 'earrings', 'bracelets', 'traditional'],
+    categories: [
+      'chain-with-pendant',
+      'chain-pendant-earring',
+      'earring',
+      'anklets',
+      'toe-rings',
+      'bracelet',
+      'necklace',
+      'rings',
+      'necklaces',
+      'earrings',
+      'bracelets',
+      'traditional',
+    ],
     categoryNames: {
+      'chain-with-pendant': 'Chain with Pendant',
+      'chain-pendant-earring': 'Chain Pendant Earring',
+      earring: 'Earring',
+      anklets: 'Anklets',
+      'toe-rings': 'Toe Rings',
+      bracelet: 'Bracelet',
+      necklace: 'Necklace',
       rings: 'Rings',
-      necklaces: 'Necklaces & Pendants',
-      earrings: 'Earrings',
-      bracelets: 'Bracelets & Cuffs',
+      necklaces: 'Necklace',
+      earrings: 'Earring',
+      bracelets: 'Bracelet',
       traditional: 'Traditional Silver',
     },
     description: 'BIS 925 hallmarked sterling silver jewellery featuring natural gemstones, architectural bezels, and rhodium anti-tarnish finish.',
@@ -316,8 +339,6 @@ export async function generateProductImportTemplate() {
     { header: 'Gallery Image URLs', key: 'gallery', width: 38, type: 'optional' },
     { header: 'Pack Size / Weight', key: 'packSize', width: 20, type: 'optional' },
     { header: 'Selling Price (INR)', key: 'price', width: 18, type: 'optional' },
-    { header: 'MRP / Compare Price (INR)', key: 'originalPrice', width: 24, type: 'optional' },
-    { header: 'Discount Label', key: 'discount', width: 16, type: 'optional' },
     { header: 'SKU (Auto-generated if blank)', key: 'sku', width: 26, type: 'optional' },
     { header: 'HSN Code *', key: 'hsnCode', width: 18, type: 'mandatory' },
     { header: 'GST Rate % *', key: 'gstRate', width: 18, type: 'mandatory' },
@@ -440,8 +461,6 @@ export async function generateProductImportTemplate() {
       gallery: '',
       packSize: '150 g',
       price: 249,
-      originalPrice: 299,
-      discount: '17% OFF',
       sku: 'AMOGA-SOUP001',
       hsnCode: '2106',
       gstRate: 12,
@@ -463,7 +482,7 @@ export async function generateProductImportTemplate() {
       food_prep: 'Mix 2 tbsp with 200ml boiling water. Simmer for 2 mins and serve hot.',
       food_storage: 'Store in an airtight container in a cool, dry place.',
       food_shelfLife: '9 Months',
-      food_compliance: 'FSSAI Lic. No. 11522001000456',
+      food_compliance: 'FSSAI Lic. No. 22425540000677',
     },
     {
       collectionId: 'tea',
@@ -476,10 +495,8 @@ export async function generateProductImportTemplate() {
       categoryName: 'Botanical Flower Brews',
       tagline: 'Whole chamomile blossoms with Himalayan spearmint',
       gallery: '',
-      packSize: '50 g Tin',
+      packSize: '25 g',
       price: 499,
-      originalPrice: 599,
-      discount: '16% OFF',
       sku: 'AMOGA-TEA001',
       hsnCode: '0902',
       gstRate: 5,
@@ -517,8 +534,6 @@ export async function generateProductImportTemplate() {
       gallery: '',
       packSize: 'Standard (6.3 m)',
       price: 18999,
-      originalPrice: 22000,
-      discount: '14% OFF',
       sku: 'AMOGA-SAR001',
       hsnCode: '5007',
       gstRate: 5,
@@ -555,8 +570,6 @@ export async function generateProductImportTemplate() {
       gallery: '',
       packSize: '1 Piece',
       price: 3499,
-      originalPrice: 4200,
-      discount: '17% OFF',
       status: 'Published',
       inStock: 'Yes',
       stockQuantity: 15,
@@ -1105,7 +1118,7 @@ export async function generateProductImportTemplate() {
       collection: 'Wholesome Pantry (food)',
       description: 'FSSAI License number or regulatory registration.',
       format: 'Text string / license number',
-      example: 'FSSAI Lic. No. 11522001000456',
+      example: 'FSSAI Lic. No. 22425540000677',
     },
 
     // Category Specific - Wellness Tea
@@ -1872,8 +1885,10 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         parsedThreshold = Math.floor(thresholdVal);
       }
 
-      // 9. Collect Category-Specific Specs
+      // 9. Collect Category-Specific Specs & Pack Size
       const specs = {};
+      let finalPackSize = packSize ? String(packSize).trim() : null;
+
       if (collectionId === 'food') {
         const ing = getCellByNormalized(row, headerMap, 'pantry: ingredients', 'pantry ingredients');
         const allg = getCellByNormalized(row, headerMap, 'pantry: allergens', 'pantry allergens');
@@ -1926,6 +1941,30 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         if (harv) specs.harvestSeason = harv;
         if (stor) specs.storage = stor;
         if (disc) specs.disclaimer = disc;
+
+        // Validate Pack Size / Weight for Wellness Tea
+        if (!finalPackSize) {
+          finalPackSize = '25 g';
+        } else {
+          const match = finalPackSize.match(/^(\d+(?:\.\d+)?)\s*(?:g|gm|grams?|kg)?$/i);
+          let num = null;
+          if (match) {
+            num = parseFloat(match[1]);
+            if (/kg/i.test(finalPackSize)) num = num * 1000;
+          }
+          if (!match || isNaN(num) || num <= 0 || num > 5000) {
+            errors.push({
+              sheet: 'Products',
+              row: r,
+              column: 'Pack Size / Weight',
+              code: 'INVALID_TEA_WEIGHT',
+              message: `Invalid tea pack weight "${packSize}". Wellness Tea weight must be a positive number in grams (e.g. 25 g).`,
+            });
+          } else {
+            const formattedNum = Number.isInteger(num) ? num : parseFloat(num.toFixed(2));
+            finalPackSize = `${formattedNum} g`;
+          }
+        }
       } else if (collectionId === 'sarees') {
         const fab = getCellByNormalized(row, headerMap, 'sarees: fabric', 'sarees fabric');
         const wea = getCellByNormalized(row, headerMap, 'sarees: weave type', 'sarees weave');
@@ -2008,7 +2047,7 @@ export async function validateProductImportWorkbook(buffer, options = {}) {
         description,
         image,
         gallery,
-        packSize: packSize || null,
+        packSize: finalPackSize || null,
         price: priceVal !== 'INVALID' ? priceVal : null,
         originalPrice: origPriceVal !== 'INVALID' ? origPriceVal : null,
         discount: discount || null,
@@ -2351,8 +2390,8 @@ export async function executeProductImport(validationResult, options = {}, admin
                 gallery: prod.gallery,
                 packSize: prod.packSize,
                 price: prod.price !== null ? prod.price : null,
-                originalPrice: prod.originalPrice !== null ? prod.originalPrice : null,
-                discount: prod.discount,
+                originalPrice: null,
+                discount: null,
                 isActive: Boolean(prod.isActive),
                 inStock: Boolean(prod.inStock),
                 stockQuantity: prod.stockQuantity,

@@ -5,7 +5,6 @@ import teaHero from '../../assets/images/food-teas-hero.jpg';
 import { Container } from '../../components/ui/Container';
 import { BotanicalSideAnimations } from './components/BotanicalAnimations';
 import { TeaProductCard } from './components/TeaProductCard';
-import { TEA_PRODUCTS } from './data/products';
 
 import { useProducts } from '../../hooks/useProducts';
 import { useCollection } from '../../hooks/useCollection';
@@ -13,9 +12,8 @@ import { ExploreCollectionsSection } from '../collections';
 
 export function TeaStorefront() {
   const { collection } = useCollection('tea');
-  const { products: apiProducts } = useProducts({
+  const { products: apiProducts, isLoading } = useProducts({
     collection: 'tea',
-    fallbackData: TEA_PRODUCTS,
   });
 
   const tagline = (collection?.tagline || 'BOTANICAL WELLNESS').toUpperCase();
@@ -30,11 +28,7 @@ export function TeaStorefront() {
   const textColor = tc.textColor || '#2C1E11';
 
   const displayProducts = React.useMemo(() => {
-    const raw = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
-    return raw.map((p) => {
-      const fallback = TEA_PRODUCTS.find((f) => f.slug === p.slug || f.id === p.id);
-      return fallback ? { ...fallback, ...p } : p;
-    });
+    return apiProducts || [];
   }, [apiProducts]);
 
   return (
@@ -140,7 +134,7 @@ export function TeaStorefront() {
                     Botanical Tea Rituals
                   </div>
                   <p className="text-[11px] text-white/80 font-sans">
-                    Butterfly Blue Pea &bull; Moringa Leaf &bull; Cinnamon &bull; Sarsaparilla &bull; Hibiscus
+                    Single Estate Leaves &bull; Botanical Infusions &bull; Ayurvedic Herbs & Spices
                   </p>
                 </div>
               </div>
@@ -175,11 +169,27 @@ export function TeaStorefront() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {displayProducts.slice(0, 6).map((product) => (
-              <TeaProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded-2xl bg-[#FFFDF5]/60 border border-[#B88E38]/20 p-4 h-72 animate-pulse" />
+              ))}
+            </div>
+          ) : displayProducts.length === 0 ? (
+            <div className="py-16 text-center bg-[#FFFDF5]/80 border border-[#B88E38]/25 rounded-3xl p-8 max-w-xl mx-auto space-y-3">
+              <Sparkles className="w-8 h-8 text-[#8C6320] mx-auto opacity-70" />
+              <h3 className="text-xl font-serif text-[#2C1E11]">Our Tea Catalogue is Being Curated</h3>
+              <p className="text-xs text-[#543B25] max-w-sm mx-auto leading-relaxed">
+                New botanical blends and herbal infusions are currently being prepared. Check back shortly or explore our other collections below.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {displayProducts.slice(0, 6).map((product) => (
+                <TeaProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </Container>
       </section>
 

@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma.js';
+import { registerCatalogueInvalidation } from '../controllers/productsController.js';
 
 /**
  * AMOGA EXECUTIVE ADMIN ANALYTICS SERVICE
@@ -32,6 +33,15 @@ export const ALL_ORDER_STATUSES = [
 ];
 
 export const CANONICAL_COLLECTIONS = ['food', 'tea', 'sarees', 'jewellery'];
+
+// High-speed in-memory cache for executive dashboard metrics
+const dashboardCache = new Map();
+const DASHBOARD_CACHE_TTL_MS = 25 * 1000; // 25 seconds TTL
+
+export function invalidateDashboardCache() {
+  dashboardCache.clear();
+}
+registerCatalogueInvalidation(invalidateDashboardCache);
 
 /**
  * Format a Date object as YYYY-MM-DD in UTC
@@ -136,6 +146,12 @@ export function resolveDateRange({ range = '30d', startDate, endDate } = {}) {
  */
 export async function getDashboardMetrics(queryOptions = {}) {
   const { start, end, rangeKey, daysCount } = resolveDateRange(queryOptions);
+  const cacheKey = [rangeKey, start ? toDateKey(start) : 'none', end ? toDateKey(end) : 'none'].join(':');
+  const now = Date.now();
+  const cached = dashboardCache.get(cacheKey);
+  if (cached && (now - cached.timestamp < DASHBOARD_CACHE_TTL_MS)) {
+    return cached.data;
+  }
 
   // Date filter objects for Prisma
   const orderDateFilter = {};
@@ -431,11 +447,11 @@ export async function getDashboardMetrics(queryOptions = {}) {
   const trendMap = new Map();
 
   let bucketKeys = [];
-  const now = new Date();
+  const currentDate = new Date();
   if (rangeKey === 'all') {
     if (trendOrders.length > 0) {
       const firstDateKey = toDateKey(trendOrders[0].createdAt);
-      const todayKey = toDateKey(now);
+      const todayKey = toDateKey(currentDate);
       const lastOrderKey = toDateKey(trendOrders[trendOrders.length - 1].createdAt);
       const lastDateKey = todayKey > lastOrderKey ? todayKey : lastOrderKey;
       bucketKeys = generateUtcDateRange(firstDateKey, lastDateKey);
@@ -601,6 +617,13 @@ export async function getDashboardMetrics(queryOptions = {}) {
       inStock: p.inStock,
     })),
   };
+
+  dashboardCache.set(cacheKey, {
+    timestamp: Date.now(),
+    data: result,
+  });
+
+  return result;
 }
 
 /**

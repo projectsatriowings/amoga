@@ -9,19 +9,18 @@ import { SoupCollectionSection } from './components/SoupCollectionSection';
 import { FoodPromoBanner } from './components/FoodPromoBanner';
 import { Container } from '../../components/ui/Container';
 import { SectionHeading } from '../../components/ui/SectionHeading';
-import { FOOD_PRODUCTS, getFeaturedProducts } from './data/products';
 import { useProducts } from '../../hooks/useProducts';
 import { ExploreCollectionsSection } from '../collections';
+import { Sparkles } from 'lucide-react';
 
 export function FoodStorefront() {
-  const { products: apiProducts } = useProducts({
+  const { products: apiProducts, isLoading } = useProducts({
     collection: 'food',
-    fallbackData: FOOD_PRODUCTS,
   });
   const [activeTab, setActiveTab] = useState('all');
 
   const featuredProducts = React.useMemo(() => {
-    const list = apiProducts && apiProducts.length > 0 ? apiProducts : FOOD_PRODUCTS;
+    const list = apiProducts || [];
     const featured = list.filter((p) => p.isFeatured || p.featured);
     return featured.length > 0 ? featured : list.slice(0, 8);
   }, [apiProducts]);
@@ -77,12 +76,28 @@ export function FoodStorefront() {
             </div>
           </div>
 
-          {/* Product Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredFeatured.map((product) => (
-              <FoodProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {/* Product Cards Grid or Empty State */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-2xl bg-white border border-[#E5E0D5] p-4 h-72 animate-pulse" />
+              ))}
+            </div>
+          ) : filteredFeatured.length === 0 ? (
+            <div className="py-16 text-center bg-white border border-[#E5E0D5] rounded-3xl p-8 max-w-xl mx-auto space-y-3">
+              <Sparkles className="w-8 h-8 text-[#173B2A] mx-auto opacity-70" />
+              <h3 className="text-xl font-serif text-[#292820]">Pantry Blends Being Curated</h3>
+              <p className="text-xs text-[#7A7167] max-w-sm mx-auto leading-relaxed">
+                Fresh batches of soup mixes, millet recipes, and traditional rice podis are currently being catalogued. Check back soon or browse categories.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredFeatured.map((product) => (
+                <FoodProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
 
           <div className="mt-12 text-center">
             <Link

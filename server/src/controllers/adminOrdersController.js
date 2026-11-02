@@ -148,6 +148,13 @@ export async function getOrderById(req, res) {
         trackingEvents: {
           orderBy: { createdAt: 'asc' },
         },
+        returnRequests: {
+          include: {
+            items: true,
+            evidence: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
 
@@ -177,6 +184,7 @@ export async function getOrderById(req, res) {
           amount: Number(p.amount),
         })),
         trackingEvents: order.trackingEvents || [],
+        returnRequests: order.returnRequests || [],
       },
       allowedNextStatuses: VALID_TRANSITIONS[order.status] || [],
     });

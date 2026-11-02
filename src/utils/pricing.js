@@ -167,28 +167,100 @@ export function calculateGstInclusiveBreakdown(inclusivePrice = 0, gstRate = 5) 
  * - 3 pcs: ₹150
  * - 4 pcs: ₹200
  * - 5+ pcs: ₹200 + (pcs - 4) * ₹50
- * - Discounted product subtotal >= ₹2,500: Free Shipping
+/**
+ * Client-side estimate for India Post shipping charges
+ * Authoritative rules:
+ * - Standard collections (Food, Sarees, Jewellery): subtotal >= ₹2,500 qualifies for Free Shipping
+ * - Wellness Tea: at least 5 tea packs AND subtotal >= ₹1,000 qualifies for Free Shipping
+ * - Mixed carts: free shipping applies if standard >= ₹2,500 OR tea meets (>=5 packs & >=₹1,000)
+ * - Otherwise: standard quantity brackets (1-2: ₹100, 3: ₹150, 4: ₹200, 5+: ₹200 + ₹50/extra)
  */
 export function estimateIndiaPostShipping({
+  items = [],
   itemCount = 0,
   subtotal = 0,
   discount = 0,
-  freeShippingThreshold = 2000,
+  freeShippingThreshold = 2500,
   thresholdOperator = 'GTE',
   brackets = null,
   beyondMaxBaseCharge = 200,
   beyondMaxChargePerPiece = 50,
 }) {
-  const count = Number(itemCount) || 0;
+  let count = Number(itemCount) || 0;
+  let teaQuantity = 0;
+  let teaSubtotal = 0;
+  let standardQuantity = 0;
+  let standardSubtotal = 0;
+
+  if (Array.isArray(items) && items.length > 0) {
+    count = 0;
+    for (const item of items) {
+      const qty = Number(item.quantity) || 0;
+      if (qty <= 0) continue;
+      count += qty;
+
+      const colId = (item.collectionId || item.collection?.id || item.collectionSlug || item.product?.collectionId || '').toLowerCase();
+      const colName = (item.collectionName || item.collection?.name || item.product?.collection?.name || '').toLowerCase();
+      const isTea = colId === 'tea' || colName.includes('tea') || colName.includes('wellness');
+
+      const unitPrice = Number(item.unitPrice !== undefined ? item.unitPrice : (item.priceRupees !== undefined ? item.priceRupees : (item.price !== undefined ? item.price : (item.product?.price || 0))));
+      const lineTotal = Number(item.lineTotal !== undefined ? item.lineTotal : (unitPrice * qty));
+
+      if (isTea) {
+        teaQuantity += qty;
+        teaSubtotal += lineTotal;
+      } else {
+        standardQuantity += qty;
+        standardSubtotal += lineTotal;
+      }
+    }
+  }
+
   const netSubtotal = Math.max(0, (Number(subtotal) || 0) - (Number(discount) || 0));
 
   if (count === 0) {
-    return { amount: 0, isFree: true, ruleApplied: 'EMPTY' };
+    return {
+      amount: 0,
+      isFree: true,
+      ruleApplied: 'EMPTY',
+      teaQuantity,
+      netTeaSubtotal,
+      standardQuantity,
+      netStandardSubtotal,
+    };
   }
 
-  const isFree = thresholdOperator === 'GT'
-    ? netSubtotal > freeShippingThreshold
-    : netSubtotal >= freeShippingThreshold;
+  const discountFactor = subtotal > 0 ? Math.max(0, netSubtotal / Number(subtotal)) : 1;
+  const netTea = teaSubtotal * discountFactor;
+  const netStandard = standardSubtotal * discountFactor;
+
+  const isStandardFree = standardQuantity > 0 && (
+    thresholdOperator === 'GT' ? netStandard > freeShippingThreshold : netStandard >= freeShippingThreshold
+  );
+
+  const isTeaFree = teaQuantity >= 5 && (
+    thresholdOperator === 'GT' ? netTea > 1000 : netTea >= 1000
+  );
+
+  let isFree = false;
+  let freeShippingReason = '';
+
+  const hasCollectionMetadata = teaQuantity > 0 || standardQuantity > 0;
+  if (hasCollectionMetadata) {
+    if (isStandardFree && isTeaFree) {
+      isFree = true;
+      freeShippingReason = 'Standard items qualify (≥₹2,500) and Tea items qualify (≥5 packs & ≥₹1,000)';
+    } else if (isStandardFree) {
+      isFree = true;
+      freeShippingReason = `Standard collection items qualify (≥₹${freeShippingThreshold})`;
+    } else if (isTeaFree) {
+      isFree = true;
+      freeShippingReason = `Wellness Tea items qualify (${teaQuantity} packs & ≥₹1,000)`;
+    }
+  } else {
+    isFree = thresholdOperator === 'GT' ? netSubtotal > freeShippingThreshold : netSubtotal >= freeShippingThreshold;
+    if (isFree) freeShippingReason = `Order subtotal meets standard free shipping threshold (≥₹${freeShippingThreshold})`;
+  }
 
   if (isFree) {
     return {
@@ -196,6 +268,11 @@ export function estimateIndiaPostShipping({
       isFree: true,
       ruleApplied: 'FREE_SHIPPING_THRESHOLD',
       threshold: freeShippingThreshold,
+      freeShippingReason,
+      teaQuantity,
+      netTeaSubtotal: netTea,
+      standardQuantity,
+      netStandardSubtotal: netStandard,
     };
   }
 
@@ -214,6 +291,10 @@ export function estimateIndiaPostShipping({
       isFree: Number(matched.charge) === 0,
       ruleApplied: 'QUANTITY_BRACKET',
       bracket: matched,
+      teaQuantity,
+      netTeaSubtotal: netTea,
+      standardQuantity,
+      netStandardSubtotal: netStandard,
     };
   }
 
@@ -230,6 +311,10 @@ export function estimateIndiaPostShipping({
     isFree: false,
     ruleApplied: 'BEYOND_MAX_INCREMENTAL',
     extraPieces: count - maxQty,
+    teaQuantity,
+    netTeaSubtotal: netTea,
+    standardQuantity,
+    netStandardSubtotal: netStandard,
   };
 }
 

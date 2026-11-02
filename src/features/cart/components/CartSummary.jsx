@@ -65,6 +65,7 @@ export const CartSummary = () => {
 
   // Authoritative India Post shipping estimate
   const shippingEst = estimateIndiaPostShipping({
+    items: selectedItems,
     itemCount: selectedQtyTotal,
     subtotal: selectedSubtotal,
     freeShippingThreshold,
@@ -74,7 +75,38 @@ export const CartSummary = () => {
   const estimatedShippingCharge = isSelectionEmpty ? 0 : shippingEst.amount;
   const isComplimentaryShipping = isSelectionEmpty || shippingEst.isFree;
   const finalPayableTotal = Math.max(0, selectedSubtotal + estimatedShippingCharge);
-  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - selectedSubtotal);
+
+  // Determine guidance message for free shipping based on cart composition
+  const teaQty = shippingEst.teaQuantity || 0;
+  const teaSub = shippingEst.netTeaSubtotal || 0;
+  const stdQty = shippingEst.standardQuantity || 0;
+  const stdSub = shippingEst.netStandardSubtotal || 0;
+
+  let freeShippingGuidance = '';
+  if (!isComplimentaryShipping && !isSelectionEmpty) {
+    if (teaQty > 0 && stdQty === 0) {
+      // Only tea in cart
+      const neededPacks = Math.max(0, 5 - teaQty);
+      const neededAmount = Math.max(0, 1000 - teaSub);
+      if (neededPacks > 0 && neededAmount > 0) {
+        freeShippingGuidance = `Add ${neededPacks} more tea pack${neededPacks > 1 ? 's' : ''} and ₹${neededAmount.toLocaleString('en-IN')} more to get Free Delivery (Requires ≥5 packs & ≥₹1,000)`;
+      } else if (neededPacks > 0) {
+        freeShippingGuidance = `Add ${neededPacks} more tea pack${neededPacks > 1 ? 's' : ''} to get Free Delivery (Requires ≥5 packs & ≥₹1,000)`;
+      } else {
+        freeShippingGuidance = `Add ₹${neededAmount.toLocaleString('en-IN')} more in tea to get Free Delivery (Requires ≥5 packs & ≥₹1,000)`;
+      }
+    } else if (stdQty > 0 && teaQty === 0) {
+      // Only standard collections
+      const remainingForFreeShipping = Math.max(0, freeShippingThreshold - stdSub);
+      freeShippingGuidance = `Add ₹${remainingForFreeShipping.toLocaleString('en-IN')} more to qualify for Free India Post Delivery (Orders ≥ ₹${freeShippingThreshold.toLocaleString('en-IN')})`;
+    } else {
+      // Mixed cart
+      const remainingForFreeShipping = Math.max(0, freeShippingThreshold - stdSub);
+      const neededPacks = Math.max(0, 5 - teaQty);
+      const neededAmount = Math.max(0, 1000 - teaSub);
+      freeShippingGuidance = `Qualify for Free Delivery: standard items reach ₹${freeShippingThreshold.toLocaleString('en-IN')} (add ₹${remainingForFreeShipping.toLocaleString('en-IN')}), OR tea reaches ≥5 packs & ≥₹1,000 (currently ${teaQty} packs, ₹${Math.round(teaSub)}).`;
+    }
+  }
 
   return (
     <div
@@ -116,12 +148,19 @@ export const CartSummary = () => {
           <Truck className={`w-4 h-4 shrink-0 ${isComplimentaryShipping ? 'text-emerald-600' : 'text-[#8C7A6B]'}`} />
           <div className="flex-1">
             {isComplimentaryShipping ? (
-              <p className="font-semibold text-emerald-800">
-                Unlocked: Free India Post Delivery!
-              </p>
+              <div>
+                <p className="font-semibold text-emerald-800">
+                  Unlocked: Free India Post Delivery!
+                </p>
+                {shippingEst.freeShippingReason && (
+                  <p className="text-[11px] text-emerald-700 mt-0.5">
+                    {shippingEst.freeShippingReason}
+                  </p>
+                )}
+              </div>
             ) : (
               <p className="leading-tight">
-                Add <span className="font-semibold text-[var(--collection-accent)]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</span> more to qualify for <span className="font-semibold">Free India Post Delivery</span> (Orders {shippingThresholdOperator === 'GT' ? '>' : '≥'} ₹{freeShippingThreshold.toLocaleString('en-IN')})
+                {freeShippingGuidance}
               </p>
             )}
           </div>
@@ -152,7 +191,7 @@ export const CartSummary = () => {
             {!isSelectionEmpty && (
               <span className="block text-[10px] text-stone-500 mt-0.5">
                 {isComplimentaryShipping
-                  ? `Complimentary (Subtotal ${shippingThresholdOperator === 'GT' ? '>' : '≥'} ₹${freeShippingThreshold.toLocaleString('en-IN')})`
+                  ? (shippingEst.freeShippingReason || `Complimentary (Free Shipping Qualified)`)
                   : selectedQtyTotal <= 2
                   ? '1–2 pieces bracket (₹100)'
                   : selectedQtyTotal === 3

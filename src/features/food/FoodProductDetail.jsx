@@ -13,7 +13,6 @@ import {
   Zap,
   Bell,
 } from 'lucide-react';
-import { getProductBySlug, getProductsByCategory } from './data/products';
 import { FoodProductCard } from './components/FoodProductCard';
 import { resolveAvailability } from '../../utils/inventory.js';
 import { RestockModal } from '../../components/ui/RestockModal.jsx';
@@ -22,16 +21,15 @@ import { ProductReviewsSection } from '../../components/reviews/ProductReviewsSe
 import { useStore } from '../../store/useStore';
 import { Container } from '../../components/ui/Container';
 import { Button } from '../../components/ui/Button';
-import { useProductDetail } from '../../hooks/useProducts';
+import { useProductDetail, useProducts } from '../../hooks/useProducts';
 import { isValidPrice } from '../../utils/pricing';
 import { BackButton } from '../../components/ui/BackButton';
 
 export function FoodProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const staticProduct = getProductBySlug(slug);
-  const { product: apiProduct, isLoading } = useProductDetail('food', slug, staticProduct);
-  const product = apiProduct || staticProduct;
+  const { product, isLoading } = useProductDetail('food', slug);
+  const { products: allFoodProducts } = useProducts({ collection: 'food' });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -84,9 +82,9 @@ export function FoodProductDetail() {
   const inWishlist = isInWishlist(product.id);
   const hasPrice = product.price !== null;
 
-  // Related products from the same category
-  const relatedProducts = getProductsByCategory(product.category)
-    .filter((p) => p.id !== product.id)
+  // Related products from database
+  const relatedProducts = (allFoodProducts || [])
+    .filter((p) => p.id !== product.id && p.slug !== slug)
     .slice(0, 4);
 
   const handleAddToCart = () => {
@@ -234,11 +232,6 @@ export function FoodProductDetail() {
                     <span className="text-3xl font-sans font-bold text-[#172B1C] tabular-nums">
                       ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
                     </span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-black/40 line-through font-sans tabular-nums">
-                        ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toLocaleString('en-IN') : product.originalPrice}
-                      </span>
-                    )}
                   </div>
                   <div className="text-[11px] text-[#557C36] font-medium">
                     Inclusive of GST • India Post delivery calculated at checkout
@@ -372,6 +365,36 @@ export function FoodProductDetail() {
                 <Truck className="w-4 h-4 text-[#287A25]" />
                 <span>Dispatched Fresh from Origin</span>
               </div>
+            </div>
+
+            {/* Food Safety & Transit Guarantee */}
+            <div className="p-3.5 rounded-2xl bg-white/70 border border-[#287A25]/20 text-xs space-y-1.5 mt-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-[#172B1C]">
+                  <div className="bg-white rounded px-1.5 py-0.5 border border-[#287A25]/20 flex items-center">
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/en/e/e2/FSSAI_logo.png"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = '/fssai-logo.png';
+                      }}
+                      alt="FSSAI"
+                      className="h-4 w-auto object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <span className="font-mono text-xs">Lic. No. 22425540000677</span>
+                </div>
+                <Link
+                  to="/returns-policy"
+                  className="text-[11px] font-semibold text-[#287A25] hover:underline"
+                >
+                  Transit Policy &rarr;
+                </Link>
+              </div>
+              <p className="text-[11px] text-[#405244] leading-relaxed">
+                Hygiene sealed pantry item. Non-returnable once opened; 100% immediate replacement or refund guarantee for transit seal damage or defect.
+              </p>
             </div>
           </div>
         </div>

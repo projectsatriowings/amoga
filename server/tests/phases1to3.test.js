@@ -287,7 +287,7 @@ describe('Phase 3: Settings & Health Reliability Suite', () => {
   test('PUT /api/admin/settings persists valid settings and logs diff to audit trail', async () => {
     const updatePayload = {
       storeName: 'AMOGA Luxury Heritage',
-      contactEmail: 'concierge@amoga.com',
+      contactEmail: 'amogastores05@gmail.com',
       contactPhone: '+91 9988776655',
       freeShippingThreshold: 5000,
       shippingStandardRate: 250,
@@ -330,7 +330,7 @@ describe('Phase 3: Settings & Health Reliability Suite', () => {
       },
       body: JSON.stringify({
         storeName: initialSettings.storeName || 'AMOGA',
-        contactEmail: initialSettings.contactEmail || 'concierge@amoga.com',
+        contactEmail: initialSettings.contactEmail || 'amogastores05@gmail.com',
         contactPhone: initialSettings.contactPhone || '+91 80000 12345',
         freeShippingThreshold: 5000,
         shippingStandardRate: 250,

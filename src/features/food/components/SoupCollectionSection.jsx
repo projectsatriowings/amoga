@@ -4,10 +4,11 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import soupImg from '../../../assets/images/food-soups-hero.jpg';
 import { Container } from '../../../components/ui/Container';
 import { Button } from '../../../components/ui/Button';
-import { FOOD_PRODUCTS } from '../data/products';
+import { useProducts } from '../../../hooks/useProducts';
 
 export function SoupCollectionSection() {
-  const soupProducts = FOOD_PRODUCTS.filter((p) => p.category === 'soups');
+  const { products: allFoodProducts } = useProducts({ collection: 'food' });
+  const soupProducts = (allFoodProducts || []).filter((p) => (p.category || '').toLowerCase() === 'soups');
 
   return (
     <section className="py-16 sm:py-24 bg-[#172B1C] text-[#F1EDE4] relative overflow-hidden">
@@ -28,16 +29,16 @@ export function SoupCollectionSection() {
 
               <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-black/50 backdrop-blur-md border border-white/15 text-white">
                 <div className="text-[10px] font-mono uppercase tracking-widest text-[#C5A46D]">
-                  The Soup Collection / 2026
+                  The Soup Collection
                 </div>
                 <div className="text-sm font-medium">
-                  Twenty Distinctive Soups. One Memorable Collection.
+                  Nutritious Traditional Bowls. Easy Daily Preparation.
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Collection Story & 20-Recipe Preview */}
+          {/* Right Column: Collection Story & Recipe Preview */}
           <div className="lg:col-span-7 space-y-6 order-1 lg:order-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[#C5A46D] text-xs font-mono tracking-widest uppercase">
               <Sparkles className="w-3.5 h-3.5" />
@@ -47,7 +48,7 @@ export function SoupCollectionSection() {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#F1EDE4] leading-tight">
               Soup Ready Mix <br />
               <span className="italic font-normal text-[#C5A46D]">
-                Twenty Distinctive Bowls
+                Distinctive Ayurvedic & Herbal Bowls
               </span>
             </h2>
 
@@ -55,26 +56,28 @@ export function SoupCollectionSection() {
               From bright lemon coriander and nutritious moringa leaves to comforting creamy garlic mushroom and traditional thippili, every soup mix is easy to prepare for healthy everyday meals.
             </p>
 
-            {/* 20-Product Recipe Tags Pill Cloud */}
-            <div className="pt-2">
-              <div className="text-xs font-mono uppercase tracking-wider text-[#C5A46D] mb-3">
-                All 20 Signature Varieties in Catalogue:
+            {/* Product Recipe Tags Pill Cloud (only if products exist in catalog) */}
+            {soupProducts.length > 0 && (
+              <div className="pt-2">
+                <div className="text-xs font-mono uppercase tracking-wider text-[#C5A46D] mb-3">
+                  Signature Varieties in Catalogue:
+                </div>
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2">
+                  {soupProducts.map((soup, idx) => (
+                    <Link
+                      key={soup.id}
+                      to={`/food/products/${soup.slug}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#C5A46D] hover:bg-white/10 text-xs text-[#F1EDE4] transition-all"
+                    >
+                      <span className="font-mono text-[10px] opacity-50">
+                        {String(idx + 1).padStart(2, '0')}
+                      </span>
+                      <span>{soup.name}</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2">
-                {soupProducts.map((soup, idx) => (
-                  <Link
-                    key={soup.id}
-                    to={`/food/products/${soup.slug}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#C5A46D] hover:bg-white/10 text-xs text-[#F1EDE4] transition-all"
-                  >
-                    <span className="font-mono text-[10px] opacity-50">
-                      {String(idx + 1).padStart(2, '0')}
-                    </span>
-                    <span>{soup.name}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* CTA to Soup Catalogue */}
             <div className="pt-4 flex flex-wrap items-center gap-4">
@@ -85,7 +88,7 @@ export function SoupCollectionSection() {
                   collection="sarees"
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                  Shop All 20 Soups
+                  Shop Soup Mixes
                 </Button>
               </Link>
             </div>

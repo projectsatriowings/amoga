@@ -2,18 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { JewelleryProductCard } from './JewelleryProductCard';
-import { JEWELLERY_PRODUCTS, getFeaturedJewellery } from '../data/products';
 import { Container } from '../../../components/ui/Container';
 import { useProducts } from '../../../hooks/useProducts';
 
 export function JewelleryFeaturedGrid() {
-  const { products: apiProducts } = useProducts({
+  const { products: apiProducts, isLoading } = useProducts({
     collection: 'jewellery',
-    fallbackData: JEWELLERY_PRODUCTS,
   });
 
   const featured = React.useMemo(() => {
-    const list = apiProducts && apiProducts.length > 0 ? apiProducts : JEWELLERY_PRODUCTS;
+    const list = apiProducts || [];
     const items = list.filter((p) => p.isFeatured || p.verified);
     return items.length > 0 ? items.slice(0, 5) : list.slice(0, 5);
   }, [apiProducts]);
@@ -37,9 +35,6 @@ export function JewelleryFeaturedGrid() {
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
-            <span className="text-xs font-mono text-[#B9B8B5] px-3 py-1 rounded bg-[#343238] border border-[#B9B8B5]/20">
-              01 &mdash; 05 Signatures
-            </span>
             <Link
               to="/jewellery/products"
               className="text-xs font-medium text-[#B9B8B5] hover:text-white hover:underline flex items-center gap-1.5"
@@ -50,12 +45,28 @@ export function JewelleryFeaturedGrid() {
           </div>
         </div>
 
-        {/* 5 Cards Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-          {featured.map((product) => (
-            <JewelleryProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {/* Cards Responsive Grid or Empty State */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="rounded-2xl bg-[#343238]/60 border border-[#B9B8B5]/20 p-4 h-72 animate-pulse" />
+            ))}
+          </div>
+        ) : featured.length === 0 ? (
+          <div className="py-16 text-center bg-[#343238]/40 border border-[#B9B8B5]/20 rounded-3xl p-8 max-w-xl mx-auto space-y-3">
+            <Sparkles className="w-8 h-8 text-[#C6AD82] mx-auto opacity-70" />
+            <h3 className="text-xl font-serif text-[#F7F3EB]">Sterling Silver Collection in Preparation</h3>
+            <p className="text-xs text-[#B9B8B5] max-w-sm mx-auto leading-relaxed">
+              Our 925 hallmarked sterling silver jewellery collection is currently being curated. Check back soon for new handcrafted arrivals.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+            {featured.map((product) => (
+              <JewelleryProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </Container>
     </section>
   );

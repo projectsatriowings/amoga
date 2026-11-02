@@ -124,16 +124,34 @@ export function ShippingPolicyPage() {
           <section className="space-y-3 border-t border-[#E5E0D5] pt-6">
             <h2 className="font-serif text-xl font-semibold text-[#1A1817] flex items-center gap-2.5">
               <Truck className="w-5 h-5 text-[#722F37]" />
-              <span>3. Delivery Charges</span>
+              <span>3. Delivery Charges & Free Shipping Rules</span>
             </h2>
-            <p className="text-xs sm:text-sm text-[#4A423B] leading-relaxed">
-              Standard orders below {formattedThreshold} are calculated according to courier weight and piece brackets (or flat standard shipping). Orders {operatorText} {formattedThreshold} receive complimentary delivery applied automatically at checkout.
-            </p>
+            <div className="space-y-3 text-xs sm:text-sm text-[#4A423B] leading-relaxed">
+              <p>
+                <strong>A. Wholesome Pantry, Heritage Sarees & Silver Jewellery:</strong>
+                <br />
+                Orders with an eligible merchandise subtotal of <strong>{formattedThreshold} or more</strong> qualify for free delivery across India. Orders below {formattedThreshold} use standard India Post postal brackets (1–2 pcs: ₹100, 3 pcs: ₹150, 4 pcs: ₹200, +₹50 per piece beyond 4).
+              </p>
+              <p>
+                <strong>B. Wellness Tea Collection:</strong>
+                <br />
+                Wellness Tea qualifies for free shipping when <em>both</em> conditions are satisfied:
+                <br />
+                • The order contains at least <strong>5 tea packs</strong>.
+                <br />
+                • The eligible tea merchandise subtotal is <strong>₹1,000 or more</strong>.
+              </p>
+              <p>
+                <strong>C. Mixed Carts:</strong>
+                <br />
+                For orders containing both tea and standard collections, free shipping applies to the overall shipment if the standard collection items total {formattedThreshold} or more, OR if the tea items meet the tea-specific threshold (≥5 packs & ≥₹1,000).
+              </p>
+            </div>
             {businessApprovalPending && (
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs mt-3">
                 <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                 <span>
-                  Authoritative store shipping policy threshold: <strong>{formattedThreshold}</strong> ({shippingThresholdOperator === 'GT' ? 'Greater Than' : 'Greater Than or Equal'}). Business owner sign-off on final promotion threshold is pending review.
+                  Authoritative store shipping configuration loaded from database: <strong>{formattedThreshold}</strong> standard threshold ({shippingThresholdOperator === 'GT' ? 'Greater Than' : 'Greater Than or Equal'}) and 5 packs / ₹1,000 tea threshold.
                 </span>
               </div>
             )}
@@ -155,7 +173,7 @@ export function ShippingPolicyPage() {
               <span>5. Delivery Help & Customer Support</span>
             </h2>
             <p className="text-xs sm:text-sm text-[#4A423B] leading-relaxed">
-              If your delivery is delayed or if you need to update your delivery address before dispatch, contact our customer support team at <a href="mailto:support@amoga.com" className="text-[#722F37] font-semibold underline">support@amoga.com</a> or call us at <a href="tel:+919940018593" className="text-[#722F37] font-semibold underline">+91 99400 18593</a> (Mon–Sat, 9:00 AM – 7:00 PM IST).
+              If your delivery is delayed or if you need to update your delivery address before dispatch, contact our customer support team at <a href="mailto:amogastores05@gmail.com" className="text-[#722F37] font-semibold underline">amogastores05@gmail.com</a> or call us at <a href="tel:+919940018593" className="text-[#722F37] font-semibold underline">+91 99400 18593</a> (Mon–Sat, 9:00 AM – 7:00 PM IST).
             </p>
           </section>
         </div>

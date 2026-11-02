@@ -81,15 +81,15 @@ export function PublicReceiptPage() {
   const seller = receipt.sellerDetails || {
     tradeName: 'Amoga',
     legalName: 'Amoga Luxury Private Limited',
-    gstin: '33AAACA1234A1Z5',
-    pan: 'AAACA1234A',
+    gstin: '33AYMPK1833D1ZQ',
+    pan: 'AYMPK1833D',
     addressLine1: '108, Heritage Walk, Anna Salai',
     addressLine2: 'T. Nagar',
     city: 'Chennai',
     state: 'Tamil Nadu',
     pincode: '600017',
     contactPhone: '+91 98765 43210',
-    contactEmail: 'support@amoga.com',
+    contactEmail: 'amogastores05@gmail.com',
   };
 
   const formattedDate = new Date(receipt.createdAt).toLocaleString('en-IN', {
@@ -304,7 +304,11 @@ export function PublicReceiptPage() {
         <p>Need assistance with this invoice? Contact Amoga Atelier:</p>
         <div className="flex items-center justify-center gap-4 mt-1 font-mono text-stone-700">
           <span>📞 {seller.contactPhone}</span>
-          <span>✉️ {seller.contactEmail}</span>
+          <span>
+            <a href={`mailto:${seller.contactEmail || 'amogastores05@gmail.com'}`} className="hover:underline">
+              ✉️ {seller.contactEmail || 'amogastores05@gmail.com'}
+            </a>
+          </span>
         </div>
       </div>
 

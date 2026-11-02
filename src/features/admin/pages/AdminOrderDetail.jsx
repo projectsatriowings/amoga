@@ -10,6 +10,7 @@ import {
   Download,
   Receipt,
   ShieldCheck,
+  RotateCcw,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { BackButton } from '../../../components/ui/BackButton';
@@ -576,6 +577,54 @@ export function AdminOrderDetail() {
           )}
         </div>
       </div>
+
+      {/* Return & Replacement Claims */}
+      {order.returnRequests && order.returnRequests.length > 0 && (
+        <div className="bg-[#FBF9F5] rounded-lg border border-amber-200 overflow-hidden">
+          <div className="p-4 border-b border-amber-200 bg-amber-50/70 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-amber-900" />
+              <h2 className="font-serif text-sm font-bold text-amber-950">
+                Return & Replacement Claims ({order.returnRequests.length})
+              </h2>
+            </div>
+            <a
+              href={`/admin/returns?search=${order.orderReference}`}
+              className="text-xs text-[#722F37] hover:underline font-semibold"
+            >
+              Manage in Return Desk →
+            </a>
+          </div>
+          <div className="p-4 divide-y divide-[#EAE4D9]">
+            {order.returnRequests.map((ret) => (
+              <div key={ret.id} className="py-3 first:pt-0 last:pb-0 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-[#1A1817]">{ret.returnReference}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white border border-[#D5CEC2]">
+                      {ret.status.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#7A7167] mt-0.5">
+                    Reason: <strong>{ret.reason.replace(/_/g, ' ')}</strong> • Requested: {new Date(ret.createdAt).toLocaleDateString('en-IN')} • Items: {ret.items?.length || 0}
+                  </p>
+                  {ret.customerNote && (
+                    <p className="text-[11px] text-[#4A423B] mt-1 italic line-clamp-2">"{ret.customerNote}"</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={`/admin/returns?search=${ret.returnReference}`}
+                    className="px-3 py-1.5 bg-[#722F37] text-white rounded text-[11px] font-semibold hover:bg-[#5E2229] transition-colors"
+                  >
+                    Review Claim
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Milestone History & Tracking Events */}
       <div className="bg-[#FBF9F5] rounded-lg border border-[#E5E0D5] overflow-hidden">

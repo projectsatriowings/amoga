@@ -40,6 +40,7 @@ import {
   Sliders,
   ArrowRightLeft,
   Layers,
+  RotateCcw,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { AdminCommandPalette } from './AdminCommandPalette';
@@ -76,8 +77,11 @@ export function AdminLayout() {
       navigate('/admin/login', { replace: true });
     } else {
       checkSession();
+      if (admin?.role === 'STALL_MANAGER' || admin?.role === 'STALL_CASHIER') {
+        navigate('/stall', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, checkSession]);
+  }, [isAuthenticated, admin?.role, navigate, checkSession]);
 
   // Global Ctrl+K / Cmd+K (Search) and Developer Mode shortcut listeners
   useEffect(() => {
@@ -150,7 +154,6 @@ export function AdminLayout() {
       items: [
         { label: 'Products', path: '/admin/products', icon: Package },
         { label: 'Bulk Product Upload', path: '/admin/products/bulk-upload', icon: FileSpreadsheet },
-        { label: 'GST Rate Master', path: '/admin/tax-rates', icon: ShieldCheck },
         { label: 'Inventory', path: '/admin/inventory', icon: Boxes },
       ],
     },
@@ -158,6 +161,7 @@ export function AdminLayout() {
       title: 'COMMERCE & SALES',
       items: [
         { label: 'Orders', path: '/admin/orders', icon: ShoppingBag },
+        { label: 'Returns & Claims', path: '/admin/returns', icon: RotateCcw },
         { label: 'Payments', path: '/admin/payments', icon: CreditCard },
         { label: 'Customers', path: '/admin/customers', icon: Users },
         { label: 'Customer Inquiries', path: '/admin/customer-inquiries', icon: MessageSquare },
@@ -168,13 +172,8 @@ export function AdminLayout() {
       title: 'STALL MANAGEMENT & POS',
       items: [
         { label: 'Stall Dashboard', path: '/admin/stall/dashboard', icon: LayoutDashboard },
-        { label: 'Dedicated POS Terminal', path: '/stall', icon: Store, target: '_blank', externalBadge: 'REGISTER' },
+        { label: 'Stall POS / Billing', path: '/stall', icon: Store, externalBadge: 'POS' },
         { label: 'Stall Inventory', path: '/admin/stall/inventory', icon: Layers },
-        { label: 'Stock Transfers', path: '/admin/stall/transfers', icon: ArrowRightLeft },
-        { label: 'Stalls & Events', path: '/admin/stall/events', icon: MapPin },
-        { label: 'Bills & Sales', path: '/admin/stall/bills', icon: Receipt },
-        { label: 'Stall Reports', path: '/admin/stall/reports', icon: TrendingUp },
-        { label: 'Stall Settings & Roles', path: '/admin/stall/settings', icon: Sliders },
       ],
     },
     {
@@ -187,6 +186,7 @@ export function AdminLayout() {
       title: 'SYSTEM & SETTINGS',
       items: [
         { label: 'Settings', path: '/admin/settings', icon: Settings },
+        { label: 'Staff & Roles', path: '/admin/settings?tab=staff', icon: Users },
       ],
     },
     ...(isDeveloperMode
@@ -230,14 +230,15 @@ export function AdminLayout() {
   let pageTitle = 'Executive Dashboard';
   if (currentPath === '/admin/products') pageTitle = 'Product Catalogue';
   else if (currentPath === '/admin/products/bulk-upload') pageTitle = 'Bulk Product Upload';
-  else if (currentPath === '/admin/tax-rates') pageTitle = 'Verified GST Rate Master';
   else if (currentPath === '/admin/collections') pageTitle = 'Collection Architecture';
   else if (currentPath === '/admin/inventory') pageTitle = 'Stock & Inventory Control';
   else if (currentPath === '/admin/orders') pageTitle = 'Customer Order Stream';
   else if (currentPath === '/admin/payments') pageTitle = 'Payment Reconciliation';
   else if (currentPath === '/admin/customers') pageTitle = 'Customer Profiles';
   else if (currentPath === '/admin/reports') pageTitle = 'Business Intelligence & Exports';
-  else if (currentPath === '/admin/settings') pageTitle = 'Atelier Settings';
+  else if (currentPath === '/admin/settings') {
+    pageTitle = location.search.includes('tab=staff') ? 'Staff & Roles' : 'Atelier Settings';
+  }
   else if (currentPath === '/admin/audit-logs') pageTitle = 'System Audit Trail';
   else if (currentPath === '/admin/stall/dashboard') pageTitle = 'Stall Management — Dashboard';
   else if (currentPath === '/admin/stall/inventory') pageTitle = 'Stall Management — Multi-Location Inventory';
@@ -336,10 +337,18 @@ export function AdminLayout() {
               )}
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive =
-                  item.path === '/admin'
-                    ? location.pathname === '/admin'
-                    : location.pathname.startsWith(item.path);
+                const isPathActive = (targetPath) => {
+                  if (targetPath === '/admin') return location.pathname === '/admin';
+                  if (targetPath.includes('?')) {
+                    const [base, query] = targetPath.split('?');
+                    return location.pathname === base && location.search === `?${query}`;
+                  }
+                  if (targetPath === '/admin/settings') {
+                    return location.pathname === '/admin/settings' && (!location.search || location.search === '?tab=general');
+                  }
+                  return location.pathname.startsWith(targetPath);
+                };
+                const isActive = isPathActive(item.path);
 
                 return (
                   <Link
@@ -663,10 +672,18 @@ export function AdminLayout() {
                     </p>
                     {group.items.map((item) => {
                       const Icon = item.icon;
-                      const isActive =
-                        item.path === '/admin'
-                          ? location.pathname === '/admin'
-                          : location.pathname.startsWith(item.path);
+                      const isPathActive = (targetPath) => {
+                        if (targetPath === '/admin') return location.pathname === '/admin';
+                        if (targetPath.includes('?')) {
+                          const [base, query] = targetPath.split('?');
+                          return location.pathname === base && location.search === `?${query}`;
+                        }
+                        if (targetPath === '/admin/settings') {
+                          return location.pathname === '/admin/settings' && (!location.search || location.search === '?tab=general');
+                        }
+                        return location.pathname.startsWith(targetPath);
+                      };
+                      const isActive = isPathActive(item.path);
                       return (
                         <Link
                           key={item.path}

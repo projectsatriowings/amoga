@@ -86,10 +86,11 @@ export async function allocateInvoiceNumber(tx = prisma) {
 export function renderInvoiceHtml(order) {
   const sellerLegalName = order.sellerLegalName || 'Amoga Luxury Private Limited';
   const sellerTradeName = order.sellerTradeName || 'Amoga';
-  const sellerGstin = order.sellerGstin || '33AAACA1234A1Z5';
+  const sellerGstin = order.sellerGstin || '33AYMPK1833D1ZQ';
   const sellerAddress = order.sellerAddress || '108, Heritage Walk, Anna Salai, T. Nagar, Chennai, Tamil Nadu - 600017';
   const sellerState = order.sellerState || 'Tamil Nadu';
   const sellerStateCode = order.sellerStateCode || '33';
+  const sellerFssai = order.sellerFssai || order.fssaiLicenseNumber || '22425540000677';
 
   const invoiceNumber = order.invoiceNumber || 'INV-PENDING';
   const invoiceDate = order.invoiceDate
@@ -380,7 +381,8 @@ export function renderInvoiceHtml(order) {
         <div style="margin-top: 6px; font-size: 11px; color: #334155;">
           <strong>${sellerLegalName}</strong><br>
           ${sellerAddress}<br>
-          GSTIN: <strong>${sellerGstin}</strong> | State: ${sellerState} (Code: ${sellerStateCode})
+          GSTIN: <strong>${sellerGstin}</strong> | State: ${sellerState} (Code: ${sellerStateCode})<br>
+          FSSAI Lic. No.: <strong>${sellerFssai}</strong>
         </div>
       </div>
       <div class="invoice-title">

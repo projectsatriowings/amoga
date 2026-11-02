@@ -1,6 +1,8 @@
 import {
   listStockLocations,
   createStockLocation,
+  updateStockLocation,
+  toggleStockLocationActive,
   getLocationInventory,
   adjustLocationStock,
   executeStockTransfer,
@@ -28,16 +30,36 @@ export async function listLocationsEndpoint(req, res, next) {
 
 export async function createLocationEndpoint(req, res, next) {
   try {
-    const { code, name, type, stallEventId, address, city, state, isActive, isDefault } = req.body;
-    if (!code || !name) {
-      return res.status(400).json({ success: false, message: 'Code and name are required.' });
+    const { code, name, type, stallEventId, address, city, state, isActive, isDefault, venue, startDate, endDate, assignedStaffIds } = req.body;
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Stall name is required.' });
     }
     const location = await createStockLocation(
-      { code, name, type, stallEventId, address, city, state, isActive, isDefault },
+      { code, name, type, stallEventId, address, city, state, isActive, isDefault, venue, startDate, endDate, assignedStaffIds },
       req.admin.email,
       req.admin.id
     );
     return res.status(201).json({ success: true, location });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateLocationEndpoint(req, res, next) {
+  try {
+    const { id } = req.params;
+    const location = await updateStockLocation(id, req.body, req.admin.email, req.admin.id);
+    return res.json({ success: true, location });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function toggleLocationActiveEndpoint(req, res, next) {
+  try {
+    const { id } = req.params;
+    const location = await toggleStockLocationActive(id, req.admin.email, req.admin.id);
+    return res.json({ success: true, location });
   } catch (error) {
     next(error);
   }

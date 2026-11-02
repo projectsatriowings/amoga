@@ -190,6 +190,16 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }) {
                 >
                   {formatINR(unitPrice)}
                 </strong>
+                {collectionId === 'tea' && (
+                  <span className="font-mono text-[11px] text-[#8C6320] ml-1 font-medium">
+                    / Pack
+                  </span>
+                )}
+                {(collectionId === 'tea' || product.packSize || item.packSize) && (
+                  <span className="font-mono text-[11px] text-[#8C6320] ml-2 px-2 py-0.5 rounded-full bg-[#8C6320]/10 border border-[#8C6320]/25 font-numeric">
+                    Net Weight: {product.packSize || item.packSize || '25 g'}
+                  </span>
+                )}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-amber-700 font-mono text-[11px]">

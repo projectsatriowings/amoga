@@ -23,19 +23,20 @@ export async function request(endpoint, options = {}) {
 
   const headers = {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    Pragma: 'no-cache',
-    Expires: '0',
     ...(options.headers || {}),
   };
 
   try {
-    const response = await fetch(url, {
-      cache: options.cache || 'no-store',
+    const fetchOptions = {
       ...options,
       headers,
       signal: controller.signal,
-    });
+    };
+    if (options.cache) {
+      fetchOptions.cache = options.cache;
+    }
+
+    const response = await fetch(url, fetchOptions);
 
     clearTimeout(id);
 

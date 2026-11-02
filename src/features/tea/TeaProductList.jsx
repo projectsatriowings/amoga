@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ArrowLeft, Leaf, SlidersHorizontal, PackageSearch, Sparkles } from 'lucide-react';
-import { TEA_PRODUCTS } from './data/products';
 import { TeaProductCard } from './components/TeaProductCard';
 import { BotanicalSideAnimations } from './components/BotanicalAnimations';
 
@@ -12,10 +11,9 @@ import { BackButton } from '../../components/ui/BackButton';
 export function TeaProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Load from backend API with fallback to verified catalogue
-  const { products: apiProducts } = useProducts({
+  // Load from backend API
+  const { products: apiProducts, isLoading, error } = useProducts({
     collection: 'tea',
-    fallbackData: TEA_PRODUCTS,
   });
 
   const initialQuery = searchParams.get('q') || '';
@@ -71,11 +69,7 @@ export function TeaProductList() {
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
-    const rawList = apiProducts && apiProducts.length > 0 ? apiProducts : TEA_PRODUCTS;
-    const list = rawList.map((p) => {
-      const fallback = TEA_PRODUCTS.find((f) => f.slug === p.slug || f.id === p.id);
-      return fallback ? { ...fallback, ...p } : p;
-    });
+    const list = apiProducts || [];
 
     let result = list.filter((p) => {
       // Category Filter
@@ -210,15 +204,19 @@ export function TeaProductList() {
               No Botanical Varieties Found
             </h2>
             <p className="text-xs text-[#543B25] leading-relaxed max-w-sm mx-auto">
-              We couldn't find any teas matching "{searchQuery}". Try searching for hibiscus, blue pea, or cinnamon.
+              {searchQuery
+                ? `We couldn't find any teas matching "${searchQuery}".`
+                : 'No botanical teas are currently available in this collection.'}
             </p>
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-mono uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-sm"
-            >
-              Clear Search Filter
-            </button>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#2C1E11] text-[#FAF1BB] text-xs font-mono uppercase tracking-wider hover:bg-[#8C6320] hover:text-white transition-all shadow-sm"
+              >
+                Clear Search Filter
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">

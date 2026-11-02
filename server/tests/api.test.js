@@ -41,10 +41,10 @@ describe('1. Health and Collections API', () => {
     assert.strictEqual(body.success, true);
     assert.strictEqual(body.data.length, 4);
     const slugs = body.data.map((c) => c.slug);
-    assert.strictEqual(slugs[0], 'food');
-    assert.strictEqual(slugs[1], 'tea');
-    assert.strictEqual(slugs[2], 'sarees');
-    assert.strictEqual(slugs[3], 'jewellery');
+    assert.strictEqual(slugs[0], 'tea');
+    assert.strictEqual(slugs[1], 'sarees');
+    assert.strictEqual(slugs[2], 'jewellery');
+    assert.strictEqual(slugs[3], 'food');
   });
 });
 

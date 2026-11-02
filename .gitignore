@@ -41,5 +41,8 @@ server/generated/
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
 scratch/
+
+# Local uploads and evidence storage
+server/storage/return-evidence/*
+!server/storage/return-evidence/.gitkeep

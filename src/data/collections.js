@@ -48,44 +48,8 @@ import jewelleryJpg1200 from '../assets/images/gatekeeper-jewellery-1200.jpg';
 
 export const COLLECTIONS = [
   {
-    id: 'food',
-    number: '01',
-    name: 'Wholesome Pantry',
-    title: 'WHOLESOME PANTRY',
-    eyebrow: 'TRADITIONAL INDIAN FOOD MIXES',
-    tagline: 'Traditional Indian Food Mixes',
-    subtitle: 'Traditional Indian Food Mixes',
-    description: 'Easy-to-prepare soup mixes, millet mixes, and rice podis for everyday meals.',
-    innerHeading: 'Traditional Indian Food Mixes',
-    innerDescription: 'Explore our selection of soup mixes, millet mixes and traditional rice podis, bringing convenience and familiar flavours to everyday meals.',
-    ctaText: 'EXPLORE COLLECTION',
-    path: '/food',
-    productsPath: '/food/products',
-    theme: 'food',
-    accentColor: '#3F7B43',
-    supportingColor: '#173B2A',
-    bgColor: '#F8F6F0',
-    textColor: '#292820',
-    fontHeading: 'font-serif',
-    fontBody: 'font-sans',
-    heroImage: foodWebp,
-    cardImage: foodWebp,
-    fallbackImage: foodJpg,
-    imageResponsive: {
-      webpSrcSet: `${foodWebp480} 480w, ${foodWebp800} 800w, ${foodWebp1200} 1200w`,
-      jpgSrcSet: `${foodJpg480} 480w, ${foodJpg800} 800w, ${foodJpg1200} 1200w`,
-      src: foodWebp,
-      fallback: foodJpg,
-      sizes: '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw',
-      alt: 'Amoga Wholesome Pantry — Traditional Indian Food Mixes',
-      objectPosition: 'center 62%',
-    },
-    badge: 'Traditional Mixes',
-    features: ['Soup Mixes', 'Millet Mixes', 'Rice Podis'],
-  },
-  {
     id: 'tea',
-    number: '02',
+    number: '01',
     name: 'Wellness Tea',
     title: 'WELLNESS TEA',
     eyebrow: 'HERBAL TEAS AND INFUSIONS',
@@ -121,7 +85,7 @@ export const COLLECTIONS = [
   },
   {
     id: 'sarees',
-    number: '03',
+    number: '02',
     name: 'Heritage Sarees',
     title: 'HERITAGE SAREES',
     eyebrow: 'TRADITIONAL SILK SAREES',
@@ -157,7 +121,7 @@ export const COLLECTIONS = [
   },
   {
     id: 'jewellery',
-    number: '04',
+    number: '03',
     name: 'Sterling Silver',
     title: 'STERLING SILVER',
     eyebrow: 'SILVER JEWELLERY',
@@ -191,13 +155,46 @@ export const COLLECTIONS = [
     badge: '925 Sterling Craft',
     features: ['925 Sterling Silver', 'Minimalist Pendants', 'Sculptural Cuffs', 'Artisan Rings'],
   },
+  {
+    id: 'food',
+    number: '04',
+    name: 'Wholesome Pantry',
+    title: 'WHOLESOME PANTRY',
+    eyebrow: 'TRADITIONAL INDIAN FOOD MIXES',
+    tagline: 'Traditional Indian Food Mixes',
+    subtitle: 'Traditional Indian Food Mixes',
+    description: 'Easy-to-prepare soup mixes, millet mixes, and rice podis for everyday meals.',
+    innerHeading: 'Traditional Indian Food Mixes',
+    innerDescription: 'Explore our selection of soup mixes, millet mixes and traditional rice podis, bringing convenience and familiar flavours to everyday meals.',
+    ctaText: 'EXPLORE COLLECTION',
+    path: '/food',
+    productsPath: '/food/products',
+    theme: 'food',
+    accentColor: '#3F7B43',
+    supportingColor: '#173B2A',
+    bgColor: '#F8F6F0',
+    textColor: '#292820',
+    fontHeading: 'font-serif',
+    fontBody: 'font-sans',
+    heroImage: foodWebp,
+    cardImage: foodWebp,
+    fallbackImage: foodJpg,
+    imageResponsive: {
+      webpSrcSet: `${foodWebp480} 480w, ${foodWebp800} 800w, ${foodWebp1200} 1200w`,
+      jpgSrcSet: `${foodJpg480} 480w, ${foodJpg800} 800w, ${foodJpg1200} 1200w`,
+      src: foodWebp,
+      fallback: foodJpg,
+      sizes: '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw',
+      alt: 'Amoga Wholesome Pantry — Traditional Indian Food Mixes',
+      objectPosition: 'center 62%',
+    },
+    badge: 'Traditional Mixes',
+    features: ['Soup Mixes', 'Millet Mixes', 'Rice Podis'],
+  },
 ];
 
 export const getCollectionById = (id) => COLLECTIONS.find((col) => col.id === id);
 export const getCollectionByPath = (pathname) => {
-  if (pathname.startsWith('/food')) return COLLECTIONS[0];
-  if (pathname.startsWith('/tea')) return COLLECTIONS[1];
-  if (pathname.startsWith('/sarees')) return COLLECTIONS[2];
-  if (pathname.startsWith('/jewellery')) return COLLECTIONS[3];
-  return null;
+  if (!pathname || typeof pathname !== 'string') return null;
+  return COLLECTIONS.find((col) => pathname.startsWith(col.path)) || null;
 };

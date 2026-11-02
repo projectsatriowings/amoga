@@ -15,6 +15,7 @@ import {
   updateProduct,
   archiveProduct,
   restoreProduct,
+  deleteProduct,
   getNextSkuPreview,
   validateSkuEndpoint,
 } from '../controllers/adminProductsController.js';
@@ -24,6 +25,12 @@ import {
   executeImport,
   downloadErrorReport,
 } from '../controllers/adminProductImportController.js';
+import {
+  listAdminReturnsEndpoint,
+  getAdminReturnDetailEndpoint,
+  updateAdminReturnWorkflowEndpoint,
+  downloadAdminEvidenceEndpoint,
+} from '../controllers/adminReturnController.js';
 import {
   listCollections,
   createCollection,
@@ -61,11 +68,23 @@ import {
   exportCsv,
 } from '../controllers/adminReportsController.js';
 import {
+  getGstReportEndpoint,
+  listInvoicesEndpoint,
+  downloadInvoicePdfEndpoint,
+  downloadBatchInvoicesZipEndpoint,
+  exportPaymentsToDateEndpoint,
+  exportOutstandingPaymentsEndpoint,
+  exportInvoicesCsvEndpoint,
+} from '../controllers/adminGstInvoicesController.js';
+import {
   getStoreSettings,
   updateStoreSettings,
   listAdminUsers,
   createAdminUser,
+  updateAdminUser,
   toggleAdminUser,
+  deleteAdminUser,
+  sendStaffResetLink,
   listAuditLogs,
   getAuditLogById,
 } from '../controllers/adminSettingsController.js';
@@ -105,6 +124,8 @@ import {
 import {
   listLocationsEndpoint,
   createLocationEndpoint,
+  updateLocationEndpoint,
+  toggleLocationActiveEndpoint,
   getLocationInventoryEndpoint,
   adjustStockEndpoint,
   executeStockTransferEndpoint,
@@ -143,6 +164,7 @@ router.post('/products', requireAdminAuth(['CATALOGUE_MANAGER']), createProduct)
 router.put('/products/:id', requireAdminAuth(['CATALOGUE_MANAGER']), updateProduct);
 router.patch('/products/:id/archive', requireAdminAuth(['CATALOGUE_MANAGER']), archiveProduct);
 router.patch('/products/:id/restore', requireAdminAuth(['CATALOGUE_MANAGER']), restoreProduct);
+router.delete('/products/:id', requireAdminAuth(['CATALOGUE_MANAGER']), deleteProduct);
 router.post('/products/:id/tax-verify', requireAdminAuth(['CATALOGUE_MANAGER']), verifyProductTaxEndpoint);
 
 // 2.5 Assisted GST/HSN Classification & Verified Rate Master (Catalogue & Super Admin)
@@ -174,10 +196,30 @@ router.get('/orders/:id/invoice', requireAdminAuth(['ORDER_MANAGER']), getOrderI
 router.patch('/orders/:id/status', requireAdminAuth(['ORDER_MANAGER']), updateOrderStatus);
 router.patch('/orders/:id/tracking', requireAdminAuth(['ORDER_MANAGER']), updateOrderTracking);
 
+// 5.5 Returns & Customer Claims (Order Manager & Super Admin)
+router.get('/returns', requireAdminAuth(['ORDER_MANAGER']), listAdminReturnsEndpoint);
+router.get('/returns/:refOrId', requireAdminAuth(['ORDER_MANAGER']), getAdminReturnDetailEndpoint);
+router.patch('/returns/:id/workflow', requireAdminAuth(['ORDER_MANAGER']), updateAdminReturnWorkflowEndpoint);
+router.patch('/returns/:id/status', requireAdminAuth(['ORDER_MANAGER']), updateAdminReturnWorkflowEndpoint);
+router.post('/returns/:id/restock', requireAdminAuth(['ORDER_MANAGER']), (req, res, next) => {
+  req.body = { ...(req.body || {}), shouldRestock: true };
+  return updateAdminReturnWorkflowEndpoint(req, res, next);
+});
+router.get('/returns/:id/evidence/:evidenceId', requireAdminAuth(['ORDER_MANAGER']), downloadAdminEvidenceEndpoint);
+
 // 6. Payments (Order Manager & Super Admin)
 router.get('/payments', requireAdminAuth(), listPayments);
 router.get('/payments/events', requireAdminAuth(), listPaymentEvents);
 router.get('/payments/:id', requireAdminAuth(), getPaymentById);
+
+// 6.5 GST Reports & Tax Invoices (Order Manager & Super Admin)
+router.get('/reports/gst', requireAdminAuth(['ORDER_MANAGER']), getGstReportEndpoint);
+router.get('/reports/payments-to-date', requireAdminAuth(['ORDER_MANAGER']), exportPaymentsToDateEndpoint);
+router.get('/reports/outstanding-payments', requireAdminAuth(['ORDER_MANAGER']), exportOutstandingPaymentsEndpoint);
+router.get('/invoices', requireAdminAuth(['ORDER_MANAGER']), listInvoicesEndpoint);
+router.get('/invoices/export-csv', requireAdminAuth(['ORDER_MANAGER']), exportInvoicesCsvEndpoint);
+router.get('/invoices/:id/pdf', requireAdminAuth(['ORDER_MANAGER']), downloadInvoicePdfEndpoint);
+router.post('/invoices/batch-pdf', requireAdminAuth(['ORDER_MANAGER']), downloadBatchInvoicesZipEndpoint);
 
 // 7. Customers (Order Manager & Super Admin)
 router.get('/customers', requireAdminAuth(), listCustomers);
@@ -199,7 +241,10 @@ router.get('/settings', requireAdminAuth(), getStoreSettings);
 router.put('/settings', requireAdminAuth(['SUPER_ADMIN']), updateStoreSettings);
 router.get('/users', requireAdminAuth(['SUPER_ADMIN']), listAdminUsers);
 router.post('/users', requireAdminAuth(['SUPER_ADMIN']), createAdminUser);
+router.put('/users/:id', requireAdminAuth(['SUPER_ADMIN']), updateAdminUser);
 router.patch('/users/:id/toggle', requireAdminAuth(['SUPER_ADMIN']), toggleAdminUser);
+router.delete('/users/:id', requireAdminAuth(['SUPER_ADMIN']), deleteAdminUser);
+router.post('/users/:id/send-reset-link', requireAdminAuth(['SUPER_ADMIN']), sendStaffResetLink);
 router.get('/audit-logs', requireAdminAuth(['SUPER_ADMIN']), listAuditLogs);
 router.get('/audit-logs/:id', requireAdminAuth(['SUPER_ADMIN']), getAuditLogById);
 
@@ -224,6 +269,8 @@ router.put('/pos/settings', requireAdminAuth(['SUPER_ADMIN']), updatePosSettings
 // 13. Stall Management & Stock Locations
 router.get('/stall/locations', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), listLocationsEndpoint);
 router.post('/stall/locations', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), createLocationEndpoint);
+router.put('/stall/locations/:id', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), updateLocationEndpoint);
+router.patch('/stall/locations/:id/toggle', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER']), toggleLocationActiveEndpoint);
 router.get('/stall/inventory', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), getLocationInventoryEndpoint);
 router.post('/stall/inventory/adjust', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), adjustStockEndpoint);
 router.post('/stall/transfers', requireAdminAuth(['SUPER_ADMIN', 'ORDER_MANAGER', 'CATALOGUE_MANAGER']), executeStockTransferEndpoint);

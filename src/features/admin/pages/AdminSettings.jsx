@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Save,
   ShieldCheck,
@@ -16,13 +17,20 @@ import {
   Trash2,
   Check,
   Percent,
+  Users,
+  Sliders,
+  RotateCcw,
 } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 import { SystemHealthCard } from '../components/SystemHealthCard';
+import { AdminStaffManagement } from '../components/AdminStaffManagement';
 import { BackButton } from '../../../components/ui/BackButton';
 
 export function AdminSettings() {
   const { adminFetch, admin } = useAdminStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'general';
+
   const [settings, setSettings] = useState(null);
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -227,6 +235,24 @@ export function AdminSettings() {
       }
     }
 
+    if (settings.fssaiLicenseNumber && !/^[0-9]{14}$/.test(settings.fssaiLicenseNumber)) {
+      setMessage({ type: 'error', text: 'FSSAI License Number must be exactly 14 digits.' });
+      setSubmitting(false);
+      return;
+    }
+
+    if (settings.returnWindowDays && (Number(settings.returnWindowDays) < 1 || Number(settings.returnWindowDays) > 90)) {
+      setMessage({ type: 'error', text: 'Standard return window must be between 1 and 90 days.' });
+      setSubmitting(false);
+      return;
+    }
+
+    if (settings.foodReturnWindowHours && (Number(settings.foodReturnWindowHours) < 1 || Number(settings.foodReturnWindowHours) > 168)) {
+      setMessage({ type: 'error', text: 'Food transit damage reporting window must be between 1 and 168 hours.' });
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const res = await adminFetch('/api/admin/settings', {
         method: 'PUT',
@@ -245,6 +271,8 @@ export function AdminSettings() {
     }
   };
 
+  const [addStaffTrigger, setAddStaffTrigger] = useState(0);
+
   const isSuperAdmin = admin?.role === 'SUPER_ADMIN';
 
   if (loading) {
@@ -257,17 +285,84 @@ export function AdminSettings() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="w-full max-w-7xl mx-auto space-y-6 pb-12 pt-2">
+      {/* Breadcrumb Navigation */}
       <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs text-[#7A7167]">
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: 'general' })}
+            className="hover:text-[#1A1817] transition-colors cursor-pointer"
+          >
+            Settings
+          </button>
+          <span>/</span>
+          <span className="font-semibold text-[#1A1817]">
+            {currentTab === 'staff' ? 'Staff & Roles' : 'Store & Compliance'}
+          </span>
+        </div>
         <BackButton collection="admin" fallbackTo="/admin" label="Back to Dashboard" />
       </div>
 
-      <div className="border-b border-[#E5E0D5] pb-4">
-        <h1 className="font-serif text-2xl font-bold text-[#1A1817]">Business & Store Settings</h1>
-        <p className="text-xs text-[#7A7167]">
-          Configure concierge details, shipping thresholds, tax percentages, and review truthful infrastructure health
-        </p>
+      <div className="border-b border-[#E5E0D5] pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-2xl lg:text-3xl font-bold text-[#1A1817] tracking-tight">
+            {currentTab === 'staff' ? 'Staff & Roles' : 'Store & Compliance'}
+          </h1>
+          <p className="text-xs sm:text-sm text-[#7A7167] mt-1">
+            {currentTab === 'staff'
+              ? 'Manage staff accounts, permissions, and assigned stall locations.'
+              : 'Configure store parameters, shipping rules, tax compliance, and legal credentials.'}
+          </p>
+        </div>
+
+        {/* Action Controls & Tab Switcher */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex p-1 bg-[#EFEAE1]/80 rounded-xl border border-[#D5CEC2] shrink-0 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setSearchParams({ tab: 'general' })}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                currentTab !== 'staff'
+                  ? 'bg-white text-[#722F37] shadow-xs'
+                  : 'text-[#7A7167] hover:text-[#1A1817]'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Store & Compliance</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchParams({ tab: 'staff' })}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                currentTab === 'staff'
+                  ? 'bg-white text-[#722F37] shadow-xs'
+                  : 'text-[#7A7167] hover:text-[#1A1817]'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Staff & Roles</span>
+            </button>
+          </div>
+
+          {/* Primary Action Button: Add Staff Member (in Page Header) */}
+          {currentTab === 'staff' && isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => setAddStaffTrigger((c) => c + 1)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#722F37] hover:bg-[#5E2229] text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-xs shrink-0 active:scale-98"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Add Staff Member</span>
+            </button>
+          )}
+        </div>
       </div>
+
+      {currentTab === 'staff' ? (
+        <AdminStaffManagement addStaffTrigger={addStaffTrigger} />
+      ) : (
+        <>
 
       {message && (
         <div
@@ -902,7 +997,7 @@ export function AdminSettings() {
                   const stateCode = val.length >= 2 ? val.substring(0, 2) : settings?.sellerStateCode;
                   setSettings({ ...settings, sellerGstin: val, sellerPan: pan, sellerStateCode: stateCode });
                 }}
-                placeholder="33AAACA1234A1Z5"
+                placeholder="33AYMPK1833D1ZQ"
                 className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
               />
               <p className="text-[10px] text-[#7A7167] mt-1">
@@ -1064,6 +1159,180 @@ export function AdminSettings() {
           </div>
         </div>
 
+        {/* FSSAI Food Safety Compliance Card */}
+        <div className="bg-[#FBF9F5] p-6 rounded-2xl border border-[#E5E0D5] space-y-5">
+          <div className="border-b border-[#EAE4D9] pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="font-serif text-base font-bold text-[#1A1817] flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#722F37]" />
+                <span>Food Safety & Standards Authority of India (FSSAI) Compliance</span>
+              </h2>
+              <p className="text-[11px] text-[#7A7167] mt-0.5">
+                Statutory 14-digit FSSAI licence registration for food storefronts, product detail badges, and GST tax invoices.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+              Food Safety Act 2006
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                FSSAI Licence / Reg Number *
+              </label>
+              <input
+                type="text"
+                maxLength={14}
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiLicenseNumber || ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/[^0-9]/g, '');
+                  setSettings({ ...settings, fssaiLicenseNumber: digits });
+                }}
+                placeholder="22425540000677"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">
+                {/^[0-9]{14}$/.test(settings?.fssaiLicenseNumber || '') ? (
+                  <span className="text-emerald-700 font-semibold">✓ Valid 14-digit FSSAI number</span>
+                ) : settings?.fssaiLicenseNumber ? (
+                  <span className="text-amber-700">Must be exactly 14 numeric digits ({settings.fssaiLicenseNumber.length}/14)</span>
+                ) : (
+                  '14-digit FSSAI registration number'
+                )}
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Licence Holder Entity Name
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiLicenseHolder || ''}
+                onChange={(e) => setSettings({ ...settings, fssaiLicenseHolder: e.target.value })}
+                placeholder="e.g. Amoga Luxury Private Limited"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Matching legal entity on registration document.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Licence Classification / Type
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiLicenseType || ''}
+                onChange={(e) => setSettings({ ...settings, fssaiLicenseType: e.target.value })}
+                placeholder="e.g. State License - E-Commerce Retail"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Licence Scope Notice / FBO Category
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiScopeNotice || ''}
+                onChange={(e) => setSettings({ ...settings, fssaiScopeNotice: e.target.value })}
+                placeholder="E-Commerce FBO for Packaged Dry Goods, Wellness Teas & Artisanal Infusions"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Disclosed on footer and food category detail pages.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Publishable Certificate Link (optional)
+              </label>
+              <input
+                type="url"
+                disabled={!isSuperAdmin}
+                value={settings?.fssaiCertificateUrl || ''}
+                onChange={(e) => setSettings({ ...settings, fssaiCertificateUrl: e.target.value })}
+                placeholder="https://.../amoga-fssai-certificate.pdf"
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Provide link only when verified and authorized for public viewing.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Return & Refund Policy Parameters */}
+        <div className="bg-[#FBF9F5] p-6 rounded-2xl border border-[#E5E0D5] space-y-5">
+          <div className="border-b border-[#EAE4D9] pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="font-serif text-base font-bold text-[#1A1817] flex items-center gap-2">
+                <RotateCcw className="w-4 h-4 text-[#722F37]" />
+                <span>Return, Replacement & Refund Policy Parameters</span>
+              </h2>
+              <p className="text-[11px] text-[#7A7167] mt-0.5">
+                Indian Consumer Protection (E-Commerce) Rules compliant reporting windows and policy versioning.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200">
+              Consumer Protection 2020
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Non-Perishable Return Window (Days) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="90"
+                disabled={!isSuperAdmin}
+                value={settings?.returnWindowDays ?? 7}
+                onChange={(e) => setSettings({ ...settings, returnWindowDays: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Days from delivery for sarees, silver jewellery, and crafts.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Food Damage Reporting Window (Hours) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="168"
+                disabled={!isSuperAdmin}
+                value={settings?.foodReturnWindowHours ?? 48}
+                onChange={(e) => setSettings({ ...settings, foodReturnWindowHours: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Hours from delivery for transit damage or broken seal claims.</p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#4A423B] uppercase mb-1">
+                Return Policy Version *
+              </label>
+              <input
+                type="text"
+                disabled={!isSuperAdmin}
+                value={settings?.returnPolicyVersion || '2026.1'}
+                onChange={(e) => setSettings({ ...settings, returnPolicyVersion: e.target.value })}
+                className="w-full px-3 py-2 bg-white border border-[#D5CEC2] rounded disabled:bg-stone-100 font-mono text-[#1A1817]"
+              />
+              <p className="text-[10px] text-[#7A7167] mt-1">Recorded on checkout disclosures and customer orders.</p>
+            </div>
+          </div>
+        </div>
+
         {isSuperAdmin ? (
           <div className="flex justify-end pt-2">
             <button
@@ -1081,6 +1350,8 @@ export function AdminSettings() {
           </p>
         )}
       </form>
+      </>
+      )}
     </div>
   );
 }

@@ -9,20 +9,23 @@ import { CollectionContactSection } from '../../features/collections/components/
 const CURRENT_YEAR = 2026;
 
 
-export function AppFooter({ activeCollection }) {
+export function AppFooter({ activeCollection, resolvedTheme }) {
   const location = useLocation();
-  const isFood = activeCollection?.id === 'food';
-  const isTea = activeCollection?.id === 'tea';
-  const isSarees = activeCollection?.id === 'sarees';
-  const isJewellery = activeCollection?.id === 'jewellery';
   const isCheckout =
     location.pathname.startsWith('/checkout') ||
     location.pathname.startsWith('/order-confirmation') ||
     location.pathname === '/cart';
 
+  const isFood = !isCheckout && activeCollection?.id === 'food';
+  const isTea = !isCheckout && activeCollection?.id === 'tea';
+  const isSarees = !isCheckout && activeCollection?.id === 'sarees';
+  const isJewellery = !isCheckout && activeCollection?.id === 'jewellery';
+
   const isGatekeeper = location.pathname === '/';
 
-  const footerBg = isFood
+  const footerBg = isCheckout
+    ? 'bg-[#FAF8F5] text-[#292820] border-[#EAE3D5]'
+    : isFood
     ? 'bg-[#F1EDE4] text-[#172B1C] border-[#172B1C]/10'
     : isTea
     ? 'bg-[#FAF1BB] text-[#2C1E11] border-[#B88E38]/25'
@@ -30,14 +33,12 @@ export function AppFooter({ activeCollection }) {
     ? 'bg-[#1D0911] text-[#F6EBD8] border-[#C5A46D]/15'
     : isJewellery
     ? 'bg-[#1C1B1E] text-[#F7F3EB] border-[#B9B8B5]/15'
-    : isCheckout
-    ? 'bg-[#F8F6F0] text-[#292820] border-[#E5E0D5]'
     : 'bg-[#0B0C0E] text-[#F4F4F2] border-white/10';
 
   return (
     <>
-      {/* Reusable Themed Contact Section & Interactive Form for Collections */}
-      {activeCollection && (
+      {/* Reusable Themed Contact Section & Interactive Form for Collections (Hidden on checkout & cart) */}
+      {activeCollection && !isCheckout && (
         <CollectionContactSection collectionId={activeCollection.id} />
       )}
 
@@ -161,40 +162,30 @@ export function AppFooter({ activeCollection }) {
                   </li>
                   <li>
                     <Link to="/food/products" className="hover:text-[#287A25] hover:underline font-semibold">
-                      All Products (61 Items)
+                      All Pantry Blends
                     </Link>
                   </li>
                 </>
               ) : isTea ? (
                 <>
                   <li>
-                    <Link to="/tea/products/hibiscus-tea" className="hover:text-[#8C6320] hover:underline">
-                      Hibiscus Tea
+                    <Link to="/tea/products?category=flower" className="hover:text-[#8C6320] hover:underline">
+                      Flower & Herbal Infusions
                     </Link>
                   </li>
                   <li>
-                    <Link to="/tea/products/butterfly-blue-pea-tea" className="hover:text-[#8C6320] hover:underline">
-                      Butterfly Blue Pea Tea
+                    <Link to="/tea/products?category=leaf" className="hover:text-[#8C6320] hover:underline">
+                      Botanical Leaf Blends
                     </Link>
                   </li>
                   <li>
-                    <Link to="/tea/products/cinnamon-tea" className="hover:text-[#8C6320] hover:underline">
-                      Cinnamon Tea
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/tea/products/sarsaparilla-tea" className="hover:text-[#8C6320] hover:underline">
-                      Sarsaparilla Tea
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/tea/products/moringa-leaf-tea" className="hover:text-[#8C6320] hover:underline">
-                      Moringa Leaf Tea
+                    <Link to="/tea/products?category=herbal" className="hover:text-[#8C6320] hover:underline">
+                      Ayurvedic Root Teas
                     </Link>
                   </li>
                   <li>
                     <Link to="/tea/products" className="hover:text-[#8C6320] hover:underline font-semibold">
-                      All 5 Brews
+                      All Botanical Brews
                     </Link>
                   </li>
                 </>
@@ -227,7 +218,7 @@ export function AppFooter({ activeCollection }) {
                   </li>
                   <li>
                     <Link to="/sarees/products" className="hover:text-[#C5A46D] hover:underline font-semibold">
-                      All Sarees (12 Items)
+                      All Heritage Sarees
                     </Link>
                   </li>
                 </>
@@ -235,32 +226,32 @@ export function AppFooter({ activeCollection }) {
                 <>
                   <li>
                     <Link to="/jewellery/products?category=rings" className="hover:text-[#B9B8B5] hover:underline">
-                      Rings (4 Designs)
+                      Rings
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products?category=necklaces" className="hover:text-[#B9B8B5] hover:underline">
-                      Necklaces & Pendants (2 Designs)
+                      Necklaces & Pendants
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products?category=earrings" className="hover:text-[#B9B8B5] hover:underline">
-                      Earrings (2 Designs)
+                      Earrings
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products?category=bracelets" className="hover:text-[#B9B8B5] hover:underline">
-                      Bracelets & Cuffs (1 Design)
+                      Bracelets & Cuffs
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products?category=traditional" className="hover:text-[#B9B8B5] hover:underline">
-                      Traditional Silver (1 Design)
+                      Traditional Silver
                     </Link>
                   </li>
                   <li>
                     <Link to="/jewellery/products" className="hover:text-[#B9B8B5] hover:underline font-semibold">
-                      All Jewellery (10 Pieces)
+                      All Silver Jewellery
                     </Link>
                   </li>
                 </>
@@ -374,6 +365,52 @@ export function AppFooter({ activeCollection }) {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Business, GST & FSSAI Food Safety Compliance Bar */}
+        <div className="py-6 border-b border-current/10 text-xs opacity-85 space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap font-medium">
+                <span className="font-semibold text-current opacity-100">Amoga Luxury Private Limited</span>
+                <span className="opacity-40">•</span>
+                <span>Trade Name: <strong>Amoga</strong></span>
+                <span className="opacity-40">•</span>
+                <span className="font-mono">GSTIN: <strong>33AYMPK1833D1ZQ</strong> (Tamil Nadu, State Code 33)</span>
+                <span className="opacity-40">•</span>
+                <span className="font-mono">PAN: <strong>AYMPK1833D</strong></span>
+              </div>
+              <p className="text-[11px] opacity-75">
+                Registered Office: 108, Heritage Walk, Anna Salai, T. Nagar, Chennai, Tamil Nadu - 600017, India
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0 p-2.5 rounded-xl bg-current/5 border border-current/10 text-[11px]">
+              <div className="bg-white rounded-md p-1 border border-current/15 flex items-center justify-center shrink-0 shadow-xs">
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/en/e/e2/FSSAI_logo.png"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/fssai-logo.png';
+                  }}
+                  alt="FSSAI Food Safety Logo"
+                  className="h-7 w-auto object-contain"
+                  loading="lazy"
+                />
+              </div>
+              <div className="space-y-0.5">
+                <div className="font-mono font-bold tracking-tight text-xs">
+                  Lic. No. 22425540000677
+                </div>
+                <div className="text-[10px] opacity-75">
+                  Food Safety and Standards Authority of India
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-[10px] opacity-65 leading-relaxed">
+            Amoga Wholesome Pantry and Wellness Tea items comply with Food Safety and Standards (Licensing and Registration of Food Businesses) Regulations. Return/replacement requests for transit defects may be submitted under our <Link to="/returns-policy" className="underline hover:opacity-100">Return Policy</Link>.
+          </p>
         </div>
 
         {/* Bottom Bar */}

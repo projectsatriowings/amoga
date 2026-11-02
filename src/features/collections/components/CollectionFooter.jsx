@@ -150,12 +150,50 @@ export function CollectionFooter({ collectionId = 'food' }) {
                 </Link>
               </li>
               <li>
-                <span className="opacity-60">Pan-India Delivery</span>
+                <Link to="/returns-policy" className="hover:underline hover:opacity-100">
+                  Returns & Product Care
+                </Link>
               </li>
               <li>
-                <span className="opacity-60">100% Genuine Quality</span>
+                <Link to="/shipping-policy" className="hover:underline hover:opacity-100">
+                  Shipping Policy
+                </Link>
+              </li>
+              <li>
+                <span className="opacity-60">Pan-India Delivery</span>
               </li>
             </ul>
+          </div>
+        </div>
+
+        {/* Statutory Compliance: GST & FSSAI Details */}
+        <div
+          className="py-6 border-b text-xs opacity-85 space-y-2.5"
+          style={{ borderColor: palette.border || '#E5E0D5' }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px]">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold" style={{ color: palette.heading || '#173B2A' }}>
+                Amoga Luxury Private Limited
+              </span>
+              <span>•</span>
+              <span className="font-mono">GSTIN: 33AYMPK1833D1ZQ</span>
+              <span>•</span>
+              <span>Chennai, Tamil Nadu</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 bg-white/60 dark:bg-stone-900/60 px-2.5 py-1 rounded-lg border border-current/10">
+              <img
+                src="https://upload.wikimedia.org/wikipedia/en/e/e2/FSSAI_logo.png"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/fssai-logo.png';
+                }}
+                alt="FSSAI Logo"
+                className="h-4 w-auto object-contain"
+                loading="lazy"
+              />
+              <span className="font-mono text-[11px] font-semibold">Lic. No. 22425540000677</span>
+            </div>
           </div>
         </div>
 

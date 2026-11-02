@@ -66,11 +66,13 @@ async function seedAdmin() {
   // 3. Default Store Settings
   const settings = await prisma.storeSetting.upsert({
     where: { id: 'default' },
-    update: {},
+    update: {
+      contactEmail: 'amogastores05@gmail.com',
+    },
     create: {
       id: 'default',
       storeName: 'Amoga Luxury Atelier',
-      contactEmail: 'concierge@amoga.com',
+      contactEmail: 'amogastores05@gmail.com',
       contactPhone: '+91 98200 12345',
       shippingStandardRate: 0.0,
       freeShippingThreshold: 2500.0,
